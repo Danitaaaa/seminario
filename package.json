@@ -1,0 +1,39 @@
+{
+  "name": "study-app",
+  "version": "1.0.0",
+  "main": "out/main/index.js",
+  "engines": {
+    "node": ">=24.17.0"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "dev": "npm run db:up && electron-vite dev",
+    "build": "electron-vite build",
+    "start": "npm run db:up && npm run build && electron-vite preview",
+    "package": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@electron-toolkit/utils": "^3.0.0",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.10.9",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/ws": "^8.5.10",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^44.3.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.0.4"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
+  }
+}
