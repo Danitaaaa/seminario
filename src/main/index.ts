@@ -15,7 +15,6 @@ import { registerPruebaIpc } from './ipc/prueba.ipc';
 let mainWindow: BrowserWindow | null = null;
 
 config({ path: join(__dirname, "../../.env") });
-
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1200,
