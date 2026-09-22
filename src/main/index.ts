@@ -11,6 +11,9 @@ import { Persistencia } from './persistencia/Persistencia';
 import { ObtenerSaludo } from './logicaPersistente/gestionDePrueba/ObtenerSaludo';
 import { Prueba } from './administracionDePersistencia/Prueba';
 import { registerPruebaIpc } from './ipc/prueba.ipc';
+import { IniciarSesion } from './logicaPersistente/gestionDeUsuarios/IniciarSesion';
+import { Usuarios } from './administracionDePersistencia/Usuarios';
+import { registerUsuariosIpc } from './ipc/Usuarios.ipc';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -49,7 +52,9 @@ function wireDependencies(): void {
   const prueba = new Prueba(obtenerSaludo);
   registerPruebaIpc(prueba);
 
-  // Repetir para Gestión de Eventos, Gestión de Sesión, Proyectos, Usuario...
+  const iniciarSesion = new IniciarSesion(persistencia);
+  const usuarios = new Usuarios(iniciarSesion);
+  registerUsuariosIpc(usuarios);
 }
 
 app.whenReady().then(async () => {
