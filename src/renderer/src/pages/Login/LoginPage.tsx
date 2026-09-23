@@ -1,5 +1,9 @@
 import { useState } from  'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '../../components/ui/Button/Button';
+import { Input } from '../../components/ui/Input/Input';
+import { Card } from '../../components/ui/Card/Card';
+import { Title } from '../../components/ui/Title/Title';
 
 export function LoginPage(){
     const [email, setEmail] = useState("");
@@ -12,37 +16,56 @@ export function LoginPage(){
         console.log(password);
     }
 
+    const cancelar = () => {
+        setEmail("");
+        setPassword("");
+    }
+
     return (
-        <div>
-            <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <button onClick={iniciarSesion}>Iniciar sesión</button>
+        <main className="login-normal">
+            <Card>
+                <div className="login-card">
 
-            <p>
-                ¿No tienes cuenta?{" "}
-                <span
-                    onClick={() =>
-                        navigate("/registro")
-                    }
-                    style={{
-                        cursor: "pointer",
-                        fontWeight: "bold"
-                    }}
-                >
-                    Registrarse
-                </span>
-            </p>
+                    <Title>
+                        Iniciar sesión
+                    </Title>
 
-    </div>
+                    <Input
+                        type="email"
+                        placeholder="Correo electrónico"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <Input
+                        type="password"
+                        placeholder="Contraseña"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <div className="login-actions">
+                        <p>También podés iniciar sesión con tu rostro.</p>
+                        <Button onClick={iniciarSesion}>Iniciar sesión</Button>
+                        <Button variant="secondary" onClick={cancelar}>Cancelar</Button>
+                    </div>
+
+                    <p>
+                        ¿No tenés una cuenta? Haga click en{" "}
+                        <span
+                            className="link-register"
+                            onClick={() =>
+                                navigate("/registro")
+                            }
+                        >
+                            Registrarse
+                        </span>
+                    </p>
+                </div>
+            </Card>
+
+            <section className="login-facial" aria-label="Login facial">
+                <Title>Reconocimiento facial</Title>
+                <p>Mirá a la cámara para escanear tu rostro.</p>
+            </section>
+        </main>
 );
 }

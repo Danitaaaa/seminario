@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { colores } from '../../styles/colores';
-import { espacios } from '../../styles/espacios';
-import { globales } from '../../styles/globales';
-import { tipografias } from '../../styles/tipografias';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '../../components/ui/Button/Button';
+import { Input } from '../../components/ui/Input/Input';
+import { Card } from '../../components/ui/Card/Card';
+
 
 export function RegistrarUsuarioPage() {
     const [ nombre, setNombre] = useState("");
@@ -51,56 +51,55 @@ export function RegistrarUsuarioPage() {
     }
 
     return (
-        <div>
+        <Card>
             <h1>Registrarse</h1>
 
-            <input
-            placeholder="Nombre"
-            value={nombre}
+            <Input
+                placeholder="Nombre"
+                value={nombre}
             onChange={e => setNombre(e.target.value)}
             />
 
-            <input
-            placeholder="Apellido"
-            value={apellido}
-            onChange={e => setApellido(e.target.value)}
+            <Input
+                placeholder="Apellido"
+                value={apellido}
+                onChange={e => setApellido(e.target.value)}
             />
 
-            <input
+            <Input
             placeholder="Apodo"
             value={apodo}
             onChange={e => setApodo(e.target.value)}
             />
 
-            <input
-            placeholder="Correo"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            <Input
+                placeholder="Correo"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
             />
 
-            <input
-            type="date"
-            placeholder="Fecha de nacimiento"
-            value={fechaNacimiento}
-            onChange={e => setFechaNacimiento(e.target.value)}
+            <Input
+                type="date"
+                placeholder="Fecha de nacimiento"
+                value={fechaNacimiento}
+                onChange={e => setFechaNacimiento(e.target.value)}
             />
 
-            <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
+            <Input
+                type="password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
             />
 
-            <input
+            <Input
             type="password"
             placeholder="Confirmar contraseña"
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
             />
 
-            <button onClick={registrar}>Registrarse</button>
-            
-        </div>
+            <Button onClick={registrar}>Registrarse</Button>
+        </Card>
     );
 }
