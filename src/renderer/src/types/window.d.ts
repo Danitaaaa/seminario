@@ -1,10 +1,13 @@
-import { Saludo } from './prueba';
+import { Nodo } from './nodo';
 
 declare global {
   interface Window {
     api: {
-      obtenerSaludo: () => Promise<Saludo | null>;
-      // agregar aquí cada función que se exponga en preload/index.ts
+      crearNodo: (datos: unknown) => Promise<Nodo>;
+      modificarNodo: (datos: unknown) => Promise<Nodo>;
+      moverNodo: (datos: unknown) => Promise<Nodo>;
+      buscarNodos: (criterios: unknown) => Promise<Nodo>;
+      eliminarNodo: (datos: unknown) => Promise<void>;
     };
   }
 }
