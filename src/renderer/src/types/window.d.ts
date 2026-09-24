@@ -32,6 +32,26 @@ declare global {
         }
       ) => Promise<void>;
 
+      recuperarPassword: (
+        datos: {
+          email: string;
+        }
+      ) => Promise<void>;
+
+      validarCodigo: (
+        datos: {
+          email: string;
+          codigo: string;
+        }
+      ) => Promise<void>;
+
+      cambiarPassword: (
+        datos: {
+          email: string;
+          nuevaPassword: string;
+        }
+      ) => Promise<void>;
+
     };
   }
 }

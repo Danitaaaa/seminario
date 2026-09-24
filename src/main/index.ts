@@ -12,8 +12,13 @@ import { ObtenerSaludo } from './logicaPersistente/gestionDePrueba/ObtenerSaludo
 import { Prueba } from './administracionDePersistencia/Prueba';
 import { registerPruebaIpc } from './ipc/prueba.ipc';
 import { IniciarSesion } from './logicaPersistente/gestionDeUsuarios/IniciarSesion';
+import { RegistrarUsuario } from './logicaPersistente/gestionDeUsuarios/RegistrarUsuario';
+import { VerificarMail } from './logicaPersistente/gestionDeUsuarios/VerificarMail';
+import { RecuperarPassword } from './logicaPersistente/gestionDeUsuarios/RecuperarPassword';
 import { Usuarios } from './administracionDePersistencia/Usuarios';
 import { registerUsuariosIpc } from './ipc/Usuarios.ipc';
+import { CambiarPassword } from './logicaPersistente/gestionDeUsuarios/CambiarPassword';
+import { ValidarCodigo } from './logicaPersistente/gestionDeUsuarios/ValidarCodigo';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -53,7 +58,12 @@ function wireDependencies(): void {
   registerPruebaIpc(prueba);
 
   const iniciarSesion = new IniciarSesion(persistencia);
-  const usuarios = new Usuarios(iniciarSesion);
+  const registrarUsuario = new RegistrarUsuario(persistencia);
+  const verificarMail = new VerificarMail(persistencia);
+  const recuperarPassword = new RecuperarPassword(persistencia);
+  const validarCodigo = new ValidarCodigo(persistencia);
+  const cambiarPassword = new CambiarPassword(persistencia);
+  const usuarios = new Usuarios(iniciarSesion, registrarUsuario, verificarMail, recuperarPassword, validarCodigo, cambiarPassword);
   registerUsuariosIpc(usuarios);
 }
 

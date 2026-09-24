@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { colores } from '../../styles/colores';
-import { espacios } from '../../styles/espacios';
-import { globales } from '../../styles/globales';
-import { tipografias } from '../../styles/tipografias';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '../../components/ui/Button/Button';
+import { Card } from '../../components/ui/Card/Card';
+import { Input } from '../../components/ui/Input/Input';
+import { Title } from '../../components/ui/Title/Title';
 
 export function VerificarMailPage() {
 
@@ -32,33 +32,26 @@ export function VerificarMailPage() {
     }
 
     return (
-        <div>
+        <main className="auth-layout">
+            <section className="auth-image" aria-label="Imagen de perfil">
+                <span aria-hidden="true">&#128100;</span>
+            </section>
 
-            <h1>
-                Verifica tu correo electrónico
-            </h1>
+            <Card>
+                <Title>Verifica tu correo electrónico</Title>
 
-            <p>
-                Crear tu cuenta con:
-                {email}
-            </p>
+                <p>
+                    Creaste tu cuenta con: {email}
+                </p>
 
-            <input
-                placeholder="Código"
-                value={codigo}
-                onChange={(e) =>
-                    setCodigo(
-                        e.target.value
-                    )
-                }
-            />
+                <Input
+                    placeholder="Código"
+                    value={codigo}
+                    onChange={e => setCodigo(e.target.value)}
+                />
 
-            <button
-                onClick={verificar}
-            >
-                Verificar
-            </button>
-
-        </div>
+                <Button onClick={verificar}>Verificar</Button>
+            </Card>
+        </main>
     );
 }

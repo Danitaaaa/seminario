@@ -1,8 +1,9 @@
 import bycript from 'bcrypt';
 import { Usuario } from './Usuario'
 import { Persistencia } from '../../persistencia/Persistencia';
-import { RegistrarUsuarioDto } from './RegistrarUsuario.dto';
+import { RegistrarUsuarioDto } from './dto/RegistrarUsuario.dto';
 import { materializarUsuario } from './MaterializadorUsuarios';
+import { enviarCodigoVerificacion } from '../../servicios/Correo';
 
 export class RegistrarUsuario {
     constructor(
@@ -44,7 +45,7 @@ export class RegistrarUsuario {
                 password_hash,
                 email_verificado,
                 codigo_verificacion,
-                fecha_expiracion_codigo,
+                fecha_expiracion_codigo
             )
             VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8)
             RETURNING
@@ -70,6 +71,8 @@ export class RegistrarUsuario {
                 fechaExpiracionCodigo
             ]
         );
+
+        await enviarCodigoVerificacion(datos.email, codigoVerificar);
 
         return materializarUsuario(filas[0]);
 

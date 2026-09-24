@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { IniciarSesionDto } from './IniciarSesion.dto';
+import { IniciarSesionDto } from './dto/IniciarSesion.dto';
 import { Usuario } from './Usuario';
 import { Persistencia } from '../../persistencia/Persistencia';
 import { materializarUsuario } from './MaterializadorUsuarios';

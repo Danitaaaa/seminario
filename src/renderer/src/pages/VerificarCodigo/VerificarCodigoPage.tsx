@@ -1,0 +1,40 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../../components/ui/Button/Button';
+import { Card } from '../../components/ui/Card/Card';
+import { Input } from '../../components/ui/Input/Input';
+import { Title } from '../../components/ui/Title/Title';
+
+export function VerificarCodigoPage() {
+    const [codigo, setCodigo] = useState("");
+    const navigate = useNavigate();
+    const email = localStorage.getItem("emailPendiente");
+
+    async function verificar() {
+        if (!email) {
+            return;
+        }
+
+        try {
+            await window.api.validarCodigo({ email, codigo });
+            navigate("/cambioPassword");
+        } catch (error) {
+            console.error("Error al verificar el código:", error);
+        }
+    }
+
+    return (
+        <Card>
+            <Title>Verifica tu correo electrónico</Title>
+            <p>
+                Creaste tu cuenta con: {email}
+            </p>
+            <Input
+                placeholder="Código"
+                value={codigo}
+                onChange={e => setCodigo(e.target.value)}
+            />
+            <Button onClick={verificar}>Verificar</Button>
+        </Card>
+    );
+}

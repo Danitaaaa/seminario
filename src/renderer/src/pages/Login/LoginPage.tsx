@@ -22,7 +22,7 @@ export function LoginPage(){
     }
 
     return (
-        <main className="login-normal">
+        <main className="auth-layout">
             <Card>
                 <div className="login-card">
 
@@ -42,6 +42,14 @@ export function LoginPage(){
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
+
+                    <p
+                        className="forgot-password"
+                        onClick={() => navigate("/recuperar-contraseña")}
+                    >
+                        ¿Olvidaste tu contraseña?
+                    </p>
+
                     <div className="login-actions">
                         <p>También podés iniciar sesión con tu rostro.</p>
                         <Button onClick={iniciarSesion}>Iniciar sesión</Button>

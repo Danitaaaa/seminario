@@ -1,16 +1,16 @@
+import bycript from 'bcrypt';
 import { Persistencia } from '../../persistencia/Persistencia';
-import { RecuperarPasswordDto } from './dto/RecuperarPassword.dto';
 import { materializarUsuario } from './MaterializadorUsuarios';
-import { enviarCodigoVerificacion } from '../../servicios/Correo';
+import { CambiarPasswordDto } from './dto/CambiarPassword.dto';
 
-export class RecuperarPassword {
+export class CambiarPassword {
     constructor(
         private readonly persistencia: Persistencia
     ) {}
 
     async ejecutar(
-        datos: RecuperarPasswordDto
-    ): Promise<void>{
+        datos: CambiarPasswordDto
+    ): Promise<void> {
 
         const filas = await this.persistencia.ejecutar(
             `SELECT id, email_verificado
@@ -34,21 +34,18 @@ export class RecuperarPassword {
             );
         }
 
-        const codigoVerificar = Math.floor(100000 + Math.random() * 900000).toString();
-        
-        const fechaExpiracionCodigo = new Date(Date.now() + 10 * 60 * 1000);
+        const passwordHash = await bycript.hash(datos.nuevaPassword, 10);
 
         await this.persistencia.ejecutar(
             `
             UPDATE usuarios
             SET
-                codigo_verificacion = $1,
-                fecha_expiracion_codigo = $2
-            WHERE email = $3
+                password_hash = $1,
+                codigo_verificacion = NULL,
+                fecha_expiracion_codigo = NULL
+            WHERE id = $2
             `,
-            [codigoVerificar, fechaExpiracionCodigo, datos.email]
+            [passwordHash, usuario.id]
         );
-
-        await enviarCodigoVerificacion(datos.email, codigoVerificar);
     }
 }

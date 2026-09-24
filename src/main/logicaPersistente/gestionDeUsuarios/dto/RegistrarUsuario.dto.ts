@@ -5,5 +5,4 @@ export interface RegistrarUsuarioDto {
     email: string;
     fechaNacimiento: Date;
     password: string;
-    fechaCreacion: Date;
 }           

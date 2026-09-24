@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button/Button';
 import { Input } from '../../components/ui/Input/Input';
 import { Card } from '../../components/ui/Card/Card';
+import { Title } from '../../components/ui/Title/Title';
 
 
 export function RegistrarUsuarioPage() {
@@ -51,55 +52,63 @@ export function RegistrarUsuarioPage() {
     }
 
     return (
-        <Card>
-            <h1>Registrarse</h1>
+        <main className="auth-layout">
+            <section className="auth-image" aria-label="Imagen de perfil">
+                <span aria-hidden="true">&#128100;</span>
+            </section>
 
-            <Input
-                placeholder="Nombre"
-                value={nombre}
-            onChange={e => setNombre(e.target.value)}
-            />
+            <Card>
+                <Title>Registrarse</Title>
 
-            <Input
-                placeholder="Apellido"
-                value={apellido}
-                onChange={e => setApellido(e.target.value)}
-            />
+                <div className="registro-row">
+                    <Input
+                        placeholder="Nombre"
+                        value={nombre}
+                        onChange={e => setNombre(e.target.value)}
+                    />
+                    <Input
+                        placeholder="Apellido"
+                        value={apellido}
+                        onChange={e => setApellido(e.target.value)}
+                    />
+                </div>
 
-            <Input
-            placeholder="Apodo"
-            value={apodo}
-            onChange={e => setApodo(e.target.value)}
-            />
+                <Input
+                    placeholder="Apodo"
+                    value={apodo}
+                    onChange={e => setApodo(e.target.value)}
+                />
 
-            <Input
-                placeholder="Correo"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-            />
+                <Input
+                    placeholder="Correo"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                />
 
-            <Input
-                type="date"
-                placeholder="Fecha de nacimiento"
-                value={fechaNacimiento}
-                onChange={e => setFechaNacimiento(e.target.value)}
-            />
+                <Input
+                    type="date"
+                    placeholder="Fecha de nacimiento"
+                    value={fechaNacimiento}
+                    onChange={e => setFechaNacimiento(e.target.value)}
+                />
 
-            <Input
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-            />
+                <div className="registro-row">
+                    <Input
+                        type="password"
+                        placeholder="Contraseña"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                    />
+                    <Input
+                        type="password"
+                        placeholder="Confirmar contraseña"
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                    />
+                </div>
 
-            <Input
-            type="password"
-            placeholder="Confirmar contraseña"
-            value={confirmPassword}
-            onChange={e => setConfirmPassword(e.target.value)}
-            />
-
-            <Button onClick={registrar}>Registrarse</Button>
-        </Card>
+                <Button onClick={registrar}>Registrarse</Button>
+            </Card>
+        </main>
     );
 }

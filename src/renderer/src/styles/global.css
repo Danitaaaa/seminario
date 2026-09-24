@@ -10,7 +10,7 @@ body {
   margin: 0;
 }
 
-.login-normal {
+.auth-layout {
   display: grid;
   grid-template-columns: minmax(280px, 380px) minmax(280px, 1fr);
   align-items: center;
@@ -19,6 +19,24 @@ body {
   min-height: 100vh;
   margin: 0 auto;
   padding: 32px 6vw;
+}
+
+.auth-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  padding: 32px;
+  border: 2px dashed #8ba3c5;
+  border-radius: 16px;
+  color: #495b7d;
+  font-size: 5rem;
+}
+
+.registro-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 .login-card {
@@ -52,14 +70,27 @@ body {
     font-weight: bold;
 }
 
+.forgot-password {
+    margin: 0;
+    cursor: pointer;
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
 @media (max-width: 720px) {
-  .login-normal {
+  .auth-layout {
     grid-template-columns: 1fr;
     gap: 24px;
     padding: 24px;
   }
 
+  .auth-image,
   .login-facial {
     min-height: 180px;
+  }
+
+  .registro-row {
+    grid-template-columns: 1fr;
   }
 }

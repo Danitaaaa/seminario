@@ -10,6 +10,7 @@ export class VerificarMail {
         email: string,
         codigo: string
     ): Promise<void> {
+        const codigoNormalizado = codigo.trim();
 
         const filas =
             await this.persistencia.ejecutar(
@@ -38,7 +39,7 @@ export class VerificarMail {
             );
         }
 
-        if (usuario.codigo_verificacion !== codigo) {
+        if (usuario.codigo_verificacion !== codigoNormalizado) {
             throw new Error(
                 "Código incorrecto"
             );
