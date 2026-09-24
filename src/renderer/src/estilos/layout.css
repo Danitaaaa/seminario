@@ -1,0 +1,273 @@
+/* Estilos del layout base. Solo consume variables generadas por tema.ts. */
+
+/* ---------- Estructura general ---------- */
+.app-shell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--color-white);
+  color: var(--color-text);
+  font-family: var(--fuente-base);
+}
+
+.app-principal {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ---------- Barra lateral ---------- */
+.app-lateral {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  width: var(--dim-barra-lateral);
+  height: 100vh;
+  padding: var(--espacio-md) var(--espacio-sm);
+  background: var(--color-primary);
+  color: var(--color-white);
+  transition: width 0.2s ease;
+}
+
+.app-lateral--colapsada {
+  width: var(--dim-barra-lateral-colapsada);
+}
+
+.app-lateral__logo {
+  display: flex;
+  align-items: center;
+  min-height: var(--dim-barra-superior);
+  padding: 0 var(--espacio-sm);
+  font-size: var(--tamano-lg);
+  font-weight: var(--peso-medium);
+  overflow: hidden;
+}
+
+.app-lateral__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-lateral__grupo--inferior {
+  margin-top: auto;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-md);
+  width: 100%;
+  padding: var(--espacio-sm) var(--espacio-md);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--tamano-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-nav:hover {
+  background: color-mix(in srgb, var(--color-primary-dark) 45%, transparent);
+}
+
+.app-nav--activo {
+  background: var(--color-primary-dark);
+  font-weight: var(--peso-medium);
+}
+
+.app-nav__icono {
+  flex-shrink: 0;
+}
+
+.app-lateral--colapsada .app-nav__etiqueta,
+.app-lateral--colapsada .app-lateral__logo-texto {
+  display: none;
+}
+
+/* ---------- Barra superior ---------- */
+.app-superior {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-md);
+  height: var(--dim-barra-superior);
+  padding: 0 var(--espacio-xl);
+}
+
+.app-superior__espaciador {
+  flex: 1;
+}
+
+.app-superior__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-md);
+}
+
+.app-boton-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--dim-icono-boton);
+  height: var(--dim-icono-boton);
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-border) 22%, var(--color-white));
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.app-boton-icono:hover {
+  background: color-mix(in srgb, var(--color-border) 40%, var(--color-white));
+}
+
+.app-boton-icono--plano {
+  background: transparent;
+}
+
+.app-buscador {
+  display: flex;
+  align-items: center;
+  flex: 0 1 var(--dim-ancho-buscador);
+  gap: var(--espacio-sm);
+  padding: 0 var(--espacio-md);
+  height: var(--dim-icono-boton);
+  border-radius: var(--radio-sm);
+  background: color-mix(in srgb, var(--color-border) 22%, var(--color-white));
+  color: var(--color-text-light);
+}
+
+.app-buscador__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+}
+
+.app-usuario {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-md);
+  min-width: var(--dim-ancho-menu-usuario);
+  padding: var(--espacio-sm) var(--espacio-md);
+  border: 0;
+  border-radius: var(--radio-md);
+  background: color-mix(in srgb, var(--color-border) 22%, var(--color-white));
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-usuario__datos {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.app-usuario__nombre {
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-bold);
+}
+
+.app-usuario__rol {
+  font-size: var(--tamano-xs);
+  color: var(--color-text-light);
+}
+
+/* ---------- Contenido ---------- */
+.app-contenido {
+  padding: 0 var(--espacio-xl) var(--espacio-xl);
+}
+
+.app-titulo {
+  margin: 0 0 var(--espacio-sm);
+  font-size: var(--tamano-lg);
+  font-weight: var(--peso-medium);
+}
+
+.app-panel {
+  padding: var(--espacio-xl);
+  border-radius: var(--radio-md);
+  background: color-mix(in srgb, var(--color-background) 35%, var(--color-white));
+}
+
+/* Rejilla estándar para tarjetas dentro del panel */
+.app-rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--dim-ancho-minimo-tarjeta), 1fr));
+  gap: var(--espacio-lg);
+}
+
+/* ---------- Botón estándar ---------- */
+.app-boton {
+  padding: var(--espacio-sm) var(--espacio-lg);
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  font: inherit;
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-medium);
+  cursor: pointer;
+}
+
+.app-boton--primario {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.app-boton--primario:hover {
+  background: var(--color-primary-dark);
+}
+
+.app-boton--contorno {
+  background: var(--color-white);
+  color: var(--color-primary);
+}
+
+.app-boton--contorno:hover {
+  background: color-mix(in srgb, var(--color-secondary) 20%, var(--color-white));
+}
+
+/* ---------- Accesibilidad ---------- */
+.app-nav:focus-visible,
+.app-boton-icono:focus-visible,
+.app-usuario:focus-visible,
+.app-boton:focus-visible,
+.app-buscador:focus-within {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+  .app-superior,
+  .app-contenido {
+    padding-left: var(--espacio-md);
+    padding-right: var(--espacio-md);
+  }
+
+  .app-panel {
+    padding: var(--espacio-md);
+  }
+
+  .app-usuario__datos,
+  .app-usuario {
+    min-width: 0;
+  }
+
+  .app-usuario__datos {
+    display: none;
+  }
+}
