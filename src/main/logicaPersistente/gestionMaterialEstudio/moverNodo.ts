@@ -6,6 +6,7 @@ import { Nodo } from "./entidades"
 export class MoverNodo {
     constructor(private readonly persistencia: Persistencia) {}
 
+    // Cambia el nodoPadre de un nodo
     async ejecutar(datos: MoverNodoDTO): Promise<Nodo> {
         const filas = await this.persistencia.ejecutar(
             `UPDATE nodos

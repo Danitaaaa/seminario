@@ -1,0 +1,336 @@
+/*
+  Usa las variables definidas en styles/globals.css (--color-primary, --color-secondary,
+  --color-accent, --color-background, --font-body). Las variables que globals.css no
+  expone todavía (superficie, borde, texto secundario, error) quedan con un valor de
+  respaldo acá mismo, tomado de la paleta de la guía de arquitectura — reemplazar por
+  las variables reales si ya existen en el proyecto (ej. --color-surface, --color-border).
+*/
+.nodos-modulo {
+    --nodos-surface: var(--color-surface, #FFFFFF);
+    --nodos-border: var(--color-border, #E2E1DC);
+    --nodos-texto: var(--color-text-primary, #1E1E1E);
+    --nodos-texto-secundario: var(--color-text-secondary, #5C5C58);
+    --nodos-error: var(--color-error, #B84C4C);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Migas de ruta */
+.ruta-migas {
+    display: flex;
+    justify-content: flex-end;
+    font-size: 0.8rem;
+    color: var(--nodos-texto-secundario);
+}
+.ruta-migas__segmento button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--nodos-texto-secundario);
+    font-size: inherit;
+    cursor: pointer;
+}
+.ruta-migas__segmento button:hover {
+    color: var(--color-primary, #2B3A67);
+    text-decoration: underline;
+}
+.ruta-migas__separador {
+    margin: 0 2px;
+}
+
+/* Barra de filtros / orden + acciones */
+.barra-filtros {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--nodos-border);
+}
+.barra-filtros__columnas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.columna-orden {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--nodos-border);
+    background: var(--nodos-surface);
+    color: var(--nodos-texto-secundario);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+.columna-orden:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+.columna-orden:not(:disabled):hover {
+    border-color: var(--color-primary, #2B3A67);
+}
+.columna-orden--activa {
+    border-color: var(--color-primary, #2B3A67);
+    color: var(--color-primary, #2B3A67);
+    font-weight: 600;
+}
+
+.barra-filtros__acciones {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.barra-filtros__menu-contenedor {
+    position: relative;
+}
+
+.boton-agregar {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: none;
+    background: var(--color-primary, #2B3A67);
+    cursor: pointer;
+}
+.boton-agregar:hover {
+    background: var(--color-primary-light, #4A5D9E);
+}
+
+.icono-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--nodos-border);
+    background: var(--nodos-surface);
+    cursor: pointer;
+}
+.icono-accion:hover:not(:disabled) {
+    border-color: var(--color-primary, #2B3A67);
+}
+.icono-accion--activo {
+    background: var(--color-background, #FAFAF8);
+    border-color: var(--color-primary, #2B3A67);
+}
+.icono-accion:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* El botón "más acciones" de cada fila/tarjeta no lleva el chip con borde:
+   es solo el ícono, como un menú kebab habitual. */
+.fila-nodo__menu-contenedor .icono-accion,
+.tarjeta-nodo__menu-contenedor .icono-accion {
+    border: none;
+    background: none;
+}
+.fila-nodo__menu-contenedor .icono-accion:hover,
+.tarjeta-nodo__menu-contenedor .icono-accion:hover {
+    background: var(--color-background, #FAFAF8);
+}
+
+/* Menú "agregar" y menú de acciones por nodo comparten el mismo look de dropdown */
+.menu-agregar,
+.menu-acciones-nodo {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 10;
+    min-width: 170px;
+    background: var(--nodos-surface);
+    border: 1px solid var(--nodos-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(30, 30, 30, 0.12);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.menu-agregar__opcion,
+.menu-acciones-nodo__opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--nodos-texto);
+    cursor: pointer;
+    text-align: left;
+}
+.menu-agregar__opcion:hover,
+.menu-acciones-nodo__opcion:hover {
+    background: var(--color-background, #FAFAF8);
+}
+.menu-acciones-nodo__opcion--peligro {
+    color: var(--nodos-error);
+}
+
+/* Vista lista */
+.tabla-nodos {
+    display: flex;
+    flex-direction: column;
+}
+.tabla-nodos__encabezado {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1.4fr 1.4fr 32px;
+    gap: 8px;
+    padding: 8px 10px;
+    font-size: 0.75rem;
+    color: var(--nodos-texto-secundario);
+    border-bottom: 1px solid var(--nodos-border);
+}
+.fila-nodo {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1.4fr 1.4fr 32px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--nodos-border);
+    font-size: 0.85rem;
+    color: var(--nodos-texto);
+}
+.fila-nodo:hover {
+    background: var(--color-background, #FAFAF8);
+}
+.fila-nodo__nombre {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+.fila-nodo__celda {
+    color: var(--nodos-texto-secundario);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.fila-nodo__menu-contenedor {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+/* Vista cuadrícula */
+.cuadricula-nodos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 20px;
+}
+.tarjeta-nodo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.tarjeta-nodo:hover {
+    background: var(--color-background, #FAFAF8);
+}
+.tarjeta-nodo__nombre {
+    font-size: 0.85rem;
+    color: var(--nodos-texto);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tarjeta-nodo__menu-contenedor {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+}
+
+.nodos-vacio {
+    padding: 32px 0;
+    text-align: center;
+    color: var(--nodos-texto-secundario);
+    font-size: 0.9rem;
+}
+
+/* Modales (crear/renombrar/confirmar) */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 30, 30, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+.modal {
+    background: var(--nodos-surface);
+    border-radius: 12px;
+    padding: 24px;
+    width: 360px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.modal__titulo {
+    margin: 0;
+    color: var(--nodos-texto);
+    font-family: var(--font-display, inherit);
+}
+.modal__texto {
+    margin: 0;
+    color: var(--nodos-texto-secundario);
+    font-size: 0.9rem;
+}
+.modal__input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--nodos-border);
+    font-size: 0.9rem;
+}
+.modal__input:focus {
+    outline: none;
+    border-color: var(--color-primary, #2B3A67);
+}
+.modal__acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* Ícono base */
+.icono {
+    display: block;
+    flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+    .tabla-nodos__encabezado,
+    .fila-nodo {
+        grid-template-columns: 1fr 32px;
+    }
+    .tabla-nodos__encabezado span:nth-child(n+2):nth-child(-n+6),
+    .fila-nodo__celda {
+        display: none;
+    }
+    .cuadricula-nodos {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+}

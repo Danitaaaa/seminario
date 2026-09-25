@@ -6,6 +6,7 @@ import { Nodo } from "./entidades"
 export class ModificarNodo {
     constructor(private readonly persistencia: Persistencia) {}
 
+    // Modifica el nombre de un nodo
     async ejecutar(datos: ModificarNodoDTO): Promise<Nodo> {
         const filas = await this.persistencia.ejecutar(
             `UPDATE nodos 

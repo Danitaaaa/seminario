@@ -1,6 +1,6 @@
 import { contextBridge } from 'electron';
-import { pruebaApi } from './apis/prueba';
+import { nodosApi } from './apis/nodo';
 
 contextBridge.exposeInMainWorld('api', {
-  ...pruebaApi,
+  ...nodosApi,
 });

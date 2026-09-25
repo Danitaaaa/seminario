@@ -12,6 +12,15 @@ import { ObtenerSaludo } from './logicaPersistente/gestionDePrueba/ObtenerSaludo
 import { Prueba } from './administracionDePersistencia/Prueba';
 import { registerPruebaIpc } from './ipc/prueba.ipc';
 
+import { CrearNodo } from './logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { ModificarNodo } from './logicaPersistente/gestionMaterialEstudio/modificarNodo';
+import { BuscarNodos } from './logicaPersistente/gestionMaterialEstudio/buscarNodos';
+import { EliminarNodo } from './logicaPersistente/gestionMaterialEstudio/elminarNodo';
+import { MoverNodo } from './logicaPersistente/gestionMaterialEstudio/moverNodo';
+import { Nodos } from './administracionDePersistencia/nodo';
+import { registrarNodosIpc } from './ipc/nodo.ipc';
+
+
 let mainWindow: BrowserWindow | null = null;
 
 config({ path: join(__dirname, "../../.env") });
@@ -49,7 +58,15 @@ function wireDependencies(): void {
   const prueba = new Prueba(obtenerSaludo);
   registerPruebaIpc(prueba);
 
-  // Repetir para Gestión de Eventos, Gestión de Sesión, Proyectos, Usuario...
+  // Gestion de material de estudio
+  const crearNodo = new CrearNodo(persistencia);
+  const modificarNodo = new ModificarNodo(persistencia);
+  const buscarNodos = new BuscarNodos(persistencia);
+  const moverNodo = new MoverNodo(persistencia);
+  const eliminarNodo = new EliminarNodo(persistencia);
+  const nodos = new Nodos(crearNodo, modificarNodo, buscarNodos,
+    eliminarNodo, moverNodo );
+  registrarNodosIpc(nodos);
 }
 
 app.whenReady().then(async () => {
