@@ -7,6 +7,7 @@ import { CrearNodoDTO } from './dto';
 export class CrearNodo {
     constructor(private readonly persistencia: Persistencia) {}
 
+    // Crea un nuevo nodo con el nombre definido por el usuario
     async ejecutar(datos: CrearNodoDTO): Promise<Nodo> {
         const filas = await this.persistencia.ejecutar(
             `INSERT INTO nodos (nombre, fecha_carga, ultima_fecha_acceso, 

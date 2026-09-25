@@ -5,6 +5,7 @@ import { EliminarNodoDTO } from './dto';
 export class EliminarNodo {
     constructor(private readonly persistencia: Persistencia) {}
 
+    // Elimina un nodo siempre que esté vacío
     async ejecutar(datos: EliminarNodoDTO): Promise<void> {
         try {
             await this.persistencia.ejecutar(

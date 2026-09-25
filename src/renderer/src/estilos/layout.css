@@ -201,7 +201,6 @@
 .app-panel {
   padding: var(--espacio-xl);
   border-radius: var(--radio-md);
-  background: color-mix(in srgb, var(--color-background) 35%, var(--color-white));
 }
 
 /* Rejilla estándar para tarjetas dentro del panel */

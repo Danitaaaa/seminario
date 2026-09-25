@@ -33,7 +33,9 @@
     "electron": "^44.3.0",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
-    "typescript": "^5.0.4"
+    "lucide-react": "^1.48.0",
+    "typescript": "^5.0.4",
+    "zod": "^4.6.5"
   },
   "allowScripts": {
     "esbuild@0.21.5": true

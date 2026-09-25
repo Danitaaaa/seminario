@@ -1,4 +1,3 @@
-// src/main/logicaPersistente/gestionMaterialEstudio/_test-manual.ts
 import { pool, verifyDbConnection } from '../../persistencia/BaseDeDatos';
 import { Persistencia } from '../../persistencia/Persistencia';
 import { CrearNodo } from './crearNodo';
@@ -7,6 +6,7 @@ import { ModificarNodo } from './modificarNodo';
 import { MoverNodo } from './moverNodo';
 import { EliminarNodo } from './elminarNodo';
 
+// Test para las funciones de Crear, Buscar, Modificar, Mover y Eliminar nodo.
 async function main() {
   await verifyDbConnection();
   const persistencia = new Persistencia(pool);
