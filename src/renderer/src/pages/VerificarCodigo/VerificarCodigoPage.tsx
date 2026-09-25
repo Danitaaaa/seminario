@@ -24,17 +24,23 @@ export function VerificarCodigoPage() {
     }
 
     return (
-        <Card>
-            <Title>Verifica tu correo electrónico</Title>
-            <p>
-                Creaste tu cuenta con: {email}
-            </p>
-            <Input
-                placeholder="Código"
-                value={codigo}
-                onChange={e => setCodigo(e.target.value)}
-            />
-            <Button onClick={verificar}>Verificar</Button>
-        </Card>
+        <main className="auth-layout auth-form-page">
+            <div className="auth-form-card">
+                <Card>
+                    <div className="login-card">
+                        <Title>Verifica tu correo electrónico</Title>
+                        <p>
+                            Creaste tu cuenta con: {email}
+                        </p>
+                        <Input
+                            placeholder="Código"
+                            value={codigo}
+                            onChange={e => setCodigo(e.target.value)}
+                        />
+                        <Button onClick={verificar}>Verificar</Button>
+                    </div>
+                </Card>
+            </div>
+        </main>
     );
 }

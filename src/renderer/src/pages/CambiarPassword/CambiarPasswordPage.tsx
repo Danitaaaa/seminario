@@ -28,15 +28,21 @@ export function CambiarPasswordPage() {
     }
 
     return (
-        <Card>
-            <Title>Cambiar contraseña</Title>
-            <Input
-                type="password"
-                placeholder="Nueva contraseña"
-                value={nuevaPassword}
-                onChange={e => setNuevaPassword(e.target.value)}
-            />
-            <Button onClick={cambiarPassword}>Cambiar contraseña</Button>
-        </Card>
+        <main className="auth-layout auth-form-page">
+            <div className="auth-form-card">
+                <Card>
+                    <div className="login-card">
+                        <Title>Cambiar contraseña</Title>
+                        <Input
+                            type="password"
+                            placeholder="Nueva contraseña"
+                            value={nuevaPassword}
+                            onChange={e => setNuevaPassword(e.target.value)}
+                        />
+                        <Button onClick={cambiarPassword}>Cambiar contraseña</Button>
+                    </div>
+                </Card>
+            </div>
+        </main>
     );
 }

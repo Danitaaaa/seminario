@@ -32,26 +32,26 @@ export function VerificarMailPage() {
     }
 
     return (
-        <main className="auth-layout">
-            <section className="auth-image" aria-label="Imagen de perfil">
-                <span aria-hidden="true">&#128100;</span>
-            </section>
+        <main className="auth-layout auth-form-page">
+            <div className="auth-form-card">
+                <Card>
+                    <div className="login-card">
+                        <Title>Verifica tu correo electrónico</Title>
 
-            <Card>
-                <Title>Verifica tu correo electrónico</Title>
+                        <p>
+                            Creaste tu cuenta con: {email}
+                        </p>
 
-                <p>
-                    Creaste tu cuenta con: {email}
-                </p>
+                        <Input
+                            placeholder="Código"
+                            value={codigo}
+                            onChange={e => setCodigo(e.target.value)}
+                        />
 
-                <Input
-                    placeholder="Código"
-                    value={codigo}
-                    onChange={e => setCodigo(e.target.value)}
-                />
-
-                <Button onClick={verificar}>Verificar</Button>
-            </Card>
+                        <Button onClick={verificar}>Verificar</Button>
+                    </div>
+                </Card>
+            </div>
         </main>
     );
 }

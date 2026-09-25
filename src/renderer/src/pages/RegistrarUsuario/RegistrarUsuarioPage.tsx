@@ -107,7 +107,10 @@ export function RegistrarUsuarioPage() {
                     />
                 </div>
 
-                <Button onClick={registrar}>Registrarse</Button>
+                <div className="login-actions registro-actions">
+                    <Button onClick={registrar}>Registrarse</Button>
+                    <Button variant="secondary" onClick={() => navigate("/")}>Cancelar</Button>
+                </div>
             </Card>
         </main>
     );

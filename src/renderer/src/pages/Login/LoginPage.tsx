@@ -49,7 +49,7 @@ export function LoginPage(){
                     >
                         ¿Olvidaste tu contraseña?
                     </p>
-
+                    
                     <div className="login-actions">
                         <p>También podés iniciar sesión con tu rostro.</p>
                         <Button onClick={iniciarSesion}>Iniciar sesión</Button>

@@ -21,9 +21,10 @@ export function RecuperarPasswordPage(){
     }
 
     return (
-        <main className="auth-layout">
-            <Card>
-                <div className="login-card">
+        <main className="auth-layout auth-form-page">
+            <div className="auth-form-card">
+                <Card>
+                    <div className="login-card">
                     <Title>
                         Recuperar contraseña
                     </Title>
@@ -35,9 +36,11 @@ export function RecuperarPasswordPage(){
                     />
                     <div className="login-actions">
                         <Button onClick={recuperarPassword}>Recuperar contraseña</Button>
+                        <Button variant="secondary" onClick={() => navigate("/")}>Cancelar</Button>
                     </div>
-                </div>
-            </Card>
+                    </div>
+                </Card>
+            </div>
         </main>
     );
 }
