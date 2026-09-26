@@ -1,19 +1,19 @@
-/*export interface Nodo {
-    id: number;
-    nombre: string;
-    fechaDeCarga: Date;
-    ultimaFechaAcceso: Date;
-    ultimaFechaModificacion: Date;
-    tamaño: BigInt;
-    nodoPadre: number | null;
-}*/
-
-export interface Nodo {
+interface NodoBase {
     id: number;
     nombre: string;
     fechaDeCarga: string;
     ultimaFechaAcceso: string;
     ultimaFechaModificacion: string;
-    tamaño: BigInt;
-    nodoPadre: number | null;
+    tamaño: string;
 }
+
+export interface Carpeta extends NodoBase {
+    tipo: 'carpeta';
+}
+
+export interface Archivo extends NodoBase {
+    tipo: 'archivo';
+    extension: string | null;
+}
+
+export type Nodo = Carpeta | Archivo;

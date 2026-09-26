@@ -17,11 +17,11 @@ interface ColumnaConfig {
 
 const COLUMNAS: ColumnaConfig[] = [
     { etiqueta: 'Nombre', campo: 'nombre' },
-    { etiqueta: 'tipo' },
-    { etiqueta: 'tamaño', campo: 'tamaño' },
-    { etiqueta: 'fecha de carga', campo: 'fecha_carga' },
-    { etiqueta: 'última fecha modificación', campo: 'fecha_ultima_modificacion' },
-    { etiqueta: 'última fecha acceso', campo: 'fecha_ultimo_acceso' },
+    { etiqueta: 'Tipo', campo: 'tipo' },
+    { etiqueta: 'Tamaño', campo: 'tamaño' },
+    { etiqueta: 'Fecha de carga', campo: 'fecha_carga' },
+    { etiqueta: 'Última fecha modificación', campo: 'fecha_ultima_modificacion' },
+    { etiqueta: 'Última fecha acceso', campo: 'fecha_ultimo_acceso' },
 ];
 
 interface BarraFiltrosNodosProps {

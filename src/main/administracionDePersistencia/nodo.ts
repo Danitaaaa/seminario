@@ -1,15 +1,17 @@
 import { Nodo } from '../logicaPersistente/gestionMaterialEstudio/entidades';
+import { ElementoContenido } from '../logicaPersistente/gestionMaterialEstudio/entidades';
 import { 
     CrearNodoDTO,
     ModificarNodoDTO,
     BuscarNodosDTO,
     EliminarNodoDTO,
     MoverNodoDTO,
+    ListarContenidoDTO,
 } from '../logicaPersistente/gestionMaterialEstudio/dto';
 
 import { CrearNodo } from '../logicaPersistente/gestionMaterialEstudio/crearNodo';
 import { ModificarNodo } from '../logicaPersistente/gestionMaterialEstudio/modificarNodo';
-import { BuscarNodos } from '../logicaPersistente/gestionMaterialEstudio/buscarNodos';
+import { ListarContenido } from '../logicaPersistente/gestionMaterialEstudio/listarContenido';
 import { EliminarNodo } from '../logicaPersistente/gestionMaterialEstudio/elminarNodo';
 import { MoverNodo } from '../logicaPersistente/gestionMaterialEstudio/moverNodo';
 
@@ -17,7 +19,7 @@ export class Nodos {
     constructor(
         private readonly crearNodo: CrearNodo,
         private readonly modificarNodo: ModificarNodo,
-        private readonly buscarNodos: BuscarNodos,
+        private readonly listarContenido: ListarContenido,
         private readonly eliminarNodo: EliminarNodo,
         private readonly moverNodo: MoverNodo,
     ) {}
@@ -33,8 +35,8 @@ export class Nodos {
     }
 
     // Enlistar los nodos dentro del nodo padre determinado, filtrar si hay criterios
-    async buscar(criterios: BuscarNodosDTO): Promise<Nodo[]> {
-        return this.buscarNodos.ejecutar(criterios);
+    async listar(criterios: ListarContenidoDTO): Promise<ElementoContenido[]> {
+        return this.listarContenido.ejecutar(criterios);
     }
 
     // Cambiar el nodo padre de un nodo

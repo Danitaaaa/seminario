@@ -3,9 +3,9 @@ import { Nodos } from '../administracionDePersistencia/nodo';
 import {
     CrearNodoDTOSchema,
     ModificarNodoDTOSchema,
-    BuscarNodosDTOSchema,
     EliminarNodoDTOSchema,
     MoverNodoDTOSchema,
+    ListarContenidoDTOSchema,
 } from '../logicaPersistente/gestionMaterialEstudio/dto';
 
 export function registrarNodosIpc(nodos: Nodos): void {
@@ -19,9 +19,9 @@ export function registrarNodosIpc(nodos: Nodos): void {
         return nodos.modificar(validado);
     });
 
-    ipcMain.handle('nodos:buscar', async (_event, criterios: unknown) => {
-        const validado = BuscarNodosDTOSchema.parse(criterios);
-        return nodos.buscar(validado);
+    ipcMain.handle('nodos:listar', async (_event, criterios: unknown) => {
+        const validado = ListarContenidoDTOSchema.parse(criterios);
+        return nodos.listar(validado);
     });
 
     ipcMain.handle('nodos:mover', async (_event, datos: unknown) => {

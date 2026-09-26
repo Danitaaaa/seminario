@@ -16,6 +16,11 @@ export const BuscarNodosDTOSchema = z.object({
 });
 export type BuscarNodosDTO = z.infer<typeof BuscarNodosDTOSchema>;
 
+export const ListarContenidoDTOSchema = BuscarNodosDTOSchema.extend({
+    idPadre: z.number().int(), // acá sí, sin nullable — el orquestador nunca recibe null
+    tipo: z.enum(['carpeta', 'archivo']).optional(), // undefined = ambos
+});
+export type ListarContenidoDTO = z.infer<typeof ListarContenidoDTOSchema>;
 
 export const ModificarNodoDTOSchema = z.object({
     id: z.number().int(),

@@ -5,5 +5,16 @@ export interface Nodo {
     ultimaFechaAcceso: Date;
     ultimaFechaModificacion: Date;
     tamaño: BigInt;
-    nodoPadre: Nodo;
+    nodoPadre: number | null;
+}
+
+
+export interface ElementoContenido {
+    id: number;
+    nombre: string;
+    tipo: 'carpeta' | 'archivo';
+    fechaDeCarga: Date;
+    ultimaFechaAcceso: Date;
+    ultimaFechaModificacion: Date;
+    tamaño: string;
 }

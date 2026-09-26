@@ -280,7 +280,7 @@
     z-index: 100;
 }
 .modal {
-    background: var(--nodos-surface);
+    background: var(--color-background, #FAFAF8);
     border-radius: 12px;
     padding: 24px;
     width: 360px;
@@ -288,6 +288,16 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+    border: 1px solid var(--nodos-border);
+    box-shadow: 0 12px 32px rgba(30, 30, 30, 0.25);
+}
+
+.modal__input {
+    background: var(--nodos-surface, #FFFFFF);
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--nodos-border);
+    font-size: 0.9rem;
 }
 .modal__titulo {
     margin: 0;
@@ -297,12 +307,6 @@
 .modal__texto {
     margin: 0;
     color: var(--nodos-texto-secundario);
-    font-size: 0.9rem;
-}
-.modal__input {
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--nodos-border);
     font-size: 0.9rem;
 }
 .modal__input:focus {
@@ -333,4 +337,23 @@
     .cuadricula-nodos {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
+}
+
+.fila-nodo--seleccionada {
+    background-color: var(--color-seleccion, #e8f0fe);
+}
+
+.fila-nodo--sobre-destino {
+    outline: 2px dashed var(--color-primario, #1a73e8);
+    outline-offset: -2px;
+}
+
+.tarjeta-nodo--seleccionada {
+    background-color: var(--color-seleccion, #e8f0fe);
+    border-color: var(--color-primario, #1a73e8);
+}
+
+.tarjeta-nodo--sobre-destino {
+    outline: 2px dashed var(--color-primario, #1a73e8);
+    outline-offset: -2px;
 }

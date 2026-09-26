@@ -3,6 +3,7 @@
 // que espera el DTO, no hace falta traducir nada al integrar.
 export type OrdenarPor =
     | 'nombre'
+    | 'tipo'
     | 'fecha_carga'
     | 'fecha_ultimo_acceso'
     | 'fecha_ultima_modificacion'
