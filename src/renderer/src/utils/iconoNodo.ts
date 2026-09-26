@@ -9,6 +9,7 @@ import iconoPpt from '../assets/iconsFile1/file-ppt.svg';
 import iconoPptx from '../assets/iconsFile1/file-pptx.svg';
 import iconoVideo from '../assets/iconsFile1/file-video.svg';
 import iconoXlsx from '../assets/iconsFile1/file-xlsx.svg';
+import iconoDocumento from '../assets/iconsFile1/file-docx.svg';
 
 // Tabla extensión → { ícono, etiqueta de tipo }.
 // Abierta a extensión (OCP): agregar un tipo de archivo nuevo es agregar una fila acá,
@@ -28,6 +29,7 @@ const ICONOS_POR_EXTENSION: Record<string, { icono: string; tipo: string }> = {
     mp4: { icono: iconoVideo, tipo: 'Video' },
     mov: { icono: iconoVideo, tipo: 'Video' },
     avi: { icono: iconoVideo, tipo: 'Video' },
+    docx: { icono: iconoDocumento, tipo: 'Documento' }
 };
 
 interface InfoNodo {

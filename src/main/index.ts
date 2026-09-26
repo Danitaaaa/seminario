@@ -19,7 +19,7 @@ import { EliminarNodo } from './logicaPersistente/gestionMaterialEstudio/elminar
 import { MoverNodo } from './logicaPersistente/gestionMaterialEstudio/moverNodo';
 import { Nodos } from './administracionDePersistencia/nodo';
 import { registrarNodosIpc } from './ipc/nodo.ipc';
-
+import { ListarContenido } from './logicaPersistente/gestionMaterialEstudio/listarContenido';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -62,9 +62,10 @@ function wireDependencies(): void {
   const crearNodo = new CrearNodo(persistencia);
   const modificarNodo = new ModificarNodo(persistencia);
   const buscarNodos = new BuscarNodos(persistencia);
+  const listarContenido = new ListarContenido(buscarNodos); // Falta agregar el listar archivos
   const moverNodo = new MoverNodo(persistencia);
   const eliminarNodo = new EliminarNodo(persistencia);
-  const nodos = new Nodos(crearNodo, modificarNodo, buscarNodos,
+  const nodos = new Nodos(crearNodo, modificarNodo, listarContenido,
     eliminarNodo, moverNodo );
   registrarNodosIpc(nodos);
 }

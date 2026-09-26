@@ -6,7 +6,7 @@ declare global {
       crearNodo: (datos: unknown) => Promise<Nodo>;
       modificarNodo: (datos: unknown) => Promise<Nodo>;
       moverNodo: (datos: unknown) => Promise<Nodo>;
-      buscarNodos: (criterios: unknown) => Promise<Nodo>;
+      listarContenido: (criterios: unknown) => Promise<Nodo[]>;
       eliminarNodo: (datos: unknown) => Promise<void>;
     };
   }
