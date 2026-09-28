@@ -12,6 +12,16 @@ import { ObtenerSaludo } from './logicaPersistente/gestionDePrueba/ObtenerSaludo
 import { Prueba } from './administracionDePersistencia/Prueba';
 import { registerPruebaIpc } from './ipc/prueba.ipc';
 
+import { CrearArchivo } from './logicaPersistente/gestionDeArchivos/CrearArchivo';
+import { Archivos } from './administracionDePersistencia/Archivos';
+import { registerArchivosIpc } from './ipc/archivos.ipc';
+import { ListarArchivos } from './logicaPersistente/gestionDeArchivos/ListarArchivos';
+import { ModificarArchivo } from './logicaPersistente/gestionDeArchivos/ModificarArchivo';
+import { EliminarArchivo } from './logicaPersistente/gestionDeArchivos/EliminarArchivo';
+
+import { ListarCarpetas } from './logicaPersistente/gestionDeArchivos/ListarCarpetas';
+import { MoverArchivos } from './logicaPersistente/gestionDeArchivos/MoverArchivos';
+
 let mainWindow: BrowserWindow | null = null;
 
 config({ path: join(__dirname, "../../.env") });
@@ -50,6 +60,16 @@ function wireDependencies(): void {
   registerPruebaIpc(prueba);
 
   // Repetir para Gestión de Eventos, Gestión de Sesión, Proyectos, Usuario...
+
+  const crearArchivo = new CrearArchivo(persistencia);
+  const listarArchivos = new ListarArchivos(persistencia);
+  const modificarArchivo = new ModificarArchivo(persistencia);
+  const eliminarArchivo = new EliminarArchivo(persistencia);
+  const listarCarpetas = new ListarCarpetas(persistencia);
+  const moverArchivos = new MoverArchivos(persistencia);
+  const archivos = new Archivos(crearArchivo, listarArchivos, modificarArchivo, eliminarArchivo, listarCarpetas, moverArchivos);
+  registerArchivosIpc(archivos);
+  
 }
 
 app.whenReady().then(async () => {
