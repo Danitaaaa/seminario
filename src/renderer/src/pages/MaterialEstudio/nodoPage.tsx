@@ -10,7 +10,7 @@ import { CuadriculaNodos } from '../../componentes/nodos/cuadriculaNodos';
 import { ModalNodo } from '../../componentes/nodos/modalNodo';
 import { ModalConfirmarEliminar } from '../../componentes/nodos/modalConfirmarEliminar';
 import '../../estilos/nodos.css';
-
+import { CartelError } from '../../componentes/comunes/cartelError';
 const usuarioLogueado = 'Usuario';
 
 type ModalAbierto =
@@ -35,18 +35,22 @@ export function NodoPage() {
     const [menuAgregarAbierto, setMenuAgregarAbierto] = useState(false);
     const [modal, setModal] = useState<ModalAbierto>(null);
 
-    // --- Selección: nodos resaltados, no checkboxes. Se usa tanto para acciones
-    // --- en lote (eliminar) como para saber qué mover al soltar sobre una carpeta.
+    /* Selección: nodos resaltados, no checkboxes. Se usa tanto para acciones
+     en lote (eliminar) como para saber qué mover al soltar sobre una carpeta.*/
     const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
     const ultimoSeleccionadoId = useRef<number | null>(null);
 
-    // --- Arrastre: qué ids se están moviendo y sobre qué carpeta está el mouse. ---
+    // Arrastre: qué ids se están moviendo y sobre qué carpeta está el mouse. ---
     const [destinoArrastre, setDestinoArrastre] = useState<number | null>(null);
     const arrastrandoIdsRef = useRef<number[]>([]);
 
-    // --- Ruta: dónde estás parado ahora. La raíz real en BD tiene id = 1.
-    const [ruta, setRuta] = useState<Miga[]>([{ id: 1, nombre: 'Raíz' }]);
+    // Ruta: dónde estás parado ahora. La raíz real en BD tiene id = 1.
+    const [ruta, setRuta] = useState<Miga[]>([{ id: 1, nombre: 'Material Estudio' }]);
     const idPadreActual = ruta[ruta.length - 1].id;
+
+    // Errores
+    const [errorMover, setErrorMover] = useState<string | null>(null);
+    const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
 
     const alternarOrden = (campo: OrdenarPor) => {
         if (campo === ordenActivo) {
@@ -69,12 +73,11 @@ export function NodoPage() {
     useEffect(() => {
         cargarContenido();
     }, [cargarContenido]);
-
+    
     const onSeleccionar = (nodo: Nodo, evento: MouseEvent) => {
         setSeleccionados((previo) => {
             const nuevo = new Set(previo);
             if (evento.shiftKey && ultimoSeleccionadoId.current !== null) {
-                // Rango entre el último nodo clickeado y este, según el orden actual.
                 const ids = nodos.map((n) => n.id);
                 const desde = ids.indexOf(ultimoSeleccionadoId.current);
                 const hasta = ids.indexOf(nodo.id);
@@ -95,8 +98,6 @@ export function NodoPage() {
     };
 
     const onArrastrarInicio = (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => {
-        // Si el nodo arrastrado ya estaba seleccionado, se mueve toda la selección;
-        // si no, el arrastre pasa a seleccionar solo ese nodo.
         const yaSeleccionado = seleccionados.has(nodo.id);
         const ids = yaSeleccionado ? Array.from(seleccionados) : [nodo.id];
         if (!yaSeleccionado) {
@@ -109,7 +110,7 @@ export function NodoPage() {
     };
 
     const onArrastrarSobre = (nodo: Nodo) => {
-        if (arrastrandoIdsRef.current.includes(nodo.id)) return; // no se puede soltar sobre sí misma
+        if (arrastrandoIdsRef.current.includes(nodo.id)) return;
         setDestinoArrastre(nodo.id);
     };
 
@@ -121,7 +122,7 @@ export function NodoPage() {
         arrastrandoIdsRef.current = [];
 
         if (ids.length === 0 || ids.includes(nodoDestino.id)) return;
-        if (nodoDestino.tipo !== 'carpeta') return; // solo se puede mover contenido dentro de una carpeta
+        if (nodoDestino.tipo !== 'carpeta') return;
 
         try {
             await Promise.all(
@@ -130,7 +131,7 @@ export function NodoPage() {
             cargarContenido();
         } catch (error) {
             console.error('No se pudo mover la selección', error);
-            // TODO: mostrar feedback de error al usuario (toast, modal, etc.)
+            setErrorMover('No se pudo mover la selección.');
         }
 
         setSeleccionados(new Set());
@@ -141,8 +142,6 @@ export function NodoPage() {
             setRuta((prev) => [...prev, { id: nodo.id, nombre: nodo.nombre }]);
             setSeleccionados(new Set());
         }
-        // TODO integración: si nodo.tipo === 'archivo', abrir/previsualizar el archivo
-        // (todavía no hay caso de uso para esto del lado del backend).
     };
 
     const onNavegarMiga = (id: number) => {
@@ -174,6 +173,13 @@ export function NodoPage() {
             onNavegar={setIdActivo}
             onBuscar={setBusqueda}
         >
+            {errorMover && (
+                <CartelError mensaje={errorMover} onCerrar={() => setErrorMover(null)} />
+            )}
+            {errorEliminar && (
+                <CartelError mensaje={errorEliminar} onCerrar={() => setErrorEliminar(null)} />
+            )}
+
             <div
                 className="nodos-modulo"
                 onClick={(e) => {
@@ -195,9 +201,6 @@ export function NodoPage() {
                     onToggleMenuAgregar={() => setMenuAgregarAbierto((v) => !v)}
                     onSubirArchivo={() => {
                         setMenuAgregarAbierto(false);
-                        // TODO integración: abrir selector de archivos del sistema (dialog.showOpenDialog
-                        // desde el main process) y llamar al caso de uso de creación de Archivo
-                        // cuando exista (hoy solo hay CrearNodo para carpetas). Recargar con cargarContenido().
                         console.log('subir archivo');
                     }}
                     onCrearCarpeta={() => {
@@ -257,12 +260,11 @@ export function NodoPage() {
                     onConfirmar={async () => {
                         try {
                             await window.api.eliminarNodo({ id: modal.nodo.id });
-                            console.error('Eliminar');
                             setModal(null);
                             await cargarContenido();
                         } catch (error) {
                             console.error('No se pudo eliminar', error);
-                            // TODO: mostrar "la carpeta contiene elementos" si viene ese error puntual
+                            setErrorEliminar('No se pudo eliminar el elemento.');
                         }
                     }}
                 />
@@ -274,28 +276,22 @@ export function NodoPage() {
                     onCancelar={() => setModal(null)}
                     onConfirmar={async () => {
                         const ids = Array.from(seleccionados);
-                        console.log('ids a eliminar:', ids);
-                        console.log("intentado");
                         const resultados = await Promise.allSettled(
                             ids.map((id) => window.api.eliminarNodo({ id }))
-                        ); 
+                        );
 
-                        // Con allSettled, un rechazo (ej. "la carpeta contiene elementos") no corta
-                        // el resto de los borrados ni te deja sin saber qué pasó con cada uno.
                         const fallidos = ids.filter((_, i) => resultados[i].status === 'rejected');
-                        console.log("encontrados");
                         setModal(null);
-                        setSeleccionados(new Set(fallidos)); // quedan tildados los que no se pudieron borrar
+                        setSeleccionados(new Set(fallidos));
                         await cargarContenido();
-                        console.log("eliminados");
-                        console.log(fallidos);
+
                         if (fallidos.length > 0) {
-                            // TODO: mostrar esto en la UI (toast/banner), no solo en consola.
+                            setErrorEliminar(`No se pudieron eliminar ${fallidos.length} elemento(s)`);
                             console.error(`No se pudieron eliminar ${fallidos.length} elemento(s):`, fallidos);
                         }
                     }}
                 />
             )}
-            </PlantillaLayout>
+        </PlantillaLayout>
     );
 }

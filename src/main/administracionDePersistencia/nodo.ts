@@ -46,6 +46,6 @@ export class Nodos {
     
     // Eliminar un nodo
     async eliminar(datos: EliminarNodoDTO): Promise<void> {
-        this.eliminarNodo.ejecutar(datos);
+        await this.eliminarNodo.ejecutar(datos);
     }
 }
