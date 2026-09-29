@@ -6,4 +6,4 @@ export const nodosApi = {
     moverNodo: (datos: unknown) => ipcRenderer.invoke('nodos:mover', datos),
     listarContenido: (criterios: unknown) => ipcRenderer.invoke('nodos:listar', criterios),
     eliminarNodo: (datos: unknown) => ipcRenderer.invoke('nodos:eliminar', datos),
-};
+}; 
