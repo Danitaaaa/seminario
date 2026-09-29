@@ -1,11 +1,11 @@
 import type { MouseEvent, DragEvent } from 'react';
-import type { Nodo } from '../../types/nodo';
+import { claveNodo, type Nodo } from '../../types/nodo';
 import { TarjetaNodo } from './tarjetaNodo';
 
 interface CuadriculaNodosProps {
     nodos: Nodo[];
-    seleccionados: Set<number>;
-    destinoArrastre: number | null;
+    seleccionados: Set<string>;
+    destinoArrastre: string | null;
     onSeleccionar: (nodo: Nodo, evento: MouseEvent) => void;
     onAbrir: (nodo: Nodo) => void;
     onRenombrar: (nodo: Nodo) => void;
@@ -27,22 +27,25 @@ export function CuadriculaNodos({
 
     return (
         <div className="cuadricula-nodos">
-            {nodos.map((nodo) => (
-                <TarjetaNodo
-                    key={nodo.id}
-                    nodo={nodo}
-                    seleccionado={seleccionados.has(nodo.id)}
-                    sobreDestino={destinoArrastre === nodo.id}
-                    onSeleccionar={onSeleccionar}
-                    onAbrir={onAbrir}
-                    onRenombrar={onRenombrar}
-                    onEliminar={onEliminar}
-                    onArrastrarInicio={onArrastrarInicio}
-                    onArrastrarSobre={onArrastrarSobre}
-                    onSoltar={onSoltar}
-                    onSalirDestino={onSalirDestino}
-                />
-            ))}
+            {nodos.map((nodo) => {
+                const clave = claveNodo(nodo);
+                return (
+                    <TarjetaNodo
+                        key={clave}
+                        nodo={nodo}
+                        seleccionado={seleccionados.has(clave)}
+                        sobreDestino={destinoArrastre === clave}
+                        onSeleccionar={onSeleccionar}
+                        onAbrir={onAbrir}
+                        onRenombrar={onRenombrar}
+                        onEliminar={onEliminar}
+                        onArrastrarInicio={onArrastrarInicio}
+                        onArrastrarSobre={onArrastrarSobre}
+                        onSoltar={onSoltar}
+                        onSalirDestino={onSalirDestino}
+                    />
+                );
+            })}
         </div>
     );
 }

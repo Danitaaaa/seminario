@@ -33,7 +33,7 @@ export function FilaNodo({
     onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino,
 }: FilaNodoProps) {
     const [menuAbierto, setMenuAbierto] = useState(false);
-    const { icono, tipo } = resolverIconoNodo(nodo.nombre, nodo.tipo === 'carpeta');
+    const { icono, tipo } =  resolverIconoNodo(nodo);
     const esCarpeta = nodo.tipo === 'carpeta';
 
     return (

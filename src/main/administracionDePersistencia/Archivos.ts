@@ -1,0 +1,40 @@
+import { CrearArchivo } from '../logicaPersistente/gestionMaterialEstudio/CrearArchivo';
+import { BuscarArchivos } from '../logicaPersistente/gestionMaterialEstudio/buscarArchivos';
+import { ModificarArchivo } from '../logicaPersistente/gestionMaterialEstudio/ModificarArchivo';
+import { EliminarArchivo } from '../logicaPersistente/gestionMaterialEstudio/EliminarArchivo';
+import { MoverArchivos } from '../logicaPersistente/gestionMaterialEstudio/MoverArchivos';
+import { Archivo } from '../logicaPersistente/gestionMaterialEstudio/entidades';
+import {
+  CrearArchivoDTO,
+  BuscadorArchivoDTO,
+  ModificarArchivoDTO,
+  EliminarArchivoDTO,
+  MoverArchivosDTO,
+} from '../logicaPersistente/gestionMaterialEstudio/dto';
+
+// Punto de entrada único al módulo de archivos — IPC nunca llama a las clases de lógica directo.
+export class Archivos {
+  constructor(
+    private readonly crearArchivo: CrearArchivo,
+    private readonly buscarArchivos: BuscarArchivos,
+    private readonly modificarArchivo: ModificarArchivo,
+    private readonly eliminarArchivo: EliminarArchivo,
+    private readonly moverArchivos: MoverArchivos
+  ) {}
+
+  async crear(datos: CrearArchivoDTO): Promise<Archivo> {
+    return this.crearArchivo.ejecutar(datos);
+  }
+  async buscar(criterios: BuscadorArchivoDTO): Promise<Archivo[]> {
+    return this.buscarArchivos.ejecutar(criterios);
+  }
+  async modificar(datos: ModificarArchivoDTO): Promise<Archivo> {
+    return this.modificarArchivo.ejecutar(datos);
+  }
+  async eliminar(datos: EliminarArchivoDTO): Promise<void> {
+    return this.eliminarArchivo.ejecutar(datos);
+  }
+  async mover(datos: MoverArchivosDTO): Promise<Archivo[]> {
+    return this.moverArchivos.ejecutar(datos);
+  }
+}

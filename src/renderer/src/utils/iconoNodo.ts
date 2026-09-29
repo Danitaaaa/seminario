@@ -10,6 +10,7 @@ import iconoPptx from '../assets/iconsFile1/file-pptx.svg';
 import iconoVideo from '../assets/iconsFile1/file-video.svg';
 import iconoXlsx from '../assets/iconsFile1/file-xlsx.svg';
 import iconoDocumento from '../assets/iconsFile1/file-docx.svg';
+import { Nodo } from '../types/nodo';
 
 // Tabla extensión → { ícono, etiqueta de tipo }.
 // Abierta a extensión (OCP): agregar un tipo de archivo nuevo es agregar una fila acá,
@@ -39,11 +40,11 @@ interface InfoNodo {
 
 // Los nodos hoy son siempre carpetas (ver backend), pero esta función ya soporta
 // distinguir archivos por extensión para cuando el backend agregue ese tipo de nodo.
-export function resolverIconoNodo(nombre: string, esCarpeta: boolean = true): InfoNodo {
-    if (esCarpeta) {
+// tipo: 'carpeta' o la extensión del archivo (pdf, docx, ...)
+export function resolverIconoNodo(nodo: Nodo): InfoNodo {
+    if (nodo.tipo === 'carpeta') {
         return { icono: iconoFolder, tipo: 'Carpeta' };
     }
-
-    const extension = nombre.split('.').pop()?.toLowerCase() ?? '';
-    return ICONOS_POR_EXTENSION[extension] ?? { icono: iconoGenerico, tipo: 'Archivo' };
+    const ext = (nodo.extension ?? '').replace(/^\./, '').toLowerCase();
+    return ICONOS_POR_EXTENSION[ext] ?? { icono: iconoGenerico, tipo: 'Archivo' };
 }

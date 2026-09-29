@@ -28,7 +28,7 @@ export function TarjetaNodo({
     onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino,
 }: TarjetaNodoProps) {
     const [menuAbierto, setMenuAbierto] = useState(false);
-    const { icono } = resolverIconoNodo(nodo.nombre, nodo.tipo === 'carpeta');
+    const { icono } = resolverIconoNodo(nodo);
     const esCarpeta = nodo.tipo === 'carpeta';
 
     return (

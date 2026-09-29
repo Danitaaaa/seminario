@@ -1,11 +1,11 @@
 import type { MouseEvent, DragEvent } from 'react';
-import type { Nodo } from '../../types/nodo';
+import { claveNodo, type Nodo } from '../../types/nodo';
 import { FilaNodo } from './filaNodo';
 
 interface TablaNodosProps {
     nodos: Nodo[];
-    seleccionados: Set<number>;
-    destinoArrastre: number | null;
+    seleccionados: Set<string>;
+    destinoArrastre: string | null;
     onSeleccionar: (nodo: Nodo, evento: MouseEvent) => void;
     onAbrir: (nodo: Nodo) => void;
     onRenombrar: (nodo: Nodo) => void;
@@ -39,22 +39,25 @@ export function TablaNodos({
                 <span aria-hidden="true" />
             </div>
 
-            {nodos.map((nodo) => (
-                <FilaNodo
-                    key={nodo.id}
-                    nodo={nodo}
-                    seleccionado={seleccionados.has(nodo.id)}
-                    sobreDestino={destinoArrastre === nodo.id}
-                    onSeleccionar={onSeleccionar}
-                    onAbrir={onAbrir}
-                    onRenombrar={onRenombrar}
-                    onEliminar={onEliminar}
-                    onArrastrarInicio={onArrastrarInicio}
-                    onArrastrarSobre={onArrastrarSobre}
-                    onSoltar={onSoltar}
-                    onSalirDestino={onSalirDestino}
-                />
-            ))}
+            {nodos.map((nodo) => {
+                const clave = claveNodo(nodo);
+                return (
+                    <FilaNodo
+                        key={clave}
+                        nodo={nodo}
+                        seleccionado={seleccionados.has(clave)}
+                        sobreDestino={destinoArrastre === clave}
+                        onSeleccionar={onSeleccionar}
+                        onAbrir={onAbrir}
+                        onRenombrar={onRenombrar}
+                        onEliminar={onEliminar}
+                        onArrastrarInicio={onArrastrarInicio}
+                        onArrastrarSobre={onArrastrarSobre}
+                        onSoltar={onSoltar}
+                        onSalirDestino={onSalirDestino}
+                    />
+                );
+            })}
         </div>
     );
 }

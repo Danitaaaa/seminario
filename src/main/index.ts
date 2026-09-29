@@ -7,11 +7,6 @@ import { config } from 'dotenv';
 import { pool, verifyDbConnection } from './persistencia/BaseDeDatos';
 import { Persistencia } from './persistencia/Persistencia';
 
-
-import { ObtenerSaludo } from './logicaPersistente/gestionDePrueba/ObtenerSaludo';
-import { Prueba } from './administracionDePersistencia/Prueba';
-import { registerPruebaIpc } from './ipc/prueba.ipc';
-
 import { CrearNodo } from './logicaPersistente/gestionMaterialEstudio/crearNodo';
 import { ModificarNodo } from './logicaPersistente/gestionMaterialEstudio/modificarNodo';
 import { BuscarNodos } from './logicaPersistente/gestionMaterialEstudio/buscarNodos';
@@ -20,6 +15,14 @@ import { MoverNodo } from './logicaPersistente/gestionMaterialEstudio/moverNodo'
 import { Nodos } from './administracionDePersistencia/nodo';
 import { registrarNodosIpc } from './ipc/nodo.ipc';
 import { ListarContenido } from './logicaPersistente/gestionMaterialEstudio/listarContenido';
+
+import { CrearArchivo } from './logicaPersistente/gestionMaterialEstudio/CrearArchivo';
+import { Archivos } from './administracionDePersistencia/Archivos';
+import { registerArchivosIpc } from './ipc/archivos.ipc';
+import { ModificarArchivo } from './logicaPersistente/gestionMaterialEstudio/ModificarArchivo';
+import { EliminarArchivo } from './logicaPersistente/gestionMaterialEstudio/EliminarArchivo';
+import { MoverArchivos } from './logicaPersistente/gestionMaterialEstudio/MoverArchivos';
+import { BuscarArchivos } from './logicaPersistente/gestionMaterialEstudio/buscarArchivos';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -53,21 +56,25 @@ function createWindow(): void {
 function wireDependencies(): void {
   const persistencia = new Persistencia(pool);
 
-
-  const obtenerSaludo = new ObtenerSaludo(persistencia);
-  const prueba = new Prueba(obtenerSaludo);
-  registerPruebaIpc(prueba);
-
   // Gestion de material de estudio
   const crearNodo = new CrearNodo(persistencia);
   const modificarNodo = new ModificarNodo(persistencia);
   const buscarNodos = new BuscarNodos(persistencia);
-  const listarContenido = new ListarContenido(buscarNodos); // Falta agregar el listar archivos
+  const buscarArchivos = new BuscarArchivos(persistencia);
+  const listarContenido = new ListarContenido(buscarNodos, buscarArchivos); 
   const moverNodo = new MoverNodo(persistencia);
   const eliminarNodo = new EliminarNodo(persistencia);
   const nodos = new Nodos(crearNodo, modificarNodo, listarContenido,
     eliminarNodo, moverNodo );
   registrarNodosIpc(nodos);
+
+  const crearArchivo = new CrearArchivo(persistencia);
+  const modificarArchivo = new ModificarArchivo(persistencia);
+  const eliminarArchivo = new EliminarArchivo(persistencia);
+  const moverArchivos = new MoverArchivos(persistencia);
+  const archivos = new Archivos(crearArchivo, buscarArchivos, modificarArchivo, eliminarArchivo, moverArchivos);
+  registerArchivosIpc(archivos);
+    
 }
 
 app.whenReady().then(async () => {

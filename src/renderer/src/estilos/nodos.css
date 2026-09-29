@@ -16,6 +16,12 @@
     gap: 16px;
 }
 
+.modal--ancho {
+  width: min(700px, 90vw);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
 /* Migas de ruta */
 .ruta-migas {
     display: flex;

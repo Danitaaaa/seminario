@@ -17,3 +17,5 @@ export interface Archivo extends NodoBase {
 }
 
 export type Nodo = Carpeta | Archivo;
+
+export const claveNodo = (n: Nodo) => `${n.tipo}-${n.id}`;

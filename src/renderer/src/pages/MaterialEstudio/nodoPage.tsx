@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import type { MouseEvent, DragEvent } from 'react';
-import type { Nodo } from '../../types/nodo';
+import { claveNodo, type Nodo } from '../../types/nodo';
 import type { Direccion, OrdenarPor, VistaListado } from '../../types/vistaNodos';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { RutaMigas } from '../../componentes/nodos/rutaMigas';
@@ -22,12 +22,15 @@ type ModalAbierto =
 
 type Miga = { id: number; nombre: string };
 
+const eliminarUno = (n: Nodo) =>
+    n.tipo === 'archivo'
+        ? window.api.eliminarArchivo({ id: n.id })
+        : window.api.eliminarNodo({ id: n.id });
+
 export function NodoPage() {
     const [idActivo, setIdActivo] = useState('material');
-
     const [nodos, setNodos] = useState<Nodo[]>([]);
 
-    // --- Estado puramente de UI ---
     const [vista, setVista] = useState<VistaListado>('lista');
     const [ordenActivo, setOrdenActivo] = useState<OrdenarPor>('nombre');
     const [direccion, setDireccion] = useState<Direccion>('ASC');
@@ -35,22 +38,20 @@ export function NodoPage() {
     const [menuAgregarAbierto, setMenuAgregarAbierto] = useState(false);
     const [modal, setModal] = useState<ModalAbierto>(null);
 
-    /* Selección: nodos resaltados, no checkboxes. Se usa tanto para acciones
-     en lote (eliminar) como para saber qué mover al soltar sobre una carpeta.*/
-    const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
-    const ultimoSeleccionadoId = useRef<number | null>(null);
+    // Claves "tipo-id": carpetas y archivos pueden compartir id.
+    const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
+    const ultimoSeleccionado = useRef<string | null>(null);
 
-    // Arrastre: qué ids se están moviendo y sobre qué carpeta está el mouse. ---
-    const [destinoArrastre, setDestinoArrastre] = useState<number | null>(null);
-    const arrastrandoIdsRef = useRef<number[]>([]);
+    const [destinoArrastre, setDestinoArrastre] = useState<string | null>(null);
+    const arrastrandoRef = useRef<Nodo[]>([]);
 
-    // Ruta: dónde estás parado ahora. La raíz real en BD tiene id = 1.
     const [ruta, setRuta] = useState<Miga[]>([{ id: 1, nombre: 'Material Estudio' }]);
     const idPadreActual = ruta[ruta.length - 1].id;
 
-    // Errores
     const [errorMover, setErrorMover] = useState<string | null>(null);
     const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
+
+    const nodosSeleccionados = nodos.filter((n) => seleccionados.has(claveNodo(n)));
 
     const alternarOrden = (campo: OrdenarPor) => {
         if (campo === ordenActivo) {
@@ -62,7 +63,7 @@ export function NodoPage() {
     };
 
     const cargarContenido = useCallback(() => {
-        window.api.listarContenido({
+        return window.api.listarContenido({
             idPadre: idPadreActual,
             ordenarPor: ordenActivo,
             direccion,
@@ -73,68 +74,76 @@ export function NodoPage() {
     useEffect(() => {
         cargarContenido();
     }, [cargarContenido]);
-    
+
     const onSeleccionar = (nodo: Nodo, evento: MouseEvent) => {
+        const clave = claveNodo(nodo);
         setSeleccionados((previo) => {
             const nuevo = new Set(previo);
-            if (evento.shiftKey && ultimoSeleccionadoId.current !== null) {
-                const ids = nodos.map((n) => n.id);
-                const desde = ids.indexOf(ultimoSeleccionadoId.current);
-                const hasta = ids.indexOf(nodo.id);
+            if (evento.shiftKey && ultimoSeleccionado.current !== null) {
+                const claves = nodos.map(claveNodo);
+                const desde = claves.indexOf(ultimoSeleccionado.current);
+                const hasta = claves.indexOf(clave);
                 if (desde !== -1 && hasta !== -1) {
                     const [inicio, fin] = desde < hasta ? [desde, hasta] : [hasta, desde];
-                    for (let i = inicio; i <= fin; i++) nuevo.add(ids[i]);
+                    for (let i = inicio; i <= fin; i++) nuevo.add(claves[i]);
                 }
             } else if (evento.ctrlKey || evento.metaKey) {
-                if (nuevo.has(nodo.id)) nuevo.delete(nodo.id);
-                else nuevo.add(nodo.id);
+                if (nuevo.has(clave)) nuevo.delete(clave);
+                else nuevo.add(clave);
             } else {
                 nuevo.clear();
-                nuevo.add(nodo.id);
+                nuevo.add(clave);
             }
             return nuevo;
         });
-        ultimoSeleccionadoId.current = nodo.id;
+        ultimoSeleccionado.current = clave;
     };
 
     const onArrastrarInicio = (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => {
-        const yaSeleccionado = seleccionados.has(nodo.id);
-        const ids = yaSeleccionado ? Array.from(seleccionados) : [nodo.id];
+        const clave = claveNodo(nodo);
+        const yaSeleccionado = seleccionados.has(clave);
         if (!yaSeleccionado) {
-            setSeleccionados(new Set([nodo.id]));
-            ultimoSeleccionadoId.current = nodo.id;
+            setSeleccionados(new Set([clave]));
+            ultimoSeleccionado.current = clave;
         }
-        arrastrandoIdsRef.current = ids;
+        arrastrandoRef.current = yaSeleccionado ? nodosSeleccionados : [nodo];
         evento.dataTransfer.effectAllowed = 'move';
-        evento.dataTransfer.setData('text/plain', JSON.stringify(ids));
+        evento.dataTransfer.setData('text/plain', clave);
     };
 
     const onArrastrarSobre = (nodo: Nodo) => {
-        if (arrastrandoIdsRef.current.includes(nodo.id)) return;
-        setDestinoArrastre(nodo.id);
+        if (nodo.tipo !== 'carpeta') return;
+        if (arrastrandoRef.current.some((n) => claveNodo(n) === claveNodo(nodo))) return;
+        setDestinoArrastre(claveNodo(nodo));
     };
 
     const onSalirDestino = () => setDestinoArrastre(null);
 
-    const onSoltar = async (nodoDestino: Nodo) => {
+    const onSoltar = async (destino: Nodo) => {
         setDestinoArrastre(null);
-        const ids = arrastrandoIdsRef.current;
-        arrastrandoIdsRef.current = [];
+        const aMover = arrastrandoRef.current;
+        arrastrandoRef.current = [];
 
-        if (ids.length === 0 || ids.includes(nodoDestino.id)) return;
-        if (nodoDestino.tipo !== 'carpeta') return;
+        if (destino.tipo !== 'carpeta' || aMover.length === 0) return;
+        if (aMover.some((n) => claveNodo(n) === claveNodo(destino))) return;
+
+        const idsArchivos = aMover.filter((n) => n.tipo === 'archivo').map((n) => n.id);
+        const carpetas = aMover.filter((n) => n.tipo === 'carpeta');
 
         try {
-            await Promise.all(
-                ids.map((id) => window.api.moverNodo({ id, idNuevoPadre: nodoDestino.id }))
-            );
-            cargarContenido();
+            await Promise.all([
+                ...(idsArchivos.length > 0
+                    ? [window.api.moverArchivos({ ids: idsArchivos, idPadre: destino.id })]
+                    : []),
+                ...carpetas.map((c) => window.api.moverNodo({ id: c.id, idNuevoPadre: destino.id })),
+            ]);
         } catch (error) {
             console.error('No se pudo mover la selección', error);
             setErrorMover('No se pudo mover la selección.');
         }
 
         setSeleccionados(new Set());
+        await cargarContenido();
     };
 
     const onAbrir = (nodo: Nodo) => {
@@ -149,6 +158,18 @@ export function NodoPage() {
         if (indice === -1) return;
         setRuta((prev) => prev.slice(0, indice + 1));
         setSeleccionados(new Set());
+    };
+
+    const subirArchivo = async () => {
+        setMenuAgregarAbierto(false);
+        const elegido = await window.api.seleccionarArchivo();
+        if (!elegido) return;
+        try {
+            await window.api.crearArchivo({ ...elegido, idPadre: idPadreActual });
+            await cargarContenido();
+        } catch (error) {
+            console.error('No se pudo subir el archivo', error);
+        }
     };
 
     const propsListado = {
@@ -186,10 +207,7 @@ export function NodoPage() {
                     if (e.target === e.currentTarget) setSeleccionados(new Set());
                 }}
             >
-                <RutaMigas
-                    segmentos={ruta}
-                    onNavegar={onNavegarMiga}
-                />
+                <RutaMigas segmentos={ruta} onNavegar={onNavegarMiga} />
 
                 <BarraFiltrosNodos
                     ordenActivo={ordenActivo}
@@ -199,10 +217,7 @@ export function NodoPage() {
                     onCambiarVista={setVista}
                     menuAgregarAbierto={menuAgregarAbierto}
                     onToggleMenuAgregar={() => setMenuAgregarAbierto((v) => !v)}
-                    onSubirArchivo={() => {
-                        setMenuAgregarAbierto(false);
-                        console.log('subir archivo');
-                    }}
+                    onSubirArchivo={subirArchivo}
                     onCrearCarpeta={() => {
                         setMenuAgregarAbierto(false);
                         setModal({ tipo: 'crear' });
@@ -242,8 +257,13 @@ export function NodoPage() {
                     valorInicial={modal.nodo.nombre}
                     onCancelar={() => setModal(null)}
                     onGuardar={async (nombre) => {
+                        const { nodo } = modal;
                         try {
-                            await window.api.modificarNodo({ id: modal.nodo.id, nombre });
+                            if (nodo.tipo === 'archivo') {
+                                await window.api.modificarArchivo({ id: nodo.id, nombre });
+                            } else {
+                                await window.api.modificarNodo({ id: nodo.id, nombre });
+                            }
                             setModal(null);
                             await cargarContenido();
                         } catch (error) {
@@ -252,14 +272,15 @@ export function NodoPage() {
                     }}
                 />
             )}
+
             {modal?.tipo === 'eliminar' && (
                 <ModalConfirmarEliminar
-                    titulo="Eliminar carpeta"
+                    titulo={modal.nodo.tipo === 'archivo' ? 'Eliminar archivo' : 'Eliminar carpeta'}
                     mensaje={<>¿Seguro que querés eliminar <strong>{modal.nodo.nombre}</strong>? Esta acción no se puede deshacer.</>}
                     onCancelar={() => setModal(null)}
                     onConfirmar={async () => {
                         try {
-                            await window.api.eliminarNodo({ id: modal.nodo.id });
+                            await eliminarUno(modal.nodo);
                             setModal(null);
                             await cargarContenido();
                         } catch (error) {
@@ -269,25 +290,23 @@ export function NodoPage() {
                     }}
                 />
             )}
+
             {modal?.tipo === 'eliminarSeleccion' && (
                 <ModalConfirmarEliminar
                     titulo="Eliminar elementos"
                     mensaje={`¿Seguro que querés eliminar ${seleccionados.size} elemento${seleccionados.size > 1 ? 's' : ''}? Esta acción no se puede deshacer.`}
                     onCancelar={() => setModal(null)}
                     onConfirmar={async () => {
-                        const ids = Array.from(seleccionados);
-                        const resultados = await Promise.allSettled(
-                            ids.map((id) => window.api.eliminarNodo({ id }))
-                        );
+                        const aEliminar = nodosSeleccionados;
+                        const resultados = await Promise.allSettled(aEliminar.map(eliminarUno));
 
-                        const fallidos = ids.filter((_, i) => resultados[i].status === 'rejected');
+                        const fallidos = aEliminar.filter((_, i) => resultados[i].status === 'rejected');
                         setModal(null);
-                        setSeleccionados(new Set(fallidos));
+                        setSeleccionados(new Set(fallidos.map(claveNodo)));
                         await cargarContenido();
 
                         if (fallidos.length > 0) {
                             setErrorEliminar(`No se pudieron eliminar ${fallidos.length} elemento(s)`);
-                            console.error(`No se pudieron eliminar ${fallidos.length} elemento(s):`, fallidos);
                         }
                     }}
                 />

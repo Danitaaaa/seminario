@@ -14,3 +14,18 @@ export const colores = {
 
     white: "#FFFFFF",
 }
+
+/*
+:root {
+  --color-primary: #495b7d;
+  --color-primary-dark: #02122f;
+  --color-secondary: #8ba3c5;
+  --color-background: #f0ecdd;
+  --color-text: #02122f;
+  --color-text-light: #495b7d;
+  --color-border: #8ba3c5;
+  --color-success: #5fa36a;
+  --color-warning: #d9a441;
+  --color-error: #c96a6a;
+  --color-white: #ffffff;
+}*/

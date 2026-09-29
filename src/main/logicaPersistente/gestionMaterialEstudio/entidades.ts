@@ -9,12 +9,26 @@ export interface Nodo {
 }
 
 
+export interface Archivo {
+  id: number;
+  nombre: string;
+  extension: string;
+  rutaFisica: string;
+  tamanio: number;
+  fechaDeCarga: Date;
+  ultimaFechaAcceso: Date;
+  ultimaFechaModificacion: Date;
+  idPadre: number;
+}
+
+
 export interface ElementoContenido {
     id: number;
     nombre: string;
-    tipo: 'carpeta' | 'archivo';
+    tipo: 'archivo' | 'carpeta';
     fechaDeCarga: Date;
     ultimaFechaAcceso: Date;
     ultimaFechaModificacion: Date;
     tamaño: string;
+    extension: string;
 }
