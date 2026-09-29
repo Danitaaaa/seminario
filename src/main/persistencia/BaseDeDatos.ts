@@ -9,8 +9,6 @@ export const pool = new Pool({
   password: process.env.POSTGRES_PASSWORD,
 });
 
-// Fail fast in dev if the DB isn't reachable, instead of discovering it
-// later when a query silently hangs.
 export async function verifyDbConnection(): Promise<void> {
   const client = await pool.connect();
   try {

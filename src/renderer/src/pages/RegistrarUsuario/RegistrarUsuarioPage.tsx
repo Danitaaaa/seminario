@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button/Button';
 import { Input } from '../../components/ui/Input/Input';
 import { Card } from '../../components/ui/Card/Card';
 import { Title } from '../../components/ui/Title/Title';
+import  RegistrarRostro from '../RegistrarRostro/RegistrarRostro';
 
 
 export function RegistrarUsuarioPage() {
@@ -14,18 +15,27 @@ export function RegistrarUsuarioPage() {
     const [ fechaNacimiento, setFechaNacimiento] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword , setConfirmPassword] = useState("");
+    const [usuarioCreadoId, setUsuarioCreadoId] = useState<string | null>(null);
+    const [iniciarRegistroFacial, setIniciarRegistroFacial] = useState(false);
+    const [registrando, setRegistrando] = useState(false);
 
     const navigate = useNavigate();
+    let mensajeRegistroRostro = "Después de crear tu cuenta, vas a poder registrar tu rostro de forma opcional.";
 
-    async function registrar() {
+    if (usuarioCreadoId) {
+        mensajeRegistroRostro = "Sumá el inicio de sesión con rostro de forma opcional o continuá con la verificación del correo.";
+    }
+
+    async function registrar(): Promise<void> {
         if (password !== confirmPassword) {
             alert("Las contraseñas no coinciden");
 
             return;
         }
 
+        setRegistrando(true);
         try {
-            await window.api.registrarUsuario({
+            const usuarioCreado = await window.api.registrarUsuario({
                 nombre,
                 apellido,
                 apodo,
@@ -35,29 +45,56 @@ export function RegistrarUsuarioPage() {
                 password
             });
 
-            localStorage.setItem(
-                "emailPendiente",
-                email
-            );
-
-            navigate(
-                "/verificar-mail"
-            );
+            localStorage.setItem("emailPendiente", email);
+            setUsuarioCreadoId(usuarioCreado.id);
 
         } catch {
-            alert(
-                "Error al registrar usuario"
-            );
+            alert("Error al registrar usuario");
+        } finally {
+            setRegistrando(false);
         }
     }
 
     return (
         <main className="auth-layout">
-            <section className="auth-image" aria-label="Imagen de perfil">
-                <span aria-hidden="true">&#128100;</span>
+            <section className="auth-image" aria-label="Registro de rostro">
+                {usuarioCreadoId && iniciarRegistroFacial ? (
+                    <div className="login-card">
+                        <RegistrarRostro
+                            usuarioId={usuarioCreadoId}
+                            onRegistroExitoso={() => navigate('/verificar-mail')}
+                        />
+                        <Button
+                            variant="secondary"
+                            onClick={() => setIniciarRegistroFacial(false)}
+                        >
+                            Volver
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="login-card">
+                        <span aria-hidden="true">&#128100;</span>
+                        <p className="registro-rostro-mensaje">{mensajeRegistroRostro}</p>
+                        {usuarioCreadoId && (
+                            <Button onClick={() => setIniciarRegistroFacial(true)}>
+                                Registrar rostro
+                            </Button>
+                        )}
+                    </div>
+                )}
             </section>
 
             <Card>
+                {usuarioCreadoId ? (
+                    <div className="login-card">
+                        <Title>Cuenta creada</Title>
+                        <p>Ahora podés registrar tu rostro o continuar con la verificación por correo.</p>
+                        <Button variant="secondary" onClick={() => navigate('/verificar-mail')}>
+                            Continuar sin registrar el rostro
+                        </Button>
+                    </div>
+                ) : (
+                    <>
                 <Title>Registrarse</Title>
 
                 <div className="registro-row">
@@ -108,9 +145,11 @@ export function RegistrarUsuarioPage() {
                 </div>
 
                 <div className="login-actions registro-actions">
-                    <Button onClick={registrar}>Registrarse</Button>
+                    <Button onClick={() => void registrar()} disabled={registrando}>Registrarse</Button>
                     <Button variant="secondary" onClick={() => navigate("/")}>Cancelar</Button>
                 </div>
+                    </>
+                )}
             </Card>
         </main>
     );

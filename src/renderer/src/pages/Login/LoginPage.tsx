@@ -4,16 +4,29 @@ import { Button } from '../../components/ui/Button/Button';
 import { Input } from '../../components/ui/Input/Input';
 import { Card } from '../../components/ui/Card/Card';
 import { Title } from '../../components/ui/Title/Title';
+import LoginFacial from './LoginFacialPage';
 
 export function LoginPage(){
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [modoFacial, setModoFacial] = useState(false);
+    const [error, setError] = useState("");
 
     const navigate = useNavigate();
 
-    const iniciarSesion = () => {
-        console.log(email);
-        console.log(password);
+    const finalizarInicioSesion = (usuarioId: string) => {
+        localStorage.setItem("usuarioId", usuarioId);
+        navigate("/dashboard");
+    };
+
+    const iniciarSesion = async () => {
+        setError("");
+        try {
+            const usuario = await window.api.iniciarSesion({ email, password });
+            finalizarInicioSesion(usuario.id);
+        } catch {
+            setError("No se pudo iniciar sesión. Revisá tus datos e intentá nuevamente.");
+        }
     }
 
     const cancelar = () => {
@@ -51,10 +64,10 @@ export function LoginPage(){
                     </p>
                     
                     <div className="login-actions">
-                        <p>También podés iniciar sesión con tu rostro.</p>
                         <Button onClick={iniciarSesion}>Iniciar sesión</Button>
                         <Button variant="secondary" onClick={cancelar}>Cancelar</Button>
                     </div>
+                    {error && <p role="alert">{error}</p>}
 
                     <p>
                         ¿No tenés una cuenta? Haga click en{" "}
@@ -72,7 +85,22 @@ export function LoginPage(){
 
             <section className="login-facial" aria-label="Login facial">
                 <Title>Reconocimiento facial</Title>
-                <p>Mirá a la cámara para escanear tu rostro.</p>
+                {modoFacial ? (
+                    <>
+                        <p>Mirá a la cámara para escanear tu rostro.</p>
+                        <LoginFacial onLoginExitoso={finalizarInicioSesion} />
+                        <Button variant="secondary" onClick={() => setModoFacial(false)}>
+                            Usar contraseña
+                        </Button>
+                    </>
+                ) : (
+                    <>
+                        <p>Mirá a la cámara para escanear tu rostro.</p>
+                        <Button variant="secondary" onClick={() => setModoFacial(true)}>
+                            Iniciar sesión con rostro
+                        </Button>
+                    </>
+                )}
             </section>
         </main>
 );

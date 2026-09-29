@@ -1,5 +1,5 @@
 import { Persistencia } from '../../persistencia/Persistencia';
-import { ValidarCodigoDto } from './dto/ValidarCodigo.dto';
+import type { ValidarCodigoDto } from './dto';
 
 export class ValidarCodigo {
     constructor(

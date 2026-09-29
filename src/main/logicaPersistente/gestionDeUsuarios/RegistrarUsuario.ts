@@ -1,7 +1,7 @@
 import bycript from 'bcrypt';
 import { Usuario } from './Usuario'
 import { Persistencia } from '../../persistencia/Persistencia';
-import { RegistrarUsuarioDto } from './dto/RegistrarUsuario.dto';
+import type { RegistrarUsuarioDto } from './dto';
 import { materializarUsuario } from './MaterializadorUsuarios';
 import { enviarCodigoVerificacion } from '../../servicios/Correo';
 

@@ -1,5 +1,5 @@
 import { Persistencia } from '../../persistencia/Persistencia';
-import { RecuperarPasswordDto } from './dto/RecuperarPassword.dto';
+import type { RecuperarPasswordDto } from './dto';
 import { materializarUsuario } from './MaterializadorUsuarios';
 import { enviarCodigoVerificacion } from '../../servicios/Correo';
 

@@ -2,11 +2,15 @@ import { ipcMain } from "electron";
 
 import { Usuarios } from "../administracionDePersistencia/Usuarios";
 
-import {iniciarSesionSchema} from "../logicaPersistente/gestionDeUsuarios/dto/IniciarSesion.dto";
-import { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios/dto/RegistrarUsuario.dto";
-import { verificarMailSchema } from "../logicaPersistente/gestionDeUsuarios/dto/VerificarMail.dto";
-import { CambiarPasswordDto } from "../logicaPersistente/gestionDeUsuarios/dto/CambiarPassword.dto";
-import { ValidarCodigoDto } from "../logicaPersistente/gestionDeUsuarios/dto/ValidarCodigo.dto";
+import {
+    iniciarSesionSchema,
+    verificarMailSchema,
+    type CambiarPasswordDto,
+    type RegistrarUsuarioDto,
+    type ValidarCodigoDto,
+} from "../logicaPersistente/gestionDeUsuarios/dto";
+import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/LoginFacial";
+import { RegistrarRostro } from "../logicaPersistente/gestionDeUsuarios/RegistrarRostro";
 
 export function registerUsuariosIpc(
     usuarios: Usuarios
@@ -92,4 +96,15 @@ export function registerUsuariosIpc(
             });
         }
     );
+
+    ipcMain.handle(
+    'usuarios:registrarRostro',
+    (_evento, usuarioId: string, embedding: number[]) =>
+        new RegistrarRostro().ejecutar(usuarioId, embedding)
+    );
+    
+    ipcMain.handle('usuarios:loginFacial', (_evento, embedding: number[]) =>
+    new LoginFacial().ejecutar(embedding)
+    );
+
 }

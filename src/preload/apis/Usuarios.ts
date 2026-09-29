@@ -36,5 +36,12 @@ export const usuariosApi = {
         ipcRenderer.invoke(
             "usuarios:cambiarPassword",
             datos
-        )
+        ),
+    
+    registrarRostro: (usuarioId: string, embedding: number[]) =>
+    ipcRenderer.invoke('usuarios:registrarRostro', usuarioId, embedding),
+ 
+    loginFacial: (embedding: number[]) =>
+    ipcRenderer.invoke('usuarios:loginFacial', embedding)
+
 };

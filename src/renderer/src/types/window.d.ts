@@ -12,7 +12,7 @@ declare global {
           email: string;
           password: string;
         }
-      ) => Promise<unknown>;
+      ) => Promise<{ id: string }>;
 
       registrarUsuario: (
         datos: {
@@ -23,7 +23,7 @@ declare global {
           fechaNacimiento: Date;
           password: string;
         }
-      ) => Promise<void>;
+      ) => Promise<{ id: string }>;
 
       verificarMail: (
         datos: {
@@ -51,6 +51,18 @@ declare global {
           nuevaPassword: string;
         }
       ) => Promise<void>;
+
+      registrarRostro(
+        usuarioId: string,
+        embedding: number[]
+      ): Promise<{ exito: boolean; mensaje: string }>
+      
+      loginFacial(
+        embedding: number[]
+      ): Promise<
+        | { exito: true; usuarioId: string }
+        | { exito: false; mensaje: string }
+      >
 
     };
   }

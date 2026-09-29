@@ -54,6 +54,12 @@ body {
   gap: 16px;
 }
 
+.registro-rostro-mensaje {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
 .login-actions {
   display: flex;
   flex-wrap: wrap;
@@ -75,6 +81,29 @@ body {
   border: 2px dashed #8ba3c5;
   border-radius: 16px;
   color: #495b7d;
+  text-align: center;
+}
+
+.login-facial .login-facial {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+}
+
+.login-facial video,
+.registrar-rostro video {
+  display: block;
+  width: min(400px, 100%);
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.registrar-rostro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
   text-align: center;
 }
 

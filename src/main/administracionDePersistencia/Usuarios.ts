@@ -1,15 +1,11 @@
 import { Usuario } from "../logicaPersistente/gestionDeUsuarios/Usuario";
 import { IniciarSesion } from "../logicaPersistente/gestionDeUsuarios/IniciarSesion";
-import { IniciarSesionDto } from "../logicaPersistente/gestionDeUsuarios/dto/IniciarSesion.dto";
 import { RegistrarUsuario } from "../logicaPersistente/gestionDeUsuarios/RegistrarUsuario";
-import { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios/dto/RegistrarUsuario.dto";
 import { VerificarMail } from "../logicaPersistente/gestionDeUsuarios/VerificarMail";
 import { RecuperarPassword } from "../logicaPersistente/gestionDeUsuarios/RecuperarPassword";
-import { VerificarMailDto } from "../logicaPersistente/gestionDeUsuarios/dto/VerificarMail.dto";
-import { CambiarPasswordDto } from "../logicaPersistente/gestionDeUsuarios/dto/CambiarPassword.dto";
-import { ValidarCodigoDto } from "../logicaPersistente/gestionDeUsuarios/dto/ValidarCodigo.dto";
 import { ValidarCodigo } from "../logicaPersistente/gestionDeUsuarios/ValidarCodigo";
 import { CambiarPassword } from "../logicaPersistente/gestionDeUsuarios/CambiarPassword";
+import type { CambiarPasswordDto, IniciarSesionDto, RegistrarUsuarioDto, ValidarCodigoDto } from "../logicaPersistente/gestionDeUsuarios/dto";
 
 export class Usuarios {
     constructor(

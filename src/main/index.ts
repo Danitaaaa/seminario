@@ -1,6 +1,7 @@
 import 'dotenv/config';
-import { app, BrowserWindow } from 'electron';
-import { join } from 'path';
+import { app, BrowserWindow, net, protocol } from 'electron';
+import { isAbsolute, join, relative, resolve } from 'path';
+import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
 import { config } from 'dotenv';
 
@@ -21,6 +22,18 @@ import { CambiarPassword } from './logicaPersistente/gestionDeUsuarios/CambiarPa
 import { ValidarCodigo } from './logicaPersistente/gestionDeUsuarios/ValidarCodigo';
 
 let mainWindow: BrowserWindow | null = null;
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'modelos',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+    },
+  },
+]);
 
 config({ path: join(__dirname, "../../.env") });
 function createWindow(): void {
@@ -68,6 +81,27 @@ function wireDependencies(): void {
 }
 
 app.whenReady().then(async () => {
+  const carpetaModelos = resolve(__dirname, '../renderer/models');
+  protocol.handle('modelos', (request) => {
+    const url = new URL(request.url);
+    if (url.hostname !== 'local') return new Response('', { status: 403 });
+
+    let archivo: string;
+    try {
+      archivo = decodeURIComponent(url.pathname);
+    } catch {
+      return new Response('', { status: 400 });
+    }
+
+    const ruta = resolve(carpetaModelos, `.${archivo}`);
+    const rutaRelativa = relative(carpetaModelos, ruta);
+    if (rutaRelativa.startsWith('..') || isAbsolute(rutaRelativa)) {
+      return new Response('', { status: 403 });
+    }
+
+    return net.fetch(pathToFileURL(ruta).toString());
+  });
+
   try {
     await verifyDbConnection();
   } catch (err) {

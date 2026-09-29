@@ -5,8 +5,14 @@ import { VerificarMailPage } from "./pages/VerificarMail/VerificarMailPage";
 import { VerificarCodigoPage } from "./pages/VerificarCodigo/VerificarCodigoPage";
 import { CambiarPasswordPage } from "./pages/CambiarPassword/CambiarPasswordPage";
 import { RecuperarPasswordPage } from "./pages/RecuperarPassword/RecuperarPasswordPage";
+import { Dashboard } from "./pages/Dashboard/Dashboard";
+import { useEffect } from "react";
+import { cargarModelos } from "../lib/cargarModelos";
 
 export default function App() {
+  useEffect(() => {
+  cargarModelos().catch(console.error)
+}, [])
 
   return (
     
@@ -40,6 +46,11 @@ export default function App() {
       <Route
         path="/cambioPassword"
         element={<CambiarPasswordPage />}
+      />
+
+      <Route
+        path="/dashboard"
+        element={<Dashboard />}
       />
 
     </Routes>

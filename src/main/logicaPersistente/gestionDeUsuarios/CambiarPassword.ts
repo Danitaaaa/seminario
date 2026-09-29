@@ -1,7 +1,7 @@
 import bycript from 'bcrypt';
 import { Persistencia } from '../../persistencia/Persistencia';
 import { materializarUsuario } from './MaterializadorUsuarios';
-import { CambiarPasswordDto } from './dto/CambiarPassword.dto';
+import type { CambiarPasswordDto } from './dto';
 
 export class CambiarPassword {
     constructor(

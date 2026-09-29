@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 
     email_verificado BOOLEAN DEFAULT FALSE,
 
-    embedding_facial TEXT,
+    embedding_facial FLOAT8[],
 
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -23,3 +23,4 @@ ADD COLUMN codigo_verificacion VARCHAR(6);
 
 ALTER TABLE usuarios
 ADD COLUMN fecha_expiracion_codigo TIMESTAMP;
+
