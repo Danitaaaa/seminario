@@ -50,6 +50,7 @@ export function NodoPage() {
 
     const [errorMover, setErrorMover] = useState<string | null>(null);
     const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
+    const [errorListar, setErrorListar] = useState<string | null>(null);
 
     const nodosSeleccionados = nodos.filter((n) => seleccionados.has(claveNodo(n)));
 
@@ -68,7 +69,12 @@ export function NodoPage() {
             ordenarPor: ordenActivo,
             direccion,
             busqueda: busqueda || undefined,
-        }).then(setNodos);
+        })
+            .then(setNodos)
+            .catch((error) => {
+                console.error('No se pudo listar el contenido', error);
+                setErrorListar(error instanceof Error ? error.message : 'No se pudo cargar el listado.');
+            });
     }, [idPadreActual, ordenActivo, direccion, busqueda]);
 
     useEffect(() => {
@@ -199,6 +205,9 @@ export function NodoPage() {
             )}
             {errorEliminar && (
                 <CartelError mensaje={errorEliminar} onCerrar={() => setErrorEliminar(null)} />
+            )}
+            {errorListar && (
+                <CartelError mensaje={errorListar} onCerrar={() => setErrorListar(null)} />
             )}
 
             <div

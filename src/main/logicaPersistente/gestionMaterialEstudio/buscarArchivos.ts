@@ -31,9 +31,20 @@ export class BuscarArchivos {
     const orden = columna === 'nombre' ? 'score DESC' : `${columna} ${direccion}`;
 
     const filas = await this.persistencia.ejecutar(
-      `SELECT *, similarity(nombre, $1) AS score
+      `WITH RECURSIVE arbol AS (
+           SELECT id_nodo FROM nodos WHERE id_nodo = $2
+           UNION ALL
+           SELECT n.id_nodo FROM nodos n
+           INNER JOIN arbol a ON n.id_padre = a.id_nodo
+       )
+       SELECT *,
+              GREATEST(
+                  similarity(nombre, $1),
+                  CASE WHEN nombre ILIKE '%' || $1 || '%' THEN 1 ELSE 0 END
+              ) AS score
        FROM archivos
-       WHERE id_padre = $2 AND similarity(nombre, $1) > $3
+       WHERE id_padre IN (SELECT id_nodo FROM arbol)
+         AND (nombre ILIKE '%' || $1 || '%' OR similarity(nombre, $1) > $3)
        ORDER BY ${orden}`,
       [criterios.busqueda, criterios.idPadre, criterios.umbral ?? 0.2]
     );
