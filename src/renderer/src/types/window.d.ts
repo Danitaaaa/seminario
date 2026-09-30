@@ -25,6 +25,10 @@ declare global {
       modificarArchivo: (datos: { id: number; nombre: string }) => Promise<Archivo>;
       eliminarArchivo: (datos: { id: number }) => Promise<void>;
       moverArchivos: (datos: { ids: number[]; idPadre: number }) => Promise<Archivo[]>;
+      leerArchivo: (datos: { id: number }) => Promise<{ archivo: Archivo; contenido: Uint8Array }>;
+      guardarArchivo: (datos: { id: number; contenido: Uint8Array }) => Promise<Archivo>;
+      guardarDocx: (datos: { id: number; html: string }) => Promise<Archivo>;
+      abrirExterno: (datos: { id: number }) => Promise<void>;
     };
   }
 }

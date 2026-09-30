@@ -78,3 +78,25 @@ export const BuscadorArchivoDTOSchema = z.object({
     direccion: z.enum(['ASC', 'DESC']).default('ASC'),
 });
 export type BuscadorArchivoDTO = z.infer<typeof BuscadorArchivoDTOSchema>;
+
+/* ---------- Visor / editor de archivos ---------- */
+
+// Abrir un archivo (leer su contenido o abrirlo con la app del sistema).
+export const ObtenerArchivoDTOSchema = z.object({
+    id: z.number().int(),
+});
+export type ObtenerArchivoDTO = z.infer<typeof ObtenerArchivoDTOSchema>;
+
+// Guardar el contenido editado como bytes (PDF, XLSX, TXT).
+export const GuardarContenidoDTOSchema = z.object({
+    id: z.number().int(),
+    contenido: z.instanceof(Uint8Array),
+});
+export type GuardarContenidoDTO = z.infer<typeof GuardarContenidoDTOSchema>;
+
+// Guardar un Word editado: llega como HTML y el main lo convierte a DOCX.
+export const GuardarDocxDTOSchema = z.object({
+    id: z.number().int(),
+    html: z.string(),
+});
+export type GuardarDocxDTO = z.infer<typeof GuardarDocxDTOSchema>;

@@ -23,6 +23,8 @@ import { ModificarArchivo } from './logicaPersistente/gestionMaterialEstudio/Mod
 import { EliminarArchivo } from './logicaPersistente/gestionMaterialEstudio/EliminarArchivo';
 import { MoverArchivos } from './logicaPersistente/gestionMaterialEstudio/MoverArchivos';
 import { BuscarArchivos } from './logicaPersistente/gestionMaterialEstudio/buscarArchivos';
+import { ObtenerArchivo } from './logicaPersistente/gestionMaterialEstudio/ObtenerArchivo';
+import { ActualizarContenidoArchivo } from './logicaPersistente/gestionMaterialEstudio/ActualizarContenidoArchivo';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -72,9 +74,11 @@ function wireDependencies(): void {
   const modificarArchivo = new ModificarArchivo(persistencia);
   const eliminarArchivo = new EliminarArchivo(persistencia);
   const moverArchivos = new MoverArchivos(persistencia);
-  const archivos = new Archivos(crearArchivo, buscarArchivos, modificarArchivo, eliminarArchivo, moverArchivos);
+  const obtenerArchivo = new ObtenerArchivo(persistencia);
+  const actualizarContenidoArchivo = new ActualizarContenidoArchivo(persistencia);
+  const archivos = new Archivos(crearArchivo, buscarArchivos, modificarArchivo, eliminarArchivo, moverArchivos,
+    obtenerArchivo, actualizarContenidoArchivo);
   registerArchivosIpc(archivos);
-    
 }
 
 app.whenReady().then(async () => {
