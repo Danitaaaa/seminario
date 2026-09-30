@@ -11,6 +11,7 @@ import { ModalNodo } from '../../componentes/nodos/modalNodo';
 import { ModalConfirmarEliminar } from '../../componentes/nodos/modalConfirmarEliminar';
 import '../../estilos/nodos.css';
 import { CartelError } from '../../componentes/comunes/cartelError';
+import { ArchivosPage } from './ArchivosPage';
 const usuarioLogueado = 'Usuario';
 
 type ModalAbierto =
@@ -51,6 +52,7 @@ export function NodoPage() {
     const [errorMover, setErrorMover] = useState<string | null>(null);
     const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
     const [errorListar, setErrorListar] = useState<string | null>(null);
+    const [mostrarSubida, setMostrarSubida] = useState(false);
 
     const nodosSeleccionados = nodos.filter((n) => seleccionados.has(claveNodo(n)));
 
@@ -166,16 +168,9 @@ export function NodoPage() {
         setSeleccionados(new Set());
     };
 
-    const subirArchivo = async () => {
+    const subirArchivo = () => {
         setMenuAgregarAbierto(false);
-        const elegido = await window.api.seleccionarArchivo();
-        if (!elegido) return;
-        try {
-            await window.api.crearArchivo({ ...elegido, idPadre: idPadreActual });
-            await cargarContenido();
-        } catch (error) {
-            console.error('No se pudo subir el archivo', error);
-        }
+        setMostrarSubida(true);
     };
 
     const propsListado = {
@@ -210,6 +205,15 @@ export function NodoPage() {
                 <CartelError mensaje={errorListar} onCerrar={() => setErrorListar(null)} />
             )}
 
+            {mostrarSubida ? (
+                <ArchivosPage
+                    idPadre={idPadreActual}
+                    onVolver={() => {
+                        setMostrarSubida(false);
+                        cargarContenido();
+                    }}
+                />
+            ) : (
             <div
                 className="nodos-modulo"
                 onClick={(e) => {
@@ -243,6 +247,7 @@ export function NodoPage() {
                     <CuadriculaNodos {...propsListado} />
                 )}
             </div>
+            )}
 
             {modal?.tipo === 'crear' && (
                 <ModalNodo
