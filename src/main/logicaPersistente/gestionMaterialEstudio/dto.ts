@@ -100,3 +100,8 @@ export const GuardarDocxDTOSchema = z.object({
     html: z.string(),
 });
 export type GuardarDocxDTO = z.infer<typeof GuardarDocxDTOSchema>;
+
+export const AbrirExternoDTOSchema = z.object({
+    id: z.number().int(),
+}); 
+export type AbrirExternoDTO = z.infer<typeof AbrirExternoDTOSchema>;

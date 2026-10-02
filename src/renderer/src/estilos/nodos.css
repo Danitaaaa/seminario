@@ -29,6 +29,19 @@
     font-size: 0.8rem;
     color: var(--nodos-texto-secundario);
 }
+
+.ruta-migas__segmento--destino button {
+    background: rgba(59, 130, 246, 0.15);
+    outline: 2px dashed #3b82f6;
+    border-radius: 4px;
+}
+
+.ruta-migas__segmento--destino button {
+    background: rgba(59, 130, 246, 0.15);
+    outline: 2px dashed #3b82f6;
+    border-radius: 4px;
+}
+
 .ruta-migas__segmento button {
     background: none;
     border: none;

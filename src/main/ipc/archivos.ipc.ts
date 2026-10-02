@@ -1,7 +1,9 @@
-import { app, ipcMain, dialog } from 'electron';
+import { app, ipcMain, dialog, shell } from 'electron';
+import HTMLtoDOCX from '@turbodocx/html-to-docx';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import os from 'node:os';
 import { Archivos } from '../administracionDePersistencia/Archivos';
 import {
   CrearArchivoDTOSchema,
@@ -9,10 +11,21 @@ import {
   ModificarArchivoDTOSchema,
   EliminarArchivoDTOSchema,
   MoverArchivosDTOSchema,
+  ObtenerArchivoDTOSchema,
+  GuardarContenidoDTOSchema,
+  GuardarDocxDTOSchema,
 } from '../logicaPersistente/gestionMaterialEstudio/dto';
 
 // Carpeta propia de la app donde viven las copias de los archivos subidos.
 const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
+
+// Reemplaza el contenido físico escribiendo primero a un temporal, así un fallo no deja el archivo a medias.
+function escribirSeguro(ruta: string, contenido: Uint8Array): number {
+  const temporal = `${ruta}.tmp`;
+  fs.writeFileSync(temporal, contenido);
+  fs.renameSync(temporal, ruta);
+  return fs.statSync(ruta).size;
+}
 
 // Handlers IPC del módulo Archivos: validan con Zod antes de tocar la fachada.
 export function registerArchivosIpc(archivos: Archivos): void {
@@ -73,4 +86,36 @@ export function registerArchivosIpc(archivos: Archivos): void {
 
     return { nombre, extension, rutaFisica, tamanio: stats.size };
   });
+
+  // Devuelve la metadata y los bytes del archivo para visualizarlo en el renderer.
+  ipcMain.handle('archivos:leer', async (_event, datos: unknown) => {
+    const archivo = await archivos.obtener(ObtenerArchivoDTOSchema.parse(datos));
+    const contenido = new Uint8Array(fs.readFileSync(archivo.rutaFisica));
+    return { archivo, contenido };
+  });
+
+  // Guarda bytes ya generados por el renderer (PDF, XLSX, TXT).
+  ipcMain.handle('archivos:guardar', async (_event, datos: unknown) => {
+    const { id, contenido } = GuardarContenidoDTOSchema.parse(datos);
+    const archivo = await archivos.obtener({ id });
+    const tamanio = escribirSeguro(archivo.rutaFisica, contenido);
+    return archivos.actualizarContenido(id, tamanio);
+  });
+
+  // Convierte el HTML del editor a DOCX y lo guarda.
+  ipcMain.handle('archivos:guardarDocx', async (_event, datos: unknown) => {
+    const { id, html } = GuardarDocxDTOSchema.parse(datos);
+    const archivo = await archivos.obtener({ id });
+    const docx = (await HTMLtoDOCX(html, null, {})) as Buffer;
+    const tamanio = escribirSeguro(archivo.rutaFisica, docx);
+    return archivos.actualizarContenido(id, tamanio);
+  });
+
+  // Abre el archivo con la aplicación predeterminada del sistema operativo.
+  ipcMain.handle('archivos:abrirExterno', async (_event, datos: unknown) => {
+    const archivo = await archivos.obtener(ObtenerArchivoDTOSchema.parse(datos));
+    const error = await shell.openPath(archivo.rutaFisica);
+    if (error) throw new Error(error);
+  });
+
 }

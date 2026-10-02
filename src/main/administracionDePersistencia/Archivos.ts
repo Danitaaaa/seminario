@@ -13,6 +13,7 @@ import {
   EliminarArchivoDTO,
   MoverArchivosDTO,
   ObtenerArchivoDTO,
+  AbrirExternoDTO,
 } from '../logicaPersistente/gestionMaterialEstudio/dto';
 
 // Punto de entrada único al módulo de archivos — IPC nunca llama a las clases de lógica directo.
@@ -48,4 +49,13 @@ export class Archivos {
   async actualizarContenido(id: number, tamanio: number): Promise<Archivo> {
     return this.actualizarContenidoArchivo.ejecutar(id, tamanio);
   }
+
+  async abrirExterno(datos: { id: number }): Promise<void> {
+    const archivo = await this.obtenerArchivo.ejecutar({ id: datos.id });
+    const ruta = archivo.rutaFisica;
+    if (!ruta) throw new Error(`El archivo con id ${datos.id} no tiene ruta física.`);
+    const { shell } = await import('electron');
+    await shell.openPath(ruta);
+  }
+
 }

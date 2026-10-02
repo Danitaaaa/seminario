@@ -26,11 +26,14 @@ const ICONOS_POR_EXTENSION: Record<string, { icono: string; tipo: string }> = {
     ppt: { icono: iconoPpt, tipo: 'Presentación' },
     pptx: { icono: iconoPptx, tipo: 'Presentación' },
     xlsx: { icono: iconoXlsx, tipo: 'Planilla' },
+    xltx: { icono: iconoXlsx, tipo: 'Planilla' },
     xls: { icono: iconoXlsx, tipo: 'Planilla' },
     mp4: { icono: iconoVideo, tipo: 'Video' },
     mov: { icono: iconoVideo, tipo: 'Video' },
     avi: { icono: iconoVideo, tipo: 'Video' },
-    docx: { icono: iconoDocumento, tipo: 'Documento' }
+    docx: { icono: iconoDocumento, tipo: 'Documento' },
+    doc: { icono: iconoDocumento, tipo: 'Documento' },
+    ods: { icono: iconoXlsx, tipo: 'Planilla' },
 };
 
 interface InfoNodo {
