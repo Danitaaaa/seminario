@@ -12,7 +12,7 @@ import {
 import { CrearNodo } from '../logicaPersistente/gestionMaterialEstudio/crearNodo';
 import { ModificarNodo } from '../logicaPersistente/gestionMaterialEstudio/modificarNodo';
 import { ListarContenido } from '../logicaPersistente/gestionMaterialEstudio/listarContenido';
-import { EliminarNodo } from '../logicaPersistente/gestionMaterialEstudio/elminarNodo';
+import { EliminarNodo } from '../logicaPersistente/gestionMaterialEstudio/eliminarNodo';
 import { MoverNodo } from '../logicaPersistente/gestionMaterialEstudio/moverNodo';
 
 export class Nodos {

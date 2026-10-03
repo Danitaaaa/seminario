@@ -1,6 +1,6 @@
 import { BuscadorArchivoDTO } from './dto';
 import { materializarArchivo } from './materializador';
-import { Persistencia } from '../../persistencia/Persistencia';
+import { Persistencia } from '../../persistencia/persistencia';
 import { Archivo } from './entidades';
 
 const COLUMNAS: Record<NonNullable<BuscadorArchivoDTO['ordenarPor']>, string> = {

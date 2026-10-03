@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Nodo } from '../../types/nodo';
 import { CartelError } from '../../componentes/comunes/cartelError';
-import '../../estilos/Archivos.css';
+import '../../estilos/archivos.css';
 
 type Props = {
   idPadre: number;

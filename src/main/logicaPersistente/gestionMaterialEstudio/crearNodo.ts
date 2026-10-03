@@ -1,4 +1,4 @@
-import { Persistencia } from '../../persistencia/Persistencia';
+import { Persistencia } from '../../persistencia/persistencia';
 import { Nodo } from './entidades';
 import { materializarNodo, desmaterializarNodo } from './materializador';
 import { CrearNodoDTO } from './dto';

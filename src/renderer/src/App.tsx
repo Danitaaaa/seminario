@@ -1,4 +1,4 @@
-import { NodoPage } from './pages/MaterialEstudio/nodoPage';
+import { NodoPage } from './pages/materialEstudio/nodoPage';
 
 export default function App() {
   return (
