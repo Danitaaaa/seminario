@@ -81,7 +81,7 @@ function wireDependencies(): void {
   const actualizarContenidoArchivo = new ActualizarContenidoArchivo(persistencia, almacenamiento);
   const archivos = new Archivos(crearArchivo, buscarArchivos, modificarArchivo, eliminarArchivo, moverArchivos,
     obtenerArchivo, actualizarContenidoArchivo);
-  registerArchivosIpc(archivos);
+  registerArchivosIpc(archivos, almacenamiento);
 }
 
 app.whenReady().then(async () => {
