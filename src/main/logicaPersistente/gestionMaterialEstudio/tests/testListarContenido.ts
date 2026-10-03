@@ -1,31 +1,37 @@
-import { pool, verifyDbConnection } from '../../../persistencia/BaseDeDatos';
-import { Persistencia } from '../../../persistencia/Persistencia';
+import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
+import { Persistencia } from '../../../persistencia/persistencia';
 import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../CrearArchivo';
+import { CrearArchivo } from '../crearArchivo';
 import { BuscarNodos } from '../buscarNodos';
 import { BuscarArchivos } from '../buscarArchivos';
 import { ListarContenido } from '../listarContenido';
 import { ElementoContenido } from '../entidades';
+import { EntornoArchivos } from './entornoTest';
 
 // Test de ListarContenido: casos normales y casos que intentan romperlo.
 async function main() {
   await verifyDbConnection();
   const persistencia = new Persistencia(pool);
+  const entorno = new EntornoArchivos();
   const crearNodo = new CrearNodo(persistencia);
-  const crearArchivo = new CrearArchivo(persistencia);
+  const crearArchivo = new CrearArchivo(persistencia, entorno.almacenamiento);
   const listar = new ListarContenido(new BuscarNodos(persistencia), new BuscarArchivos(persistencia));
 
   const raiz = await crearNodo.ejecutar({ nombre: 'Test ListarContenido', idPadre: 1 });
   const zeta = await crearNodo.ejecutar({ nombre: 'Zeta', idPadre: raiz.id });
   const alfa = await crearNodo.ejecutar({ nombre: 'alfa', idPadre: raiz.id });
-  const base = { rutaFisica: '/tmp/x', idPadre: raiz.id };
-  await crearArchivo.ejecutar({ ...base, nombre: 'beta', extension: 'pdf', tamanio: 500 });
-  await crearArchivo.ejecutar({ ...base, nombre: 'Álgebra', extension: 'docx', tamanio: 5 });
-  await crearArchivo.ejecutar({ ...base, nombre: 'Algebra', extension: 'pdf', tamanio: 9_000_000_000 });
-  const ver = (e: ElementoContenido[]) => e.map((x) => `${x.tipo === 'carpeta' ? '[C]' : '[A]'} ${x.nombre}${x.extension ? '.' + x.extension : ''} (${x.tamaño})`);
-  const criterios = { idPadre: raiz.id, ordenarPor: 'nombre' as const, direccion: 'ASC' as const };
 
   try {
+    const base = { idPadre: raiz.id };
+    await crearArchivo.ejecutar({ ...base, nombre: 'beta', extension: 'pdf', rutaFisica: entorno.origen(500) });
+    await crearArchivo.ejecutar({ ...base, nombre: 'Álgebra', extension: 'docx', rutaFisica: entorno.origen(5) });
+    const grande = await crearArchivo.ejecutar({ ...base, nombre: 'Algebra', extension: 'pdf', rutaFisica: entorno.origen(9) });
+    // Fuerza un tamaño > 2^32 sin crear un archivo real de 9 GB
+    await persistencia.ejecutar('UPDATE archivos SET tamaño = $1 WHERE id_archivo = $2', [9_000_000_000, grande.id]);
+
+    const ver = (e: ElementoContenido[]) => e.map((x) => `${x.tipo === 'carpeta' ? '[C]' : '[A]'} ${x.nombre}${x.extension ? '.' + x.extension : ''} (${x.tamaño})`);
+    const criterios = { idPadre: raiz.id, ordenarPor: 'nombre' as const, direccion: 'ASC' as const };
+
     console.log('--- Listar todo por nombre ASC (carpetas y archivos mezclados, sin distinguir mayúsculas) ---');
     console.log(ver(await listar.ejecutar(criterios)));
 
@@ -78,6 +84,7 @@ async function main() {
     await persistencia.ejecutar('DELETE FROM archivos WHERE id_padre = $1', [raiz.id]);
     await persistencia.ejecutar('DELETE FROM nodos WHERE id_nodo = ANY($1::int[])', [[zeta.id, alfa.id]]);
     await persistencia.ejecutar('DELETE FROM nodos WHERE id_nodo = $1', [raiz.id]);
+    entorno.limpiar();
     await pool.end();
   }
 }

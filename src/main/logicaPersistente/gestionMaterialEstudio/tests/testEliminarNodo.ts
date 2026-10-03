@@ -1,21 +1,23 @@
-import { pool, verifyDbConnection } from '../../../persistencia/BaseDeDatos';
-import { Persistencia } from '../../../persistencia/Persistencia';
+import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
+import { Persistencia } from '../../../persistencia/persistencia';
 import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../CrearArchivo';
-import { EliminarNodo } from '../elminarNodo';
+import { CrearArchivo } from '../crearArchivo';
+import { EliminarNodo } from '../eliminarNodo';
+import { EntornoArchivos } from './entornoTest';
 
 // Test de EliminarNodo: casos normales y casos que intentan romperlo.
 async function main() {
   await verifyDbConnection();
   const persistencia = new Persistencia(pool);
+  const entorno = new EntornoArchivos();
   const crearNodo = new CrearNodo(persistencia);
-  const crearArchivo = new CrearArchivo(persistencia);
+  const crearArchivo = new CrearArchivo(persistencia, entorno.almacenamiento);
   const eliminarNodo = new EliminarNodo(persistencia);
 
   const conHijo = await crearNodo.ejecutar({ nombre: 'Test EliminarNodo con hijo', idPadre: 1 });
   const hijo = await crearNodo.ejecutar({ nombre: 'Hijo', idPadre: conHijo.id });
   const conArchivo = await crearNodo.ejecutar({ nombre: 'Test EliminarNodo con archivo', idPadre: 1 });
-  await crearArchivo.ejecutar({ nombre: 'apunte', extension: 'txt', rutaFisica: '/tmp/no-existe.txt', tamanio: 0, idPadre: conArchivo.id });
+  await crearArchivo.ejecutar({ nombre: 'apunte', extension: 'txt', rutaFisica: entorno.origen('apunte'), idPadre: conArchivo.id });
 
   try {
     console.log('--- Eliminar carpeta vacía ---');
@@ -68,6 +70,7 @@ async function main() {
     for (const id of [hijo.id, conHijo.id, conArchivo.id]) {
       await persistencia.ejecutar('DELETE FROM nodos WHERE id_nodo = $1', [id]);
     }
+    entorno.limpiar();
     await pool.end();
   }
 }

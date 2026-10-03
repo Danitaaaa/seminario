@@ -1,6 +1,6 @@
 import { BuscarNodosDTO } from "./dto";
 import { materializarNodo } from "./materializador";
-import { Persistencia } from "../../persistencia/Persistencia";
+import { Persistencia } from "../../persistencia/persistencia";
 import { Nodo } from "./entidades";
 
 const COLUMNAS: Record<BuscarNodosDTO['ordenarPor'] & string, string> = {

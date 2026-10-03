@@ -1,10 +1,10 @@
-import { CrearArchivo } from '../logicaPersistente/gestionMaterialEstudio/CrearArchivo';
+import { CrearArchivo } from '../logicaPersistente/gestionMaterialEstudio/crearArchivo';
 import { BuscarArchivos } from '../logicaPersistente/gestionMaterialEstudio/buscarArchivos';
-import { ModificarArchivo } from '../logicaPersistente/gestionMaterialEstudio/ModificarArchivo';
-import { EliminarArchivo } from '../logicaPersistente/gestionMaterialEstudio/EliminarArchivo';
-import { MoverArchivos } from '../logicaPersistente/gestionMaterialEstudio/MoverArchivos';
-import { ObtenerArchivo } from '../logicaPersistente/gestionMaterialEstudio/ObtenerArchivo';
-import { ActualizarContenidoArchivo } from '../logicaPersistente/gestionMaterialEstudio/ActualizarContenidoArchivo';
+import { ModificarArchivo } from '../logicaPersistente/gestionMaterialEstudio/modificarArchivo';
+import { EliminarArchivo } from '../logicaPersistente/gestionMaterialEstudio/eliminarArchivo';
+import { MoverArchivos } from '../logicaPersistente/gestionMaterialEstudio/moverArchivos';
+import { ObtenerArchivo } from '../logicaPersistente/gestionMaterialEstudio/obtenerArchivo';
+import { ActualizarContenidoArchivo } from '../logicaPersistente/gestionMaterialEstudio/actualizarContenidoArchivo';
 import { Archivo } from '../logicaPersistente/gestionMaterialEstudio/entidades';
 import {
   CrearArchivoDTO,
@@ -46,8 +46,8 @@ export class Archivos {
   async obtener(datos: ObtenerArchivoDTO): Promise<Archivo> {
     return this.obtenerArchivo.ejecutar(datos);
   }
-  async actualizarContenido(id: number, tamanio: number): Promise<Archivo> {
-    return this.actualizarContenidoArchivo.ejecutar(id, tamanio);
+  async actualizarContenido(id: number, rutaOrigen: string): Promise<Archivo> {
+    return this.actualizarContenidoArchivo.ejecutar(id, rutaOrigen);
   }
 
   async abrirExterno(datos: { id: number }): Promise<void> {

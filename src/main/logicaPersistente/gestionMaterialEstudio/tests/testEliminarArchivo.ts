@@ -1,70 +1,77 @@
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
-import { pool, verifyDbConnection } from '../../../persistencia/BaseDeDatos';
-import { Persistencia } from '../../../persistencia/Persistencia';
+import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
+import { Persistencia } from '../../../persistencia/persistencia';
 import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../CrearArchivo';
-import { EliminarArchivo } from '../EliminarArchivo';
-
-const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
+import { CrearArchivo } from '../crearArchivo';
+import { EliminarArchivo } from '../eliminarArchivo';
+import { EntornoArchivos, verificar, esperarError, terminar } from './entornoTest';
 
 // Test de EliminarArchivo: casos normales y casos que intentan romperlo.
 async function main() {
   await verifyDbConnection();
   const persistencia = new Persistencia(pool);
+  const entorno = new EntornoArchivos();
   const crearNodo = new CrearNodo(persistencia);
-  const crearArchivo = new CrearArchivo(persistencia);
-  const eliminarArchivo = new EliminarArchivo(persistencia);
+  const crearArchivo = new CrearArchivo(persistencia, entorno.almacenamiento);
+  const eliminarArchivo = new EliminarArchivo(persistencia, entorno.almacenamiento);
 
   const carpeta = await crearNodo.ejecutar({ nombre: 'Test EliminarArchivo', idPadre: 1 });
-  const ruta = path.join(os.tmpdir(), `test-eliminar-${Date.now()}.txt`);
-  fs.writeFileSync(ruta, 'hola');
+
+  const existeFila = async (id: number): Promise<boolean> =>
+    (await persistencia.ejecutar('SELECT 1 FROM archivos WHERE id_archivo = $1', [id])).length > 0;
 
   try {
-    console.log('--- Eliminar archivo con archivo físico ---');
-    const real = await crearArchivo.ejecutar({ nombre: 'real', extension: 'txt', rutaFisica: ruta, tamanio: 4, idPadre: carpeta.id });
-    await eliminarArchivo.ejecutar({ id: real.id });
-    await esperar(100); // el unlink no se espera dentro de ejecutar()
-    console.log(fs.existsSync(ruta) ? 'NO se borró el archivo físico' : 'Registro y archivo físico eliminados OK');
+    // Caso normal
+    const real = await crearArchivo.ejecutar({
+      nombre: 'real', extension: 'txt', rutaFisica: entorno.origen('hola'), idPadre: carpeta.id,
+    });
+    const fisicoReal = entorno.fisico(real.rutaFisica);
+    verificar('El archivo físico existe antes de eliminar', fs.existsSync(fisicoReal));
 
-    console.log('--- Eliminar archivo cuya ruta física no existe ---');
-    const fantasma = await crearArchivo.ejecutar({ nombre: 'fantasma', extension: 'txt', rutaFisica: '/tmp/no-existe-123.txt', tamanio: 0, idPadre: carpeta.id });
+    await eliminarArchivo.ejecutar({ id: real.id });
+    verificar(
+      'Registro y archivo físico eliminados',
+      !fs.existsSync(fisicoReal) && !(await existeFila(real.id))
+    );
+
+    // El archivo físico ya no está (borrado a mano)
+    const fantasma = await crearArchivo.ejecutar({
+      nombre: 'fantasma', extension: 'txt', rutaFisica: entorno.origen('x'), idPadre: carpeta.id,
+    });
+    fs.rmSync(entorno.fisico(fantasma.rutaFisica));
+    let lanzo = false;
     try {
       await eliminarArchivo.ejecutar({ id: fantasma.id });
-      await esperar(100);
-      console.log('No lanzó error: el registro se borra igual y el fallo solo se loguea');
-    } catch (e: any) {
-      console.log('Error:', e.message);
+    } catch {
+      lanzo = true;
     }
+    verificar('Archivo físico faltante: no lanza error y borra el registro', !lanzo && !(await existeFila(fantasma.id)));
 
-    console.log('--- Eliminar archivo cuya ruta apunta a una carpeta ---');
-    const dir = await crearArchivo.ejecutar({ nombre: 'dir', extension: 'txt', rutaFisica: os.tmpdir(), tamanio: 0, idPadre: carpeta.id });
-    await eliminarArchivo.ejecutar({ id: dir.id });
-    await esperar(100);
-    console.log(fs.existsSync(os.tmpdir()) ? 'La carpeta sigue existiendo OK' : 'Se borró la carpeta temporal');
+    // Ruta maliciosa en la base (../): no debe borrar nada fuera del almacenamiento
+    const protegido = path.join(entorno.dirOrigen, 'protegido.txt');
+    fs.writeFileSync(protegido, 'no me borres');
+    const rutaMala = path.join('..', path.basename(entorno.dirOrigen), 'protegido.txt');
+    const [fila] = await persistencia.ejecutar(
+      `INSERT INTO archivos (nombre, extension, ruta_fisica, tamaño, id_padre)
+       VALUES ('malicioso', 'txt', $1, 0, $2) RETURNING id_archivo`,
+      [rutaMala, carpeta.id]
+    );
+    await eliminarArchivo.ejecutar({ id: fila.id_archivo }); // se loguea "Ruta de archivo inválida"
+    verificar('Ruta con ../: no borra archivos fuera del almacenamiento', fs.existsSync(protegido));
+    verificar('Ruta con ../: el registro sí se elimina', !(await existeFila(fila.id_archivo)));
 
-    console.log('--- Id inexistente ---');
-    try {
-      await eliminarArchivo.ejecutar({ id: 999999 });
-      console.log('NO falló');
-    } catch (e: any) {
-      console.log('Error esperado:', e.message);
-    }
-
-    console.log('--- Eliminar dos veces el mismo archivo ---');
-    try {
-      await eliminarArchivo.ejecutar({ id: real.id });
-      console.log('NO falló');
-    } catch (e: any) {
-      console.log('Error esperado:', e.message);
-    }
+    // Errores
+    await esperarError('Id inexistente', () => eliminarArchivo.ejecutar({ id: 999999 }));
+    await esperarError('Eliminar dos veces el mismo archivo', () => eliminarArchivo.ejecutar({ id: real.id }));
   } finally {
-    if (fs.existsSync(ruta)) fs.unlinkSync(ruta);
     await persistencia.ejecutar('DELETE FROM archivos WHERE id_padre = $1', [carpeta.id]);
     await persistencia.ejecutar('DELETE FROM nodos WHERE id_nodo = $1', [carpeta.id]);
+    entorno.limpiar();
     await pool.end();
   }
+
+  terminar();
 }
 
 main().catch((err) => {

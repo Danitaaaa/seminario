@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import type { MouseEvent, DragEvent } from 'react';
-import { claveNodo, type Nodo, type Archivo } from '../../types/nodo';
+import { claveNodo, type Nodo } from '../../types/nodo';
 import type { Direccion, OrdenarPor, VistaListado } from '../../types/vistaNodos';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { RutaMigas } from '../../componentes/nodos/rutaMigas';
@@ -11,10 +11,7 @@ import { ModalNodo } from '../../componentes/nodos/modalNodo';
 import { ModalConfirmarEliminar } from '../../componentes/nodos/modalConfirmarEliminar';
 import '../../estilos/nodos.css';
 import { CartelError } from '../../componentes/comunes/cartelError';
-import { ArchivosPage } from './ArchivosPage';
-import { VisorArchivo } from '../../componentes/visor/visorArchivo';
-import { ModalAbrirCon } from '../../componentes/visor/modalAbrirCon';
-import { tipoVisor } from '../../componentes/visor/formatos';
+import { ArchivosPage } from './archivosPage';
 
 const usuarioLogueado = 'Usuario';
 
@@ -65,9 +62,6 @@ export function NodoPage() {
     const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
     const [errorListar, setErrorListar] = useState<string | null>(null);
     const [mostrarSubida, setMostrarSubida] = useState(false);
-    const [archivoAbierto, setArchivoAbierto] = useState<Archivo | null>(null);
-    const [archivoAbrirCon, setArchivoAbrirCon] = useState<Archivo | null>(null);
-    const [errorAbrir, setErrorAbrir] = useState<string | null>(null);
 
     const nodosSeleccionados = nodos.filter((n) => seleccionados.has(claveNodo(n)));
 
@@ -235,13 +229,6 @@ export function NodoPage() {
         if (nodo.tipo === 'carpeta') {
             setRuta((prev) => [...prev, { id: nodo.id, nombre: nodo.nombre }]);
             setSeleccionados(new Set());
-            return;
-        }
-        // Formatos soportados se abren en el visor; el resto pregunta con qué abrirlo.
-        if (tipoVisor(nodo.extension)) {
-            setArchivoAbierto(nodo);
-        } else {
-            setArchivoAbrirCon(nodo);
         }
     };
 
@@ -289,9 +276,6 @@ export function NodoPage() {
             )}
             {errorListar && (
                 <CartelError mensaje={errorListar} onCerrar={() => setErrorListar(null)} />
-            )}
-            {errorAbrir && (
-                <CartelError mensaje={errorAbrir} onCerrar={() => setErrorAbrir(null)} />
             )}
 
             {mostrarSubida ? (
@@ -343,22 +327,6 @@ export function NodoPage() {
                     <CuadriculaNodos {...propsListado} />
                 )}
             </div>
-            )}
-
-            {archivoAbierto && (
-                <VisorArchivo
-                    archivo={archivoAbierto}
-                    onCerrar={() => setArchivoAbierto(null)}
-                    onGuardado={cargarContenido}
-                />
-            )}
-
-            {archivoAbrirCon && (
-                <ModalAbrirCon
-                    archivo={archivoAbrirCon}
-                    onCerrar={() => setArchivoAbrirCon(null)}
-                    onError={setErrorAbrir}
-                />
             )}
 
             {modal?.tipo === 'crear' && (

@@ -1,8 +1,9 @@
-import { pool, verifyDbConnection } from '../../../persistencia/BaseDeDatos';
-import { Persistencia } from '../../../persistencia/Persistencia';
+import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
+import { Persistencia } from '../../../persistencia/persistencia';
 import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../CrearArchivo';
-import { ObtenerArchivo } from '../ObtenerArchivo';
+import { CrearArchivo } from '../crearArchivo';
+import { ObtenerArchivo } from '../obtenerArchivo';
+import { EntornoArchivos, verificar, esperarError, terminar } from './entornoTest';
 
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -10,48 +11,36 @@ const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function main() {
   await verifyDbConnection();
   const persistencia = new Persistencia(pool);
+  const entorno = new EntornoArchivos();
   const crearNodo = new CrearNodo(persistencia);
-  const crearArchivo = new CrearArchivo(persistencia);
+  const crearArchivo = new CrearArchivo(persistencia, entorno.almacenamiento);
   const obtenerArchivo = new ObtenerArchivo(persistencia);
 
   const carpeta = await crearNodo.ejecutar({ nombre: 'Test ObtenerArchivo', idPadre: 1 });
-  const archivo = await crearArchivo.ejecutar({ nombre: 'a', extension: 'pdf', rutaFisica: '/tmp/a.pdf', tamanio: 10, idPadre: carpeta.id });
 
   try {
-    console.log('--- Obtener archivo ---');
+    const archivo = await crearArchivo.ejecutar({
+      nombre: 'a', extension: 'pdf', rutaFisica: entorno.origen(10), idPadre: carpeta.id,
+    });
+
     await esperar(50);
     const obtenido = await obtenerArchivo.ejecutar({ id: archivo.id });
-    console.log(obtenido);
+    verificar('Devuelve el archivo pedido', obtenido.id === archivo.id && obtenido.nombre === 'a', obtenido);
+    verificar('Actualiza la fecha de acceso', +obtenido.ultimaFechaAcceso > +archivo.ultimaFechaAcceso);
+    verificar('No cambia la fecha de modificación', +obtenido.ultimaFechaModificacion === +archivo.ultimaFechaModificacion);
+    verificar('Devuelve la ruta física para abrir el archivo', obtenido.rutaFisica === archivo.rutaFisica);
 
-    console.log('--- ¿Actualiza la fecha de acceso y no la de modificación? ---');
-    console.log(+obtenido.ultimaFechaAcceso > +archivo.ultimaFechaAcceso ? 'Fecha de acceso actualizada OK' : 'NO se actualizó la fecha de acceso');
-    console.log(+obtenido.ultimaFechaModificacion === +archivo.ultimaFechaModificacion ? 'Fecha de modificación intacta OK' : 'Cambió la fecha de modificación');
-
-    console.log('--- Id inexistente ---');
-    try {
-      console.log('NO falló:', await obtenerArchivo.ejecutar({ id: 999999 }));
-    } catch (e: any) {
-      console.log('Error esperado:', e.message);
-    }
-
-    console.log('--- Id negativo ---');
-    try {
-      console.log('NO falló:', await obtenerArchivo.ejecutar({ id: -1 }));
-    } catch (e: any) {
-      console.log('Error esperado:', e.message);
-    }
-
-    console.log('--- Id decimal (el DTO lo frena, la lógica no) ---');
-    try {
-      console.log('NO falló:', await obtenerArchivo.ejecutar({ id: 1.5 }));
-    } catch (e: any) {
-      console.log('Error esperado:', e.message);
-    }
+    await esperarError('Id inexistente', () => obtenerArchivo.ejecutar({ id: 999999 }));
+    await esperarError('Id negativo', () => obtenerArchivo.ejecutar({ id: -1 }));
+    await esperarError('Id decimal (el DTO lo frena, la lógica no)', () => obtenerArchivo.ejecutar({ id: 1.5 }));
   } finally {
     await persistencia.ejecutar('DELETE FROM archivos WHERE id_padre = $1', [carpeta.id]);
     await persistencia.ejecutar('DELETE FROM nodos WHERE id_nodo = $1', [carpeta.id]);
+    entorno.limpiar();
     await pool.end();
   }
+
+  terminar();
 }
 
 main().catch((err) => {

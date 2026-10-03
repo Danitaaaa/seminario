@@ -4,27 +4,29 @@ import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
 import { config } from 'dotenv';
 
-import { pool, verifyDbConnection } from './persistencia/BaseDeDatos';
-import { Persistencia } from './persistencia/Persistencia';
+import { pool, verifyDbConnection } from './persistencia/baseDeDatos';
+import { Persistencia } from './persistencia/persistencia';
 
 import { CrearNodo } from './logicaPersistente/gestionMaterialEstudio/crearNodo';
 import { ModificarNodo } from './logicaPersistente/gestionMaterialEstudio/modificarNodo';
 import { BuscarNodos } from './logicaPersistente/gestionMaterialEstudio/buscarNodos';
-import { EliminarNodo } from './logicaPersistente/gestionMaterialEstudio/elminarNodo';
+import { EliminarNodo } from './logicaPersistente/gestionMaterialEstudio/eliminarNodo';
 import { MoverNodo } from './logicaPersistente/gestionMaterialEstudio/moverNodo';
 import { Nodos } from './administracionDePersistencia/nodo';
 import { registrarNodosIpc } from './ipc/nodo.ipc';
 import { ListarContenido } from './logicaPersistente/gestionMaterialEstudio/listarContenido';
 
-import { CrearArchivo } from './logicaPersistente/gestionMaterialEstudio/CrearArchivo';
-import { Archivos } from './administracionDePersistencia/Archivos';
+import { CrearArchivo } from './logicaPersistente/gestionMaterialEstudio/crearArchivo';
+import { Archivos } from './administracionDePersistencia/archivos';
 import { registerArchivosIpc } from './ipc/archivos.ipc';
-import { ModificarArchivo } from './logicaPersistente/gestionMaterialEstudio/ModificarArchivo';
-import { EliminarArchivo } from './logicaPersistente/gestionMaterialEstudio/EliminarArchivo';
-import { MoverArchivos } from './logicaPersistente/gestionMaterialEstudio/MoverArchivos';
+import { ModificarArchivo } from './logicaPersistente/gestionMaterialEstudio/modificarArchivo';
+import { EliminarArchivo } from './logicaPersistente/gestionMaterialEstudio/eliminarArchivo';
+import { MoverArchivos } from './logicaPersistente/gestionMaterialEstudio/moverArchivos';
 import { BuscarArchivos } from './logicaPersistente/gestionMaterialEstudio/buscarArchivos';
-import { ObtenerArchivo } from './logicaPersistente/gestionMaterialEstudio/ObtenerArchivo';
-import { ActualizarContenidoArchivo } from './logicaPersistente/gestionMaterialEstudio/ActualizarContenidoArchivo';
+import { ObtenerArchivo } from './logicaPersistente/gestionMaterialEstudio/obtenerArchivo';
+import { ActualizarContenidoArchivo } from './logicaPersistente/gestionMaterialEstudio/actualizarContenidoArchivo';
+import { Almacenamiento } from './persistencia/almacenamiento';
+import path from 'path';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -70,12 +72,13 @@ function wireDependencies(): void {
     eliminarNodo, moverNodo );
   registrarNodosIpc(nodos);
 
-  const crearArchivo = new CrearArchivo(persistencia);
+  const almacenamiento = new Almacenamiento(path.join(app.getPath('userData'), 'archivos'));
+  const crearArchivo = new CrearArchivo(persistencia, almacenamiento);
   const modificarArchivo = new ModificarArchivo(persistencia);
-  const eliminarArchivo = new EliminarArchivo(persistencia);
+  const eliminarArchivo = new EliminarArchivo(persistencia, almacenamiento);
   const moverArchivos = new MoverArchivos(persistencia);
   const obtenerArchivo = new ObtenerArchivo(persistencia);
-  const actualizarContenidoArchivo = new ActualizarContenidoArchivo(persistencia);
+  const actualizarContenidoArchivo = new ActualizarContenidoArchivo(persistencia, almacenamiento);
   const archivos = new Archivos(crearArchivo, buscarArchivos, modificarArchivo, eliminarArchivo, moverArchivos,
     obtenerArchivo, actualizarContenidoArchivo);
   registerArchivosIpc(archivos);

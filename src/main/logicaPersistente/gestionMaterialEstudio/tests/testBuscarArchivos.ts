@@ -1,27 +1,31 @@
-import { pool, verifyDbConnection } from '../../../persistencia/BaseDeDatos';
-import { Persistencia } from '../../../persistencia/Persistencia';
+import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
+import { Persistencia } from '../../../persistencia/persistencia';
 import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../CrearArchivo';
+import { CrearArchivo } from '../crearArchivo';
 import { BuscarArchivos } from '../buscarArchivos';
+import { EntornoArchivos } from './entornoTest';
 
 // Test de BuscarArchivos: casos normales y casos que intentan romperlo.
 async function main() {
   await verifyDbConnection();
   const persistencia = new Persistencia(pool);
+  const entorno = new EntornoArchivos();
   const crearNodo = new CrearNodo(persistencia);
-  const crearArchivo = new CrearArchivo(persistencia);
+  const crearArchivo = new CrearArchivo(persistencia, entorno.almacenamiento);
   const buscarArchivos = new BuscarArchivos(persistencia);
 
   const raiz = await crearNodo.ejecutar({ nombre: 'Test BuscarArchivos', idPadre: 1 });
   const sub = await crearNodo.ejecutar({ nombre: 'Sub', idPadre: raiz.id });
-  const base = { extension: 'pdf', rutaFisica: '/tmp/x.pdf', idPadre: raiz.id };
-  await crearArchivo.ejecutar({ ...base, nombre: 'Resumen Álgebra', tamanio: 300 });
-  await crearArchivo.ejecutar({ ...base, nombre: 'Parcial 1', tamanio: 100 });
-  await crearArchivo.ejecutar({ ...base, nombre: '100% resuelto', tamanio: 200 });
-  await crearArchivo.ejecutar({ ...base, nombre: 'Resumen Análisis', tamanio: 50, idPadre: sub.id });
-  const nombres = (a: { nombre: string }[]) => a.map((x) => x.nombre);
 
   try {
+    // El tamaño ahora es el real del archivo de origen (en bytes)
+    const base = { extension: 'pdf', idPadre: raiz.id };
+    await crearArchivo.ejecutar({ ...base, nombre: 'Resumen Álgebra', rutaFisica: entorno.origen(300) });
+    await crearArchivo.ejecutar({ ...base, nombre: 'Parcial 1', rutaFisica: entorno.origen(100) });
+    await crearArchivo.ejecutar({ ...base, nombre: '100% resuelto', rutaFisica: entorno.origen(200) });
+    await crearArchivo.ejecutar({ ...base, nombre: 'Resumen Análisis', rutaFisica: entorno.origen(50), idPadre: sub.id });
+    const nombres = (a: { nombre: string }[]) => a.map((x) => x.nombre);
+
     console.log('--- Listar archivos de la carpeta sin búsqueda (no incluye subcarpetas) ---');
     console.log(nombres(await buscarArchivos.ejecutar({ idPadre: raiz.id, ordenarPor: 'nombre', direccion: 'ASC' })));
 
@@ -60,8 +64,9 @@ async function main() {
     console.log(await buscarArchivos.ejecutar({ idPadre: 999999, busqueda: 'resumen', ordenarPor: 'nombre', direccion: 'ASC' }));
   } finally {
     await persistencia.ejecutar('DELETE FROM archivos WHERE id_padre = ANY($1::int[])', [[raiz.id, sub.id]]);
-    await persistencia.ejecutar('DELETE FROM nodos WHERE id_nodo = ANY($1::int[])', [[sub.id]]);
+    await persistencia.ejecutar('DELETE FROM nodos WHERE id_nodo = $1', [sub.id]);
     await persistencia.ejecutar('DELETE FROM nodos WHERE id_nodo = $1', [raiz.id]);
+    entorno.limpiar();
     await pool.end();
   }
 }

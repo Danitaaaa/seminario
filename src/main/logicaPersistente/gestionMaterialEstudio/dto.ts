@@ -47,7 +47,7 @@ export const CrearArchivoDTOSchema = z.object({
     nombre: z.string().min(1).max(255),
     extension: z.string().min(1).max(20),
     rutaFisica: z.string().min(1),
-    tamanio: z.number().int().nonnegative(), // nonnegative: permite archivos vacíos
+    tamanio: z.number().int().nonnegative().optional(), // nonnegative: permite archivos vacíos
     idPadre: z.number().int(),
 });
 export type CrearArchivoDTO = z.infer<typeof CrearArchivoDTOSchema>;
