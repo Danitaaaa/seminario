@@ -7,6 +7,9 @@ export class ActualizarContenidoArchivo {
   constructor(private readonly persistencia: Persistencia) {}
 
   async ejecutar(id: number, tamanio: number): Promise<Archivo> {
+    if (!Number.isInteger(tamanio) || tamanio < 0) {
+      throw new Error('El tamaño del archivo no es válido.');
+    }
     const filas = await this.persistencia.ejecutar(
       `UPDATE archivos SET tamaño = $1, ultima_fecha_modificacion = NOW()
        WHERE id_archivo = $2 RETURNING *`,

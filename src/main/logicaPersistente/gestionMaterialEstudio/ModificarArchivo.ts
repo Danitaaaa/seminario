@@ -8,6 +8,9 @@ export class ModificarArchivo {
   constructor(private readonly persistencia: Persistencia) {}
 
   async ejecutar(datos: ModificarArchivoDTO): Promise<Archivo> {
+    if (!datos.nombre.trim()) {
+      throw new Error('El nombre del archivo no puede estar vacío.');
+    }
     const filas = await this.persistencia.ejecutar(
       `UPDATE archivos SET nombre = $1, ultima_fecha_modificacion = NOW()
        WHERE id_archivo = $2 RETURNING *`,
@@ -16,4 +19,5 @@ export class ModificarArchivo {
     if (filas.length === 0) throw new Error('Archivo no encontrado');
     return materializarArchivo(filas[0]);
   }
+
 }

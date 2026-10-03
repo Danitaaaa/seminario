@@ -15,7 +15,7 @@ export class BuscarArchivos {
   constructor(private readonly persistencia: Persistencia) {}
 
   async ejecutar(criterios: BuscadorArchivoDTO): Promise<Archivo[]> {
-    const columna = COLUMNAS[criterios.ordenarPor ?? 'nombre'];
+    const columna = COLUMNAS[criterios.ordenarPor ?? 'nombre'] ?? 'nombre';
     const direccion = criterios.direccion === 'DESC' ? 'DESC' : 'ASC';
 
     if (!criterios.busqueda) {
@@ -29,6 +29,8 @@ export class BuscarArchivos {
     }
 
     const orden = columna === 'nombre' ? 'score DESC' : `${columna} ${direccion}`;
+    // Escapa \ % _ para que se busquen como texto literal y no como comodines del ILIKE
+    const patron = criterios.busqueda.replace(/[\\%_]/g, '\\$&');
 
     const filas = await this.persistencia.ejecutar(
       `WITH RECURSIVE arbol AS (
@@ -40,13 +42,13 @@ export class BuscarArchivos {
        SELECT *,
               GREATEST(
                   similarity(nombre, $1),
-                  CASE WHEN nombre ILIKE '%' || $1 || '%' THEN 1 ELSE 0 END
+                  CASE WHEN nombre ILIKE '%' || $4 || '%' THEN 1 ELSE 0 END
               ) AS score
        FROM archivos
        WHERE id_padre IN (SELECT id_nodo FROM arbol)
-         AND (nombre ILIKE '%' || $1 || '%' OR similarity(nombre, $1) > $3)
+         AND (nombre ILIKE '%' || $4 || '%' OR similarity(nombre, $1) > $3)
        ORDER BY ${orden}`,
-      [criterios.busqueda, criterios.idPadre, criterios.umbral ?? 0.2]
+      [criterios.busqueda, criterios.idPadre, criterios.umbral ?? 0.2, patron]
     );
     return filas.map(materializarArchivo);
   }
