@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS nodos (
     ultima_fecha_modificacion TIMESTAMP NOT NULL,
     tamaño BIGINT NOT NULL,
     id_padre INT REFERENCES nodos(id_nodo) ON DELETE RESTRICT,
-    Unique(id_nodo, id_padre)
+    UNIQUE (id_nodo, id_padre)
 );
 
 CREATE INDEX IF NOT EXISTS idx_nodos_nombre_trgm 

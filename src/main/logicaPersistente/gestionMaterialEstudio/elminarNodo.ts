@@ -16,7 +16,7 @@ export class EliminarNodo {
                 throw new Error(`No existe un nodo con id ${datos.id}.`);
             }
         } catch (error: any) {
-            if (error.code == "23001") {
+            if (error.code == "23001" || error.code ==="23503 ") {
                 throw new Error('No se puede eliminar: la carpeta contiene elementos.');
             }
             throw error;

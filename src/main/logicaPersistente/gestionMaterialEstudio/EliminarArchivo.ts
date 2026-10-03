@@ -8,13 +8,23 @@ export class EliminarArchivo {
 
   async ejecutar(datos: EliminarArchivoDTO): Promise<void> {
     const filas = await this.persistencia.ejecutar(
-      `DELETE FROM archivos WHERE id_archivo = $1 RETURNING ruta_fisica`,
+      `SELECT ruta_fisica FROM archivos WHERE id_archivo = $1`,
       [datos.id]
     );
     if (filas.length === 0) throw new Error(`No existe un archivo con id ${datos.id}.`);
 
-    fs.unlink(filas[0].ruta_fisica, (err) => {
-      if (err) console.error('[EliminarArchivo] No se pudo borrar el archivo físico:', err);
-    });
+    try {
+      await fs.promises.unlink(filas[0].ruta_fisica);
+    } catch (err: any) {
+      // Si el archivo ya no existe en disco, se sigue y se borra el registro igual.
+      if (err.code !== 'ENOENT') {
+        throw new Error(`No se pudo borrar el archivo físico: ${err.message}`);
+      }
+    }
+
+    await this.persistencia.ejecutar(
+      `DELETE FROM archivos WHERE id_archivo = $1`,
+      [datos.id]
+    );
   }
 }
