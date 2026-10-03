@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button/Button';
 import { Input } from '../../components/ui/Input/Input';
 import { Card } from '../../components/ui/Card/Card';
 import { Title } from '../../components/ui/Title/Title';
+import { CartelError } from '../../components/ui/commons/CartelesError';
 import  RegistrarRostro from '../RegistrarRostro/RegistrarRostro';
 
 
@@ -15,24 +16,20 @@ export function RegistrarUsuarioPage() {
     const [ fechaNacimiento, setFechaNacimiento] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword , setConfirmPassword] = useState("");
-    const [usuarioCreadoId, setUsuarioCreadoId] = useState<string | null>(null);
+    const [usuarioCreadoId, setUsuarioCreadoId] = useState<number | null>(null);
     const [iniciarRegistroFacial, setIniciarRegistroFacial] = useState(false);
     const [registrando, setRegistrando] = useState(false);
+    const [error, setError] = useState("");
 
     const navigate = useNavigate();
     let mensajeRegistroRostro = "Después de crear tu cuenta, vas a poder registrar tu rostro de forma opcional.";
 
-    if (usuarioCreadoId) {
+    if (usuarioCreadoId !== null) {
         mensajeRegistroRostro = "Sumá el inicio de sesión con rostro de forma opcional o continuá con la verificación del correo.";
     }
 
     async function registrar(): Promise<void> {
-        if (password !== confirmPassword) {
-            alert("Las contraseñas no coinciden");
-
-            return;
-        }
-
+        setError("");
         setRegistrando(true);
         try {
             const usuarioCreado = await window.api.registrarUsuario({
@@ -42,14 +39,15 @@ export function RegistrarUsuarioPage() {
                 email,
                 fechaNacimiento:
                     new Date(fechaNacimiento),
-                password
+                password,
+                confirmPassword
             });
 
             localStorage.setItem("emailPendiente", email);
             setUsuarioCreadoId(usuarioCreado.id);
 
-        } catch {
-            alert("Error al registrar usuario");
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "No se pudo registrar el usuario.");
         } finally {
             setRegistrando(false);
         }
@@ -58,7 +56,7 @@ export function RegistrarUsuarioPage() {
     return (
         <main className="auth-layout">
             <section className="auth-image" aria-label="Registro de rostro">
-                {usuarioCreadoId && iniciarRegistroFacial ? (
+                {usuarioCreadoId !== null && iniciarRegistroFacial ? (
                     <div className="login-card">
                         <RegistrarRostro
                             usuarioId={usuarioCreadoId}
@@ -75,7 +73,7 @@ export function RegistrarUsuarioPage() {
                     <div className="login-card">
                         <span aria-hidden="true">&#128100;</span>
                         <p className="registro-rostro-mensaje">{mensajeRegistroRostro}</p>
-                        {usuarioCreadoId && (
+                        {usuarioCreadoId !== null && (
                             <Button onClick={() => setIniciarRegistroFacial(true)}>
                                 Registrar rostro
                             </Button>
@@ -85,7 +83,7 @@ export function RegistrarUsuarioPage() {
             </section>
 
             <Card>
-                {usuarioCreadoId ? (
+                {usuarioCreadoId !== null ? (
                     <div className="login-card">
                         <Title>Cuenta creada</Title>
                         <p>Ahora podés registrar tu rostro o continuar con la verificación por correo.</p>
@@ -148,6 +146,7 @@ export function RegistrarUsuarioPage() {
                     <Button onClick={() => void registrar()} disabled={registrando}>Registrarse</Button>
                     <Button variant="secondary" onClick={() => navigate("/")}>Cancelar</Button>
                 </div>
+                {error && <CartelError mensaje={error} onCerrar={() => setError("")} />}
                     </>
                 )}
             </Card>

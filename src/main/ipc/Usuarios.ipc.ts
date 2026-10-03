@@ -1,16 +1,26 @@
 import { ipcMain } from "electron";
+import { z } from "zod";
 
 import { Usuarios } from "../administracionDePersistencia/Usuarios";
-
 import {
+    cambiarPasswordSchema,
     iniciarSesionSchema,
+    recuperarPasswordSchema,
+    registrarUsuarioSchema,
+    validarCodigoSchema,
     verificarMailSchema,
-    type CambiarPasswordDto,
-    type RegistrarUsuarioDto,
-    type ValidarCodigoDto,
 } from "../logicaPersistente/gestionDeUsuarios/dto";
+import type { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios/dto";
 import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/LoginFacial";
 import { RegistrarRostro } from "../logicaPersistente/gestionDeUsuarios/RegistrarRostro";
+
+function validarDatos<T extends z.ZodType>(schema: T, datos: unknown): z.output<T> {
+    const resultado = schema.safeParse(datos);
+    if (!resultado.success) {
+        throw new Error(resultado.error.issues[0]?.message ?? "Los datos ingresados no son válidos.");
+    }
+    return resultado.data;
+}
 
 export function registerUsuariosIpc(
     usuarios: Usuarios
@@ -20,28 +30,22 @@ export function registerUsuariosIpc(
         "usuarios:iniciarSesion",
         async (_event, datos: unknown) => {
 
-            const validado =
-                iniciarSesionSchema.parse(
-                    datos
-                );
-
-            return usuarios.iniciarSesion(
-                validado
-            );
+            return usuarios.iniciarSesion(validarDatos(iniciarSesionSchema, datos));
         }
     );
 
     ipcMain.handle(
         "usuarios:registrarUsuario",
-        async (_event, datos: RegistrarUsuarioDto) => {
-            return usuarios.registrarUsuario(datos);
+        async (_event, datos: unknown) => {
+            const validado = validarDatos(registrarUsuarioSchema, datos) as RegistrarUsuarioDto;
+            return usuarios.registrarUsuario(validado);
         }
     );
 
     ipcMain.handle(
         "usuarios:verificarMail",
         async (_event, datos: unknown) => {
-            const validado = verificarMailSchema.parse(datos);
+            const validado = validarDatos(verificarMailSchema, datos);
             return usuarios.verificarMail(validado.email, validado.codigo);
         }
     );
@@ -49,57 +53,30 @@ export function registerUsuariosIpc(
     ipcMain.handle(
         "usuarios:recuperarPassword",
         async (_event, datos: unknown) => {
-            const email = typeof datos === "object" && datos !== null && "email" in datos
-                ? String((datos as { email?: unknown }).email ?? "")
-                : "";
-
-            if (!email) {
-                throw new Error("El email es obligatorio.");
-            }
-
-            return usuarios.recuperarPassword(email);
+            const validado = validarDatos(recuperarPasswordSchema, datos);
+            return usuarios.recuperarPassword(validado.email);
         }
     );
 
     ipcMain.handle(
         "usuarios:cambiarPassword",
         async (_event, datos: unknown) => {
-            const { email, nuevaPassword } = typeof datos === "object" && datos !== null
-                ? (datos as { email?: unknown; nuevaPassword?: unknown })
-                : {};
-
-            if (!email || !nuevaPassword) {
-                throw new Error("El email y la nueva contraseña son obligatorios.");
-            }
-
-            return usuarios.cambiarPassword({
-                email: String(email),
-                nuevaPassword: String(nuevaPassword),
-            });
+            const validado = validarDatos(cambiarPasswordSchema, datos);
+            return usuarios.cambiarPassword(validado);
         }
     );
 
     ipcMain.handle(
         "usuarios:validarCodigo",
         async (_event, datos: unknown) => {
-            const { email, codigo } = typeof datos === "object" && datos !== null
-                ? (datos as { email?: unknown; codigo?: unknown })
-                : {};
-
-            if (!email || !codigo) {
-                throw new Error("El email y el código son obligatorios.");
-            }
-
-            return usuarios.validarCodigo({
-                email: String(email),
-                codigo: String(codigo),
-            });
+            const validado = validarDatos(validarCodigoSchema, datos);
+            return usuarios.validarCodigo(validado);
         }
     );
 
     ipcMain.handle(
     'usuarios:registrarRostro',
-    (_evento, usuarioId: string, embedding: number[]) =>
+    (_evento, usuarioId: number, embedding: number[]) =>
         new RegistrarRostro().ejecutar(usuarioId, embedding)
     );
     

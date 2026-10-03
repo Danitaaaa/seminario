@@ -4,6 +4,9 @@
 
 :root {
   --color-primary: #495b7d;
+  --color-error: #b84c4c;
+  --color-error-bg: #fbeaea;
+  --color-error-texto: #8a3535;
 }
 
 body {
@@ -118,6 +121,69 @@ body {
     color: var(--color-primary);
     font-weight: 600;
     text-decoration: underline;
+}
+
+.cartel-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--color-error);
+  background: var(--color-error-bg);
+  color: var(--color-error-texto);
+}
+
+.cartel-error__icono {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-error);
+}
+
+.cartel-error__contenido {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cartel-error__titulo {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-error-texto);
+}
+
+.cartel-error__mensaje {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--color-error-texto);
+}
+
+.cartel-error__reintentar {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-error);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cartel-error__cerrar {
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-error-texto);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 @media (max-width: 720px) {

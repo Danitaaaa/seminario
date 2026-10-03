@@ -3,7 +3,7 @@ import { UsuarioFacialRepositorio } from '../../persistencia/UsuarioFacialReposi
 const UMBRAL_COINCIDENCIA = 0.5
  
 type ResultadoLogin =
-  | { exito: true; usuarioId: string }
+  | { exito: true; usuarioId: number }
   | { exito: false; mensaje: string }
  
 export class LoginFacial {
@@ -23,7 +23,7 @@ export class LoginFacial {
       return { exito: false, mensaje: 'Todavía no hay rostros registrados' }
     }
  
-    let usuarioIdMasCercano: string | null = null
+    let usuarioIdMasCercano: number | null = null
     let distanciaMasCercana = UMBRAL_COINCIDENCIA
 
     for (const rostroGuardado of rostrosGuardados) {

@@ -4,7 +4,7 @@ import { ObtenerEmbedding } from "../../../lib/ObtenerEmbeddings";
 import { Button } from "../../components/ui/Button/Button";
 
 interface Props {
-  onLoginExitoso: (usuarioId: string) => void
+  onLoginExitoso: (usuarioId: number) => void
 }
  
 export default function LoginFacial({ onLoginExitoso }: Props) {

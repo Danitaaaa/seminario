@@ -15,7 +15,7 @@ export class IniciarSesion {
 
         const filas = await this.persistencia.ejecutar(
             `SELECT
-                id,
+                id_usuario AS id,
                 nombre,
                 apellido,
                 apodo,
@@ -51,7 +51,7 @@ export class IniciarSesion {
         );
 
         if (!passwordValida) {
-            throw new Error('La contraseña es incorrecta');
+            throw new Error('La contraseña es incorrecta.');
         }
 
         return usuario;

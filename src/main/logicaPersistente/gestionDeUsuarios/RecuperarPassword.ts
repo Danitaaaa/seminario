@@ -13,7 +13,7 @@ export class RecuperarPassword {
     ): Promise<void>{
 
         const filas = await this.persistencia.ejecutar(
-            `SELECT id, email_verificado
+            `SELECT id_usuario AS id, email_verificado
             FROM usuarios
             WHERE email = $1
             `,

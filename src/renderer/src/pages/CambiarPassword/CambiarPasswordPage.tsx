@@ -4,14 +4,18 @@ import { Button } from "../../components/ui/Button/Button";
 import { Input } from "../../components/ui/Input/Input";
 import { Card } from "../../components/ui/Card/Card";
 import { Title } from "../../components/ui/Title/Title";
+import { CartelError } from "../../components/ui/commons/CartelesError";
 
 export function CambiarPasswordPage() {
     const [nuevaPassword, setNuevaPassword] = useState("");
+    const [error, setError] = useState("");
     const navigate = useNavigate();
     const email = localStorage.getItem("emailPendiente");
 
     async function cambiarPassword() {
+        setError("");
         if (!email) {
+            setError("No se encontró el email para cambiar la contraseña.");
             return;
         }
 
@@ -23,7 +27,7 @@ export function CambiarPasswordPage() {
             navigate("/");
 
         } catch (error) {
-            console.error("Error al cambiar la contraseña:", error);
+            setError(error instanceof Error ? error.message : "No se pudo cambiar la contraseña.");
         }
     }
 
@@ -39,6 +43,7 @@ export function CambiarPasswordPage() {
                             value={nuevaPassword}
                             onChange={e => setNuevaPassword(e.target.value)}
                         />
+                        {error && <CartelError mensaje={error} onCerrar={() => setError("")} />}
                         <Button onClick={cambiarPassword}>Cambiar contraseña</Button>
                     </div>
                 </Card>

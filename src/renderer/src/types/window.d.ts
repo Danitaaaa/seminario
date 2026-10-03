@@ -12,7 +12,7 @@ declare global {
           email: string;
           password: string;
         }
-      ) => Promise<{ id: string }>;
+      ) => Promise<{ id: number }>;
 
       registrarUsuario: (
         datos: {
@@ -22,8 +22,9 @@ declare global {
           email: string;
           fechaNacimiento: Date;
           password: string;
+          confirmPassword: string;
         }
-      ) => Promise<{ id: string }>;
+      ) => Promise<{ id: number }>;
 
       verificarMail: (
         datos: {
@@ -53,14 +54,14 @@ declare global {
       ) => Promise<void>;
 
       registrarRostro(
-        usuarioId: string,
+        usuarioId: number,
         embedding: number[]
       ): Promise<{ exito: boolean; mensaje: string }>
       
       loginFacial(
         embedding: number[]
       ): Promise<
-        | { exito: true; usuarioId: string }
+        | { exito: true; usuarioId: number }
         | { exito: false; mensaje: string }
       >
 
@@ -69,4 +70,3 @@ declare global {
 }
 
 export {};
-

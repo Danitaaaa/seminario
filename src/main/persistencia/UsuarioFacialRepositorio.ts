@@ -9,14 +9,14 @@ export const pool = new Pool({
 });
 
 export interface EmbeddingGuardado {
-  usuarioId: string
+  usuarioId: number
   embedding: number[]
 }
  
 export class UsuarioFacialRepositorio {
-  async guardarEmbedding(usuarioId: string, embedding: number[]): Promise<boolean> {
+  async guardarEmbedding(usuarioId: number, embedding: number[]): Promise<boolean> {
     const resultado = await pool.query(
-      'UPDATE usuarios SET embedding_facial = $1 WHERE id = $2',
+      'UPDATE usuarios SET embedding_facial = $1 WHERE id_usuario = $2',
       [embedding, usuarioId]
     )
     return (resultado.rowCount ?? 0) > 0
@@ -24,10 +24,10 @@ export class UsuarioFacialRepositorio {
  
   async obtenerEmbeddings(): Promise<EmbeddingGuardado[]> {
     const resultado = await pool.query(
-      'SELECT id, embedding_facial FROM usuarios WHERE embedding_facial IS NOT NULL AND email_verificado = true'
+      'SELECT id_usuario, embedding_facial FROM usuarios WHERE embedding_facial IS NOT NULL AND email_verificado = true'
     )
     return resultado.rows.map((fila) => ({
-      usuarioId: fila.id,
+      usuarioId: fila.id_usuario,
       embedding: fila.embedding_facial
     }))
   }

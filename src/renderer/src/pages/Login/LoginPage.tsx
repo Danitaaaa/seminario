@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button/Button';
 import { Input } from '../../components/ui/Input/Input';
 import { Card } from '../../components/ui/Card/Card';
 import { Title } from '../../components/ui/Title/Title';
+import { CartelError } from '../../components/ui/commons/CartelesError';
 import LoginFacial from './LoginFacialPage';
 
 export function LoginPage(){
@@ -14,8 +15,8 @@ export function LoginPage(){
 
     const navigate = useNavigate();
 
-    const finalizarInicioSesion = (usuarioId: string) => {
-        localStorage.setItem("usuarioId", usuarioId);
+    const finalizarInicioSesion = (usuarioId: number) => {
+        localStorage.setItem("usuarioId", String(usuarioId));
         navigate("/dashboard");
     };
 
@@ -24,8 +25,8 @@ export function LoginPage(){
         try {
             const usuario = await window.api.iniciarSesion({ email, password });
             finalizarInicioSesion(usuario.id);
-        } catch {
-            setError("No se pudo iniciar sesión. Revisá tus datos e intentá nuevamente.");
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "No se pudo iniciar sesión.");
         }
     }
 
@@ -67,7 +68,7 @@ export function LoginPage(){
                         <Button onClick={iniciarSesion}>Iniciar sesión</Button>
                         <Button variant="secondary" onClick={cancelar}>Cancelar</Button>
                     </div>
-                    {error && <p role="alert">{error}</p>}
+                    {error && <CartelError mensaje={error} onCerrar={() => setError("")} />}
 
                     <p>
                         ¿No tenés una cuenta? Haga click en{" "}

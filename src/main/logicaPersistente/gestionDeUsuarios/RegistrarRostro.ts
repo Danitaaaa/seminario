@@ -4,7 +4,7 @@ export class RegistrarRostro {
   private repositorio = new UsuarioFacialRepositorio()
  
   async ejecutar(
-    usuarioId: string,
+    usuarioId: number,
     embedding: number[]
   ): Promise<{ exito: boolean; mensaje: string }> {
     const valido =

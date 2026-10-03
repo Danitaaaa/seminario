@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS usuarios (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id_usuario INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
@@ -23,4 +23,3 @@ ADD COLUMN codigo_verificacion VARCHAR(6);
 
 ALTER TABLE usuarios
 ADD COLUMN fecha_expiracion_codigo TIMESTAMP;
-

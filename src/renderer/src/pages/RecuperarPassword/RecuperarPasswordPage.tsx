@@ -4,19 +4,22 @@ import { Button } from '../../components/ui/Button/Button';
 import { Input } from '../../components/ui/Input/Input';
 import { Card } from '../../components/ui/Card/Card';
 import { Title } from '../../components/ui/Title/Title';
+import { CartelError } from '../../components/ui/commons/CartelesError';
 
 export function RecuperarPasswordPage(){
     const [email, setEmail] = useState("");
+    const [error, setError] = useState("");
 
     const navigate = useNavigate();
     
     const recuperarPassword = async () => {
+        setError("");
         try {
             await window.api.recuperarPassword({email});
             localStorage.setItem('emailPendiente', email);
             navigate('/verificar-codigo');
         } catch (error) {
-            console.error('Error al recuperar contraseña:', error);
+            setError(error instanceof Error ? error.message : "No se pudo recuperar la contraseña.");
         }
     }
 
@@ -38,6 +41,7 @@ export function RecuperarPasswordPage(){
                         <Button onClick={recuperarPassword}>Recuperar contraseña</Button>
                         <Button variant="secondary" onClick={() => navigate("/")}>Cancelar</Button>
                     </div>
+                    {error && <CartelError mensaje={error} onCerrar={() => setError("")} />}
                     </div>
                 </Card>
             </div>

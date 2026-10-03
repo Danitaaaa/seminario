@@ -11,7 +11,7 @@ export class ValidarCodigo {
     ): Promise<void> {
 
         const filas = await this.persistencia.ejecutar(
-            `SELECT id, codigo_verificacion, fecha_expiracion_codigo
+            `SELECT id_usuario AS id, codigo_verificacion, fecha_expiracion_codigo
             FROM usuarios
             WHERE email = $1
             `,

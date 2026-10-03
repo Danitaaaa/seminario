@@ -38,7 +38,7 @@ export const usuariosApi = {
             datos
         ),
     
-    registrarRostro: (usuarioId: string, embedding: number[]) =>
+    registrarRostro: (usuarioId: number, embedding: number[]) =>
     ipcRenderer.invoke('usuarios:registrarRostro', usuarioId, embedding),
  
     loginFacial: (embedding: number[]) =>

@@ -15,7 +15,7 @@ export class RegistrarUsuario {
     ): Promise<Usuario>{
 
         const existe = await this.persistencia.ejecutar(
-            `SELECT id
+            `SELECT id_usuario AS id
             FROM usuarios
             WHERE email = $1
             `,
@@ -49,7 +49,7 @@ export class RegistrarUsuario {
             )
             VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8)
             RETURNING
-                id,
+                id_usuario AS id,
                 nombre,
                 apellido,
                 apodo,

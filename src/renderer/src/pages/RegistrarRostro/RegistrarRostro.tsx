@@ -3,15 +3,17 @@ import { UsarCamara } from '../../hooks/UsarCamara'
 import { ObtenerEmbedding } from '../../../lib/ObtenerEmbeddings'
 import { Button } from '../../components/ui/Button/Button'
 import { Title } from '../../components/ui/Title/Title'
+import { CartelError } from '../../components/ui/commons/CartelesError'
  
 interface Props {
-  usuarioId: string
+  usuarioId: number
   onRegistroExitoso: () => void
 }
  
 export default function RegistrarRostro({ usuarioId, onRegistroExitoso }: Props) {
   const { videoRef, camaraLista, error, alCargarVideo } = UsarCamara()
   const [mensaje, setMensaje] = useState('')
+  const [mensajeError, setMensajeError] = useState('')
   const [procesando, setProcesando] = useState(false)
   
   let textoBoton = 'Tomar foto y registrar'
@@ -23,6 +25,7 @@ export default function RegistrarRostro({ usuarioId, onRegistroExitoso }: Props)
   const registrar = async () => {
     if (!videoRef.current) return
     setProcesando(true)
+    setMensajeError('')
     setMensaje('Detectando rostro...')
     try {
       const embedding = await ObtenerEmbedding(videoRef.current)
@@ -35,8 +38,7 @@ export default function RegistrarRostro({ usuarioId, onRegistroExitoso }: Props)
       if (respuesta.exito) onRegistroExitoso()
     } catch (error) {
       console.error('Error al registrar el rostro:', error)
-      const mensajeError = error instanceof Error ? error.message : String(error)
-      setMensaje(`No se pudo registrar el rostro: ${mensajeError}`)
+      setMensajeError(error instanceof Error ? error.message : String(error))
     } finally {
       setProcesando(false)
     }
@@ -50,7 +52,9 @@ export default function RegistrarRostro({ usuarioId, onRegistroExitoso }: Props)
       <Button onClick={registrar} disabled={!camaraLista || procesando}>
         {textoBoton}
       </Button>
-      <p role="status">{error || mensaje}</p>
+      {error && <CartelError mensaje={error} />}
+      {mensajeError && <CartelError mensaje={mensajeError} onCerrar={() => setMensajeError('')} />}
+      <p role="status">{mensaje}</p>
     </div>
   )
 }

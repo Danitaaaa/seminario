@@ -13,7 +13,7 @@ export class CambiarPassword {
     ): Promise<void> {
 
         const filas = await this.persistencia.ejecutar(
-            `SELECT id, email_verificado
+            `SELECT id_usuario AS id, email_verificado
             FROM usuarios
             WHERE email = $1
             `,
@@ -43,7 +43,7 @@ export class CambiarPassword {
                 password_hash = $1,
                 codigo_verificacion = NULL,
                 fecha_expiracion_codigo = NULL
-            WHERE id = $2
+            WHERE id_usuario = $2
             `,
             [passwordHash, usuario.id]
         );
