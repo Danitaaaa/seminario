@@ -8,7 +8,7 @@ import { CambiarPasswordPage } from "./pages/CambiarPassword/CambiarPasswordPage
 import { RecuperarPasswordPage } from "./pages/RecuperarPassword/RecuperarPasswordPage";
 import { Dashboard } from "./pages/Dashboard/Dashboard";
 import { NodoPage } from "./pages/materialEstudio/nodoPage";
-  import { SplashScreen } from "./pages/splash/splashScreen";
+import { SplashScreen } from "./pages/splash/splashScreen";
 import { cargarModelos } from "../lib/cargarModelos";
 import { Proximamente } from "./pages/proximamente/proximamente";
 
@@ -33,6 +33,7 @@ export default function App() {
       <Route path="/cambioPassword" element={<CambiarPasswordPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/material" element={<NodoPage />} />
+            <Route path="/proximamente/:id" element={<Proximamente />} />
     </Routes>
   );
 }
