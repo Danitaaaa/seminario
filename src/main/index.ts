@@ -3,7 +3,7 @@ import { app, BrowserWindow, net, protocol } from 'electron';
 import { isAbsolute, join, relative, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
-import { config } from 'dotenv';
+
 
 import { pool, verifyDbConnection } from './persistencia/BaseDeDatos';
 import { Persistencia } from './persistencia/Persistencia';
@@ -35,7 +35,7 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-config({ path: join(__dirname, "../../.env") });
+
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1200,
