@@ -8,8 +8,9 @@ import { CambiarPasswordPage } from "./pages/CambiarPassword/CambiarPasswordPage
 import { RecuperarPasswordPage } from "./pages/RecuperarPassword/RecuperarPasswordPage";
 import { Dashboard } from "./pages/Dashboard/Dashboard";
 import { NodoPage } from "./pages/materialEstudio/nodoPage";
-import { SplashScreen } from "./pages/Splash/SplashScreen";
+  import { SplashScreen } from "./pages/splash/splashScreen";
 import { cargarModelos } from "../lib/cargarModelos";
+import { Proximamente } from "./pages/proximamente/proximamente";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);

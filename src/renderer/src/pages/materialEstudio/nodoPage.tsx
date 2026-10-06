@@ -36,7 +36,6 @@ const eliminarUno = (n: Nodo) =>
         : window.api.eliminarNodo({ id: n.id });
 
 export function NodoPage() {
-    const [idActivo, setIdActivo] = useState('material');
     const [nodos, setNodos] = useState<Nodo[]>([]);
 
     const [vista, setVista] = useState<VistaListado>('lista');
@@ -276,9 +275,8 @@ export function NodoPage() {
     return (
         <PlantillaLayout
             titulo="Material Estudio"
-            idActivo={idActivo}
+            idActivo="material"
             usuario={{ nombre: usuarioLogueado }}
-            onNavegar={setIdActivo}
             onBuscar={setBusqueda}
         >
             {errorMover && (

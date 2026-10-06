@@ -2,7 +2,7 @@ import { CSSProperties, useEffect } from 'react';
 import { colores } from '../../estilos/colores';
 import icono from '../../assets/splash-icono.png';
 import texto from '../../assets/splash-texto.png';
-import './SplashScreen.css';
+  import './splashScreen.css';
 
 interface Props {
   onFinish: () => void;

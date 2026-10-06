@@ -27,3 +27,13 @@ export const accionesSuperiores: AccionSuperior[] = [
   { id: "mensajes", etiqueta: "Mensajes", icono: Mail },
   { id: "notificaciones", etiqueta: "Notificaciones", icono: Bell },
 ];
+
+// A qué ruta lleva cada ítem de la barra lateral.
+const rutasPorItem: Record<string, string> = {
+  inicio: '/dashboard',
+  material: '/material',
+  'cerrar-sesion': '/',
+};
+
+// Los ítems que todavía no tienen pantalla van a "Próximamente".
+export const rutaDe = (id: string) => rutasPorItem[id] ?? `/proximamente/${id}`;

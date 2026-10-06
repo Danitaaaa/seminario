@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import type { UsuarioActual } from "../../types/layout";
-import { itemsPrincipales, itemsInferiores, accionesSuperiores } from "../navegacion";
+import { itemsPrincipales, itemsInferiores, accionesSuperiores, rutaDe } from "../navegacion";
 import { BarraLateral } from "../../componentes/layout/barraLateral";
 import { BarraSuperior } from "../../componentes/layout/barraSuperior";
 
@@ -9,7 +10,7 @@ interface PlantillaLayoutProps {
   titulo: string;
   idActivo: string;
   usuario: UsuarioActual;
-  onNavegar: (id: string) => void;
+  onNavegar?: (id: string) => void;
   onBuscar?: (texto: string) => void;
   onAccion?: (id: string) => void;
   children: ReactNode; // el contenido propio de cada pantalla
@@ -20,6 +21,10 @@ export function PlantillaLayout({
   titulo, idActivo, usuario, onNavegar, onBuscar, onAccion, children,
 }: PlantillaLayoutProps) {
   const [menuColapsado, setMenuColapsado] = useState(false);
+  const navigate = useNavigate();
+
+  // Si la pantalla no maneja la navegación, se va a la ruta del ítem.
+  const navegar = onNavegar ?? ((id: string) => navigate(rutaDe(id)));
 
   return (
     <div className="app-shell">
@@ -28,7 +33,7 @@ export function PlantillaLayout({
         itemsInferiores={itemsInferiores}
         idActivo={idActivo}
         colapsada={menuColapsado}
-        onNavegar={onNavegar}
+        onNavegar={navegar}
       />
       <div className="app-principal">
         <BarraSuperior
