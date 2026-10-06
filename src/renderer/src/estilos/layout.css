@@ -38,11 +38,18 @@
 .app-lateral__logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   min-height: var(--dim-barra-superior);
   padding: 0 var(--espacio-sm);
   font-size: var(--tamano-lg);
   font-weight: var(--peso-medium);
   overflow: hidden;
+}
+
+.app-lateral__logo-img {
+  width: 120px;
+  height: auto;
+  display: block;
 }
 
 .app-lateral__grupo {
