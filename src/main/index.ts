@@ -1,12 +1,14 @@
 import 'dotenv/config';
-import { app, BrowserWindow } from 'electron';
-import { join } from 'path';
+import { app, BrowserWindow, net, protocol } from 'electron';
+import { isAbsolute, join, relative, resolve } from 'path';
+import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
-import { config } from 'dotenv';
+
 
 import { pool, verifyDbConnection } from './persistencia/baseDeDatos';
 import { Persistencia } from './persistencia/persistencia';
 
+// Gestion de material de estudio
 import { CrearNodo } from './logicaPersistente/gestionMaterialEstudio/crearNodo';
 import { ModificarNodo } from './logicaPersistente/gestionMaterialEstudio/modificarNodo';
 import { BuscarNodos } from './logicaPersistente/gestionMaterialEstudio/buscarNodos';
@@ -15,7 +17,6 @@ import { MoverNodo } from './logicaPersistente/gestionMaterialEstudio/moverNodo'
 import { Nodos } from './administracionDePersistencia/nodo';
 import { registrarNodosIpc } from './ipc/nodo.ipc';
 import { ListarContenido } from './logicaPersistente/gestionMaterialEstudio/listarContenido';
-
 import { CrearArchivo } from './logicaPersistente/gestionMaterialEstudio/crearArchivo';
 import { Archivos } from './administracionDePersistencia/archivos';
 import { registerArchivosIpc } from './ipc/archivos.ipc';
@@ -28,9 +29,31 @@ import { ActualizarContenidoArchivo } from './logicaPersistente/gestionMaterialE
 import { Almacenamiento } from './persistencia/almacenamiento';
 import path from 'path';
 
+// Gestion de usuarios
+import { IniciarSesion } from './logicaPersistente/gestionDeUsuarios/IniciarSesion';
+import { RegistrarUsuario } from './logicaPersistente/gestionDeUsuarios/RegistrarUsuario';
+import { VerificarMail } from './logicaPersistente/gestionDeUsuarios/VerificarMail';
+import { RecuperarPassword } from './logicaPersistente/gestionDeUsuarios/RecuperarPassword';
+import { Usuarios } from './administracionDePersistencia/Usuarios';
+import { registerUsuariosIpc } from './ipc/Usuarios.ipc';
+import { CambiarPassword } from './logicaPersistente/gestionDeUsuarios/CambiarPassword';
+import { ValidarCodigo } from './logicaPersistente/gestionDeUsuarios/ValidarCodigo';
+
 let mainWindow: BrowserWindow | null = null;
 
-config({ path: join(__dirname, "../../.env") });
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'modelos',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+    },
+  },
+]);
+
+
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -82,9 +105,40 @@ function wireDependencies(): void {
   const archivos = new Archivos(crearArchivo, buscarArchivos, modificarArchivo, eliminarArchivo, moverArchivos,
     obtenerArchivo, actualizarContenidoArchivo);
   registerArchivosIpc(archivos, almacenamiento);
+
+  // Gestion de usuarios
+  const iniciarSesion = new IniciarSesion(persistencia);
+  const registrarUsuario = new RegistrarUsuario(persistencia);
+  const verificarMail = new VerificarMail(persistencia);
+  const recuperarPassword = new RecuperarPassword(persistencia);
+  const validarCodigo = new ValidarCodigo(persistencia);
+  const cambiarPassword = new CambiarPassword(persistencia);
+  const usuarios = new Usuarios(iniciarSesion, registrarUsuario, verificarMail, recuperarPassword, validarCodigo, cambiarPassword);
+  registerUsuariosIpc(usuarios);
 }
 
 app.whenReady().then(async () => {
+  const carpetaModelos = resolve(__dirname, '../renderer/models');
+  protocol.handle('modelos', (request) => {
+    const url = new URL(request.url);
+    if (url.hostname !== 'local') return new Response('', { status: 403 });
+
+    let archivo: string;
+    try {
+      archivo = decodeURIComponent(url.pathname);
+    } catch {
+      return new Response('', { status: 400 });
+    }
+
+    const ruta = resolve(carpetaModelos, `.${archivo}`);
+    const rutaRelativa = relative(carpetaModelos, ruta);
+    if (rutaRelativa.startsWith('..') || isAbsolute(rutaRelativa)) {
+      return new Response('', { status: 403 });
+    }
+
+    return net.fetch(pathToFileURL(ruta).toString());
+  });
+
   try {
     await verifyDbConnection();
   } catch (err) {
