@@ -1,10 +1,7 @@
-import { PruebaPage } from './pages/Prueba/PruebaPage';
+import { EventosPage } from './pages/Eventos/EventosPage'
 
 export default function App() {
   return (
-    <div style={{ padding: 24, fontFamily: 'sans-serif' }}>
-      <h1>Proyecto B</h1>
-      <PruebaPage />
-    </div>
+      <EventosPage />
   );
 }

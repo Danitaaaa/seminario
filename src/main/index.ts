@@ -12,6 +12,27 @@ import { ObtenerSaludo } from './logicaPersistente/gestionDePrueba/ObtenerSaludo
 import { Prueba } from './administracionDePersistencia/Prueba';
 import { registerPruebaIpc } from './ipc/prueba.ipc';
 
+import { CrearEvento } from './logicaPersistente/gestionDeEventos/CrearEvento';
+import { ListarEventos } from './logicaPersistente/gestionDeEventos/ListarEventos';
+import { ModificarEvento } from './logicaPersistente/gestionDeEventos/ModificarEvento';
+import { EliminarEvento } from './logicaPersistente/gestionDeEventos/EliminarEvento';
+import { Eventos } from './administracionDePersistencia/Eventos';
+import { registerEventosIpc } from './ipc/eventos.ipc';
+
+import { CrearHorario } from './logicaPersistente/gestionDeHorarios/CrearHorario';
+import { ListarHorarios } from './logicaPersistente/gestionDeHorarios/ListarHorarios';
+import { ModificarHorario } from './logicaPersistente/gestionDeHorarios/ModificarHorario';
+import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/EliminarHorario';
+import { Horarios } from './administracionDePersistencia/Horarios';
+import { registerHorariosIpc } from './ipc/horarios.ipc';
+
+import { CrearCategoria } from './logicaPersistente/gestionDeCategorias/CrearCategoria';
+import { ListarCategorias } from './logicaPersistente/gestionDeCategorias/ListarCategorias';
+import { ModificarCategoria } from './logicaPersistente/gestionDeCategorias/ModificarCategoria';
+import { EliminarCategoria } from './logicaPersistente/gestionDeCategorias/EliminarCategoria';
+import { Categorias } from './administracionDePersistencia/Categorias';
+import { registerCategoriasIpc } from './ipc/categorias.ipc';
+
 let mainWindow: BrowserWindow | null = null;
 
 config({ path: join(__dirname, "../../.env") });
@@ -50,6 +71,24 @@ function wireDependencies(): void {
   registerPruebaIpc(prueba);
 
   // Repetir para Gestión de Eventos, Gestión de Sesión, Proyectos, Usuario...
+  const crearEvento = new CrearEvento(persistencia);
+  const listarEventos = new ListarEventos(persistencia);
+  const modificarEvento = new ModificarEvento(persistencia);
+  const eliminarEvento = new EliminarEvento(persistencia);
+  const eventos = new Eventos(crearEvento, listarEventos, modificarEvento, eliminarEvento);
+  registerEventosIpc(eventos);
+
+  const horarios = new Horarios(
+    new CrearHorario(persistencia), new ListarHorarios(persistencia),
+    new ModificarHorario(persistencia), new EliminarHorario(persistencia)
+  );
+  registerHorariosIpc(horarios);
+
+  const categorias = new Categorias(
+    new CrearCategoria(persistencia), new ListarCategorias(persistencia),
+    new ModificarCategoria(persistencia), new EliminarCategoria(persistencia)
+  );
+  registerCategoriasIpc(categorias);
 }
 
 app.whenReady().then(async () => {
