@@ -6,16 +6,22 @@ import { VerificarCodigoPage } from "./pages/VerificarCodigo/VerificarCodigoPage
 import { CambiarPasswordPage } from "./pages/CambiarPassword/CambiarPasswordPage";
 import { RecuperarPasswordPage } from "./pages/RecuperarPassword/RecuperarPasswordPage";
 import { Dashboard } from "./pages/Dashboard/Dashboard";
-import { useEffect } from "react";
+import { SplashScreen } from "./pages/Splash/SplashScreen";
+import { useEffect, useState } from "react";
 import { cargarModelos } from "../lib/cargarModelos";
 
 export default function App() {
+  const [mostrarSplash, setMostrarSplash] = useState(true);
+
   useEffect(() => {
-  cargarModelos().catch(console.error)
-}, [])
+    cargarModelos().catch(console.error)
+  }, [])
+
+  if (mostrarSplash) {
+    return <SplashScreen onFinish={() => setMostrarSplash(false)} />;
+  }
 
   return (
-    
     <Routes>
 
       <Route
