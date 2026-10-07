@@ -7,6 +7,7 @@ export interface HorarioCursado {
   usuarioId: number;
   diaSemana: number; // 0-6, igual a Date.getDay()
   horaInicio: string; // "HH:MM"
+  horaFin: string; // "HH:MM"
   titulo: string;
 }
 
@@ -14,6 +15,7 @@ export interface CrearHorarioInput {
   usuarioId: number;
   diaSemana: number;
   horaInicio: string;
+  horaFin: string;
   titulo: string;
 }
 
@@ -21,6 +23,7 @@ export interface ModificarHorarioInput {
   id: number;
   diaSemana?: number;
   horaInicio?: string;
+  horaFin?: string;
   titulo?: string;
 }
 

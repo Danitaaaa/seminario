@@ -13,20 +13,37 @@ import {
 // TODO: reemplazar por el id del usuario logueado (contexto de sesión / auth)
 const USUARIO_ID_ACTUAL = 1;
 
-const ORDEN_VISUAL_DIAS = [1, 2, 3, 4, 5, 6, 0];
+const NOMBRES_MES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+// Electron envuelve el error real como "Error invoking remote method '...':
+// Error: <mensaje nuestro>". Esto rescata el mensaje de negocio (ej. "Ya
+// tenés X cargado ese día...") para mostrarlo tal cual, en vez del genérico.
+function extraerMensajeError(err: unknown, generico: string): string {
+  const texto = err instanceof Error ? err.message : String(err);
+  const partes = texto.split('Error: ');
+  return partes.length > 1 ? partes[partes.length - 1] : generico;
+}
 
 export function HorariosPage(): JSX.Element {
   const [idActivo, setIdActivo] = useState('horarios');
   const [busqueda, setBusqueda] = useState('');
   const usuarioLogueado = 'Usuario';
 
+  // NUEVO: en vez de listar los 7 días apilados, se navega de a un día por
+  // vez (como en el wireframe: "Lunes 7 de Septiembre" con flechas ‹ ›).
+  const [fechaActual, setFechaActual] = useState(() => new Date());
+  const diaSemanaActual = fechaActual.getDay();
+
   const [horarios, setHorarios] = useState<HorarioCursado[]>([]);
   const [cargando, setCargando] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
 
-  const [formDiaSemana, setFormDiaSemana] = useState(1); // lunes por defecto
-  const [formHora, setFormHora] = useState('08:00');
+  const [formHoraInicio, setFormHoraInicio] = useState('08:00');
+  const [formHoraFin, setFormHoraFin] = useState('09:00');
   const [formTitulo, setFormTitulo] = useState('');
   const [errorForm, setErrorForm] = useState<string | null>(null);
 
@@ -44,10 +61,18 @@ export function HorariosPage(): JSX.Element {
     }
   }
 
-  function abrirModalNuevo(diaSemana: number): void {
+  function cambiarDia(delta: number): void {
+    setFechaActual((prev) => {
+      const nueva = new Date(prev);
+      nueva.setDate(prev.getDate() + delta);
+      return nueva;
+    });
+  }
+
+  function abrirModalNuevo(): void {
     setEditandoId(null);
-    setFormDiaSemana(diaSemana);
-    setFormHora('08:00');
+    setFormHoraInicio('08:00');
+    setFormHoraFin('09:00');
     setFormTitulo('');
     setErrorForm(null);
     setModalAbierto(true);
@@ -55,8 +80,8 @@ export function HorariosPage(): JSX.Element {
 
   function abrirModalEditar(horario: HorarioCursado): void {
     setEditandoId(horario.id);
-    setFormDiaSemana(horario.diaSemana);
-    setFormHora(horario.horaInicio);
+    setFormHoraInicio(horario.horaInicio);
+    setFormHoraFin(horario.horaFin);
     setFormTitulo(horario.titulo);
     setErrorForm(null);
     setModalAbierto(true);
@@ -67,22 +92,27 @@ export function HorariosPage(): JSX.Element {
       setErrorForm('El nombre de la materia es obligatorio.');
       return;
     }
+    if (formHoraFin <= formHoraInicio) {
+      setErrorForm('La hora de fin debe ser posterior a la hora de inicio.');
+      return;
+    }
 
     try {
       setErrorForm(null);
       if (editandoId !== null) {
         const cambios: ModificarHorarioInput = {
           id: editandoId,
-          diaSemana: formDiaSemana,
-          horaInicio: formHora,
+          horaInicio: formHoraInicio,
+          horaFin: formHoraFin,
           titulo: formTitulo.trim(),
         };
         await window.api.modificarHorario(cambios);
       } else {
         const nuevo: CrearHorarioInput = {
           usuarioId: USUARIO_ID_ACTUAL,
-          diaSemana: formDiaSemana,
-          horaInicio: formHora,
+          diaSemana: diaSemanaActual,
+          horaInicio: formHoraInicio,
+          horaFin: formHoraFin,
           titulo: formTitulo.trim(),
         };
         await window.api.crearHorario(nuevo);
@@ -91,7 +121,12 @@ export function HorariosPage(): JSX.Element {
       await cargarHorarios();
     } catch (err) {
       console.error('Error al guardar horario:', err);
-      setErrorForm('No se pudo guardar el horario. Revisá la consola para más detalles.');
+      // CAMBIO: antes mostraba siempre un mensaje genérico. Ahora, si el
+      // backend rechazó por superposición (punto 1 pedido), se ve el
+      // mensaje real: "Ya tenés X cargado ese día de HH:MM a HH:MM."
+      setErrorForm(
+        extraerMensajeError(err, 'No se pudo guardar el horario. Revisá la consola para más detalles.')
+      );
     }
   }
 
@@ -100,9 +135,11 @@ export function HorariosPage(): JSX.Element {
     await cargarHorarios();
   }
 
-  function horariosDelDia(diaSemana: number): HorarioCursado[] {
-    return horarios.filter((h) => h.diaSemana === diaSemana);
-  }
+  const horariosDelDia = horarios
+    .filter((h) => h.diaSemana === diaSemanaActual)
+    .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+
+  const tituloFecha = `${NOMBRES_DIA_SEMANA[diaSemanaActual]} ${fechaActual.getDate()} de ${NOMBRES_MES[fechaActual.getMonth()]}`;
 
   return (
     <PlantillaLayout
@@ -112,97 +149,96 @@ export function HorariosPage(): JSX.Element {
       onNavegar={setIdActivo}
       onBuscar={setBusqueda}
     >
-    <div style={{ padding: spacing.lg }}>
-      <h2 style={estiloTituloSeccion}>Horarios de cursado</h2>
-      {cargando && <p style={{ color: colors.textSecondary }}>Cargando...</p>}
+      <div style={{ padding: spacing.lg }}>
+        <h2 style={estiloTituloSeccion}>Horarios de cursado</h2>
 
-      {ORDEN_VISUAL_DIAS.map((dia) => (
-        <div key={dia} style={estiloBloqueDia}>
-          <div style={estiloCabeceraDia}>
-            <span style={estiloNombreDia}>{NOMBRES_DIA_SEMANA[dia]}</span>
-            <button onClick={() => abrirModalNuevo(dia)} style={estiloBotonPrimario}>
-              + Ingresar Horario
-            </button>
+        <div style={estiloTarjeta}>
+          <div style={estiloCabeceraTarjeta}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+              <button onClick={() => cambiarDia(-1)} style={estiloBotonNav}>‹</button>
+              <span style={estiloFechaTitulo}>{tituloFecha}</span>
+              <button onClick={() => cambiarDia(1)} style={estiloBotonNav}>›</button>
+            </div>
+            <button onClick={abrirModalNuevo} style={estiloBotonPrimario}>+ Ingresar Horario</button>
           </div>
 
-          {horariosDelDia(dia).length === 0 ? (
-            <p style={{ color: colors.textSecondary, fontSize: typography.fontSize.sm, margin: 0 }}>
+          {cargando && <p style={{ color: colors.textSecondary }}>Cargando...</p>}
+          {!cargando && horariosDelDia.length === 0 && (
+            <p style={{ color: colors.textSecondary, fontSize: typography.fontSize.sm }}>
               Sin clases este día.
             </p>
-          ) : (
-            horariosDelDia(dia).map((h) => (
-              <div key={h.id} style={estiloFilaHorario}>
-                <div>
-                  <div style={{ fontWeight: typography.fontWeight.bold, color: colors.textPrimary }}>
-                    {h.titulo}
-                  </div>
-                  <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary }}>
-                    Hora: {h.horaInicio}
-                  </div>
+          )}
+          {horariosDelDia.map((h) => (
+            <div key={h.id} style={estiloFilaHorario}>
+              <div>
+                <div style={{ fontWeight: typography.fontWeight.bold, color: colors.textPrimary }}>
+                  {h.titulo}
                 </div>
-                <div style={{ display: 'flex', gap: spacing.xs }}>
-                  <button onClick={() => abrirModalEditar(h)} style={estiloBotonNav}>Editar</button>
-                  <button
-                    onClick={() => eliminarHorario(h.id)}
-                    style={{ ...estiloBotonNav, color: colors.error }}
-                  >
-                    Eliminar
-                  </button>
+                <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary }}>
+                  Hora: {h.horaInicio} a {h.horaFin}
                 </div>
               </div>
-            ))
-          )}
+              <div style={{ display: 'flex', gap: spacing.xs }}>
+                <button onClick={() => abrirModalEditar(h)} style={estiloBotonNav}>Editar</button>
+                <button onClick={() => eliminarHorario(h.id)} style={{ ...estiloBotonNav, color: colors.error }}>
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
 
-      {modalAbierto && (
-        <div style={estiloOverlay}>
-          <div style={estiloModal}>
-            <h3 style={estiloTituloModal}>
-              {editandoId !== null ? 'Editar Horario' : 'Nuevo Horario'}
-            </h3>
+        {modalAbierto && (
+          <div style={estiloOverlay}>
+            <div style={estiloModal}>
+              <h3 style={estiloTituloModal}>
+                {editandoId !== null ? 'Editar Horario' : 'Nuevo Horario'}
+              </h3>
+              <p style={estiloSubtituloModal}>{tituloFecha}</p>
 
-            <label style={estiloEtiquetaCampo}>Día</label>
-            <select
-              value={formDiaSemana}
-              onChange={(e) => setFormDiaSemana(Number(e.target.value))}
-              style={estiloInput}
-            >
-              {ORDEN_VISUAL_DIAS.map((dia) => (
-                <option key={dia} value={dia}>{NOMBRES_DIA_SEMANA[dia]}</option>
-              ))}
-            </select>
+              <div style={{ display: 'flex', gap: spacing.sm }}>
+                <div style={{ flex: 1 }}>
+                  <label style={estiloEtiquetaCampo}>Desde</label>
+                  <input
+                    type="time"
+                    value={formHoraInicio}
+                    onChange={(e) => setFormHoraInicio(e.target.value)}
+                    style={estiloInput}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={estiloEtiquetaCampo}>Hasta</label>
+                  <input
+                    type="time"
+                    value={formHoraFin}
+                    onChange={(e) => setFormHoraFin(e.target.value)}
+                    style={estiloInput}
+                  />
+                </div>
+              </div>
 
-            <label style={estiloEtiquetaCampo}>Horario</label>
-            <input
-              type="time"
-              value={formHora}
-              onChange={(e) => setFormHora(e.target.value)}
-              style={estiloInput}
-            />
+              <label style={estiloEtiquetaCampo}>Materia</label>
+              <input
+                placeholder="Ingrese título..."
+                value={formTitulo}
+                onChange={(e) => setFormTitulo(e.target.value)}
+                style={estiloInput}
+              />
 
-            <label style={estiloEtiquetaCampo}>Materia</label>
-            <input
-              placeholder="Ingrese título..."
-              value={formTitulo}
-              onChange={(e) => setFormTitulo(e.target.value)}
-              style={estiloInput}
-            />
+              {errorForm && <div style={estiloError}>{errorForm}</div>}
 
-            {errorForm && <div style={estiloError}>{errorForm}</div>}
-
-            <div style={{ display: 'flex', gap: spacing.sm, justifyContent: 'center' }}>
-              <button onClick={() => setModalAbierto(false)} style={estiloBotonCancelarModal}>
-                Cancelar
-              </button>
-              <button onClick={guardarHorario} style={estiloBotonGuardarModal}>
-                {editandoId !== null ? 'Guardar cambios' : '+'}
-              </button>
+              <div style={{ display: 'flex', gap: spacing.sm, justifyContent: 'center' }}>
+                <button onClick={() => setModalAbierto(false)} style={estiloBotonCancelarModal}>
+                  Cancelar
+                </button>
+                <button onClick={guardarHorario} style={estiloBotonGuardarModal}>
+                  {editandoId !== null ? 'Guardar cambios' : '+'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </PlantillaLayout>
   );
 }
@@ -216,24 +252,24 @@ const estiloTituloSeccion: React.CSSProperties = {
   marginBottom: spacing.md,
 };
 
-const estiloBloqueDia: React.CSSProperties = {
+const estiloTarjeta: React.CSSProperties = {
   background: colors.surface,
   border: `1px solid ${colors.border}`,
-  borderRadius: 8,
+  borderRadius: 10,
   padding: spacing.md,
-  marginBottom: spacing.sm,
 };
 
-const estiloCabeceraDia: React.CSSProperties = {
+const estiloCabeceraTarjeta: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  marginBottom: spacing.sm,
+  marginBottom: spacing.md,
 };
 
-const estiloNombreDia: React.CSSProperties = {
+const estiloFechaTitulo: React.CSSProperties = {
   fontFamily: typography.fontFamily.body,
   fontWeight: typography.fontWeight.bold,
+  fontSize: typography.fontSize.base,
   color: colors.textPrimary,
 };
 
@@ -241,8 +277,11 @@ const estiloFilaHorario: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  borderTop: `1px solid ${colors.border}`,
-  padding: `${spacing.sm} 0`,
+  borderLeft: `4px solid ${colors.accent}`,
+  background: colors.background,
+  borderRadius: 6,
+  padding: spacing.sm,
+  marginBottom: spacing.sm,
 };
 
 const estiloBotonNav: React.CSSProperties = {
@@ -306,6 +345,15 @@ const estiloTituloModal: React.CSSProperties = {
   fontSize: typography.fontSize.xl,
   fontWeight: typography.fontWeight.bold,
   textAlign: 'center',
+  margin: 0,
+};
+
+const estiloSubtituloModal: React.CSSProperties = {
+  color: colors.surface,
+  fontFamily: typography.fontFamily.body,
+  fontSize: typography.fontSize.sm,
+  textAlign: 'center',
+  opacity: 0.85,
   margin: 0,
   marginBottom: spacing.md,
 };
