@@ -8,9 +8,12 @@ import { pool, verifyDbConnection } from './persistencia/BaseDeDatos';
 import { Persistencia } from './persistencia/Persistencia';
 
 
-import { ObtenerSaludo } from './logicaPersistente/gestionDePrueba/ObtenerSaludo';
-import { Prueba } from './administracionDePersistencia/Prueba';
-import { registerPruebaIpc } from './ipc/prueba.ipc';
+import { CrearHorario } from './logicaPersistente/gestionDeHorarios/CrearHorario';
+import { ListarHorarios } from './logicaPersistente/gestionDeHorarios/ListarHorarios';
+import { ModificarHorario } from './logicaPersistente/gestionDeHorarios/ModificarHorario';
+import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/EliminarHorario';
+import { Horarios } from './administracionDePersistencia/Horarios';
+import { registerHorariosIpc } from './ipc/horarios.ipc';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -45,12 +48,12 @@ function wireDependencies(): void {
   const persistencia = new Persistencia(pool);
 
 
-  const obtenerSaludo = new ObtenerSaludo(persistencia);
-  const prueba = new Prueba(obtenerSaludo);
-  registerPruebaIpc(prueba);
-
   // Repetir para Gestión de Eventos, Gestión de Sesión, Proyectos, Usuario...
-}
+ const horarios = new Horarios(
+    new CrearHorario(persistencia), new ListarHorarios(persistencia),
+    new ModificarHorario(persistencia), new EliminarHorario(persistencia)
+  );
+  registerHorariosIpc(horarios);
 
 app.whenReady().then(async () => {
   try {

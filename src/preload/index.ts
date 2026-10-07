@@ -1,6 +1,6 @@
 import { contextBridge } from 'electron';
-import { pruebaApi } from './apis/prueba';
+import { horariosApi } from './apis/horarios';
 
 contextBridge.exposeInMainWorld('api', {
-  ...pruebaApi,
+  ...horariosApi,
 });
