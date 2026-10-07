@@ -1,3 +1,4 @@
+import { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
 
 declare global {
   interface Window {

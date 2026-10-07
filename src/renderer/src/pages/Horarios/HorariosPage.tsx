@@ -13,9 +13,6 @@ import {
 // TODO: reemplazar por el id del usuario logueado (contexto de sesión / auth)
 const USUARIO_ID_ACTUAL = 1;
 
-// Lunes primero, domingo al final — es el orden en que se ve una semana de
-// cursada, aunque internamente diaSemana siga el criterio de Date.getDay()
-// (0 = domingo) para que coincida directo con el calendario.
 const ORDEN_VISUAL_DIAS = [1, 2, 3, 4, 5, 6, 0];
 
 export function HorariosPage(): JSX.Element {

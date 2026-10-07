@@ -54,6 +54,7 @@ function wireDependencies(): void {
     new ModificarHorario(persistencia), new EliminarHorario(persistencia)
   );
   registerHorariosIpc(horarios);
+}
 
 app.whenReady().then(async () => {
   try {
