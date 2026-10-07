@@ -7,24 +7,12 @@ import { config } from 'dotenv';
 import { pool, verifyDbConnection } from './persistencia/BaseDeDatos';
 import { Persistencia } from './persistencia/Persistencia';
 
-
-import { ObtenerSaludo } from './logicaPersistente/gestionDePrueba/ObtenerSaludo';
-import { Prueba } from './administracionDePersistencia/Prueba';
-import { registerPruebaIpc } from './ipc/prueba.ipc';
-
 import { CrearEvento } from './logicaPersistente/gestionDeEventos/CrearEvento';
 import { ListarEventos } from './logicaPersistente/gestionDeEventos/ListarEventos';
 import { ModificarEvento } from './logicaPersistente/gestionDeEventos/ModificarEvento';
 import { EliminarEvento } from './logicaPersistente/gestionDeEventos/EliminarEvento';
 import { Eventos } from './administracionDePersistencia/Eventos';
 import { registerEventosIpc } from './ipc/eventos.ipc';
-
-import { CrearHorario } from './logicaPersistente/gestionDeHorarios/CrearHorario';
-import { ListarHorarios } from './logicaPersistente/gestionDeHorarios/ListarHorarios';
-import { ModificarHorario } from './logicaPersistente/gestionDeHorarios/ModificarHorario';
-import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/EliminarHorario';
-import { Horarios } from './administracionDePersistencia/Horarios';
-import { registerHorariosIpc } from './ipc/horarios.ipc';
 
 import { CrearCategoria } from './logicaPersistente/gestionDeCategorias/CrearCategoria';
 import { ListarCategorias } from './logicaPersistente/gestionDeCategorias/ListarCategorias';
@@ -40,7 +28,7 @@ function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    show: false, // evita el "flash" blanco: se muestra recién cuando el contenido está listo
+    show: false, 
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -52,8 +40,6 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => mainWindow?.show());
   mainWindow.on('closed', () => { mainWindow = null; });
 
-  // Clave con electron-vite: en desarrollo carga el servidor Vite (hot reload);
-  // en producción carga el HTML ya compilado por Vite.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
@@ -65,11 +51,6 @@ function createWindow(): void {
 function wireDependencies(): void {
   const persistencia = new Persistencia(pool);
 
-
-  const obtenerSaludo = new ObtenerSaludo(persistencia);
-  const prueba = new Prueba(obtenerSaludo);
-  registerPruebaIpc(prueba);
-
   // Repetir para Gestión de Eventos, Gestión de Sesión, Proyectos, Usuario...
   const crearEvento = new CrearEvento(persistencia);
   const listarEventos = new ListarEventos(persistencia);
@@ -77,12 +58,6 @@ function wireDependencies(): void {
   const eliminarEvento = new EliminarEvento(persistencia);
   const eventos = new Eventos(crearEvento, listarEventos, modificarEvento, eliminarEvento);
   registerEventosIpc(eventos);
-
-  const horarios = new Horarios(
-    new CrearHorario(persistencia), new ListarHorarios(persistencia),
-    new ModificarHorario(persistencia), new EliminarHorario(persistencia)
-  );
-  registerHorariosIpc(horarios);
 
   const categorias = new Categorias(
     new CrearCategoria(persistencia), new ListarCategorias(persistencia),

@@ -6,7 +6,6 @@ import { spacing } from '../../styles/spacing';
 import { Evento, CrearEventoInput, ModificarEventoInput, Categoria, CATEGORIAS, Prioridad, Recordatorio, UnidadTiempo} from '../../types/eventos';
 
 import { Categoria as CategoriaRegistro } from '../../types/categorias';
-import { HorarioCursado } from '../../types/horarios';
 
 
 const USUARIO_ID_ACTUAL = 1;
@@ -32,10 +31,6 @@ const ETIQUETA_PRIORIDAD: Record<Prioridad, string> = {
 
 const MAX_EVENTOS_VISIBLES_POR_DIA = 3;
 
-// Nombre de categoría que usan los horarios de cursada recurrentes. Si el
-// usuario borra o renombra esta categoría, las clases recurrentes dejan de
-// tener un checkbox propio en el filtro — es un trade-off consciente de
-// haber hecho las categorías 100% editables (ver nota en el chat).
 const CATEGORIA_CLASES_RECURRENTES = 'Clases';
 
 function primerDiaYCantidad(anio: number, mesIndex: number): { inicio: number; dias: number } {
@@ -50,8 +45,6 @@ function formatoFechaISO(anio: number, mesIndex: number, dia: number): string {
   return `${anio}-${mm}-${dd}`;
 }
 
-// CAMBIO: ahora recibe la hora en vez de asumir medianoche, para que el
-// selector de hora del modal tenga efecto real sobre la fecha guardada.
 function fechaLocalISO(anio: number, mesIndex: number, dia: number, hora: string): string {
   return `${formatoFechaISO(anio, mesIndex, dia)}T${hora}:00`;
 }
@@ -72,7 +65,7 @@ export function EventosPage(): JSX.Element {
   const [anio, setAnio] = useState(hoy.getFullYear());
   const [mesIndex, setMesIndex] = useState(hoy.getMonth());
   const [eventos, setEventos] = useState<Evento[]>([]);
-  const [horarios, setHorarios] = useState<HorarioCursado[]>([]);
+  //const [horarios, setHorarios] = useState<HorarioCursado[]>([]);
   const [categorias, setCategorias] = useState<CategoriaRegistro[]>([]);
   const [diaSeleccionado, setDiaSeleccionado] = useState<number>(hoy.getDate());
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -96,15 +89,11 @@ export function EventosPage(): JSX.Element {
 
   useEffect(() => {
     cargarEventos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anio, mesIndex]);
 
-  // Categorías y horarios NO dependen del mes que se esté mirando — se
-  // cargan una sola vez al entrar a la pantalla.
   useEffect(() => {
     cargarCategorias();
-    cargarHorarios();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    //cargarHorarios();
   }, []);
 
   async function cargarEventos(): Promise<void> {
@@ -123,10 +112,11 @@ export function EventosPage(): JSX.Element {
     }
   }
 
-  async function cargarHorarios(): Promise<void> {
+  /*async function cargarHorarios(): Promise<void> {
     const resultado = await window.api.listarHorarios({ usuarioId: USUARIO_ID_ACTUAL });
     setHorarios(resultado);
   }
+  */
 
   async function cargarCategorias(): Promise<void> {
     const resultado: CategoriaRegistro[] = await window.api.listarCategorias({
@@ -135,7 +125,7 @@ export function EventosPage(): JSX.Element {
     setCategorias(resultado);
     // Todas tildadas por defecto la primera vez que se cargan.
     setCategoriasVisibles((prev) => {
-      if (prev.size > 0) return prev; // ya había un filtro elegido, no lo pisamos
+      if (prev.size > 0) return prev; 
       return new Set(resultado.map((c) => c.nombre));
     });
     if (resultado.length > 0 && !formCategoria) {
@@ -187,9 +177,7 @@ export function EventosPage(): JSX.Element {
     });
   }
 
-  // NUEVO: a partir de los horarios de cursada, genera eventos "virtuales"
-  // (no existen como fila en la tabla eventos) para el día pedido, si ese
-  // día de la semana coincide con algún horario cargado.
+ /*
   function eventosVirtualesDelDia(dia: number): Evento[] {
     if (!categoriasVisibles.has(CATEGORIA_CLASES_RECURRENTES)) return [];
     const diaSemana = new Date(anio, mesIndex, dia).getDay();
@@ -208,9 +196,9 @@ export function EventosPage(): JSX.Element {
           prioridad: 'leve' as Prioridad,
           notificacionesActivas: false,
           recordatorios: [],
-        };
+        }; 
       });
-  }
+  }*/
 
   function eventosDelDia(dia: number): Evento[] {
     const fechaBuscada = formatoFechaISO(anio, mesIndex, dia);
@@ -223,7 +211,8 @@ export function EventosPage(): JSX.Element {
       );
       return fechaEventoISO === fechaBuscada;
     });
-    return [...eventosVirtualesDelDia(dia), ...reales];
+    return reales
+    //return [...eventosVirtualesDelDia(dia), ...reales];
   }
 
   function cambiarMes(delta: number): void {
@@ -246,7 +235,7 @@ export function EventosPage(): JSX.Element {
   }
 
   function abrirModalEditarEvento(evento: Evento): void {
-    if (evento.id < 0) return; // es una clase recurrente virtual, no se edita acá
+    if (evento.id < 0) return; 
     setEditandoId(evento.id);
     setFormTitulo(evento.titulo);
     setFormDescripcion(evento.descripcion ?? '');
@@ -333,7 +322,7 @@ export function EventosPage(): JSX.Element {
   }
 
   async function eliminarEvento(id: number): Promise<void> {
-    if (id < 0) return; // clase recurrente virtual: se borra desde Horarios, no acá
+    if (id < 0) return; 
     await window.api.eliminarEvento({ id });
     await cargarEventos();
   }
