@@ -5,6 +5,7 @@ import type { UsuarioActual } from "../../types/layout";
 import { itemsPrincipales, itemsInferiores, accionesSuperiores, rutaDe } from "../navegacion";
 import { BarraLateral } from "../../componentes/layout/barraLateral";
 import { BarraSuperior } from "../../componentes/layout/barraSuperior";
+import { cerrarSesion } from "../../../lib/sesion";
 
 interface PlantillaLayoutProps {
   titulo: string;
@@ -24,8 +25,10 @@ export function PlantillaLayout({
   const navigate = useNavigate();
 
   // Si la pantalla no maneja la navegación, se va a la ruta del ítem.
-  const navegar = onNavegar ?? ((id: string) => navigate(rutaDe(id)));
-
+  const navegar = onNavegar ?? ((id: string) => {
+    if (id === 'cerrar-sesion') cerrarSesion();
+    navigate(rutaDe(id));
+  });
   return (
     <div className="app-shell">
       <BarraLateral

@@ -6,6 +6,7 @@ import { Card } from '../../components/ui/Card/Card';
 import { Title } from '../../components/ui/Title/Title';
 import { CartelError } from '../../components/ui/commons/CartelesError';
 import LoginFacial from './LoginFacialPage';
+import { guardarSesion } from '../../../lib/sesion';
 
 export function LoginPage(){
     const [email, setEmail] = useState("");
@@ -16,8 +17,8 @@ export function LoginPage(){
     const navigate = useNavigate();
 
     const finalizarInicioSesion = (usuarioId: number) => {
-        localStorage.setItem("usuarioId", String(usuarioId));
-        navigate("/dashboard");
+    guardarSesion(usuarioId);
+    navigate("/dashboard");
     };
 
     const iniciarSesion = async () => {

@@ -6,9 +6,8 @@ import { spacing } from '../../styles/spacing';
 import { Evento, CrearEventoInput, ModificarEventoInput, Categoria, CATEGORIAS, Prioridad, Recordatorio, UnidadTiempo} from '../../types/eventos';
 
 import { Categoria as CategoriaRegistro } from '../../types/categorias';
+import { obtenerUsuarioId } from '../../../lib/sesion';
 
-
-const USUARIO_ID_ACTUAL = 1;
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
   { valor: 'minutos', etiqueta: 'minutos' },
@@ -55,6 +54,7 @@ const NOMBRES_MES = [
 ];
 
 export function EventosPage(): JSX.Element {
+  const USUARIO_ID_ACTUAL = obtenerUsuarioId() ?? 0;
   //layout
   const hoy = new Date();
   const [busqueda, setBusqueda] = useState('');
