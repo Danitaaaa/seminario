@@ -11,7 +11,8 @@
     "dev": "npm run db:up && electron-vite dev",
     "build": "electron-vite build",
     "start": "npm run db:up && npm run build && electron-vite preview",
-    "package": "npm run build && electron-builder"
+    "package": "npm run build && electron-builder",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tiptap/pm": "^3.31.4",
@@ -22,6 +23,7 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^16.6.1",
     "exceljs": "^4.4.0",
+    "lucide-react": "^1.51.0",
     "mammoth": "^1.13.0",
     "nodemailer": "^10.0.10",
     "pdf-lib": "^1.17.1",
@@ -48,9 +50,8 @@
     "electron": "^44.5.1",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
-    "lucide-react": "^1.48.0",
     "typescript": "^5.0.4",
-    "zod": "^4.6.5"
+    "vitest": "^1.6.0"
   },
   "allowScripts": {
     "esbuild@0.21.5": true

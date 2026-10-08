@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { ItemNavegacion as Item } from "../../types/layout";
 import { ItemNavegacion } from './itemNavegacion';
-import logoSyntra from "../../assets/logo-barra.png";
+const logoSyntra = new URL("../../assets/logo-barra.png", import.meta.url).href;
 
 interface BarraLateralProps {
   items: Item[];

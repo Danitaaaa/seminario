@@ -11,13 +11,14 @@ import { NodoPage } from "./pages/materialEstudio/nodoPage";
 import { SplashScreen } from "./pages/splash/splashScreen";
 import { cargarModelos } from "../lib/cargarModelos";
 import { Proximamente } from "./pages/proximamente/proximamente";
+import { EventosPage } from "./pages/Eventos/EventosPage";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
 
   useEffect(() => {
-    cargarModelos().catch(console.error)
-  }, [])
+    cargarModelos().catch(console.error);
+  }, []);
 
   if (mostrarSplash) {
     return <SplashScreen onFinish={() => setMostrarSplash(false)} />;
@@ -33,7 +34,8 @@ export default function App() {
       <Route path="/cambioPassword" element={<CambiarPasswordPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/material" element={<NodoPage />} />
-            <Route path="/proximamente/:id" element={<Proximamente />} />
+      <Route path="/eventos" element={<EventosPage />} />
+      <Route path="/proximamente/:id" element={<Proximamente />} />
     </Routes>
   );
 }

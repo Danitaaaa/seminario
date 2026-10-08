@@ -4,7 +4,6 @@ import { isAbsolute, join, relative, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
 
-
 import { pool, verifyDbConnection } from './persistencia/baseDeDatos';
 import { Persistencia } from './persistencia/persistencia';
 
@@ -39,6 +38,22 @@ import { registerUsuariosIpc } from './ipc/Usuarios.ipc';
 import { CambiarPassword } from './logicaPersistente/gestionDeUsuarios/CambiarPassword';
 import { ValidarCodigo } from './logicaPersistente/gestionDeUsuarios/ValidarCodigo';
 
+// Gestion de eventos
+import { CrearEvento } from './logicaPersistente/gestionDeEventos/CrearEvento';
+import { ListarEventos } from './logicaPersistente/gestionDeEventos/ListarEventos';
+import { ModificarEvento } from './logicaPersistente/gestionDeEventos/ModificarEvento';
+import { EliminarEvento } from './logicaPersistente/gestionDeEventos/EliminarEvento';
+import { Eventos } from './administracionDePersistencia/Eventos';
+import { registerEventosIpc } from './ipc/eventos.ipc';
+
+// Gestion de categorias
+import { CrearCategoria } from './logicaPersistente/gestionDeCategorias/CrearCategoria';
+import { ListarCategorias } from './logicaPersistente/gestionDeCategorias/ListarCategorias';
+import { ModificarCategoria } from './logicaPersistente/gestionDeCategorias/ModificarCategoria';
+import { EliminarCategoria } from './logicaPersistente/gestionDeCategorias/EliminarCategoria';
+import { Categorias } from './administracionDePersistencia/Categorias';
+import { registerCategoriasIpc } from './ipc/categorias.ipc';
+
 let mainWindow: BrowserWindow | null = null;
 
 protocol.registerSchemesAsPrivileged([
@@ -53,12 +68,11 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    show: false, // evita el "flash" blanco: se muestra recién cuando el contenido está listo
+    show: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -70,8 +84,6 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => mainWindow?.show());
   mainWindow.on('closed', () => { mainWindow = null; });
 
-  // Clave con electron-vite: en desarrollo carga el servidor Vite (hot reload);
-  // en producción carga el HTML ya compilado por Vite.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
@@ -79,7 +91,6 @@ function createWindow(): void {
   }
 }
 
-// --- Composición: igual que antes, sin cambios por usar Vite ---
 function wireDependencies(): void {
   const persistencia = new Persistencia(pool);
 
@@ -88,11 +99,10 @@ function wireDependencies(): void {
   const modificarNodo = new ModificarNodo(persistencia);
   const buscarNodos = new BuscarNodos(persistencia);
   const buscarArchivos = new BuscarArchivos(persistencia);
-  const listarContenido = new ListarContenido(buscarNodos, buscarArchivos); 
+  const listarContenido = new ListarContenido(buscarNodos, buscarArchivos);
   const moverNodo = new MoverNodo(persistencia);
   const eliminarNodo = new EliminarNodo(persistencia);
-  const nodos = new Nodos(crearNodo, modificarNodo, listarContenido,
-    eliminarNodo, moverNodo );
+  const nodos = new Nodos(crearNodo, modificarNodo, listarContenido, eliminarNodo, moverNodo);
   registrarNodosIpc(nodos);
 
   const almacenamiento = new Almacenamiento(path.join(app.getPath('userData'), 'archivos'));
@@ -115,6 +125,21 @@ function wireDependencies(): void {
   const cambiarPassword = new CambiarPassword(persistencia);
   const usuarios = new Usuarios(iniciarSesion, registrarUsuario, verificarMail, recuperarPassword, validarCodigo, cambiarPassword);
   registerUsuariosIpc(usuarios);
+
+  // Gestion de eventos
+  const crearEvento = new CrearEvento(persistencia);
+  const listarEventos = new ListarEventos(persistencia);
+  const modificarEvento = new ModificarEvento(persistencia);
+  const eliminarEvento = new EliminarEvento(persistencia);
+  const eventos = new Eventos(crearEvento, listarEventos, modificarEvento, eliminarEvento);
+  registerEventosIpc(eventos);
+
+  // Gestion de categorias
+  const categorias = new Categorias(
+    new CrearCategoria(persistencia), new ListarCategorias(persistencia),
+    new ModificarCategoria(persistencia), new EliminarCategoria(persistencia)
+  );
+  registerCategoriasIpc(categorias);
 }
 
 app.whenReady().then(async () => {

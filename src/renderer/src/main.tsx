@@ -8,9 +8,7 @@ import { aplicarTema } from './estilos/tema';
 
 aplicarTema();
 
-ReactDOM.createRoot(
-  document.getElementById('root')!
-).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <HashRouter>
     <App />
   </HashRouter>
