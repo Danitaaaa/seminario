@@ -107,3 +107,30 @@ export interface VerificarMailDto {
     email: string;
     codigo: string;
 }
+
+const idSchema = z.number().int().positive();
+
+export const obtenerPerfilSchema = z.object({ id: idSchema });
+
+export const modificarPerfilSchema = z.object({
+    id: idSchema,
+    nombre: z.string().trim().min(1, "El nombre es obligatorio."),
+    apellido: z.string().trim().min(1, "El apellido es obligatorio."),
+    email: z.email("El correo no es válido."),
+});
+
+export const cambiarPasswordActualSchema = z.object({
+    id: idSchema,
+    passwordActual: z.string().min(1, "Ingresá tu contraseña actual."),
+    passwordNueva: z.string()
+        .min(8, "La contraseña debe tener al menos 8 caracteres.")
+        .regex(/[0-9]/, "La contraseña debe tener al menos un número.")
+        .regex(/[A-Z]/, "La contraseña debe tener al menos una mayúscula."),
+});
+
+export const eliminarUsuarioSchema = z.object({ id: idSchema });
+
+export type ObtenerPerfilDto = z.infer<typeof obtenerPerfilSchema>;
+export type ModificarPerfilDto = z.infer<typeof modificarPerfilSchema>;
+export type CambiarPasswordActualDto = z.infer<typeof cambiarPasswordActualSchema>;
+export type EliminarUsuarioDto = z.infer<typeof eliminarUsuarioSchema>;

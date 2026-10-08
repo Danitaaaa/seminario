@@ -2,6 +2,7 @@ import { Archivo } from './archivo';
 import { Nodo } from './nodo';
 import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput } from './eventos';
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
+import type { Perfil } from './perfil';
 
 declare global {
   interface Window {
@@ -53,6 +54,12 @@ declare global {
         | { exito: true; usuarioId: number }
         | { exito: false; mensaje: string }
       >;
+
+      // Gestion de perfil
+      obtenerPerfil: (datos: { id: number }) => Promise<Perfil>;
+      modificarPerfil: (datos: { id: number; nombre: string; apellido: string; email: string }) => Promise<Perfil>;
+      cambiarPasswordActual: (datos: { id: number; passwordActual: string; passwordNueva: string }) => Promise<void>;
+      eliminarUsuario: (datos: { id: number }) => Promise<void>;
 
       // Gestion de eventos
       crearEvento: (datos: CrearEventoInput) => Promise<Evento>;

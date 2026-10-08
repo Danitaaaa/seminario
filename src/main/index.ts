@@ -53,6 +53,11 @@ import { ModificarCategoria } from './logicaPersistente/gestionDeCategorias/Modi
 import { EliminarCategoria } from './logicaPersistente/gestionDeCategorias/EliminarCategoria';
 import { Categorias } from './administracionDePersistencia/Categorias';
 import { registerCategoriasIpc } from './ipc/categorias.ipc';
+import { ObtenerPerfil } from './logicaPersistente/gestionDeUsuarios/ObtenerPerfil';
+import { ModificarPerfil } from './logicaPersistente/gestionDeUsuarios/ModificarPerfil';
+import { CambiarPasswordActual } from './logicaPersistente/gestionDeUsuarios/CambiarPasswordActual';
+import { EliminarUsuario } from './logicaPersistente/gestionDeUsuarios/EliminarUsuario';
+
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -123,7 +128,11 @@ function wireDependencies(): void {
   const recuperarPassword = new RecuperarPassword(persistencia);
   const validarCodigo = new ValidarCodigo(persistencia);
   const cambiarPassword = new CambiarPassword(persistencia);
-  const usuarios = new Usuarios(iniciarSesion, registrarUsuario, verificarMail, recuperarPassword, validarCodigo, cambiarPassword);
+  const usuarios = new Usuarios(
+    iniciarSesion, registrarUsuario, verificarMail, recuperarPassword, validarCodigo, cambiarPassword,
+    new ObtenerPerfil(persistencia), new ModificarPerfil(persistencia),
+    new CambiarPasswordActual(persistencia), new EliminarUsuario(persistencia)
+  );
   registerUsuariosIpc(usuarios);
 
   // Gestion de eventos

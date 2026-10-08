@@ -9,6 +9,10 @@ import {
     registrarUsuarioSchema,
     validarCodigoSchema,
     verificarMailSchema,
+    cambiarPasswordActualSchema,
+    eliminarUsuarioSchema,
+    modificarPerfilSchema,
+    obtenerPerfilSchema,
 } from "../logicaPersistente/gestionDeUsuarios/dto";
 import type { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios/dto";
 import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/LoginFacial";
@@ -84,4 +88,19 @@ export function registerUsuariosIpc(
     new LoginFacial().ejecutar(embedding)
     );
 
+        ipcMain.handle("usuarios:obtenerPerfil", async (_event, datos: unknown) =>
+        usuarios.obtenerPerfil(validarDatos(obtenerPerfilSchema, datos))
+    );
+
+    ipcMain.handle("usuarios:modificarPerfil", async (_event, datos: unknown) =>
+        usuarios.modificarPerfil(validarDatos(modificarPerfilSchema, datos))
+    );
+
+    ipcMain.handle("usuarios:cambiarPasswordActual", async (_event, datos: unknown) =>
+        usuarios.cambiarPasswordActual(validarDatos(cambiarPasswordActualSchema, datos))
+    );
+
+    ipcMain.handle("usuarios:eliminarUsuario", async (_event, datos: unknown) =>
+        usuarios.eliminarUsuario(validarDatos(eliminarUsuarioSchema, datos))
+    );
 }
