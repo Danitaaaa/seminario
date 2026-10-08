@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
-import { colors } from '../../styles/colors';
-import { typography } from '../../styles/typography';
-import { spacing } from '../../styles/spacing';
+import { colors } from '../../estilos/colors';
+import { typography } from '../../estilos/typography';
+import { spacing } from '../../estilos/spacing';
 import { Evento, CrearEventoInput, ModificarEventoInput, Categoria, CATEGORIAS, Prioridad, Recordatorio, UnidadTiempo} from '../../types/eventos';
 
 import { Categoria as CategoriaRegistro } from '../../types/categorias';
