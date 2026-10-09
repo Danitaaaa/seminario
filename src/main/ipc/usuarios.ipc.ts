@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import { z } from "zod";
 
-import { Usuarios } from "../administracionDePersistencia/Usuarios";
+import { Usuarios } from "../administracionDePersistencia/usuarios";
 import {
     cambiarPasswordSchema,
     iniciarSesionSchema,
@@ -11,8 +11,8 @@ import {
     verificarMailSchema,
 } from "../logicaPersistente/gestionDeUsuarios/dto";
 import type { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios/dto";
-import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/LoginFacial";
-import { RegistrarRostro } from "../logicaPersistente/gestionDeUsuarios/RegistrarRostro";
+import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/loginFacial";
+import { RegistrarRostro } from "../logicaPersistente/gestionDeUsuarios/registrarRostro";
 
 function validarDatos<T extends z.ZodType>(schema: T, datos: unknown): z.output<T> {
     const resultado = schema.safeParse(datos);

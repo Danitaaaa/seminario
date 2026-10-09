@@ -30,14 +30,14 @@ import { Almacenamiento } from './persistencia/almacenamiento';
 import path from 'path';
 
 // Gestion de usuarios
-import { IniciarSesion } from './logicaPersistente/gestionDeUsuarios/IniciarSesion';
-import { RegistrarUsuario } from './logicaPersistente/gestionDeUsuarios/RegistrarUsuario';
-import { VerificarMail } from './logicaPersistente/gestionDeUsuarios/VerificarMail';
-import { RecuperarPassword } from './logicaPersistente/gestionDeUsuarios/RecuperarPassword';
-import { Usuarios } from './administracionDePersistencia/Usuarios';
-import { registerUsuariosIpc } from './ipc/Usuarios.ipc';
-import { CambiarPassword } from './logicaPersistente/gestionDeUsuarios/CambiarPassword';
-import { ValidarCodigo } from './logicaPersistente/gestionDeUsuarios/ValidarCodigo';
+import { IniciarSesion } from './logicaPersistente/gestionDeUsuarios/iniciarSesion';
+import { RegistrarUsuario } from './logicaPersistente/gestionDeUsuarios/registrarUsuario';
+import { VerificarMail } from './logicaPersistente/gestionDeUsuarios/verificarMail';
+import { RecuperarPassword } from './logicaPersistente/gestionDeUsuarios/recuperarPassword';
+import { Usuarios } from './administracionDePersistencia/usuarios';
+import { registerUsuariosIpc } from './ipc/usuarios.ipc';
+import { CambiarPassword } from './logicaPersistente/gestionDeUsuarios/cambiarPassword';
+import { ValidarCodigo } from './logicaPersistente/gestionDeUsuarios/validarCodigo';
 
 let mainWindow: BrowserWindow | null = null;
 

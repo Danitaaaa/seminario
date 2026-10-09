@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/Input/Input';
 import { Card } from '../../components/ui/Card/Card';
 import { Title } from '../../components/ui/Title/Title';
 import { CartelError } from '../../components/ui/commons/CartelesError';
-import LoginFacial from './LoginFacialPage';
+import LoginFacial from './loginFacialPage';
 
 export function LoginPage(){
     const [email, setEmail] = useState("");
@@ -84,7 +84,7 @@ export function LoginPage(){
                 </div>
             </Card>
 
-            <section className="login-facial" aria-label="Login facial">
+            <section className="login-facial" aria-label="login facial">
                 <Title>Reconocimiento facial</Title>
                 {modoFacial ? (
                     <>

@@ -1,4 +1,4 @@
-import { UsuarioFacialRepositorio } from '../../persistencia/UsuarioFacialRepositorio'
+import { UsuarioFacialRepositorio } from '../../persistencia/usuarioFacialRepositorio'
  
 export class RegistrarRostro {
   private repositorio = new UsuarioFacialRepositorio()

@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/Input/Input';
 import { Card } from '../../components/ui/Card/Card';
 import { Title } from '../../components/ui/Title/Title';
 import { CartelError } from '../../components/ui/commons/CartelesError';
-import  RegistrarRostro from '../RegistrarRostro/RegistrarRostro';
+import RegistrarRostro from '../registrarRostro/registrarRostro';
 
 
 export function RegistrarUsuarioPage() {

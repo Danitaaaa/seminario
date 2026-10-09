@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { UsarCamara } from '../../hooks/UsarCamara'
-import { ObtenerEmbedding } from '../../../lib/ObtenerEmbeddings'
+import { ObtenerEmbedding } from '../../../lib/obtenerEmbeddings'
 import { Button } from '../../components/ui/Button/Button'
 import { Title } from '../../components/ui/Title/Title'
 import { CartelError } from '../../components/ui/commons/CartelesError'
