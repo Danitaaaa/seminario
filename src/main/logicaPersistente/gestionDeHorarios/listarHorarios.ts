@@ -1,4 +1,4 @@
-import { Persistencia } from '../../persistencia/Persistencia';
+import { Persistencia } from '../../persistencia/persistencia';
 import { HorarioCursado } from './entidades';
 import { materializarHorario } from './materializador';
 import { ListarHorariosDTO } from './dto';
