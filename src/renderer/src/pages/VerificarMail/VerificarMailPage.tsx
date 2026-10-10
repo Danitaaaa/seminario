@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../components/ui/Button/Button';
-import { Card } from '../../components/ui/Card/Card';
-import { Input } from '../../components/ui/Input/Input';
-import { Title } from '../../components/ui/Title/Title';
-import { CartelError } from '../../components/ui/commons/CartelesError';
+import { Button } from '../../components/ui/Button/button';
+import { Card } from '../../components/ui/Card/card';
+import { Input } from '../../components/ui/Input/input';
+import { Title } from '../../components/ui/Title/title';
+import { CartelError } from '../../components/ui/commons/cartelesError';
 
 export function VerificarMailPage() {
 

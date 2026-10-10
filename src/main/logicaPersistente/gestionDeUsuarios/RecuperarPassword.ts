@@ -1,7 +1,7 @@
-import { Persistencia } from '../../persistencia/Persistencia';
+import { Persistencia } from '../../persistencia/persistencia';
 import type { RecuperarPasswordDto } from './dto';
-import { materializarUsuario } from './MaterializadorUsuarios';
-import { enviarCodigoVerificacion } from '../../servicios/Correo';
+import { materializarUsuario } from './materializadorUsuarios';
+import { enviarCodigoVerificacion } from '../../servicios/correo';
 
 export class RecuperarPassword {
     constructor(

@@ -1,17 +1,17 @@
 import { Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { LoginPage } from "./pages/Login/LoginPage";
-import { RegistrarUsuarioPage } from "./pages/RegistrarUsuario/RegistrarUsuarioPage";
-import { VerificarMailPage } from "./pages/VerificarMail/VerificarMailPage";
-import { VerificarCodigoPage } from "./pages/VerificarCodigo/VerificarCodigoPage";
-import { CambiarPasswordPage } from "./pages/CambiarPassword/CambiarPasswordPage";
-import { RecuperarPasswordPage } from "./pages/RecuperarPassword/RecuperarPasswordPage";
-import { Dashboard } from "./pages/Dashboard/Dashboard";
+import { LoginPage } from "./pages/Login/loginPage";
+import { RegistrarUsuarioPage } from "./pages/RegistrarUsuario/registrarUsuarioPage";
+import { VerificarMailPage } from "./pages/VerificarMail/verificarMailPage";
+import { VerificarCodigoPage } from "./pages/VerificarCodigo/verificarCodigoPage";
+import { CambiarPasswordPage } from "./pages/CambiarPassword/cambiarPasswordPage";
+import { RecuperarPasswordPage } from "./pages/RecuperarPassword/recuperarPasswordPage";
+import { Dashboard } from "./pages/Dashboard/dashboard";
 import { NodoPage } from "./pages/materialEstudio/nodoPage";
 import { SplashScreen } from "./pages/splash/splashScreen";
 import { cargarModelos } from "../lib/cargarModelos";
 import { Proximamente } from "./pages/proximamente/proximamente";
-import { EventosPage } from "./pages/Eventos/EventosPage";
+import { EventosPage } from "./pages/Eventos/eventosPage";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);

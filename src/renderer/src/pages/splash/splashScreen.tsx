@@ -1,5 +1,5 @@
 import { CSSProperties, useEffect } from 'react';
-import { colores } from '../../estilos/colores';
+import { colores } from '../../styles/colores';
 import icono from '../../assets/splash-icono.png';
 import texto from '../../assets/splash-texto.png';
   import './splashScreen.css';

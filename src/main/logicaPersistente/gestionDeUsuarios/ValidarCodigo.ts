@@ -1,4 +1,4 @@
-import { Persistencia } from '../../persistencia/Persistencia';
+import { Persistencia } from '../../persistencia/persistencia';
 import type { ValidarCodigoDto } from './dto';
 
 export class ValidarCodigo {

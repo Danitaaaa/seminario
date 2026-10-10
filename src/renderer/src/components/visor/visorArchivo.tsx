@@ -6,7 +6,7 @@ import { VisorPdf } from './visorPdf';
 import { VisorDocx } from './visorDocx';
 import { VisorExcel } from './visorExcel';
 import { VisorTexto } from './visorTexto';
-import '../../estilos/visor.css';
+import '../../styles/visor.css';
 
 interface VisorArchivoProps {
   archivo: Archivo;

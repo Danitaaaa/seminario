@@ -1,7 +1,7 @@
-import { CrearEvento } from '../logicaPersistente/gestionDeEventos/CrearEvento';
-import { ListarEventos } from '../logicaPersistente/gestionDeEventos/ListarEventos';
-import { ModificarEvento } from '../logicaPersistente/gestionDeEventos/ModificarEvento';
-import { EliminarEvento } from '../logicaPersistente/gestionDeEventos/EliminarEvento';
+import { CrearEvento } from '../logicaPersistente/gestionDeEventos/crearEvento';
+import { ListarEventos } from '../logicaPersistente/gestionDeEventos/listarEventos';
+import { ModificarEvento } from '../logicaPersistente/gestionDeEventos/modificarEvento';
+import { EliminarEvento } from '../logicaPersistente/gestionDeEventos/eliminarEvento';
 import { Evento } from '../logicaPersistente/gestionDeEventos/entidades';
 import {
   CrearEventoDTO,

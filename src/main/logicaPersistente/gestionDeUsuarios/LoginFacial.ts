@@ -1,4 +1,4 @@
-import { UsuarioFacialRepositorio } from '../../persistencia/UsuarioFacialRepositorio'
+import { UsuarioFacialRepositorio } from '../../persistencia/usuarioFacialRepositorio'
  
 const UMBRAL_COINCIDENCIA = 0.5
  

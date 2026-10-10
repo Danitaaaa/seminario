@@ -1,9 +1,9 @@
 import bycript from 'bcrypt';
-import { Usuario } from './Usuario'
-import { Persistencia } from '../../persistencia/Persistencia';
+import { Usuario } from './usuario'
+import { Persistencia } from '../../persistencia/persistencia';
 import type { RegistrarUsuarioDto } from './dto';
-import { materializarUsuario } from './MaterializadorUsuarios';
-import { enviarCodigoVerificacion } from '../../servicios/Correo';
+import { materializarUsuario } from './materializadorUsuarios';
+import { enviarCodigoVerificacion } from '../../servicios/correo';
 
 export class RegistrarUsuario {
     constructor(

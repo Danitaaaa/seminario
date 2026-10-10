@@ -1,4 +1,4 @@
-import { Persistencia } from '../../persistencia/Persistencia';
+import { Persistencia } from '../../persistencia/persistencia';
 import { Categoria } from './entidades';
 import { materializarCategoria } from './materializador';
 import { ModificarCategoriaDTO } from './dto';

@@ -1,4 +1,4 @@
-import { Persistencia } from '../../persistencia/Persistencia';
+import { Persistencia } from '../../persistencia/persistencia';
 import { Evento } from './entidades';
 import { materializarEvento } from './materializador';
 import { CrearEventoDTO } from './dto';

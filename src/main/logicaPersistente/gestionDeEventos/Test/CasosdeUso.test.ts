@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { CrearEvento } from './CrearEvento';
-import { ModificarEvento } from './ModificarEvento';
-import { ListarEventos } from './ListarEventos';
-import { EliminarEvento } from './EliminarEvento';
+import { CrearEvento } from './crearEvento';
+import { ModificarEvento } from './modificarEvento';
+import { ListarEventos } from './listarEventos';
+import { EliminarEvento } from './eliminarEvento';
 
 describe('Casos de Uso de Eventos', () => {
   const mockPersistencia = {

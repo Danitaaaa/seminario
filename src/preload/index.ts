@@ -1,7 +1,7 @@
 import { contextBridge } from 'electron';
 import { nodosApi } from './apis/nodo';
 import { archivosApi } from './apis/archivos';
-import { usuariosApi } from './apis/Usuarios';
+import { usuariosApi } from './apis/usuarios';
 import { eventosApi } from './apis/eventos';
 import { categoriasApi } from './apis/categorias';
 

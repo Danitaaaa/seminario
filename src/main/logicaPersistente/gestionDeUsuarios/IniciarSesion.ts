@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
 import type { IniciarSesionDto } from './dto';
-import { Usuario } from './Usuario';
-import { Persistencia } from '../../persistencia/Persistencia';
-import { materializarUsuario } from './MaterializadorUsuarios';
+import { Usuario } from './usuario';
+import { Persistencia } from '../../persistencia/persistencia';
+import { materializarUsuario } from './materializadorUsuarios';
 
 export class IniciarSesion {
     constructor(

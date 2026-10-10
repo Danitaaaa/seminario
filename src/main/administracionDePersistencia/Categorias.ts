@@ -1,7 +1,7 @@
-import { CrearCategoria } from '../logicaPersistente/gestionDeCategorias/CrearCategoria';
-import { ListarCategorias } from '../logicaPersistente/gestionDeCategorias/ListarCategorias';
-import { ModificarCategoria } from '../logicaPersistente/gestionDeCategorias/ModificarCategoria';
-import { EliminarCategoria } from '../logicaPersistente/gestionDeCategorias/EliminarCategoria';
+import { CrearCategoria } from '../logicaPersistente/gestionDeCategorias/crearCategoria';
+import { ListarCategorias } from '../logicaPersistente/gestionDeCategorias/listarCategorias';
+import { ModificarCategoria } from '../logicaPersistente/gestionDeCategorias/modificarCategoria';
+import { EliminarCategoria } from '../logicaPersistente/gestionDeCategorias/eliminarCategoria';
 import { Categoria } from '../logicaPersistente/gestionDeCategorias/entidades';
 import {
   CrearCategoriaDTO,

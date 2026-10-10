@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Archivo } from '../../types/nodo';
 import { OPCIONES_ABRIR_CON, AVISO_GOOGLE, abrirCon } from './abrirCon';
-import '../../estilos/visor.css';
+import '../../styles/visor.css';
 
 interface ModalAbrirConProps {
   archivo: Archivo;

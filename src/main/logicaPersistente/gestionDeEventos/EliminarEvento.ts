@@ -1,4 +1,4 @@
-import { Persistencia } from '../../persistencia/Persistencia';
+import { Persistencia } from '../../persistencia/persistencia';
 import { EliminarEventoDTO } from './dto';
 
 export class EliminarEvento {

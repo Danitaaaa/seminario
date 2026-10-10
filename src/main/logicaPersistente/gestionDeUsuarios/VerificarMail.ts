@@ -1,4 +1,4 @@
-import { Persistencia } from "../../persistencia/Persistencia";
+import { Persistencia } from "../../persistencia/persistencia";
 
 export class VerificarMail {
 
