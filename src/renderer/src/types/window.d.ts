@@ -60,8 +60,10 @@ declare global {
       modificarPerfil: (datos: { id: number; nombre: string; apellido: string; email: string }) => Promise<Perfil>;
       cambiarPasswordActual: (datos: { id: number; passwordActual: string; passwordNueva: string }) => Promise<void>;
       eliminarUsuario: (datos: { id: number }) => Promise<void>;
+      obtenerFotoPerfil: (datos: { id: number }) => Promise<string | null>;
+      elegirFotoPerfil: (datos: { id: number }) => Promise<string | null>;   
 
-      // Gestion de eventos
+
       crearEvento: (datos: CrearEventoInput) => Promise<Evento>;
       listarEventos: (datos: ListarEventosInput) => Promise<Evento[]>;
       modificarEvento: (datos: ModificarEventoInput) => Promise<Evento>;

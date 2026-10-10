@@ -7,7 +7,7 @@ import { Evento, CrearEventoInput, ModificarEventoInput, Categoria, CATEGORIAS, 
 
 import { Categoria as CategoriaRegistro } from '../../types/categorias';
 import { obtenerUsuarioId } from '../../../lib/sesion';
-
+import { useLocation } from 'react-router-dom';
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
   { valor: 'minutos', etiqueta: 'minutos' },
@@ -56,7 +56,9 @@ const NOMBRES_MES = [
 export function EventosPage(): JSX.Element {
   const USUARIO_ID_ACTUAL = obtenerUsuarioId() ?? 0;
   //layout
-  const hoy = new Date();
+  const location = useLocation();
+  const fechaInicial = (location.state as { fecha?: string } | null)?.fecha;
+  const hoy = fechaInicial ? new Date(`${fechaInicial}T00:00:00`) : new Date();
   const [busqueda, setBusqueda] = useState('');
   const usuarioLogueado = 'Usuario';
 

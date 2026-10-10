@@ -57,7 +57,7 @@ import { ObtenerPerfil } from './logicaPersistente/gestionDeUsuarios/ObtenerPerf
 import { ModificarPerfil } from './logicaPersistente/gestionDeUsuarios/ModificarPerfil';
 import { CambiarPasswordActual } from './logicaPersistente/gestionDeUsuarios/CambiarPasswordActual';
 import { EliminarUsuario } from './logicaPersistente/gestionDeUsuarios/EliminarUsuario';
-
+import { ActualizarFotoPerfil, ObtenerFotoPerfil } from './logicaPersistente/gestionDeUsuarios/FotoPerfil';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -131,7 +131,9 @@ function wireDependencies(): void {
   const usuarios = new Usuarios(
     iniciarSesion, registrarUsuario, verificarMail, recuperarPassword, validarCodigo, cambiarPassword,
     new ObtenerPerfil(persistencia), new ModificarPerfil(persistencia),
-    new CambiarPasswordActual(persistencia), new EliminarUsuario(persistencia)
+    new CambiarPasswordActual(persistencia), new EliminarUsuario(persistencia),
+    new ObtenerFotoPerfil(persistencia),
+    new ActualizarFotoPerfil(persistencia, path.join(app.getPath('userData'), 'fotosPerfil'))
   );
   registerUsuariosIpc(usuarios);
 

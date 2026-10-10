@@ -1,0 +1,200 @@
+/* Pantalla de perfil. Solo consume variables generadas por tema.ts. */
+
+.perfil {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: var(--espacio-xl);
+  align-items: start;
+}
+
+.perfil__lateral {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-md);
+}
+
+.perfil__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: var(--color-frost-claro);
+  color: var(--color-storm);
+  font-size: 2.5rem;
+  font-weight: var(--peso-bold);
+}
+
+.perfil__avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.perfil__boton-lateral {
+  width: 100%;
+  padding: var(--espacio-xs) var(--espacio-md);
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  cursor: pointer;
+}
+
+.perfil__boton-lateral:hover {
+  background: var(--color-storm);
+}
+
+.perfil__boton-lateral--contorno {
+  border: 1px solid var(--color-primary-dark);
+  background: var(--color-white);
+  color: var(--color-primary-dark);
+}
+
+.perfil__boton-lateral--contorno:hover {
+  background: var(--color-frost-claro);
+}
+
+.perfil__columna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-lg);
+  max-width: 640px;
+}
+
+.perfil__tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  padding: var(--espacio-lg);
+  border-radius: var(--radio-md);
+  background: var(--color-frost-claro);
+  color: var(--color-storm);
+}
+
+.perfil__nombre {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: var(--peso-bold);
+  color: var(--color-primary-dark);
+}
+
+.perfil__dato {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-steel);
+}
+
+.perfil__titulo {
+  margin: 0 0 var(--espacio-xs);
+  font-size: var(--tamano-lg);
+  font-weight: var(--peso-bold);
+  color: var(--color-primary-dark);
+}
+
+.perfil__campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+}
+
+.perfil__etiqueta {
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-medium);
+}
+
+.perfil__ayuda {
+  margin: 0;
+  font-size: var(--tamano-xs);
+  color: var(--color-steel);
+}
+
+.perfil__peligro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-md);
+  padding: var(--espacio-md) var(--espacio-lg);
+  border-radius: var(--radio-md);
+  background: color-mix(in srgb, var(--color-error) 12%, var(--color-white));
+  color: var(--color-error);
+  font-size: var(--tamano-sm);
+}
+
+.perfil__peligro-acciones {
+  display: flex;
+  gap: var(--espacio-sm);
+}
+
+.perfil__boton-peligro {
+  padding: var(--espacio-xs) var(--espacio-md);
+  border: 1px solid var(--color-error);
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-error);
+  font: inherit;
+  cursor: pointer;
+}
+
+.perfil__boton-peligro--confirmar {
+  background: var(--color-error);
+  color: var(--color-white);
+}
+
+.perfil__exito {
+  margin: 0;
+  padding: var(--espacio-sm) var(--espacio-md);
+  border-radius: var(--radio-md);
+  background: color-mix(in srgb, var(--color-success) 15%, var(--color-white));
+  color: var(--color-success);
+  font-size: var(--tamano-sm);
+  text-align: center;
+}
+
+.perfil__acciones {
+  display: flex;
+  justify-content: center;
+  gap: var(--espacio-md);
+}
+
+/* Modal de actualizar rostro */
+.perfil__modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 18, 47, 0.45);
+}
+
+.perfil__modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  width: min(480px, 90vw);
+  padding: var(--espacio-lg);
+  border-radius: var(--radio-md);
+  background: var(--color-white);
+  color: var(--color-storm);
+}
+
+.perfil__video {
+  width: 100%;
+  border-radius: var(--radio-md);
+  background: var(--color-frost-claro);
+}
+
+@media (max-width: 720px) {
+  .perfil {
+    grid-template-columns: 1fr;
+  }
+}

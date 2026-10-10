@@ -17,4 +17,6 @@ export const usuariosApi = {
     modificarPerfil: (datos: unknown) => ipcRenderer.invoke("usuarios:modificarPerfil", datos),
     cambiarPasswordActual: (datos: unknown) => ipcRenderer.invoke("usuarios:cambiarPasswordActual", datos),
     eliminarUsuario: (datos: unknown) => ipcRenderer.invoke("usuarios:eliminarUsuario", datos),
+    obtenerFotoPerfil: (datos: unknown) => ipcRenderer.invoke("usuarios:obtenerFotoPerfil", datos),
+    actualizarFotoPerfil: (datos: unknown) => ipcRenderer.invoke("usuarios:actualizarFotoPerfil", datos),
 };

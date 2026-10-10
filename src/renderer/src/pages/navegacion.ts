@@ -33,6 +33,7 @@ const rutasPorItem: Record<string, string> = {
   inicio: '/dashboard',
   material: '/material',
   calendario: '/eventos',
+  perfil: '/perfil',
   'cerrar-sesion': '/',
 };
 

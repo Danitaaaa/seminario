@@ -5,14 +5,16 @@ import { VerificarMail } from "../logicaPersistente/gestionDeUsuarios/VerificarM
 import { RecuperarPassword } from "../logicaPersistente/gestionDeUsuarios/RecuperarPassword";
 import { ValidarCodigo } from "../logicaPersistente/gestionDeUsuarios/ValidarCodigo";
 import { CambiarPassword } from "../logicaPersistente/gestionDeUsuarios/CambiarPassword";
-import type { CambiarPasswordDto, IniciarSesionDto, RegistrarUsuarioDto, ValidarCodigoDto } from "../logicaPersistente/gestionDeUsuarios/dto";
 import { ObtenerPerfil } from "../logicaPersistente/gestionDeUsuarios/ObtenerPerfil";
 import { ModificarPerfil } from "../logicaPersistente/gestionDeUsuarios/ModificarPerfil";
 import { CambiarPasswordActual } from "../logicaPersistente/gestionDeUsuarios/CambiarPasswordActual";
 import { EliminarUsuario } from "../logicaPersistente/gestionDeUsuarios/EliminarUsuario";
+import { ActualizarFotoPerfil, ObtenerFotoPerfil } from "../logicaPersistente/gestionDeUsuarios/FotoPerfil";
 import type { Perfil } from "../logicaPersistente/gestionDeUsuarios/Perfil";
-import type { ObtenerPerfilDto, ModificarPerfilDto, CambiarPasswordActualDto, EliminarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios/dto";
-
+import type {
+    CambiarPasswordDto, IniciarSesionDto, RegistrarUsuarioDto, ValidarCodigoDto,
+    ObtenerPerfilDto, ModificarPerfilDto, CambiarPasswordActualDto, EliminarUsuarioDto,
+} from "../logicaPersistente/gestionDeUsuarios/dto";
 
 export class Usuarios {
     constructor(
@@ -25,23 +27,17 @@ export class Usuarios {
         private readonly obtenerPerfilCaso: ObtenerPerfil,
         private readonly modificarPerfilCaso: ModificarPerfil,
         private readonly cambiarPasswordActualCaso: CambiarPasswordActual,
-        private readonly eliminarUsuarioCaso: EliminarUsuario
+        private readonly eliminarUsuarioCaso: EliminarUsuario,
+        private readonly obtenerFotoPerfilCaso: ObtenerFotoPerfil,
+        private readonly actualizarFotoPerfilCaso: ActualizarFotoPerfil
     ) {}
 
-    async iniciarSesion(
-        datos: IniciarSesionDto
-    ): Promise<Usuario> {
-        return this.iniciarSesionCaso.ejecutar(
-            datos
-        );
+    async iniciarSesion(datos: IniciarSesionDto): Promise<Usuario> {
+        return this.iniciarSesionCaso.ejecutar(datos);
     }
 
-    async registrarUsuario(
-        datos: RegistrarUsuarioDto
-    ) {
-        return this.registrarUsuarioCaso.ejecutar(
-            datos
-        );
+    async registrarUsuario(datos: RegistrarUsuarioDto) {
+        return this.registrarUsuarioCaso.ejecutar(datos);
     }
 
     async verificarMail(email: string, codigo: string): Promise<void> {
@@ -60,7 +56,7 @@ export class Usuarios {
         return this.cambiarPasswordCaso.ejecutar(datos);
     }
 
-        async obtenerPerfil(datos: ObtenerPerfilDto): Promise<Perfil> {
+    async obtenerPerfil(datos: ObtenerPerfilDto): Promise<Perfil> {
         return this.obtenerPerfilCaso.ejecutar(datos);
     }
 
@@ -74,5 +70,13 @@ export class Usuarios {
 
     async eliminarUsuario(datos: EliminarUsuarioDto): Promise<void> {
         return this.eliminarUsuarioCaso.ejecutar(datos);
+    }
+
+    async obtenerFotoPerfil(id: number): Promise<string | null> {
+        return this.obtenerFotoPerfilCaso.ejecutar(id);
+    }
+
+    async actualizarFotoPerfil(id: number, rutaOrigen: string): Promise<string | null> {
+        return this.actualizarFotoPerfilCaso.ejecutar(id, rutaOrigen);
     }
 }
