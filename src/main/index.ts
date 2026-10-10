@@ -54,6 +54,14 @@ import { EliminarCategoria } from './logicaPersistente/gestionDeCategorias/elimi
 import { Categorias } from './administracionDePersistencia/categorias';
 import { registerCategoriasIpc } from './ipc/categorias.ipc';
 
+// Gestion de horarios
+import { CrearHorario } from './logicaPersistente/gestionDeHorarios/crearHorario';
+import { ListarHorarios } from './logicaPersistente/gestionDeHorarios/listarHorarios';
+import { ModificarHorario } from './logicaPersistente/gestionDeHorarios/modificarHorario';
+import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/eliminarHorario';
+import { Horarios } from './administracionDePersistencia/horarios';
+import { registerHorariosIpc } from './ipc/horarios.ipc';
+
 let mainWindow: BrowserWindow | null = null;
 
 protocol.registerSchemesAsPrivileged([
@@ -140,6 +148,13 @@ function wireDependencies(): void {
     new ModificarCategoria(persistencia), new EliminarCategoria(persistencia)
   );
   registerCategoriasIpc(categorias);
+
+  // Gestion de horarios
+  const horarios = new Horarios(
+    new CrearHorario(persistencia), new ListarHorarios(persistencia),
+    new ModificarHorario(persistencia), new EliminarHorario(persistencia)
+  );
+  registerHorariosIpc(horarios);
 }
 
 app.whenReady().then(async () => {

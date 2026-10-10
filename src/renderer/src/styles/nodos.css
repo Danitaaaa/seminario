@@ -51,11 +51,6 @@
 .ruta-migas__separador {
     margin: 0 2px;
 }
-.ruta-migas__segmento--destino button {
-    background: rgba(59, 130, 246, 0.15);
-    outline: 2px dashed #3b82f6;
-    border-radius: 4px;
-}
 
 /* Barra de filtros / orden + acciones */
 .barra-filtros {
