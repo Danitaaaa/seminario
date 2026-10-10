@@ -12,6 +12,7 @@ import { SplashScreen } from "./pages/splash/splashScreen";
 import { cargarModelos } from "../lib/cargarModelos";
 import { Proximamente } from "./pages/proximamente/proximamente";
 import { EventosPage } from "./pages/Eventos/EventosPage";
+import { HorariosPage } from "./pages/Horarios/HorariosPage";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -35,6 +36,7 @@ export default function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/material" element={<NodoPage />} />
       <Route path="/eventos" element={<EventosPage />} />
+      <Route path="/horarios" element={<HorariosPage />} />
       <Route path="/proximamente/:id" element={<Proximamente />} />
     </Routes>
   );
