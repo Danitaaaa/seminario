@@ -1,0 +1,159 @@
+.visor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 30, 30, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.visor {
+  background: var(--color-background, #FAFAF8);
+  border-radius: 12px;
+  width: min(1100px, 94vw);
+  height: 92vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 12px 32px rgba(30, 30, 30, 0.25);
+}
+
+.visor__encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.visor__titulo {
+  margin: 0;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visor__acciones,
+.visor__barra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.visor__separador {
+  flex: 1;
+}
+
+.visor__cuerpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.visor__cargando,
+.visor__nota {
+  margin: 0;
+  color: var(--nodos-texto-secundario, #6b6b6b);
+  font-size: 0.85rem;
+}
+
+.visor__cargando {
+  padding: 24px;
+  text-align: center;
+}
+
+.visor__aviso {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e8f3ea;
+  color: #2f6b3a;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.visor__input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--nodos-border, #d9d9d9);
+  font-size: 0.85rem;
+}
+
+.visor-boton {
+  background: var(--color-primary, #495b7d);
+  color: #fff;
+  border: 1px solid var(--color-primary, #495b7d);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.visor-boton--contorno {
+  background: transparent;
+  color: var(--color-primary, #495b7d);
+}
+
+.visor-boton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.visor-pdf,
+.visor-editor,
+.visor-excel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.visor-pdf__pagina {
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.visor-pdf__campo {
+  position: absolute;
+  min-width: 160px;
+  padding: 0 2px;
+  border: 1px dashed var(--color-primary, #495b7d);
+  background: rgba(255, 255, 255, 0.85);
+  font-family: Helvetica, Arial, sans-serif;
+  line-height: 1.2;
+  outline: none;
+  z-index: 5;
+}
+
+.visor-editor__hoja {
+  flex: 1;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid var(--nodos-border, #d9d9d9);
+  border-radius: 8px;
+  padding: 24px 32px;
+}
+
+.visor-editor__hoja .tiptap {
+  outline: none;
+  min-height: 100%;
+}
+
+.visor-editor__hoja--texto .tiptap p {
+  margin: 0;
+  min-height: 1.4em;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.visor-excel__grilla {
+  flex: 1;
+  overflow: auto;
+  background: #fff;
+  border-radius: 8px;
+}

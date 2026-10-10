@@ -22,7 +22,7 @@ type Modulo = {
 const MODULOS: Modulo[] = [
   { titulo: 'Material', descripcion: '¡Administrá tus apuntes, bibliografía y demás!', ruta: '/material', icono: BookOpen, fondo: '#E3E9F2', color: '#495B7D' },
   { titulo: 'Sesiones de estudio', descripcion: 'Ingresá a las sesiones de estudio para una mejor concentración.', ruta: '/proximamente/sesiones', icono: Timer, fondo: '#C5D1E2', color: '#23354D' },
-  { titulo: 'Horarios', descripcion: 'Horarios de cursado y colectivos.', ruta: '/proximamente/horarios', icono: CalendarClock, fondo: '#D1DBE8', color: '#23354D' },
+  { titulo: 'Horarios', descripcion: 'Horarios de cursado.', ruta: '/horarios', icono: CalendarClock, fondo: '#D1DBE8', color: '#23354D' },
   { titulo: 'Métodos', descripcion: 'Creá tus métodos para tus sesiones de estudio.', ruta: '/proximamente/metodos', icono: Lightbulb, fondo: '#B8C8DC', color: '#02122F' },
   { titulo: 'Proyectos', descripcion: 'Visualizá tus proyectos creados.', ruta: '/proximamente/proyectos', icono: FolderKanban, fondo: '#DADEE6', color: '#495B7D' },
   { titulo: 'Cronograma', descripcion: 'Visualización del calendario y listado de actividad.', ruta: '/proximamente/cronograma', icono: CalendarDays, fondo: '#A9BCD4', color: '#02122F' },

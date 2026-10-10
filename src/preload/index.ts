@@ -4,6 +4,7 @@ import { archivosApi } from './apis/archivos';
 import { usuariosApi } from './apis/Usuarios';
 import { eventosApi } from './apis/eventos';
 import { categoriasApi } from './apis/categorias';
+import { horariosApi } from './apis/horarios';
 
 contextBridge.exposeInMainWorld('api', {
   ...nodosApi,
@@ -11,4 +12,5 @@ contextBridge.exposeInMainWorld('api', {
   ...usuariosApi,
   ...eventosApi,
   ...categoriasApi,
+  ...horariosApi,
 });
