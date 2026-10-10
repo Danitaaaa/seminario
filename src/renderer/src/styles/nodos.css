@@ -1,5 +1,5 @@
 /*
-  Usa las variables definidas en styles/globals.css (--color-primary, --color-secondary,
+  Usa las variables definidas en styles/global.css (--color-primary, --color-secondary,
   --color-accent, --color-background, --font-body). Las variables que globals.css no
   expone todavía (superficie, borde, texto secundario, error) quedan con un valor de
   respaldo acá mismo, tomado de la paleta de la guía de arquitectura — reemplazar por

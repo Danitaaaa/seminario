@@ -13,4 +13,9 @@ export const colores = {
     error: "#C96A6A",
 
     white: "#FFFFFF",
+
+    steel: "#495B7D",
+    frostBlue: "#8BA3C5",
+    frostClaro: "#C4D1E3",
+    storm: "#23354D",
 }
