@@ -29,42 +29,42 @@ import { Almacenamiento } from './persistencia/almacenamiento';
 import path from 'path';
 
 // Gestion de usuarios
-import { IniciarSesion } from './logicaPersistente/gestionDeUsuarios/IniciarSesion';
-import { RegistrarUsuario } from './logicaPersistente/gestionDeUsuarios/RegistrarUsuario';
-import { VerificarMail } from './logicaPersistente/gestionDeUsuarios/VerificarMail';
-import { RecuperarPassword } from './logicaPersistente/gestionDeUsuarios/RecuperarPassword';
-import { Usuarios } from './administracionDePersistencia/Usuarios';
-import { registerUsuariosIpc } from './ipc/Usuarios.ipc';
-import { CambiarPassword } from './logicaPersistente/gestionDeUsuarios/CambiarPassword';
-import { ValidarCodigo } from './logicaPersistente/gestionDeUsuarios/ValidarCodigo';
+import { IniciarSesion } from './logicaPersistente/gestionDeUsuarios/iniciarSesion';
+import { RegistrarUsuario } from './logicaPersistente/gestionDeUsuarios/registrarUsuario';
+import { VerificarMail } from './logicaPersistente/gestionDeUsuarios/verificarMail';
+import { RecuperarPassword } from './logicaPersistente/gestionDeUsuarios/recuperarPassword';
+import { Usuarios } from './administracionDePersistencia/usuarios';
+import { registerUsuariosIpc } from './ipc/usuarios.ipc';
+import { CambiarPassword } from './logicaPersistente/gestionDeUsuarios/cambiarPassword';
+import { ValidarCodigo } from './logicaPersistente/gestionDeUsuarios/validarCodigo';
 
 // Gestion de eventos
-import { CrearEvento } from './logicaPersistente/gestionDeEventos/CrearEvento';
-import { ListarEventos } from './logicaPersistente/gestionDeEventos/ListarEventos';
-import { ModificarEvento } from './logicaPersistente/gestionDeEventos/ModificarEvento';
-import { EliminarEvento } from './logicaPersistente/gestionDeEventos/EliminarEvento';
-import { Eventos } from './administracionDePersistencia/Eventos';
+import { CrearEvento } from './logicaPersistente/gestionDeEventos/crearEvento';
+import { ListarEventos } from './logicaPersistente/gestionDeEventos/listarEventos';
+import { ModificarEvento } from './logicaPersistente/gestionDeEventos/modificarEvento';
+import { EliminarEvento } from './logicaPersistente/gestionDeEventos/eliminarEvento';
+import { Eventos } from './administracionDePersistencia/eventos';
 import { registerEventosIpc } from './ipc/eventos.ipc';
 
 // Gestion de categorias
-import { CrearCategoria } from './logicaPersistente/gestionDeCategorias/CrearCategoria';
-import { ListarCategorias } from './logicaPersistente/gestionDeCategorias/ListarCategorias';
-import { ModificarCategoria } from './logicaPersistente/gestionDeCategorias/ModificarCategoria';
-import { EliminarCategoria } from './logicaPersistente/gestionDeCategorias/EliminarCategoria';
-import { Categorias } from './administracionDePersistencia/Categorias';
+import { CrearCategoria } from './logicaPersistente/gestionDeCategorias/crearCategoria';
+import { ListarCategorias } from './logicaPersistente/gestionDeCategorias/listarCategorias';
+import { ModificarCategoria } from './logicaPersistente/gestionDeCategorias/modificarCategoria';
+import { EliminarCategoria } from './logicaPersistente/gestionDeCategorias/eliminarCategoria';
+import { Categorias } from './administracionDePersistencia/categorias';
 import { registerCategoriasIpc } from './ipc/categorias.ipc';
-import { ObtenerPerfil } from './logicaPersistente/gestionDeUsuarios/ObtenerPerfil';
-import { ModificarPerfil } from './logicaPersistente/gestionDeUsuarios/ModificarPerfil';
-import { CambiarPasswordActual } from './logicaPersistente/gestionDeUsuarios/CambiarPasswordActual';
-import { EliminarUsuario } from './logicaPersistente/gestionDeUsuarios/EliminarUsuario';
-import { ActualizarFotoPerfil, ObtenerFotoPerfil } from './logicaPersistente/gestionDeUsuarios/FotoPerfil';
+import { ObtenerPerfil } from './logicaPersistente/gestionDeUsuarios/obtenerPerfil';
+import { ModificarPerfil } from './logicaPersistente/gestionDeUsuarios/modificarPerfil';
+import { CambiarPasswordActual } from './logicaPersistente/gestionDeUsuarios/cambiarPasswordActual';
+import { EliminarUsuario } from './logicaPersistente/gestionDeUsuarios/eliminarUsuario';
+import { ActualizarFotoPerfil, ObtenerFotoPerfil } from './logicaPersistente/gestionDeUsuarios/fotoPerfil';
 
 // Gestion de horarios
-import { CrearHorario } from './logicaPersistente/gestionDeHorarios/CrearHorario';
-import { ListarHorarios } from './logicaPersistente/gestionDeHorarios/ListarHorarios';
-import { ModificarHorario } from './logicaPersistente/gestionDeHorarios/ModificarHorario';
-import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/EliminarHorario';
-import { Horarios } from './administracionDePersistencia/Horarios';
+import { CrearHorario } from './logicaPersistente/gestionDeHorarios/crearHorario';
+import { ListarHorarios } from './logicaPersistente/gestionDeHorarios/listarHorarios';
+import { ModificarHorario } from './logicaPersistente/gestionDeHorarios/modificarHorario';
+import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/eliminarHorario';
+import { Horarios } from './administracionDePersistencia/horarios';
 import { registerHorariosIpc } from './ipc/horarios.ipc';
 
 let mainWindow: BrowserWindow | null = null;

@@ -1,0 +1,49 @@
+import { Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { LoginPage } from "./pages/Login/loginPage";
+import { RegistrarUsuarioPage } from "./pages/RegistrarUsuario/registrarUsuarioPage";
+import { VerificarMailPage } from "./pages/VerificarMail/verificarMailPage";
+import { VerificarCodigoPage } from "./pages/VerificarCodigo/verificarCodigoPage";
+import { CambiarPasswordPage } from "./pages/CambiarPassword/cambiarPasswordPage";
+import { RecuperarPasswordPage } from "./pages/RecuperarPassword/recuperarPasswordPage";
+import { Dashboard } from "./pages/Dashboard/dashboard";
+import { NodoPage } from "./pages/materialEstudio/nodoPage";
+import { SplashScreen } from "./pages/splash/splashScreen";
+import { cargarModelos } from "../lib/cargarModelos";
+import { Proximamente } from "./pages/proximamente/proximamente";
+import { EventosPage } from "./pages/Eventos/eventosPage";
+import { HorariosPage } from "./pages/Horarios/horariosPage";
+import { PerfilPage } from "./pages/perfil/perfilPage";
+import { PanelPerfil } from "./pages/perfil/panelPerfil";
+
+export default function App() {
+  const [mostrarSplash, setMostrarSplash] = useState(true);
+
+  useEffect(() => {
+    cargarModelos().catch(console.error);
+  }, []);
+
+  if (mostrarSplash) {
+    return <SplashScreen onFinish={() => setMostrarSplash(false)} />;
+  }
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/registro" element={<RegistrarUsuarioPage />} />
+        <Route path="/verificar-mail" element={<VerificarMailPage />} />
+        <Route path="/recuperar-contraseña" element={<RecuperarPasswordPage />} />
+        <Route path="/verificar-codigo" element={<VerificarCodigoPage />} />
+        <Route path="/cambioPassword" element={<CambiarPasswordPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/material" element={<NodoPage />} />
+        <Route path="/eventos" element={<EventosPage />} />
+        <Route path="/horarios" element={<HorariosPage />} />
+        <Route path="/perfil" element={<PerfilPage />} />
+        <Route path="/proximamente/:id" element={<Proximamente />} />
+      </Routes>
+      <PanelPerfil />
+    </>
+  );
+}

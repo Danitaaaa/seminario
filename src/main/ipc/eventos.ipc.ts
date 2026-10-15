@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { Eventos } from '../administracionDePersistencia/Eventos';
+import { Eventos } from '../administracionDePersistencia/eventos';
 import {
   crearEventoSchema,
   listarEventosSchema,

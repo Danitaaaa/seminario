@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { colors } from '../../estilos/colors';
-import { typography } from '../../estilos/typography';
-import { spacing } from '../../estilos/spacing';
+import { colors } from '../../styles/colors';
+import { typography } from '../../styles/typography';
+import { spacing } from '../../styles/spacing';
 import type { Evento } from '../../types/eventos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 

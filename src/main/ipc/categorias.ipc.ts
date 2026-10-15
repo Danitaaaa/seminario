@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { Categorias } from '../administracionDePersistencia/Categorias';
+import { Categorias } from '../administracionDePersistencia/categorias';
 import {
   crearCategoriaSchema,
   listarCategoriasSchema,

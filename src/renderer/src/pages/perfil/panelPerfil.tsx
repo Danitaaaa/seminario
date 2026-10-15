@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { obtenerUsuarioId } from "../../../lib/sesion";
 import type { Perfil } from "../../types/perfil";
-import { EVENTO_PERFIL_ACTUALIZADO } from "../../componentes/layout/menuUsuario";
-import "../../estilos/panelPerfil.css";
+import { EVENTO_PERFIL_ACTUALIZADO } from "../../components/layout/menuUsuario";
+import "../../styles/panelPerfil.css";
 
 export const EVENTO_ABRIR_PERFIL = "syntra:abrir-perfil";
 

@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { PlantillaLayout } from "../plantillaLayout/plantillaLayout";
-import { Button } from "../../components/ui/Button/Button";
-import { Input } from "../../components/ui/Input/Input";
-import { CartelError } from "../../components/ui/commons/CartelesError";
+import { Button } from "../../components/ui/Button/button";
+import { Input } from "../../components/ui/Input/input";
+import { CartelError } from "../../components/ui/commons/cartelesError";
 import { obtenerUsuarioId, cerrarSesion } from "../../../lib/sesion";
 import type { Perfil } from "../../types/perfil";
 import { ActualizarRostro } from "./actualizarRostro";
-import { EVENTO_PERFIL_ACTUALIZADO } from "../../componentes/layout/menuUsuario";
-import "../../estilos/perfil.css";
+import { EVENTO_PERFIL_ACTUALIZADO } from "../../components/layout/menuUsuario";
+import "../../styles/perfil.css";
 
 // Saca el prefijo que agrega Electron a los errores que vienen del proceso principal.
 const mensajeDe = (error: unknown) =>

@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { Horarios } from '../administracionDePersistencia/Horarios';
+import { Horarios } from '../administracionDePersistencia/horarios';
 import {
   crearHorarioSchema,
   listarHorariosSchema,
