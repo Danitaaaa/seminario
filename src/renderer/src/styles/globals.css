@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fraunces:wght@400;700&display=swap');
+
+:root {
+--color-primary: #2B3A67;
+--color-secondary: #7A9E7E;
+--color-accent: #D9A441;
+--color-background: #FAFAF8;
+--font-display: "Fraunces", serif;
+--font-body: "Inter", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+margin: 0;
+font-family: var(--font-body);
+background: var(--color-background);
+color: #1E1E1E;
+}

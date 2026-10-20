@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UsuarioActual } from "../../types/layout";
 import { itemsPrincipales, itemsInferiores, accionesSuperiores, rutaDe } from "../navegacion";
-import { BarraLateral } from "../../componentes/layout/barraLateral";
-import { BarraSuperior } from "../../componentes/layout/barraSuperior";
+import { BarraLateral } from "../../components/layout/barraLateral";
+import { BarraSuperior } from "../../components/layout/barraSuperior";
 
 interface PlantillaLayoutProps {
   titulo: string;

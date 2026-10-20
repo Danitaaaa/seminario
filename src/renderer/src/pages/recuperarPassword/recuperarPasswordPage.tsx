@@ -1,10 +1,10 @@
 import { useState } from  'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../components/ui/Button/Button';
-import { Input } from '../../components/ui/Input/Input';
-import { Card } from '../../components/ui/Card/Card';
-import { Title } from '../../components/ui/Title/Title';
-import { CartelError } from '../../components/ui/commons/CartelesError';
+import { Button } from '../../components/ui/button/button';
+import { Input } from '../../components/ui/input/input';
+import { Card } from '../../components/ui/card/card';
+import { Title } from '../../components/ui/title/title';
+import { CartelError } from '../../components/ui/commons/cartelesError';
 
 export function RecuperarPasswordPage(){
     const [email, setEmail] = useState("");

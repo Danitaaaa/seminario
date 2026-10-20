@@ -1,5 +1,8 @@
 import { Archivo } from './archivo';
 import { Nodo } from './nodo';
+import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput } from './eventos';
+import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
+import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
 
 declare global {
   interface Window {
@@ -51,6 +54,24 @@ declare global {
         | { exito: true; usuarioId: number }
         | { exito: false; mensaje: string }
       >;
+
+      // Gestion de eventos
+      crearEvento: (datos: CrearEventoInput) => Promise<Evento>;
+      listarEventos: (datos: ListarEventosInput) => Promise<Evento[]>;
+      modificarEvento: (datos: ModificarEventoInput) => Promise<Evento>;
+      eliminarEvento: (datos: { id: number }) => Promise<{ ok: boolean }>;
+
+      // Gestion de categorias
+      crearCategoria: (datos: CrearCategoriaInput) => Promise<Categoria>;
+      listarCategorias: (datos: ListarCategoriasInput) => Promise<Categoria[]>;
+      modificarCategoria: (datos: ModificarCategoriaInput) => Promise<Categoria>;
+      eliminarCategoria: (datos: { id: number }) => Promise<{ ok: boolean }>;
+
+      // Gestion de horarios
+      crearHorario: (datos: CrearHorarioInput) => Promise<HorarioCursado>;
+      listarHorarios: (datos: ListarHorariosInput) => Promise<HorarioCursado[]>;
+      modificarHorario: (datos: ModificarHorarioInput) => Promise<HorarioCursado>;
+      eliminarHorario: (datos: { id: number }) => Promise<{ ok: boolean }>;
     };
   }
 }
