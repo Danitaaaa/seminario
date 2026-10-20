@@ -21,7 +21,6 @@ export const itemsInferiores: ItemNavegacion[] = [
   { id: "ajustes", etiqueta: "Ajustes", icono: Settings },
   { id: "cerrar-sesion", etiqueta: "Cerrar sesión", icono: LogOut },
 ];
-
 export const accionesSuperiores: AccionSuperior[] = [
   { id: "ayuda", etiqueta: "Ayuda", icono: CircleHelp },
   { id: "mensajes", etiqueta: "Mensajes", icono: Mail },
@@ -34,6 +33,7 @@ const rutasPorItem: Record<string, string> = {
   material: '/material',
   horarios: '/horarios',
   calendario: '/eventos',
+  proyectos: '/proyectos',
   'cerrar-sesion': '/',
 };
 

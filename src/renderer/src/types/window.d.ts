@@ -3,6 +3,20 @@ import { Nodo } from './nodo';
 import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput } from './eventos';
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
+import type { 
+  Proyecto,
+  Miembro,
+  CrearProyectoDatos,
+  ModificarProyectoDatos,
+  EliminarProyectoDatos,
+  ObtenerProyectoDatos,
+  ListarProyectosCriterios,
+  AgregarMiembroDatos,
+  QuitarMiembroDatos,
+  ListarMiembrosCriterios,
+  SincronizarProyectoDatos,
+  UnirseAProyectoDatos,
+} from './proyectos';
 
 declare global {
   interface Window {
@@ -72,6 +86,18 @@ declare global {
       listarHorarios: (datos: ListarHorariosInput) => Promise<HorarioCursado[]>;
       modificarHorario: (datos: ModificarHorarioInput) => Promise<HorarioCursado>;
       eliminarHorario: (datos: { id: number }) => Promise<{ ok: boolean }>;
+
+      // Gestion de proyectos
+      crearProyecto: (datos: CrearProyectoDatos) => Promise<Proyecto>;
+      modificarProyecto: (datos: ModificarProyectoDatos) => Promise<Proyecto>;
+      eliminarProyecto: (datos: EliminarProyectoDatos) => Promise<void>;
+      obtenerProyecto: (datos: ObtenerProyectoDatos) => Promise<Proyecto>;
+      listarProyectos: (criterios: ListarProyectosCriterios) => Promise<Proyecto[]>;
+      agregarMiembro: (datos: AgregarMiembroDatos) => Promise<Miembro>;
+      quitarMiembro: (datos: QuitarMiembroDatos) => Promise<void>;
+      listarMiembros: (criterios: ListarMiembrosCriterios) => Promise<Miembro[]>;
+      sincronizarProyecto: (datos: SincronizarProyectoDatos) => Promise<void>;
+      unirseAProyecto: (datos: UnirseAProyectoDatos) => Promise<Proyecto>;
     };
   }
 }

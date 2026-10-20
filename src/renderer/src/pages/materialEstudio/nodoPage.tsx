@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import type { MouseEvent, DragEvent } from 'react';
+import type { MouseEvent, DragEvent, ReactNode } from 'react';
 import { claveNodo, type Nodo, type Archivo } from '../../types/nodo';
 import type { Direccion, OrdenarPor, VistaListado } from '../../types/vistaNodos';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
@@ -30,15 +30,35 @@ type ModalAbierto =
 
 type Miga = { id: number; nombre: string };
 
+const RAIZ_MATERIAL: Miga = { id: 1, nombre: 'Material Estudio' };
+
+interface NodoPageProps {
+    titulo?: string;
+    idActivo?: string;
+    raiz?: Miga; // Carpeta desde la que arranca la navegación
+    vistaInicial?: VistaListado;
+    prefijoRuta?: ReactNode; // Antes de las migas (ej. "Proyectos /")
+    subencabezado?: ReactNode; // Debajo de las migas (ej. avatares de colaboradores)
+    lateral?: ReactNode; // Panel derecho (ej. panel lateral del proyecto)
+}
+
 const eliminarUno = (n: Nodo) =>
     n.tipo === 'archivo'
         ? window.api.eliminarArchivo({ id: n.id })
         : window.api.eliminarNodo({ id: n.id });
 
-export function NodoPage() {
+export function NodoPage({
+    titulo = 'Material Estudio',
+    idActivo = 'material',
+    raiz = RAIZ_MATERIAL,
+    vistaInicial = 'lista',
+    prefijoRuta,
+    subencabezado,
+    lateral,
+}: NodoPageProps = {}) {
     const [nodos, setNodos] = useState<Nodo[]>([]);
 
-    const [vista, setVista] = useState<VistaListado>('lista');
+    const [vista, setVista] = useState<VistaListado>(vistaInicial);
     const [ordenActivo, setOrdenActivo] = useState<OrdenarPor>('nombre');
     const [direccion, setDireccion] = useState<Direccion>('ASC');
     const [busqueda, setBusqueda] = useState('');
@@ -57,7 +77,7 @@ export function NodoPage() {
     const timerMiga = useRef<ReturnType<typeof setTimeout> | null>(null);
     const migaEnEspera = useRef<number | null>(null);
 
-    const [ruta, setRuta] = useState<Miga[]>([{ id: 1, nombre: 'Material Estudio' }]);
+    const [ruta, setRuta] = useState<Miga[]>([raiz]);
     const idPadreActual = ruta[ruta.length - 1].id;
 
     const [errorMover, setErrorMover] = useState<string | null>(null);
@@ -103,7 +123,7 @@ export function NodoPage() {
         migaEnEspera.current = null;
     }, []);
 
-    // Si el drag se cancela (soltar fuera, Esc) o termina, se limpia todo el estado visual.
+    // Si el drag se cancela o termina, se limpia todo el estado visual.
     useEffect(() => {
         const limpiar = () => {
             limpiarTimerMiga();
@@ -163,7 +183,6 @@ export function NodoPage() {
 
     const onSalirDestino = () => setDestinoArrastre(null);
 
-    // Mueve los nodos indicados a la carpeta `idDestino` y recarga el listado.
     const moverA = async (idDestino: number, aMover: Nodo[]) => {
         const idsArchivos = aMover.filter((n) => n.tipo === 'archivo').map((n) => n.id);
         const carpetas = aMover.filter((n) => n.tipo === 'carpeta');
@@ -195,15 +214,12 @@ export function NodoPage() {
         await moverA(destino.id, aMover);
     };
 
-    // ---- Drag sobre las migas ----
-
     const onArrastrarSobreMiga = (id: number) => {
         setDestinoMiga(id);
-        if (migaEnEspera.current === id) return; // dragover se dispara continuamente
+        if (migaEnEspera.current === id) return;
         limpiarTimerMiga();
         migaEnEspera.current = id;
 
-        // Si ya estamos en esa carpeta no hace falta navegar
         if (id === idPadreActual) return;
 
         timerMiga.current = setTimeout(() => {
@@ -211,7 +227,6 @@ export function NodoPage() {
                 const i = prev.findIndex((m) => m.id === id);
                 return i === -1 ? prev : prev.slice(0, i + 1);
             });
-            // Se mantiene la selección: los nodos siguen "en la mano"
             migaEnEspera.current = null;
         }, RETARDO_NAVEGAR_MIGA_MS);
     };
@@ -236,7 +251,6 @@ export function NodoPage() {
             setSeleccionados(new Set());
             return;
         }
-        // Formatos soportados se abren en el visor; el resto pregunta con qué abrirlo.
         if (tipoVisor(nodo.extension)) {
             setArchivoAbierto(nodo);
         } else {
@@ -244,7 +258,6 @@ export function NodoPage() {
         }
     };
 
-    // Acepta `number | null` porque así lo declara RutaMigas (onNavegar).
     const onNavegarMiga = (id: number | null) => {
         if (id === null) return;
         const indice = ruta.findIndex((m) => m.id === id);
@@ -274,8 +287,8 @@ export function NodoPage() {
 
     return (
         <PlantillaLayout
-            titulo="Material Estudio"
-            idActivo="material"
+            titulo={titulo}
+            idActivo={idActivo}
             usuario={{ nombre: usuarioLogueado }}
             onBuscar={setBusqueda}
         >
@@ -301,46 +314,54 @@ export function NodoPage() {
                     }}
                 />
             ) : (
-            <div
-                className="nodos-modulo"
-                onClick={(e) => {
-                    if (e.target === e.currentTarget) setSeleccionados(new Set());
-                }}
-            >
-                <RutaMigas
-                    segmentos={ruta}
-                    onNavegar={onNavegarMiga}
-                    destinoArrastre={destinoMiga}
-                    onArrastrarSobre={onArrastrarSobreMiga}
-                    onSalirDestino={onSalirMiga}
-                    onSoltar={onSoltarEnMiga}
-                />
+                <div className={lateral ? 'nodos-pagina nodos-pagina--con-lateral' : 'nodos-pagina'}>
+                    <div
+                        className="nodos-modulo"
+                        onClick={(e) => {
+                            if (e.target === e.currentTarget) setSeleccionados(new Set());
+                        }}
+                    >
+                        <div className="nodos-ruta-fila">
+                            {prefijoRuta}
+                            <RutaMigas
+                                segmentos={ruta}
+                                onNavegar={onNavegarMiga}
+                                destinoArrastre={destinoMiga}
+                                onArrastrarSobre={onArrastrarSobreMiga}
+                                onSalirDestino={onSalirMiga}
+                                onSoltar={onSoltarEnMiga}
+                            />
+                        </div>
 
-                <BarraFiltrosNodos
-                    ordenActivo={ordenActivo}
-                    direccion={direccion}
-                    onOrdenar={alternarOrden}
-                    vista={vista}
-                    onCambiarVista={setVista}
-                    menuAgregarAbierto={menuAgregarAbierto}
-                    onToggleMenuAgregar={() => setMenuAgregarAbierto((v) => !v)}
-                    onSubirArchivo={subirArchivo}
-                    onCrearCarpeta={() => {
-                        setMenuAgregarAbierto(false);
-                        setModal({ tipo: 'crear' });
-                    }}
-                    onEliminarSeleccion={() => {
-                        if (seleccionados.size === 0) return;
-                        setModal({ tipo: 'eliminarSeleccion' });
-                    }}
-                    haySeleccion={seleccionados.size > 0}
-                />
-                {vista === 'lista' ? (
-                    <TablaNodos {...propsListado} />
-                ) : (
-                    <CuadriculaNodos {...propsListado} />
-                )}
-            </div>
+                        {subencabezado}
+
+                        <BarraFiltrosNodos
+                            ordenActivo={ordenActivo}
+                            direccion={direccion}
+                            onOrdenar={alternarOrden}
+                            vista={vista}
+                            onCambiarVista={setVista}
+                            menuAgregarAbierto={menuAgregarAbierto}
+                            onToggleMenuAgregar={() => setMenuAgregarAbierto((v) => !v)}
+                            onSubirArchivo={subirArchivo}
+                            onCrearCarpeta={() => {
+                                setMenuAgregarAbierto(false);
+                                setModal({ tipo: 'crear' });
+                            }}
+                            onEliminarSeleccion={() => {
+                                if (seleccionados.size === 0) return;
+                                setModal({ tipo: 'eliminarSeleccion' });
+                            }}
+                            haySeleccion={seleccionados.size > 0}
+                        />
+                        {vista === 'lista' ? (
+                            <TablaNodos {...propsListado} />
+                        ) : (
+                            <CuadriculaNodos {...propsListado} />
+                        )}
+                    </div>
+                    {lateral}
+                </div>
             )}
 
             {archivoAbierto && (

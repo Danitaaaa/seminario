@@ -1,0 +1,266 @@
+/* ---------- Layout de NodoPage con panel lateral ---------- */
+.nodos-pagina {
+  display: contents; /* sin lateral, no altera el layout actual */
+}
+
+.nodos-pagina--con-lateral {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+.nodos-ruta-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.proyecto-ruta-volver {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #495b7d;
+  font: inherit;
+  cursor: pointer;
+}
+
+.proyecto-ruta-volver:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Listado de proyectos ---------- */
+.proyectos-grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.tarjeta-proyecto {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #c4d1e3;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.tarjeta-proyecto__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-proyecto {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #23354d;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.tarjeta-proyecto__titulo {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #02122f;
+}
+
+.tarjeta-proyecto__fecha {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #495b7d;
+}
+
+.tarjeta-proyecto__imagen {
+  height: 140px;
+  border-radius: 6px;
+  background: #d9dce1;
+}
+
+.tarjeta-proyecto__nombre {
+  margin: 0;
+  font-weight: 700;
+  color: #02122f;
+}
+
+.tarjeta-proyecto__materia {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #495b7d;
+}
+
+.tarjeta-proyecto__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.btn-proyecto {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid #23354d;
+  background: #23354d;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-proyecto--peligro {
+  border-color: #c96a6a;
+  background: transparent;
+  color: #b84c4c;
+}
+
+.btn-proyecto--secundario {
+  border-color: #8ba3c5;
+  background: transparent;
+  color: #495b7d;
+}
+
+.tarjeta-crear-proyecto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 300px;
+  border: 2px dashed #c4d1e3;
+  border-radius: 14px;
+  background: transparent;
+  color: #495b7d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tarjeta-crear-proyecto__mas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e6e9ee;
+  font-size: 1.5rem;
+}
+
+/* ---------- Modal de proyecto ---------- */
+.modal-proyecto__fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 18, 47, 0.45);
+}
+
+.modal-proyecto {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(460px, 92vw);
+  padding: 24px;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.modal-proyecto h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #02122f;
+}
+
+.modal-proyecto label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #495b7d;
+}
+
+.modal-proyecto input {
+  padding: 9px 11px;
+  border: 1px solid #8ba3c5;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.modal-proyecto__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ---------- Colaboradores ---------- */
+.avatares-miembros {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #495b7d;
+}
+
+.avatares-miembros__pila {
+  display: flex;
+}
+
+.avatares-miembros__pila .avatar-proyecto {
+  width: 24px;
+  height: 24px;
+  margin-left: -6px;
+  border: 2px solid #ffffff;
+  font-size: 0.65rem;
+}
+
+.avatares-miembros__pila .avatar-proyecto:first-child {
+  margin-left: 0;
+}
+
+/* ---------- Panel lateral ---------- */
+.panel-proyecto {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-proyecto__tarjeta {
+  padding: 14px;
+  border: 1px solid #c4d1e3;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.panel-proyecto__titulo {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #02122f;
+}
+
+.panel-proyecto__vacio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  border-radius: 8px;
+  background: #f4f6f9;
+  color: #8ba3c5;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 1100px) {
+  .nodos-pagina--con-lateral {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -62,6 +62,19 @@ import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/eliminarH
 import { Horarios } from './administracionDePersistencia/horarios';
 import { registerHorariosIpc } from './ipc/horarios.ipc';
 
+// Gestion de proyectos
+import { CrearProyecto } from './logicaPersistente/gestionDeProyectos/crearProyecto';
+import { ModificarProyecto } from './logicaPersistente/gestionDeProyectos/modificarProyecto';
+import { EliminarProyecto } from './logicaPersistente/gestionDeProyectos/eliminarProyectp';
+import { ObtenerProyecto } from './logicaPersistente/gestionDeProyectos/obtenerProyecto';
+import { ListarProyectos } from './logicaPersistente/gestionDeProyectos/listarProyectos';
+import { AgregarMiembro } from './logicaPersistente/gestionDeProyectos/agregarMiembro';
+import { QuitarMiembro } from './logicaPersistente/gestionDeProyectos/quitarMiembro';
+import { ListarMiembros } from './logicaPersistente/gestionDeProyectos/listarMienbros';
+import { SincronizarProyecto } from './logicaPersistente/gestionDeProyectos/sincronizarProyecto';
+import { SincronizadorMock } from './logicaPersistente/gestionDeProyectos/sincronizadorMock';
+import { Proyectos } from './administracionDePersistencia/proyectos';
+import { registrarProyectosIpc } from './ipc/proyectos.ipc';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -156,6 +169,26 @@ function wireDependencies(): void {
     new ModificarHorario(persistencia), new EliminarHorario(persistencia)
   );
   registerHorariosIpc(horarios);
+
+    // Gestion de proyectos
+    const servidor = {} as ConstructorParameters<typeof SincronizadorMock>[0];
+    const opciones = {} as ConstructorParameters<typeof SincronizadorMock>[1];
+    const sincronizador = new SincronizadorMock(servidor, opciones);
+    const aplicarCambioRemoto = (async () => {}) as ConstructorParameters<typeof SincronizarProyecto>[2];
+
+    const proyectos = new Proyectos(
+      new CrearProyecto(persistencia, crearNodo),
+      new ModificarProyecto(persistencia, modificarNodo),
+      new EliminarProyecto(persistencia, eliminarNodo),
+      new ObtenerProyecto(persistencia),
+      new ListarProyectos(persistencia),
+      new AgregarMiembro(persistencia, sincronizador),
+      new QuitarMiembro(persistencia),
+      new ListarMiembros(persistencia),
+      new SincronizarProyecto(persistencia, sincronizador, aplicarCambioRemoto),
+    );
+    registrarProyectosIpc(proyectos);
+
 }
 
 app.whenReady().then(async () => {
