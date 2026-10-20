@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../components/ui/Button/button';
-import { Input } from '../../components/ui/Input/input';
-import { Card } from '../../components/ui/Card/card';
-import { Title } from '../../components/ui/Title/title';
+import { Button } from '../../components/ui/button/button';
+import { Input } from '../../components/ui/input/input';
+import { Card } from '../../components/ui/card/card';
+import { Title } from '../../components/ui/title/title';
 import { CartelError } from '../../components/ui/commons/cartelesError';
-import  RegistrarRostro from '../RegistrarRostro/registrarRostro';
+import  RegistrarRostro from '../registrarRostro/registrarRostro';
 
 
 export function RegistrarUsuarioPage() {

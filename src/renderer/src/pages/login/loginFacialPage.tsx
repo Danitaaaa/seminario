@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { UsarCamara } from "../../hooks/usarCamara";
 import { ObtenerEmbedding } from "../../../lib/obtenerEmbeddings";
-import { Button } from "../../components/ui/Button/button";
+import { Button } from "../../components/ui/button/button";
 
 interface Props {
   onLoginExitoso: (usuarioId: number) => void

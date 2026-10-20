@@ -67,6 +67,7 @@ import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/eliminarH
 import { Horarios } from './administracionDePersistencia/horarios';
 import { registerHorariosIpc } from './ipc/horarios.ipc';
 
+
 let mainWindow: BrowserWindow | null = null;
 
 protocol.registerSchemesAsPrivileged([

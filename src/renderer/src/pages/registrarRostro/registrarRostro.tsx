@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { UsarCamara } from '../../hooks/usarCamara'
 import { ObtenerEmbedding } from '../../../lib/obtenerEmbeddings'
-import { Button } from '../../components/ui/Button/button'
-import { Title } from '../../components/ui/Title/title'
+import { Button } from '../../components/ui/button/button'
+import { Title } from '../../components/ui/title/title'
 import { CartelError } from '../../components/ui/commons/cartelesError'
  
 interface Props {
