@@ -62,6 +62,12 @@ import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/eliminarH
 import { Horarios } from './administracionDePersistencia/horarios';
 import { registerHorariosIpc } from './ipc/horarios.ipc';
 
+// Gestion de flashcards
+import { CrearDeck } from './logicaPersistente/gestionDeFlashcards/crearDeck';
+import { ListarDecks } from './logicaPersistente/gestionDeFlashcards/listarDecks';
+import { Flashcards } from './administracionDePersistencia/flashcards';
+import { registerFlashcardsIpc } from './ipc/flashcards.ipc';
+import { flashcardsApi } from "./apis/flashcards";
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -156,6 +162,16 @@ function wireDependencies(): void {
     new ModificarHorario(persistencia), new EliminarHorario(persistencia)
   );
   registerHorariosIpc(horarios);
+
+  // Gestion de flashcards
+  const crearDeck = new CrearDeck(persistencia);
+  const listarDecks =new ListarDecks(persistencia);
+  const flashcards =new Flashcards(crearDeck,listarDecks);
+
+  registerFlashcardsIpc(
+    flashcards
+  );
+
 }
 
 app.whenReady().then(async () => {

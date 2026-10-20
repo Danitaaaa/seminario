@@ -72,8 +72,22 @@ declare global {
       listarHorarios: (datos: ListarHorariosInput) => Promise<HorarioCursado[]>;
       modificarHorario: (datos: ModificarHorarioInput) => Promise<HorarioCursado>;
       eliminarHorario: (datos: { id: number }) => Promise<{ ok: boolean }>;
-    };
-  }
+      
+    crearDeck: (
+      datos: {usuarioId: number;
+        nombre: string;
+        descripcion?: string;
+        materiaAsociada?: string;
+      }
+    ) => Promise<unknown>;
+
+    listarDecks: (
+      usuarioId: number
+    ) => Promise<unknown>;
+
+  };
+}
+    
 }
 
 export {};
