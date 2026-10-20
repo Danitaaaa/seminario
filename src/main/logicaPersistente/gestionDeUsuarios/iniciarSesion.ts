@@ -4,6 +4,7 @@ import { Usuario } from './usuario';
 import { Persistencia } from '../../persistencia/persistencia';
 import { materializarUsuario } from './materializadorUsuarios';
 
+// Inicia sesión validando el usuario y la contraseña
 export class IniciarSesion {
     constructor(
         private readonly persistencia: Persistencia

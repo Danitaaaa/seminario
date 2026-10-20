@@ -1,5 +1,6 @@
 import { HorarioCursado } from './entidades';
 
+// Convierte un registro de la BD a un objeto del tipo Horario.
 export function materializarHorario(fila: any): HorarioCursado {
   return {
     id: fila.id,

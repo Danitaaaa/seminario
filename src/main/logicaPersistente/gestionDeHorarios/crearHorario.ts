@@ -3,6 +3,7 @@ import { HorarioCursado } from './entidades';
 import { materializarHorario } from './materializador';
 import { CrearHorarioDTO } from './dto';
 
+// Crea un nuevo horario
 export class CrearHorario {
   constructor(private readonly persistencia: Persistencia) {}
 

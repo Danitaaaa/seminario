@@ -1,3 +1,4 @@
+// Representa a un usuario del sistema
 export interface Usuario {
     id: number;
 

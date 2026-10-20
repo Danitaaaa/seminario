@@ -1,5 +1,6 @@
 import { Usuario } from "./usuario";
 
+// Convierte un registro de la BD a un objeto del tipo Usuario.
 export function materializarUsuario(fila: any): Usuario {
     return {
         id: fila.id,

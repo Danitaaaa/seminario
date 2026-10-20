@@ -1,6 +1,7 @@
 import { Persistencia } from '../../persistencia/persistencia';
 import { EliminarHorarioDTO } from './dto';
 
+// Elimina el horario con el ID indicado
 export class EliminarHorario {
   constructor(private readonly persistencia: Persistencia) {}
 

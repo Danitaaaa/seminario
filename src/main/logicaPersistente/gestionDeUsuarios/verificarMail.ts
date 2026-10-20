@@ -1,5 +1,6 @@
 import { Persistencia } from "../../persistencia/persistencia";
 
+// Valida el email mendiante la verificación del código ingresado
 export class VerificarMail {
 
     constructor(

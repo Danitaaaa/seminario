@@ -3,14 +3,12 @@ import { HorarioCursado } from './entidades';
 import { materializarHorario } from './materializador';
 import { ModificarHorarioDTO } from './dto';
 
+// Modifica los parámetros de un horario
 export class ModificarHorario {
   constructor(private readonly persistencia: Persistencia) {}
 
   async ejecutar(datos: ModificarHorarioDTO): Promise<HorarioCursado> {
-    // Como diaSemana/horaInicio/horaFin son todos opcionales acá (solo se
-    // actualiza lo que llega), primero traemos la fila actual para saber
-    // los valores "finales" con los que hay que chequear superposición y
-    // el orden inicio < fin — no alcanza con mirar solo lo que cambió.
+  
     const filaActual = await this.persistencia.ejecutar(
       `SELECT * FROM horarios_cursado WHERE id = $1`,
       [datos.id]
