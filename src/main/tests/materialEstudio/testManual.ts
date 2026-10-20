@@ -1,10 +1,10 @@
 import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
 import { Persistencia } from '../../persistencia/persistencia';
-import { CrearNodo } from './crearNodo';
-import { BuscarNodos } from './buscarNodos';
-import { ModificarNodo } from './modificarNodo';
-import { MoverNodo } from './moverNodo';
-import { EliminarNodo } from './elminarNodo';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { BuscarNodos } from '../../logicaPersistente/gestionMaterialEstudio/buscarNodos';
+import { ModificarNodo } from '../../logicaPersistente/gestionMaterialEstudio/modificarNodo';
+import { MoverNodo } from '../../logicaPersistente/gestionMaterialEstudio/moverNodo';
+import { EliminarNodo } from '../../logicaPersistente/gestionMaterialEstudio/eliminarNodo';
 
 // Test para las funciones de Crear, Buscar, Modificar, Mover y Eliminar nodo.
 async function main() {

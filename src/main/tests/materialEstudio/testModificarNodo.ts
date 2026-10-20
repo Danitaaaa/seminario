@@ -1,7 +1,7 @@
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { CrearNodo } from '../crearNodo';
-import { ModificarNodo } from '../modificarNodo';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { ModificarNodo } from '../../logicaPersistente/gestionMaterialEstudio/modificarNodo';
 
 // Test de ModificarNodo: casos normales y casos que intentan romperlo.
 async function main() {

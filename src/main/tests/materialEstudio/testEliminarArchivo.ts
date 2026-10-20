@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../crearArchivo';
-import { EliminarArchivo } from '../eliminarArchivo';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { CrearArchivo } from '../../logicaPersistente/gestionMaterialEstudio/crearArchivo';
+import { EliminarArchivo } from '../../logicaPersistente/gestionMaterialEstudio/eliminarArchivo';
 import { EntornoArchivos, verificar, esperarError, terminar } from './entornoTest';
 
 // Test de EliminarArchivo: casos normales y casos que intentan romperlo.

@@ -1,8 +1,8 @@
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../crearArchivo';
-import { MoverArchivos } from '../moverArchivos';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { CrearArchivo } from '../../logicaPersistente/gestionMaterialEstudio/crearArchivo';
+import { MoverArchivos } from '../../logicaPersistente/gestionMaterialEstudio/moverArchivos';
 import { EntornoArchivos, verificar, esperarError, terminar } from './entornoTest';
 
 // Test de MoverArchivos: casos normales y casos que intentan romperlo.

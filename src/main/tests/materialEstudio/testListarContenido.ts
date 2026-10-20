@@ -1,11 +1,11 @@
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../crearArchivo';
-import { BuscarNodos } from '../buscarNodos';
-import { BuscarArchivos } from '../buscarArchivos';
-import { ListarContenido } from '../listarContenido';
-import { ElementoContenido } from '../entidades';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { CrearArchivo } from '../../logicaPersistente/gestionMaterialEstudio/crearArchivo';
+import { BuscarNodos } from '../../logicaPersistente/gestionMaterialEstudio/buscarNodos';
+import { BuscarArchivos } from '../../logicaPersistente/gestionMaterialEstudio/buscarArchivos';
+import { ListarContenido } from '../../logicaPersistente/gestionMaterialEstudio/listarContenido';
+import { ElementoContenido } from '../../logicaPersistente/gestionMaterialEstudio/entidades';
 import { EntornoArchivos } from './entornoTest';
 
 // Test de ListarContenido: casos normales y casos que intentan romperlo.

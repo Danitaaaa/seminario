@@ -1,7 +1,7 @@
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { CrearNodo } from '../crearNodo';
-import { BuscarNodos } from '../buscarNodos';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { BuscarNodos } from '../../logicaPersistente/gestionMaterialEstudio/buscarNodos';
 
 // Test de BuscarNodos: casos normales y casos que intentan romperlo.
 async function main() {

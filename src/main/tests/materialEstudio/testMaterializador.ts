@@ -3,7 +3,7 @@ import {
   desmaterializarNodo,
   materializarArchivo,
   desmaterializarArchivo,
-} from '../materializador';
+} from '../../logicaPersistente/gestionMaterialEstudio/materializador';
 
 // Test del materializador: funciones puras, no necesita base de datos.
 function main() {

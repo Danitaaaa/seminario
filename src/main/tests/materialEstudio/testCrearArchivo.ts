@@ -1,8 +1,8 @@
 import fs from 'node:fs';
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../crearArchivo';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { CrearArchivo } from '../../logicaPersistente/gestionMaterialEstudio/crearArchivo';
 import { EntornoArchivos, verificar, esperarError, terminar } from './entornoTest';
 
 // Test de CrearArchivo: casos normales y casos que intentan romperlo.

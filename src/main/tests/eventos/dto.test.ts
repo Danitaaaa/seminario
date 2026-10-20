@@ -3,7 +3,7 @@ import {
   crearEventoSchema, 
   modificarEventoSchema, 
   listarEventosSchema 
-} from './dto';
+} from '../../logicaPersistente/gestionDeEventos/dto';
 
 describe('Validaciones DTO (dto.ts)', () => {
   it('1. Validar crearEventoSchema con datos válidos', () => {

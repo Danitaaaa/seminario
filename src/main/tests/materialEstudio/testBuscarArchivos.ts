@@ -1,8 +1,8 @@
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../crearArchivo';
-import { BuscarArchivos } from '../buscarArchivos';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { CrearArchivo } from '../../logicaPersistente/gestionMaterialEstudio/crearArchivo';
+import { BuscarArchivos } from '../../logicaPersistente/gestionMaterialEstudio/buscarArchivos';
 import { EntornoArchivos } from './entornoTest';
 
 // Test de BuscarArchivos: casos normales y casos que intentan romperlo.

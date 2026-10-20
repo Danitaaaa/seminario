@@ -1,8 +1,8 @@
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../crearArchivo';
-import { ObtenerArchivo } from '../obtenerArchivo';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { CrearArchivo } from '../../logicaPersistente/gestionMaterialEstudio/crearArchivo';
+import { ObtenerArchivo } from '../../logicaPersistente/gestionMaterialEstudio/obtenerArchivo';
 import { EntornoArchivos, verificar, esperarError, terminar } from './entornoTest';
 
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));

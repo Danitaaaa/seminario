@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { Almacenamiento } from '../../../persistencia/almacenamiento';
+import { Almacenamiento } from '../../persistencia/almacenamiento';
 
 let fallos = 0;
 

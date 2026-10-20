@@ -1,12 +1,12 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { Almacenamiento } from '../../../persistencia/almacenamiento';
-import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../crearArchivo';
-import { ActualizarContenidoArchivo } from '../actualizarContenidoArchivo';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { Almacenamiento } from '../../persistencia/almacenamiento';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { CrearArchivo } from '../../logicaPersistente/gestionMaterialEstudio/crearArchivo';
+import { ActualizarContenidoArchivo } from '../../logicaPersistente/gestionMaterialEstudio/actualizarContenidoArchivo';
 
 let fallos = 0;
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { materializarEvento } from './materializador';
+import { materializarEvento } from '../../logicaPersistente/gestionDeEventos/materializador';
 
 describe('Mapeador (materializador.ts)', () => {
   it('16. Reemplazar nulos por defaults en materializador', () => {

@@ -1,8 +1,8 @@
-import { pool, verifyDbConnection } from '../../../persistencia/baseDeDatos';
-import { Persistencia } from '../../../persistencia/persistencia';
-import { CrearNodo } from '../crearNodo';
-import { CrearArchivo } from '../crearArchivo';
-import { EliminarNodo } from '../eliminarNodo';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { Persistencia } from '../../persistencia/persistencia';
+import { CrearNodo } from '../../logicaPersistente/gestionMaterialEstudio/crearNodo';
+import { CrearArchivo } from '../../logicaPersistente/gestionMaterialEstudio/crearArchivo';
+import { EliminarNodo } from '../../logicaPersistente/gestionMaterialEstudio/eliminarNodo';
 import { EntornoArchivos } from './entornoTest';
 
 // Test de EliminarNodo: casos normales y casos que intentan romperlo.
