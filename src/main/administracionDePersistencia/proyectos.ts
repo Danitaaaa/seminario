@@ -37,6 +37,16 @@ export class Proyectos {
 
     /* ---------- Proyectos ---------- */
 
+    // Listar los proyectos de un usuario, con búsqueda y orden opcionales
+    async listar(criterios: ListarProyectosDTO): Promise<Proyecto[]> {
+        return this.listarProyectos.ejecutar(criterios);
+    }
+
+    // Obtener un proyecto por id
+    async obtener(datos: ObtenerProyectoDTO): Promise<Proyecto> {
+        return this.obtenerProyecto.ejecutar(datos);
+    }
+
     // Crear un nuevo proyecto (el usuario creador queda como propietario)
     async crear(datos: CrearProyectoDTO): Promise<Proyecto> {
         return this.crearProyecto.ejecutar(datos);
@@ -52,17 +62,12 @@ export class Proyectos {
         await this.eliminarProyecto.ejecutar(datos);
     }
 
-    // Obtener un proyecto por id
-    async obtener(datos: ObtenerProyectoDTO): Promise<Proyecto> {
-        return this.obtenerProyecto.ejecutar(datos);
-    }
-
-    // Listar los proyectos de un usuario, con búsqueda y orden opcionales
-    async listar(criterios: ListarProyectosDTO): Promise<Proyecto[]> {
-        return this.listarProyectos.ejecutar(criterios);
-    }
-
     /* ---------- Miembros ---------- */
+
+    // Listar los miembros de un proyecto
+    async listarMiembros(criterios: ListarMiembrosDTO): Promise<ProyectoMiembro[]> {
+        return this.listarMiembros_.ejecutar(criterios);
+    }
 
     // Agregar un miembro a un proyecto
     async agregarMiembro(datos: AgregarMiembroDTO): Promise<ProyectoMiembro> {
@@ -72,11 +77,6 @@ export class Proyectos {
     // Quitar un miembro (o abandonar el proyecto si coincide con el solicitante)
     async quitarMiembro(datos: QuitarMiembroDTO): Promise<void> {
         await this.quitarMiembro_.ejecutar(datos);
-    }
-
-    // Listar los miembros de un proyecto
-    async listarMiembros(criterios: ListarMiembrosDTO): Promise<ProyectoMiembro[]> {
-        return this.listarMiembros_.ejecutar(criterios);
     }
 
     /* ---------- Sincronización ---------- */

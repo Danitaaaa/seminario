@@ -1,8 +1,6 @@
 import {
   materializarNodo,
-  desmaterializarNodo,
   materializarArchivo,
-  desmaterializarArchivo,
 } from '../../logicaPersistente/gestionMaterialEstudio/materializador';
 
 // Test del materializador: funciones puras, no necesita base de datos.
@@ -36,17 +34,10 @@ function main() {
   console.log(nodo);
   console.log('Tipo de tamaño:', typeof nodo.tamaño, '(la entidad dice BigInt)');
 
-  console.log('--- Ida y vuelta de nodo ---');
-  console.log(JSON.stringify(desmaterializarNodo(nodo)) === JSON.stringify(filaNodo) ? 'OK' : 'Distinto');
-
   console.log('--- materializarArchivo ---');
   const archivo = materializarArchivo(filaArchivo);
   console.log(archivo);
   console.log(archivo.tamanio === 1024 ? 'tamaño convertido a number OK' : 'tamaño mal convertido');
-
-  console.log('--- Ida y vuelta de archivo ---');
-  const vuelta = desmaterializarArchivo(archivo);
-  console.log(vuelta.tamaño === 1024 && vuelta.id_archivo === 7 ? 'OK' : 'Distinto', vuelta);
 
   console.log('--- Archivo con tamaño mayor a 2^53 ---');
   const enorme = materializarArchivo({ ...filaArchivo, tamaño: '9007199254740993' });

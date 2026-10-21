@@ -9,6 +9,11 @@ import {
 } from '../logicaPersistente/gestionMaterialEstudio/dto';
 
 export function registrarNodosIpc(nodos: Nodos): void {
+    ipcMain.handle('nodos:listar', async (_event, criterios: unknown) => {
+        const validado = ListarContenidoDTOSchema.parse(criterios);
+        return nodos.listar(validado);
+    });
+
     ipcMain.handle('nodos:crear', async (_event, datos: unknown) => {
         const validado = CrearNodoDTOSchema.parse(datos);
         return nodos.crear(validado);
@@ -17,11 +22,6 @@ export function registrarNodosIpc(nodos: Nodos): void {
     ipcMain.handle('nodos:modificar', async (_event, datos: unknown) => {
         const validado = ModificarNodoDTOSchema.parse(datos);
         return nodos.modificar(validado);
-    });
-
-    ipcMain.handle('nodos:listar', async (_event, criterios: unknown) => {
-        const validado = ListarContenidoDTOSchema.parse(criterios);
-        return nodos.listar(validado);
     });
 
     ipcMain.handle('nodos:mover', async (_event, datos: unknown) => {

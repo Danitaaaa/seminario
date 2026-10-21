@@ -9,11 +9,15 @@ export const usuariosApi = {
             datos
         )
     ,
+    loginFacial: (embedding: number[]) =>
+        ipcRenderer.invoke('usuarios:loginFacial', embedding),
     registrarUsuario: (datos: unknown) =>
         ipcRenderer.invoke(
             "usuarios:registrarUsuario",
             datos
         ),
+    registrarRostro: (usuarioId: number, embedding: number[]) =>
+        ipcRenderer.invoke('usuarios:registrarRostro', usuarioId, embedding),
     verificarMail: (datos: unknown) =>
         ipcRenderer.invoke(
             "usuarios:verificarMail",
@@ -37,11 +41,4 @@ export const usuariosApi = {
             "usuarios:cambiarPassword",
             datos
         ),
-    
-    registrarRostro: (usuarioId: number, embedding: number[]) =>
-    ipcRenderer.invoke('usuarios:registrarRostro', usuarioId, embedding),
- 
-    loginFacial: (embedding: number[]) =>
-    ipcRenderer.invoke('usuarios:loginFacial', embedding)
-
 };
