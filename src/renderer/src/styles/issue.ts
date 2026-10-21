@@ -1,6 +1,6 @@
-import { colores } from "./colores";
-import { espacios, dimensiones } from "./espacios";
-import { tipografias } from "./tipografias";
+import { colors } from "./colors";
+import { spacing, dimensiones } from "./spacing";
+import { typography } from "./typography";
 import { globales } from "./globales";
 
 type Tokens = Record<string, string | number>;
@@ -9,14 +9,14 @@ type Tokens = Record<string, string | number>;
 const aKebab = (texto: string) => texto.replace(/([A-Z])/g, "-$1").toLowerCase();
 
 // Cada grupo de tokens TS se publica como variables CSS con un prefijo.
-// Ej.: colores.primaryDark -> --color-primary-dark
+// Ej.: colors.primaryDark -> --color-primary-dark
 const grupos: Array<[prefijo: string, tokens: Tokens]> = [
-  ["color", colores],
-  ["espacio", espacios],
+  ["color", colors],
+  ["espacio", spacing],
   ["dim", dimensiones],
-  ["fuente", tipografias.familia],
-  ["tamano", tipografias.tamano],
-  ["peso", tipografias.peso],
+  ["fuente", typography.fontFamily],
+  ["tamano", typography.fontSize],
+  ["peso", typography.fontWeight],
   ["radio", globales.radios],
   ["sombra", globales.sombras],
 ];

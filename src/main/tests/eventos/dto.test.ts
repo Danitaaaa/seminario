@@ -22,10 +22,10 @@ describe('Validaciones DTO (dto.ts)', () => {
     expect(resultado.success).toBe(true);
   });
 
-  it('2. Rechazar título vacío o solo espacios', () => {
+  it('2. Rechazar título vacío o solo spacing', () => {
     const resVacio = crearEventoSchema.safeParse({ titulo: '' });
     const resEspacios = crearEventoSchema.safeParse({ titulo: '   ' });
-    console.log('[TEST 2 OUTPUT] Título vacío success:', resVacio.success, '| Solo espacios success:', resEspacios.success);
+    console.log('[TEST 2 OUTPUT] Título vacío success:', resVacio.success, '| Solo spacing success:', resEspacios.success);
     expect(resVacio.success).toBe(false);
     expect(resEspacios.success).toBe(false);
   });

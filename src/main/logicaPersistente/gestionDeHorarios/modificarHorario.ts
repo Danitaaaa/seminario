@@ -1,14 +1,12 @@
-import { Persistencia } from '../../persistencia/persistencia';
+import { Persistencia } from '../../persistencia/Persistencia';
 import { HorarioCursado } from './entidades';
 import { materializarHorario } from './materializador';
 import { ModificarHorarioDTO } from './dto';
 
-// Modifica los parámetros de un horario
 export class ModificarHorario {
   constructor(private readonly persistencia: Persistencia) {}
 
   async ejecutar(datos: ModificarHorarioDTO): Promise<HorarioCursado> {
-  
     const filaActual = await this.persistencia.ejecutar(
       `SELECT * FROM horarios_cursado WHERE id = $1`,
       [datos.id]
