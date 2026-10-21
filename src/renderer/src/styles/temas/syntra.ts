@@ -1,0 +1,36 @@
+import { colors } from "../colors";
+
+export type Modo = "claro" | "oscuro";
+
+export const syntra: Record<Modo, typeof colors> = {
+  claro: colors,
+  oscuro: {
+    primary: "#5B4BEA",
+    primaryLight: "#8B7BFF",
+    primaryDark: "#2A2580",
+    secondary: "#7FC4BA",
+    accent: "#E5B95E",
+    background: "#0B1028",
+    surface: "#111733",
+    border: "#2C3378",
+    textPrimary: "#E8EAF6",
+    textSecondary: "#B4BAD6",
+    success: "#6FB57E",
+    warning: "#E5B95E",
+    error: "#E07A7A",
+    errorBg: "#3A1D2A",
+    errorTexto: "#F2B8B8",
+    text: "#E8EAF6",
+    textLight: "#B4BAD6",
+    white: "#FFFFFF",
+    steel: "#B4BAD6",
+    frostBlue: "#5B4BEA",
+    frostClaro: "#141B3D",
+    storm: "#E8EAF6",
+    lateralFondo: "#0E1430",
+    lateralTexto: "#E8EAF6",
+    splashFondo: "#0B1028",
+    splashCentro: "#25206B",
+    splashBrillo: "#8B7BFF",
+  },
+};

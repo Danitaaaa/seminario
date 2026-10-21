@@ -5,7 +5,7 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   min-height: 100vh;
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-text);
   font-family: var(--fuente-body);
 }
@@ -26,8 +26,8 @@
   width: var(--dim-barra-lateral);
   height: 100vh;
   padding: var(--espacio-md) var(--espacio-sm);
-  background: var(--color-primary);
-  color: var(--color-white);
+  background: var(--color-lateral-fondo);
+  color: var(--color-lateral-texto);
   transition: width 0.2s ease;
 }
 
@@ -126,13 +126,13 @@
   height: var(--dim-icono-boton);
   border: 0;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--color-border) 22%, var(--color-white));
+  background: color-mix(in srgb, var(--color-border) 22%, var(--color-surface));
   color: var(--color-text);
   cursor: pointer;
 }
 
 .app-boton-icono:hover {
-  background: color-mix(in srgb, var(--color-border) 40%, var(--color-white));
+  background: color-mix(in srgb, var(--color-border) 40%, var(--color-surface));
 }
 
 .app-boton-icono--plano {
@@ -147,7 +147,7 @@
   padding: 0 var(--espacio-md);
   height: var(--dim-icono-boton);
   border-radius: var(--radio-sm);
-  background: color-mix(in srgb, var(--color-border) 22%, var(--color-white));
+  background: color-mix(in srgb, var(--color-border) 22%, var(--color-surface));
   color: var(--color-text-light);
 }
 
@@ -170,7 +170,7 @@
   padding: var(--espacio-sm) var(--espacio-md);
   border: 0;
   border-radius: var(--radio-md);
-  background: color-mix(in srgb, var(--color-border) 22%, var(--color-white));
+  background: color-mix(in srgb, var(--color-border) 22%, var(--color-surface));
   color: var(--color-text);
   font: inherit;
   text-align: left;
@@ -238,12 +238,12 @@
 }
 
 .app-boton--contorno {
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-primary);
 }
 
 .app-boton--contorno:hover {
-  background: color-mix(in srgb, var(--color-secondary) 20%, var(--color-white));
+  background: color-mix(in srgb, var(--color-secondary) 20%, var(--color-surface));
 }
 
 /* ---------- Accesibilidad ---------- */

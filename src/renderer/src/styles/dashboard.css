@@ -1,0 +1,175 @@
+/* Dashboard y mini calendario. Solo consume variables generadas por issue.ts. */
+
+.dashboard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-lg);
+  padding: var(--espacio-lg);
+  font-family: var(--fuente-body);
+}
+
+.dashboard__modulos {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espacio-md);
+}
+
+.dashboard__tarjeta {
+  display: flex;
+  align-items: stretch;
+  height: 110px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  box-shadow: var(--sombra-card);
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.dashboard__tarjeta:hover {
+  border-color: var(--color-primary);
+}
+
+.dashboard__tarjeta:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+.dashboard__portada {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 110px;
+}
+
+/* Tonos de portada (modo claro): mezclas de frost-blue y steel sobre la superficie */
+.dashboard__portada--material   { background: color-mix(in srgb, var(--color-frost-blue) 25%, var(--color-surface)); color: var(--color-steel); }
+.dashboard__portada--sesiones   { background: color-mix(in srgb, var(--color-frost-blue) 50%, var(--color-surface)); color: var(--color-storm); }
+.dashboard__portada--horarios   { background: color-mix(in srgb, var(--color-frost-blue) 40%, var(--color-surface)); color: var(--color-storm); }
+.dashboard__portada--metodos    { background: color-mix(in srgb, var(--color-frost-blue) 60%, var(--color-surface)); color: var(--color-text); }
+.dashboard__portada--proyectos  { background: color-mix(in srgb, var(--color-steel) 20%, var(--color-surface)); color: var(--color-steel); }
+.dashboard__portada--cronograma { background: color-mix(in srgb, var(--color-frost-blue) 75%, var(--color-surface)); color: var(--color-text); }
+
+/* En oscuro todas las portadas van iguales: bloque azul noche con ícono violeta */
+:root[data-modo="oscuro"] .dashboard__portada {
+  background: var(--color-frost-claro);
+  color: var(--color-primary-light);
+}
+
+.dashboard__texto {
+  padding: var(--espacio-sm);
+}
+
+.dashboard__titulo {
+  margin: 0 0 var(--espacio-xs);
+  font-size: var(--tamano-base);
+  font-weight: var(--peso-bold);
+  color: var(--color-text-primary);
+}
+
+.dashboard__descripcion {
+  margin: 0;
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+}
+
+.dashboard__lateral {
+  flex-shrink: 0;
+  width: 260px;
+}
+
+/* ---------- Mini calendario ---------- */
+.calendario {
+  padding: var(--espacio-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  font-family: var(--fuente-body);
+}
+
+.calendario__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-xs);
+  margin-bottom: var(--espacio-sm);
+}
+
+.calendario__flecha {
+  display: flex;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.calendario__select {
+  padding: 2px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--tamano-sm);
+}
+
+.calendario__grilla {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.calendario__dia-semana {
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+}
+
+.calendario__dia {
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.calendario__dia:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+
+.calendario__dia--hoy {
+  background: var(--color-background);
+  font-weight: var(--peso-bold);
+}
+
+.calendario__dia--evento,
+.calendario__dia--evento:hover {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.calendario__dia-ajeno {
+  line-height: 28px;
+  font-size: var(--tamano-sm);
+  color: var(--color-border);
+}
+
+.calendario__link {
+  margin-top: var(--espacio-xs);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-light);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  text-decoration: underline;
+  cursor: pointer;
+}

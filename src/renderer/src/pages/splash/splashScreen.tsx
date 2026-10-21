@@ -1,5 +1,4 @@
-import { CSSProperties, useEffect } from 'react';
-import { colors } from '../../styles/colors';
+import { useEffect } from 'react';
 import icono from '../../assets/splash-icono.png';
 import texto from '../../assets/splash-texto.png';
 import './splashScreen.css';
@@ -15,13 +14,8 @@ export function SplashScreen({ onFinish, duracion = 8000 }: Props) {
     return () => clearTimeout(t);
   }, [onFinish, duracion]);
 
-  const vars = {
-    '--fondo': colors.steel,
-    '--brillo': colors.frostBlue,
-  } as CSSProperties;
-
   return (
-    <div className="splash" style={vars}>
+    <div className="splash">
       <div className="splash-contenido">
         <img src={icono} alt="" className="splash-icono" />
         <img src={texto} alt="Syntra" className="splash-texto" />

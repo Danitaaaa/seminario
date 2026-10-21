@@ -30,4 +30,12 @@ steel: "#495B7D",
 frostBlue: "#8BA3C5",
 frostClaro: "#C4D1E3",
 storm: "#23354D",
+
+lateralFondo: '#2B3A67',
+lateralTexto: '#FFFFFF',
+
+splashFondo: '#495B7D',
+splashCentro: '#5A6E93',
+splashBrillo: '#8BA3C5',
+
 };

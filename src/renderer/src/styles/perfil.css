@@ -48,12 +48,12 @@
 }
 
 .perfil__boton-lateral:hover {
-  background: var(--color-storm);
+  background: var(--color-primary-light);
 }
 
 .perfil__boton-lateral--contorno {
   border: 1px solid var(--color-primary);
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-primary);
 }
 
@@ -127,7 +127,7 @@
   gap: var(--espacio-md);
   padding: var(--espacio-md) var(--espacio-lg);
   border-radius: var(--radio-md);
-  background: color-mix(in srgb, var(--color-error) 12%, var(--color-white));
+  background: color-mix(in srgb, var(--color-error) 12%, var(--color-surface));
   color: var(--color-error);
   font-size: var(--tamano-sm);
 }
@@ -141,7 +141,7 @@
   padding: var(--espacio-xs) var(--espacio-md);
   border: 1px solid var(--color-error);
   border-radius: 999px;
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-error);
   font: inherit;
   cursor: pointer;
@@ -156,7 +156,7 @@
   margin: 0;
   padding: var(--espacio-sm) var(--espacio-md);
   border-radius: var(--radio-md);
-  background: color-mix(in srgb, var(--color-success) 15%, var(--color-white));
+  background: color-mix(in srgb, var(--color-success) 15%, var(--color-surface));
   color: var(--color-success);
   font-size: var(--tamano-sm);
   text-align: center;
@@ -186,7 +186,7 @@
   width: min(480px, 90vw);
   padding: var(--espacio-lg);
   border-radius: var(--radio-md);
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-storm);
   font-family: var(--fuente-body);
 }

@@ -15,6 +15,7 @@ import { EventosPage } from "./pages/eventos/eventosPage";
 import { HorariosPage } from "./pages/horarios/horariosPage";
 import { PerfilPage } from "./pages/perfil/perfilPage";
 import { PanelPerfil } from "./pages/perfil/panelPerfil";
+import { AjustesPage } from "./pages/ajustes/ajustesPage";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/horarios" element={<HorariosPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
         <Route path="/proximamente/:id" element={<Proximamente />} />
+        <Route path="/ajustes" element={<AjustesPage />} />      
       </Routes>
       <PanelPerfil />
     </>

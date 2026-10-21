@@ -30,7 +30,7 @@
 .eventos-subtitulo { margin: 0; }
 .eventos-subtitulo-chico { margin: 0 0 8px; }
 
-/* Botones (mismo estilo que archivos-boton*) */
+/* Botones */
 .eventos-boton-primario {
   background: var(--color-primary);
   color: var(--color-white);
@@ -65,14 +65,14 @@
 }
 .eventos-dia-semana {
   text-align: center;
-  background: var(--color-white);
+  background: var(--color-surface);
   padding: 8px;
   color: var(--color-text-light);
   font-weight: bold;
 }
-.eventos-celda-vacia { background: var(--color-white); height: 92px; }
+.eventos-celda-vacia { background: var(--color-surface); height: 92px; }
 .eventos-celda {
-  background: var(--color-white);
+  background: var(--color-surface);
   height: 92px;
   min-width: 0;
   overflow: hidden;
@@ -90,8 +90,7 @@
 .eventos-mas { font-size: 0.75rem; color: var(--color-text-light); }
 .eventos-celda--seleccionada .eventos-mas { color: var(--color-white); }
 
-/* Prioridad: fija un color que reutilizan píldora, tarjeta y botón.
-   success / accent no existen en archivos.css: confirmá estos nombres. */
+/* Prioridad: fija un color que reutilizan píldora, tarjeta y botón. */
 .eventos-prioridad--leve { --color-prioridad: var(--color-success); }
 .eventos-prioridad--media { --color-prioridad: var(--color-accent); }
 .eventos-prioridad--importante { --color-prioridad: var(--color-error); }
@@ -126,6 +125,7 @@
   padding: 4px 8px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
+  background: var(--color-surface);
   color: var(--color-text);
   box-sizing: border-box;
 }
@@ -140,7 +140,7 @@
 }
 
 .eventos-tarjeta {
-  background: var(--color-white);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-left: 4px solid var(--color-prioridad);
   border-radius: 12px;
@@ -168,11 +168,11 @@
   white-space: nowrap;
 }
 
-/* Modal. --color-overlay no existe en archivos.css: se usa un valor de respaldo. */
+/* Modal */
 .eventos-overlay {
   position: fixed;
   inset: 0;
-  background: var(--color-overlay, rgba(0, 0, 0, 0.4));
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -202,6 +202,7 @@
   margin-bottom: 8px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
+  background: var(--color-surface);
   color: var(--color-text);
   box-sizing: border-box;
 }
@@ -250,7 +251,7 @@
 }
 .eventos-etiqueta-recordatorio {
   flex: 2;
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: 8px;
   padding: 4px 8px;
   color: var(--color-text);
@@ -260,6 +261,7 @@
   padding: 4px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 .eventos-input-numero { width: 60px; text-align: center; }
@@ -282,7 +284,7 @@
 }
 
 .eventos-error {
-  background: var(--color-white);
+  background: var(--color-surface);
   border: 1px solid var(--color-error);
   border-radius: 12px;
   padding: 8px 16px;
@@ -293,7 +295,7 @@
 
 .eventos-modal-acciones { display: flex; gap: 8px; justify-content: center; }
 .eventos-boton-cancelar {
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: 999px;
@@ -308,4 +310,30 @@
   padding: 8px 24px;
   cursor: pointer;
   font-weight: bold;
+}
+
+/* ---------- Modo oscuro ---------- */
+:root[data-modo="oscuro"] .eventos-modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+:root[data-modo="oscuro"] .eventos-input,
+:root[data-modo="oscuro"] .eventos-etiqueta-recordatorio,
+:root[data-modo="oscuro"] .eventos-input-numero,
+:root[data-modo="oscuro"] .eventos-select-unidad {
+  background: var(--color-background);
+}
+
+:root[data-modo="oscuro"] .eventos-boton-guardar {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+:root[data-modo="oscuro"] .eventos-boton-cancelar {
+  background: transparent;
+}
+
+:root[data-modo="oscuro"] .eventos-boton-nav {
+  color: var(--color-primary-light);
 }

@@ -9,7 +9,8 @@
 }
 
 .visor {
-  background: var(--color-background, #FAFAF8);
+  background: var(--color-background);
+  color: var(--color-text);
   border-radius: 12px;
   width: min(1100px, 94vw);
   height: 92vh;
@@ -57,7 +58,7 @@
 .visor__cargando,
 .visor__nota {
   margin: 0;
-  color: var(--nodos-texto-secundario, #6b6b6b);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
 }
 
@@ -70,8 +71,8 @@
   margin: 0;
   padding: 8px 12px;
   border-radius: 8px;
-  background: #e8f3ea;
-  color: #2f6b3a;
+  background: color-mix(in srgb, var(--color-success) 15%, var(--color-surface));
+  color: var(--color-success);
   font-size: 0.85rem;
   cursor: pointer;
 }
@@ -79,14 +80,16 @@
 .visor__input {
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid var(--nodos-border, #d9d9d9);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 0.85rem;
 }
 
 .visor-boton {
-  background: var(--color-primary, #495b7d);
-  color: #fff;
-  border: 1px solid var(--color-primary, #495b7d);
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: 1px solid var(--color-primary);
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 0.85rem;
@@ -95,7 +98,7 @@
 
 .visor-boton--contorno {
   background: transparent;
-  color: var(--color-primary, #495b7d);
+  color: var(--color-primary);
 }
 
 .visor-boton:disabled {
@@ -122,7 +125,7 @@
   position: absolute;
   min-width: 160px;
   padding: 0 2px;
-  border: 1px dashed var(--color-primary, #495b7d);
+  border: 1px dashed var(--color-primary);
   background: rgba(255, 255, 255, 0.85);
   font-family: Helvetica, Arial, sans-serif;
   line-height: 1.2;
@@ -133,8 +136,9 @@
 .visor-editor__hoja {
   flex: 1;
   overflow: auto;
-  background: #fff;
-  border: 1px solid var(--nodos-border, #d9d9d9);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 24px 32px;
 }
@@ -151,6 +155,7 @@
   font-size: 0.9rem;
 }
 
+/* La grilla de Excel queda blanca en ambos modos: la librería pinta sus celdas en claro. */
 .visor-excel__grilla {
   flex: 1;
   overflow: auto;

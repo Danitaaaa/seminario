@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { colors } from '../../styles/colors';
-import { typography } from '../../styles/typography';
-import { spacing } from '../../styles/spacing';
 import type { Evento } from '../../types/eventos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 
@@ -52,46 +49,48 @@ export function MiniCalendario() {
   const esHoy = (dia: number) =>
     dia === hoy.getDate() && mesIndex === hoy.getMonth() && anio === hoy.getFullYear();
 
+  const clasesDia = (dia: number) => {
+    const clases = ['calendario__dia'];
+    if (esHoy(dia)) clases.push('calendario__dia--hoy');
+    if (diasConEventos.has(dia)) clases.push('calendario__dia--evento');
+    return clases.join(' ');
+  };
+
   const anios = Array.from({ length: 11 }, (_, i) => hoy.getFullYear() - 5 + i);
 
   return (
     <div>
-      <div style={estiloTarjeta}>
-        <div style={estiloCabecera}>
-          <button onClick={() => cambiarMes(-1)} style={estiloFlecha} aria-label="Mes anterior">
+      <div className="calendario">
+        <div className="calendario__cabecera">
+          <button type="button" className="calendario__flecha" onClick={() => cambiarMes(-1)} aria-label="Mes anterior">
             <ChevronLeft size={16} />
           </button>
-          <select value={mesIndex} onChange={(e) => setMesIndex(Number(e.target.value))} style={estiloSelect}>
+          <select className="calendario__select" value={mesIndex} onChange={(e) => setMesIndex(Number(e.target.value))}>
             {MESES.map((m, i) => <option key={m} value={i}>{m}</option>)}
           </select>
-          <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} style={estiloSelect}>
+          <select className="calendario__select" value={anio} onChange={(e) => setAnio(Number(e.target.value))}>
             {anios.map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
-          <button onClick={() => cambiarMes(1)} style={estiloFlecha} aria-label="Mes siguiente">
+          <button type="button" className="calendario__flecha" onClick={() => cambiarMes(1)} aria-label="Mes siguiente">
             <ChevronRight size={16} />
           </button>
         </div>
 
-        <div style={estiloGrilla}>
-          {DIAS_SEMANA.map((d, i) => <span key={i} style={estiloDiaSemana}>{d}</span>)}
+        <div className="calendario__grilla">
+          {DIAS_SEMANA.map((d, i) => <span key={i} className="calendario__dia-semana">{d}</span>)}
 
           {Array.from({ length: inicio }, (_, i) => (
-            <span key={`a${i}`} style={estiloDiaAjeno}>{diasMesAnterior - inicio + i + 1}</span>
+            <span key={`a${i}`} className="calendario__dia-ajeno">{diasMesAnterior - inicio + i + 1}</span>
           ))}
 
           {Array.from({ length: dias }, (_, i) => {
             const dia = i + 1;
-            const conEvento = diasConEventos.has(dia);
             return (
               <button
                 key={dia}
+                type="button"
+                className={clasesDia(dia)}
                 onClick={() => navigate('/eventos', { state: { fecha: fechaISO(anio, mesIndex, dia) } })}
-                style={{
-                  ...estiloDia,
-                  background: conEvento ? colors.textPrimary : esHoy(dia) ? colors.background : 'transparent',
-                  color: conEvento ? colors.surface : colors.textPrimary,
-                  fontWeight: esHoy(dia) ? typography.fontWeight.bold : undefined,
-                }}
               >
                 {dia}
               </button>
@@ -99,86 +98,14 @@ export function MiniCalendario() {
           })}
 
           {Array.from({ length: diasMesSiguiente }, (_, i) => (
-            <span key={`s${i}`} style={estiloDiaAjeno}>{i + 1}</span>
+            <span key={`s${i}`} className="calendario__dia-ajeno">{i + 1}</span>
           ))}
         </div>
       </div>
 
-      <button onClick={() => navigate('/eventos')} style={estiloLinkEventos}>
+      <button type="button" className="calendario__link" onClick={() => navigate('/eventos')}>
         Ir a eventos →
       </button>
     </div>
   );
 }
-
-const estiloTarjeta: React.CSSProperties = {
-  background: colors.surface,
-  border: `1px solid ${colors.border}`,
-  borderRadius: 12,
-  padding: spacing.md,
-};
-
-const estiloCabecera: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: spacing.xs,
-  marginBottom: spacing.sm,
-};
-
-const estiloFlecha: React.CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  cursor: 'pointer',
-  display: 'flex',
-  color: colors.textPrimary,
-};
-
-const estiloSelect: React.CSSProperties = {
-  padding: '2px 6px',
-  borderRadius: 6,
-  border: `1px solid ${colors.border}`,
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.sm,
-};
-
-const estiloGrilla: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(7, 1fr)',
-  gap: 4,
-  textAlign: 'center',
-};
-
-const estiloDiaSemana: React.CSSProperties = {
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.xs,
-  color: colors.textSecondary,
-};
-
-const estiloDia: React.CSSProperties = {
-  height: 28,
-  border: 'none',
-  borderRadius: 6,
-  cursor: 'pointer',
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.sm,
-};
-
-const estiloDiaAjeno: React.CSSProperties = {
-  lineHeight: '28px',
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.sm,
-  color: colors.border,
-};
-
-const estiloLinkEventos: React.CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  padding: 0,
-  marginTop: spacing.xs,
-  cursor: 'pointer',
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.xs,
-  color: colors.textSecondary,
-  textDecoration: 'underline',
-};

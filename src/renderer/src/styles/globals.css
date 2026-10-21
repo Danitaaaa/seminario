@@ -3,13 +3,10 @@
 body {
   margin: 0;
   font-family: var(--fuente-body);
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-text-primary);
 }
 
-h1, h2, h3 {
-  font-family: var(--fuente-display);
-}
 
 /* ---------- Auth ---------- */
 .auth-layout,

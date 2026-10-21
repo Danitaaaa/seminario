@@ -3,7 +3,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at center, #5A6E93 0%, var(--fondo) 65%);
+  background: radial-gradient(circle at center, var(--color-splash-centro) 0%, var(--color-splash-fondo) 65%);
   animation: splash-salir 1s ease-in 7s forwards;
   overflow: hidden;
 }
@@ -42,8 +42,8 @@
 }
 
 @keyframes splash-brillo {
-  50% { filter: drop-shadow(0 0 24px var(--brillo)); }
-  to { filter: drop-shadow(0 0 10px rgba(139, 163, 197, 0.5)); }
+  50% { filter: drop-shadow(0 0 24px var(--color-splash-brillo)); }
+  to { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-splash-brillo) 50%, transparent)); }
 }
 
 @keyframes splash-salir {

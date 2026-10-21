@@ -36,6 +36,7 @@ const rutasPorItem: Record<string, string> = {
   calendario: '/eventos',
   perfil: '/perfil',
   'cerrar-sesion': '/',
+  ajustes: '/ajustes',
 };
 
 // Los ítems que todavía no tienen pantalla van a "Próximamente".

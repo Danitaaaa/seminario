@@ -1,0 +1,84 @@
+/* Pantalla de ajustes. Solo consume variables generadas por issue.ts. */
+
+.ajustes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-lg);
+  max-width: 640px;
+  font-family: var(--fuente-body);
+}
+
+.ajustes__seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  padding: var(--espacio-lg);
+  border-radius: var(--radio-md);
+  background: var(--color-frost-claro);
+  color: var(--color-storm);
+}
+
+.ajustes__titulo {
+  margin: 0 0 var(--espacio-xs);
+  font-family: var(--fuente-display);
+  font-size: var(--tamano-lg);
+  color: var(--color-text);
+}
+
+.ajustes__fila {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-md);
+  width: 100%;
+  padding: var(--espacio-sm) var(--espacio-md);
+  border: 0;
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ajustes__fila:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+
+.ajustes__fila-texto {
+  flex: 1;
+}
+
+.ajustes__selector {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: var(--espacio-xs);
+  padding: var(--espacio-xs);
+  border-radius: 999px;
+  background: var(--color-surface);
+}
+
+.ajustes__opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  padding: var(--espacio-xs) var(--espacio-md);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-light);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.ajustes__opcion--activa {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.ajustes__fila:focus-visible,
+.ajustes__opcion:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}

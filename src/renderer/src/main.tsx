@@ -7,9 +7,9 @@ import '@fontsource/inter/700.css';
 import '@fontsource/fraunces/700.css';
 import './styles/globals.css';
 import './styles/layout.css';
-import { aplicarTema } from './styles/issue';
+import { aplicarPreferencia } from './hooks/usarModo';
 
-aplicarTema();
+aplicarPreferencia();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <HashRouter>
