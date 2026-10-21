@@ -1,0 +1,311 @@
+.eventos-page {
+  padding: 24px;
+  color: var(--color-text);
+}
+.eventos-page button,
+.eventos-page input,
+.eventos-page select,
+.eventos-page textarea {
+  font-family: inherit;
+}
+
+.eventos-instructivo {
+  color: var(--color-text-light);
+  font-weight: bold;
+  margin: 0 0 16px;
+}
+
+.eventos-columnas { display: flex; gap: 24px; align-items: flex-start; }
+.eventos-col-calendario { flex: 2; }
+.eventos-col-lateral { flex: 1; min-width: 280px; }
+
+.eventos-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.eventos-acciones { display: flex; align-items: center; gap: 8px; }
+
+.eventos-subtitulo { margin: 0; }
+.eventos-subtitulo-chico { margin: 0 0 8px; }
+
+/* Botones (mismo estilo que archivos-boton*) */
+.eventos-boton-primario {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.eventos-boton-nav {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.eventos-boton-nav--peligro {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+/* Calendario */
+.eventos-grilla {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.eventos-dia-semana {
+  text-align: center;
+  background: var(--color-white);
+  padding: 8px;
+  color: var(--color-text-light);
+  font-weight: bold;
+}
+.eventos-celda-vacia { background: var(--color-white); height: 92px; }
+.eventos-celda {
+  background: var(--color-white);
+  height: 92px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--color-text);
+}
+.eventos-celda--seleccionada {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+.eventos-mas { font-size: 0.75rem; color: var(--color-text-light); }
+.eventos-celda--seleccionada .eventos-mas { color: var(--color-white); }
+
+/* Prioridad: fija un color que reutilizan píldora, tarjeta y botón.
+   success / accent no existen en archivos.css: confirmá estos nombres. */
+.eventos-prioridad--leve { --color-prioridad: var(--color-success); }
+.eventos-prioridad--media { --color-prioridad: var(--color-accent); }
+.eventos-prioridad--importante { --color-prioridad: var(--color-error); }
+
+.eventos-pildora {
+  background: var(--color-prioridad);
+  color: var(--color-white);
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+/* Panel lateral */
+.eventos-texto-secundario { color: var(--color-text-light); }
+.eventos-categorias { margin-bottom: 16px; }
+.eventos-fila-categoria {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+.eventos-fila-categoria input[type='checkbox'] { accent-color: var(--color-primary); }
+.eventos-categoria-nombre { flex: 1; cursor: text; }
+.eventos-input-inline {
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  box-sizing: border-box;
+}
+.eventos-nueva-categoria { display: flex; gap: 8px; margin-top: 8px; }
+.eventos-nueva-categoria .eventos-input-inline { flex: 1; }
+.eventos-boton-quitar-categoria {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-text-light);
+}
+
+.eventos-tarjeta {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-prioridad);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+.eventos-tarjeta-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.eventos-tarjeta-titulo { font-weight: bold; color: var(--color-text); }
+.eventos-tarjeta-meta { font-size: 0.75rem; color: var(--color-text-light); }
+.eventos-tarjeta-meta--sep { margin-top: 8px; }
+.eventos-tarjeta-descripcion { color: var(--color-text-light); margin-top: 4px; }
+.eventos-tarjeta-acciones { display: flex; gap: 8px; margin-top: 8px; }
+.eventos-badge {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+/* Modal. --color-overlay no existe en archivos.css: se usa un valor de respaldo. */
+.eventos-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay, rgba(0, 0, 0, 0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.eventos-modal {
+  background: var(--color-primary);
+  border-radius: 16px;
+  padding: 24px;
+  width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.eventos-modal-titulo {
+  color: var(--color-white);
+  text-align: center;
+  margin: 0 0 16px;
+}
+.eventos-etiqueta {
+  display: block;
+  color: var(--color-white);
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.eventos-input {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  box-sizing: border-box;
+}
+.eventos-input--area { min-height: 70px; resize: vertical; }
+
+.eventos-prioridades { display: flex; gap: 8px; margin-bottom: 8px; }
+.eventos-prioridad-boton {
+  flex: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 2px solid var(--color-prioridad);
+  background: transparent;
+  color: var(--color-white);
+  font-weight: bold;
+  cursor: pointer;
+}
+.eventos-prioridad-boton--activa {
+  background: var(--color-prioridad);
+  color: var(--color-white);
+}
+
+.eventos-pregunta-notif {
+  color: var(--color-white);
+  text-align: center;
+  margin: 0 0 8px;
+}
+.eventos-opciones-notif {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+.eventos-opcion-radio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-white);
+}
+
+.eventos-recordatorios { margin-bottom: 8px; }
+.eventos-fila-recordatorio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.eventos-etiqueta-recordatorio {
+  flex: 2;
+  background: var(--color-white);
+  border-radius: 8px;
+  padding: 4px 8px;
+  color: var(--color-text);
+}
+.eventos-input-numero,
+.eventos-select-unidad {
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+.eventos-input-numero { width: 60px; text-align: center; }
+.eventos-select-unidad { flex: 1; }
+.eventos-boton-quitar-recordatorio {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-white);
+  padding: 4px;
+}
+.eventos-agregar-recordatorio {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-top: 4px;
+  color: var(--color-white);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.eventos-error {
+  background: var(--color-white);
+  border: 1px solid var(--color-error);
+  border-radius: 12px;
+  padding: 8px 16px;
+  color: var(--color-error);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.eventos-modal-acciones { display: flex; gap: 8px; justify-content: center; }
+.eventos-boton-cancelar {
+  background: var(--color-white);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 8px 24px;
+  cursor: pointer;
+}
+.eventos-boton-guardar {
+  background: var(--color-white);
+  color: var(--color-primary);
+  border: none;
+  border-radius: 999px;
+  padding: 8px 24px;
+  cursor: pointer;
+  font-weight: bold;
+}

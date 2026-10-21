@@ -1,8 +1,8 @@
 import { CSSProperties, useEffect } from 'react';
-import { colores } from '../../styles/colores';
+import { colors } from '../../styles/colors';
 import icono from '../../assets/splash-icono.png';
 import texto from '../../assets/splash-texto.png';
-  import './splashScreen.css';
+import './splashScreen.css';
 
 interface Props {
   onFinish: () => void;
@@ -16,8 +16,8 @@ export function SplashScreen({ onFinish, duracion = 8000 }: Props) {
   }, [onFinish, duracion]);
 
   const vars = {
-    '--fondo': colores.steel,
-    '--brillo': colores.frostBlue,
+    '--fondo': colors.steel,
+    '--brillo': colors.frostBlue,
   } as CSSProperties;
 
   return (

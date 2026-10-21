@@ -16,4 +16,15 @@ textSecondary: '#5C5C58',
 success: '#4C8C5A',
 warning: '#D9A441',
 error: '#B84C4C',
+
+//externos a la guía del proyecto
+text: "#02122F",
+textLight: "#495B7D",
+
+white: "#FFFFFF",
+
+steel: "#495B7D",
+frostBlue: "#8BA3C5",
+frostClaro: "#C4D1E3",
+storm: "#23354D",
 };

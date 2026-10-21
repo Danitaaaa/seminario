@@ -3,7 +3,7 @@ import { Almacenamiento } from '../../persistencia/almacenamiento';
 import { Archivo } from './entidades';
 import { materializarArchivo } from './materializador';
 
-// Reemplaza el contenido físico del archivo y registra el nuevo tamaño y fecha.
+// Reemplaza el contenido físico del archivo y registra el nuevo tamaño y fecha
 export class ActualizarContenidoArchivo {
   constructor(
     private readonly persistencia: Persistencia,

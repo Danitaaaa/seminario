@@ -1,4 +1,4 @@
-import styles from "./card.module.css";
+import styles from "../../../styles/card.module.css";
 
 interface CardProps {
     children: React.ReactNode;

@@ -4,7 +4,7 @@ import { Mail } from "lucide-react";
 import { PlantillaLayout } from "../plantillaLayout/plantillaLayout";
 import { Button } from "../../components/ui/button/button";
 import { Input } from "../../components/ui/input/input";
-import { CartelError } from "../../components/ui/commons/cartelesError";
+import { CartelError } from "../../components/comunes/cartelError";
 import { obtenerUsuarioId, cerrarSesion } from "../../../lib/sesion";
 import type { Perfil } from "../../types/perfil";
 import { ActualizarRostro } from "./actualizarRostro";

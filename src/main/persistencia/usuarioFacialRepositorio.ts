@@ -14,14 +14,6 @@ export interface EmbeddingGuardado {
 }
  
 export class UsuarioFacialRepositorio {
-  async guardarEmbedding(usuarioId: number, embedding: number[]): Promise<boolean> {
-    const resultado = await pool.query(
-      'UPDATE usuarios SET embedding_facial = $1 WHERE id_usuario = $2',
-      [embedding, usuarioId]
-    )
-    return (resultado.rowCount ?? 0) > 0
-  }
- 
   async obtenerEmbeddings(): Promise<EmbeddingGuardado[]> {
     const resultado = await pool.query(
       'SELECT id_usuario, embedding_facial FROM usuarios WHERE embedding_facial IS NOT NULL AND email_verificado = true'
@@ -30,5 +22,13 @@ export class UsuarioFacialRepositorio {
       usuarioId: fila.id_usuario,
       embedding: fila.embedding_facial
     }))
+  }
+
+  async guardarEmbedding(usuarioId: number, embedding: number[]): Promise<boolean> {
+    const resultado = await pool.query(
+      'UPDATE usuarios SET embedding_facial = $1 WHERE id_usuario = $2',
+      [embedding, usuarioId]
+    )
+    return (resultado.rowCount ?? 0) > 0
   }
 }

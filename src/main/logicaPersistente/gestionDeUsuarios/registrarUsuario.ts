@@ -5,6 +5,7 @@ import type { RegistrarUsuarioDto } from './dto';
 import { materializarUsuario } from './materializadorUsuarios';
 import { enviarCodigoVerificacion } from '../../servicios/correo';
 
+// Registra un nuevo usuario
 export class RegistrarUsuario {
     constructor(
         private readonly persistencia: Persistencia

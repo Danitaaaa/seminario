@@ -24,6 +24,11 @@ export class Nodos {
         private readonly moverNodo: MoverNodo,
     ) {}
 
+    // Enlistar los nodos dentro del nodo padre determinado, filtrar si hay criterios
+    async listar(criterios: ListarContenidoDTO): Promise<ElementoContenido[]> {
+        return this.listarContenido.ejecutar(criterios);
+    }
+
     // Crear un nuevo nodo
     async crear(datos: CrearNodoDTO): Promise<Nodo> {
         return this.crearNodo.ejecutar(datos);
@@ -32,11 +37,6 @@ export class Nodos {
     // Modificar el nombre de un nodo
     async modificar(datos: ModificarNodoDTO): Promise<Nodo> {
         return this.modificarNodo.ejecutar(datos);
-    }
-
-    // Enlistar los nodos dentro del nodo padre determinado, filtrar si hay criterios
-    async listar(criterios: ListarContenidoDTO): Promise<ElementoContenido[]> {
-        return this.listarContenido.ejecutar(criterios);
     }
 
     // Cambiar el nodo padre de un nodo

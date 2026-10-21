@@ -3,6 +3,7 @@ import { Categoria } from './entidades';
 import { materializarCategoria } from './materializador';
 import { CrearCategoriaDTO } from './dto';
 
+// Crea una nueva categoría
 export class CrearCategoria {
   constructor(private readonly persistencia: Persistencia) {}
 

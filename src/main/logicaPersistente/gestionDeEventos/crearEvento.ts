@@ -3,6 +3,7 @@ import { Evento } from './entidades';
 import { materializarEvento } from './materializador';
 import { CrearEventoDTO } from './dto';
 
+// Crea un nuevo evento
 export class CrearEvento {
   constructor(private readonly persistencia: Persistencia) {}
 

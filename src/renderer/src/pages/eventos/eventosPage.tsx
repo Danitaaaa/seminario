@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
-import { colors } from '../../styles/colors';
-import { typography } from '../../styles/typography';
-import { spacing } from '../../styles/spacing';
-import { Evento, CrearEventoInput, ModificarEventoInput, Categoria, CATEGORIAS, Prioridad, Recordatorio, UnidadTiempo} from '../../types/eventos';
-
+import { Evento, CrearEventoInput, ModificarEventoInput, Prioridad, Recordatorio, UnidadTiempo } from '../../types/eventos';
 import { Categoria as CategoriaRegistro } from '../../types/categorias';
-import { obtenerUsuarioId } from '../../../lib/sesion';
-import { useLocation } from 'react-router-dom';
+import '../../styles/eventos.css';
+
+const USUARIO_ID_ACTUAL = 1;
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
   { valor: 'minutos', etiqueta: 'minutos' },
@@ -16,12 +13,6 @@ const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
   { valor: 'semanas', etiqueta: 'semanas' },
 ];
 
-const COLOR_PRIORIDAD: Record<Prioridad, string> = {
-  leve: colors.success,
-  media: colors.accent,
-  importante: colors.error,
-};
-
 const ETIQUETA_PRIORIDAD: Record<Prioridad, string> = {
   leve: 'Leve',
   media: 'Media',
@@ -29,8 +20,6 @@ const ETIQUETA_PRIORIDAD: Record<Prioridad, string> = {
 };
 
 const MAX_EVENTOS_VISIBLES_POR_DIA = 3;
-
-const CATEGORIA_CLASES_RECURRENTES = 'Clases';
 
 function primerDiaYCantidad(anio: number, mesIndex: number): { inicio: number; dias: number } {
   const inicio = new Date(anio, mesIndex, 1).getDay();
@@ -54,11 +43,7 @@ const NOMBRES_MES = [
 ];
 
 export function EventosPage(): JSX.Element {
-  const USUARIO_ID_ACTUAL = obtenerUsuarioId() ?? 0;
-  //layout
-  const location = useLocation();
-  const fechaInicial = (location.state as { fecha?: string } | null)?.fecha;
-  const hoy = fechaInicial ? new Date(`${fechaInicial}T00:00:00`) : new Date();
+  const hoy = new Date();
   const [busqueda, setBusqueda] = useState('');
   const usuarioLogueado = 'Usuario';
 
@@ -66,7 +51,6 @@ export function EventosPage(): JSX.Element {
   const [anio, setAnio] = useState(hoy.getFullYear());
   const [mesIndex, setMesIndex] = useState(hoy.getMonth());
   const [eventos, setEventos] = useState<Evento[]>([]);
-  //const [horarios, setHorarios] = useState<HorarioCursado[]>([]);
   const [categorias, setCategorias] = useState<CategoriaRegistro[]>([]);
   const [diaSeleccionado, setDiaSeleccionado] = useState<number>(hoy.getDate());
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -94,7 +78,6 @@ export function EventosPage(): JSX.Element {
 
   useEffect(() => {
     cargarCategorias();
-    //cargarHorarios();
   }, []);
 
   async function cargarEventos(): Promise<void> {
@@ -113,12 +96,6 @@ export function EventosPage(): JSX.Element {
     }
   }
 
-  /*async function cargarHorarios(): Promise<void> {
-    const resultado = await window.api.listarHorarios({ usuarioId: USUARIO_ID_ACTUAL });
-    setHorarios(resultado);
-  }
-  */
-
   async function cargarCategorias(): Promise<void> {
     const resultado: CategoriaRegistro[] = await window.api.listarCategorias({
       usuarioId: USUARIO_ID_ACTUAL,
@@ -126,7 +103,7 @@ export function EventosPage(): JSX.Element {
     setCategorias(resultado);
     // Todas tildadas por defecto la primera vez que se cargan.
     setCategoriasVisibles((prev) => {
-      if (prev.size > 0) return prev; 
+      if (prev.size > 0) return prev;
       return new Set(resultado.map((c) => c.nombre));
     });
     if (resultado.length > 0 && !formCategoria) {
@@ -178,32 +155,9 @@ export function EventosPage(): JSX.Element {
     });
   }
 
- /*
-  function eventosVirtualesDelDia(dia: number): Evento[] {
-    if (!categoriasVisibles.has(CATEGORIA_CLASES_RECURRENTES)) return [];
-    const diaSemana = new Date(anio, mesIndex, dia).getDay();
-    return horarios
-      .filter((h) => h.diaSemana === diaSemana)
-      .map((h) => {
-        const [hh, mm] = h.horaInicio.split(':').map(Number);
-        return {
-          id: -h.id, // id negativo = marca que es virtual, no una fila real
-          usuarioId: USUARIO_ID_ACTUAL,
-          titulo: h.titulo,
-          descripcion: `Clase recurrente · ${h.horaInicio}`,
-          lugar: null,
-          fecha: new Date(anio, mesIndex, dia, hh, mm),
-          categoria: CATEGORIA_CLASES_RECURRENTES,
-          prioridad: 'leve' as Prioridad,
-          notificacionesActivas: false,
-          recordatorios: [],
-        }; 
-      });
-  }*/
-
   function eventosDelDia(dia: number): Evento[] {
     const fechaBuscada = formatoFechaISO(anio, mesIndex, dia);
-    const reales = eventosVisibles.filter((evento) => {
+    return eventosVisibles.filter((evento) => {
       const fechaEvento = new Date(evento.fecha);
       const fechaEventoISO = formatoFechaISO(
         fechaEvento.getFullYear(),
@@ -212,8 +166,6 @@ export function EventosPage(): JSX.Element {
       );
       return fechaEventoISO === fechaBuscada;
     });
-    return reales
-    //return [...eventosVirtualesDelDia(dia), ...reales];
   }
 
   function cambiarMes(delta: number): void {
@@ -236,7 +188,7 @@ export function EventosPage(): JSX.Element {
   }
 
   function abrirModalEditarEvento(evento: Evento): void {
-    if (evento.id < 0) return; 
+    if (evento.id < 0) return;
     setEditandoId(evento.id);
     setFormTitulo(evento.titulo);
     setFormDescripcion(evento.descripcion ?? '');
@@ -323,7 +275,7 @@ export function EventosPage(): JSX.Element {
   }
 
   async function eliminarEvento(id: number): Promise<void> {
-    if (id < 0) return; 
+    if (id < 0) return;
     await window.api.eliminarEvento({ id });
     await cargarEventos();
   }
@@ -340,38 +292,28 @@ export function EventosPage(): JSX.Element {
       usuario={{ nombre: usuarioLogueado }}
       onBuscar={setBusqueda}
     >
-      <div style={{ padding: spacing.lg }}>
-        <p style={estiloTextoInstructivo}>Seleccione la fecha e ingrese la actividad a registrar</p>
+      <div className="eventos-page">
+        <p className="eventos-instructivo">Seleccione la fecha e ingrese la actividad a registrar</p>
 
-        <div style={{ display: 'flex', gap: spacing.lg, alignItems: 'flex-start' }}>
-          <div style={{ flex: 2 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
-              <h2 style={estiloSubtitulo}>{NOMBRES_MES[mesIndex]} - {anio}</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-                <button onClick={() => cambiarMes(-1)} style={estiloBotonNav}>‹</button>
-                <button onClick={() => cambiarMes(1)} style={estiloBotonNav}>›</button>
-                <button onClick={abrirModalNuevoEvento} style={estiloBotonPrimario}>+ Nuevo Evento</button>
+        <div className="eventos-columnas">
+          <div className="eventos-col-calendario">
+            <div className="eventos-encabezado">
+              <h2 className="eventos-subtitulo">{NOMBRES_MES[mesIndex]} - {anio}</h2>
+              <div className="eventos-acciones">
+                <button className="eventos-boton-nav" onClick={() => cambiarMes(-1)}>‹</button>
+                <button className="eventos-boton-nav" onClick={() => cambiarMes(1)}>›</button>
+                <button className="eventos-boton-primario" onClick={abrirModalNuevoEvento}>+ Nuevo Evento</button>
               </div>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-                gap: 2,
-                background: colors.border,
-                border: `1px solid ${colors.border}`,
-                borderRadius: 8,
-                overflow: 'hidden',
-              }}
-            >
+            <div className="eventos-grilla">
               {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((letra, i) => (
-                <div key={i} style={estiloCabeceraDiaSemana}>{letra}</div>
+                <div key={i} className="eventos-dia-semana">{letra}</div>
               ))}
 
               {celdas.map((dia, i) => {
                 if (dia === null) {
-                  return <div key={i} style={{ background: colors.surface, height: 92 }} />;
+                  return <div key={i} className="eventos-celda-vacia" />;
                 }
                 const eventosDia = eventosDelDia(dia);
                 const seleccionado = dia === diaSeleccionado;
@@ -381,148 +323,116 @@ export function EventosPage(): JSX.Element {
                 return (
                   <div
                     key={i}
+                    className={`eventos-celda${seleccionado ? ' eventos-celda--seleccionada' : ''}`}
                     onClick={() => setDiaSeleccionado(dia)}
-                    style={{
-                      background: seleccionado ? colors.primaryLight : colors.surface,
-                      height: 92,
-                      minWidth: 0,
-                      overflow: 'hidden',
-                      padding: spacing.xs,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 2,
-                    }}
                   >
-                    <span style={{ fontFamily: typography.fontFamily.body, fontSize: typography.fontSize.sm, color: seleccionado ? colors.surface : colors.textPrimary }}>
-                      {dia}
-                    </span>
+                    <span className="eventos-celda-numero">{dia}</span>
 
                     {visibles.map((evento) => (
                       <div
                         key={evento.id}
+                        className={`eventos-pildora eventos-prioridad--${evento.prioridad}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           abrirModalEditarEvento(evento);
                         }}
                         title={evento.id < 0 ? `${evento.titulo} (clase recurrente)` : evento.titulo}
-                        style={estiloPildoraEvento(COLOR_PRIORIDAD[evento.prioridad])}
                       >
                         {evento.titulo}
                       </div>
                     ))}
 
-                    {restantes > 0 && (
-                      <span style={{ fontSize: 10, color: seleccionado ? colors.surface : colors.textSecondary, fontFamily: typography.fontFamily.body }}>
-                        +{restantes} más
-                      </span>
-                    )}
+                    {restantes > 0 && <span className="eventos-mas">+{restantes} más</span>}
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <div style={{ flex: 1, minWidth: 280 }}>
-            {/* NUEVO: panel de categorías editable, arriba de "Eventos del día" */}
-            <h3 style={estiloSubtituloChico}>Categorías</h3>
-            <div style={{ marginBottom: spacing.md }}>
+          <div className="eventos-col-lateral">
+            <h3 className="eventos-subtitulo-chico">Categorías</h3>
+            <div className="eventos-categorias">
               {categorias.map((cat) => (
-                <div key={cat.id} style={estiloFilaCategoria}>
+                <div key={cat.id} className="eventos-fila-categoria">
                   <input
                     type="checkbox"
                     checked={categoriasVisibles.has(cat.nombre)}
                     onChange={() => alternarCategoria(cat.nombre)}
-                    style={{ accentColor: colors.primary }}
                   />
                   {categoriaEditandoId === cat.id ? (
                     <input
                       autoFocus
+                      className="eventos-input-inline"
                       value={categoriaEditandoNombre}
                       onChange={(e) => setCategoriaEditandoNombre(e.target.value)}
                       onBlur={() => guardarRenombreCategoria(cat.id)}
                       onKeyDown={(e) => e.key === 'Enter' && guardarRenombreCategoria(cat.id)}
-                      style={estiloInputInlineCategoria}
                     />
                   ) : (
                     <span
+                      className="eventos-categoria-nombre"
                       onClick={() => {
                         setCategoriaEditandoId(cat.id);
                         setCategoriaEditandoNombre(cat.nombre);
                       }}
-                      style={{ flex: 1, cursor: 'text' }}
                       title="Tocar para renombrar"
                     >
                       {cat.nombre}
                     </span>
                   )}
                   <button
+                    className="eventos-boton-quitar-categoria"
                     onClick={() => eliminarCategoria(cat)}
-                    style={estiloBotonQuitarCategoria}
                     aria-label={`Eliminar categoría ${cat.nombre}`}
                   >
                     ✕
                   </button>
                 </div>
               ))}
-              <div style={{ display: 'flex', gap: spacing.xs, marginTop: spacing.xs }}>
+              <div className="eventos-nueva-categoria">
                 <input
+                  className="eventos-input-inline"
                   placeholder="Nueva categoría..."
                   value={nuevaCategoriaNombre}
                   onChange={(e) => setNuevaCategoriaNombre(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && agregarCategoria()}
-                  style={{ ...estiloInputInlineCategoria, flex: 1 }}
                 />
-                <button onClick={agregarCategoria} style={estiloBotonNav}>+</button>
+                <button className="eventos-boton-nav" onClick={agregarCategoria}>+</button>
               </div>
             </div>
 
-            <h3 style={estiloSubtituloChico}>Eventos del día</h3>
-            {cargando && <p style={{ color: colors.textSecondary }}>Cargando...</p>}
+            <h3 className="eventos-subtitulo-chico">Eventos del día</h3>
+            {cargando && <p className="eventos-texto-secundario">Cargando...</p>}
             {!cargando && eventosDelDia(diaSeleccionado).length === 0 && (
-              <p style={{ color: colors.textSecondary, fontFamily: typography.fontFamily.body }}>
-                No hay eventos para este día.
-              </p>
+              <p className="eventos-texto-secundario">No hay eventos para este día.</p>
             )}
             {eventosDelDia(diaSeleccionado).map((evento) => (
-              <div
-                key={evento.id}
-                style={{
-                  background: colors.surface,
-                  border: `1px solid ${colors.border}`,
-                  borderLeft: `4px solid ${COLOR_PRIORIDAD[evento.prioridad]}`,
-                  borderRadius: 6,
-                  padding: spacing.sm,
-                  marginBottom: spacing.sm,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ fontWeight: typography.fontWeight.bold, color: colors.textPrimary }}>
-                    {evento.titulo}
-                  </div>
-                  <span style={estiloBadgeCategoria}>{evento.categoria}</span>
+              <div key={evento.id} className={`eventos-tarjeta eventos-prioridad--${evento.prioridad}`}>
+                <div className="eventos-tarjeta-cabecera">
+                  <div className="eventos-tarjeta-titulo">{evento.titulo}</div>
+                  <span className="eventos-badge">{evento.categoria}</span>
                 </div>
-                <div style={{ fontSize: typography.fontSize.xs, color: colors.textSecondary }}>
+                <div className="eventos-tarjeta-meta">
                   {new Date(evento.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
                 {evento.descripcion && (
-                  <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, marginTop: 2 }}>
-                    {evento.descripcion}
-                  </div>
+                  <div className="eventos-tarjeta-descripcion">{evento.descripcion}</div>
                 )}
                 {evento.notificacionesActivas && evento.recordatorios.length > 0 && (
-                  <div style={{ fontSize: typography.fontSize.xs, color: colors.textSecondary, marginTop: 4 }}>
-                     {evento.recordatorios.map((r) => `${r.cantidad} ${UNIDADES.find((u) => u.valor === r.unidad)?.etiqueta}`).join(' · ')}
+                  <div className="eventos-tarjeta-meta eventos-tarjeta-meta--sep">
+                    {evento.recordatorios
+                      .map((r) => `${r.cantidad} ${UNIDADES.find((u) => u.valor === r.unidad)?.etiqueta}`)
+                      .join(' · ')}
                   </div>
                 )}
                 {evento.id < 0 ? (
-                  <div style={{ fontSize: typography.fontSize.xs, color: colors.textSecondary, marginTop: spacing.xs }}>
-                     Clase recurrente — se edita desde "Horarios de cursado"
+                  <div className="eventos-tarjeta-meta eventos-tarjeta-meta--sep">
+                    Clase recurrente — se edita desde "Horarios de cursado"
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', gap: spacing.xs, marginTop: spacing.xs }}>
-                    <button onClick={() => abrirModalEditarEvento(evento)} style={estiloBotonNav}>Editar</button>
-                    <button onClick={() => eliminarEvento(evento.id)} style={{ ...estiloBotonNav, color: colors.error }}>Eliminar</button>
+                  <div className="eventos-tarjeta-acciones">
+                    <button className="eventos-boton-nav" onClick={() => abrirModalEditarEvento(evento)}>Editar</button>
+                    <button className="eventos-boton-nav eventos-boton-nav--peligro" onClick={() => eliminarEvento(evento.id)}>Eliminar</button>
                   </div>
                 )}
               </div>
@@ -530,110 +440,105 @@ export function EventosPage(): JSX.Element {
           </div>
 
           {modalAbierto && (
-            <div style={estiloOverlay}>
-              <div style={estiloModal}>
-                <h3 style={estiloTituloModal}>{editandoId !== null ? 'Editar Evento' : 'Nuevo Evento'}</h3>
+            <div className="eventos-overlay">
+              <div className="eventos-modal">
+                <h3 className="eventos-modal-titulo">{editandoId !== null ? 'Editar Evento' : 'Nuevo Evento'}</h3>
 
                 <input
+                  className="eventos-input"
                   placeholder="Ingrese el nombre del nuevo evento..."
                   value={formTitulo}
                   onChange={(e) => setFormTitulo(e.target.value)}
-                  style={estiloInput}
                 />
                 <textarea
+                  className="eventos-input eventos-input--area"
                   placeholder="Ingrese una breve descripción del nuevo evento..."
                   value={formDescripcion}
                   onChange={(e) => setFormDescripcion(e.target.value)}
-                  style={{ ...estiloInput, minHeight: 70, resize: 'vertical' }}
                 />
 
-                <label style={estiloEtiquetaCampo}>Categoría</label>
-                <select value={formCategoria} onChange={(e) => setFormCategoria(e.target.value)} style={estiloInput}>
+                <label className="eventos-etiqueta">Categoría</label>
+                <select className="eventos-input" value={formCategoria} onChange={(e) => setFormCategoria(e.target.value)}>
                   {categorias.map((cat) => (
                     <option key={cat.id} value={cat.nombre}>{cat.nombre}</option>
                   ))}
                 </select>
 
-                {/* NUEVO: selector de hora */}
-                <label style={estiloEtiquetaCampo}>Hora</label>
+                <label className="eventos-etiqueta">Hora</label>
                 <input
+                  className="eventos-input"
                   type="time"
                   value={formHora}
                   onChange={(e) => setFormHora(e.target.value)}
-                  style={estiloInput}
                 />
 
-                <label style={estiloEtiquetaCampo}>Prioridad</label>
-                <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.sm }}>
-                  {(['leve', 'media', 'importante'] as Prioridad[]).map((p) => {
-                    const activa = formPrioridad === p;
-                    return (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setFormPrioridad(p)}
-                        style={{
-                          flex: 1,
-                          padding: `${spacing.xs} ${spacing.sm}`,
-                          borderRadius: 999,
-                          border: `2px solid ${COLOR_PRIORIDAD[p]}`,
-                          background: activa ? COLOR_PRIORIDAD[p] : 'transparent',
-                          color: activa ? colors.surface : COLOR_PRIORIDAD[p],
-                          fontFamily: typography.fontFamily.body,
-                          fontWeight: typography.fontWeight.medium,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {ETIQUETA_PRIORIDAD[p]}
-                      </button>
-                    );
-                  })}
+                <label className="eventos-etiqueta">Prioridad</label>
+                <div className="eventos-prioridades">
+                  {(['leve', 'media', 'importante'] as Prioridad[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      className={`eventos-prioridad-boton eventos-prioridad--${p}${formPrioridad === p ? ' eventos-prioridad-boton--activa' : ''}`}
+                      onClick={() => setFormPrioridad(p)}
+                    >
+                      {ETIQUETA_PRIORIDAD[p]}
+                    </button>
+                  ))}
                 </div>
 
-                <p style={estiloPreguntaNotif}>¿Desea activar notificaciones para el evento?</p>
-                <div style={estiloOpcionesNotif}>
-                  <label style={estiloOpcionRadio}>
+                <p className="eventos-pregunta-notif">¿Desea activar notificaciones para el evento?</p>
+                <div className="eventos-opciones-notif">
+                  <label className="eventos-opcion-radio">
                     <input type="radio" checked={formNotificacionesActivas} onChange={() => cambiarNotificacionesActivas(true)} /> Sí
                   </label>
-                  <label style={estiloOpcionRadio}>
+                  <label className="eventos-opcion-radio">
                     <input type="radio" checked={!formNotificacionesActivas} onChange={() => cambiarNotificacionesActivas(false)} /> No
                   </label>
                 </div>
 
                 {formNotificacionesActivas && (
-                  <div style={{ marginBottom: spacing.sm }}>
+                  <div className="eventos-recordatorios">
                     {formRecordatorios.map((rec, indice) => (
-                      <div key={indice} style={estiloFilaRecordatorio}>
-                        <span style={estiloEtiquetaRecordatorio}>Notificación</span>
+                      <div key={indice} className="eventos-fila-recordatorio">
+                        <span className="eventos-etiqueta-recordatorio">Notificación</span>
                         <input
+                          className="eventos-input-numero"
                           type="number"
                           min={1}
                           max={999}
                           value={rec.cantidad}
                           onChange={(e) => actualizarRecordatorio(indice, { cantidad: Number(e.target.value) || 1 })}
-                          style={estiloInputNumeroRecordatorio}
                         />
                         <select
+                          className="eventos-select-unidad"
                           value={rec.unidad}
                           onChange={(e) => actualizarRecordatorio(indice, { unidad: e.target.value as UnidadTiempo })}
-                          style={estiloSelectUnidadRecordatorio}
                         >
                           {UNIDADES.map((u) => (
                             <option key={u.valor} value={u.valor}>{u.etiqueta}</option>
                           ))}
                         </select>
-                        <button type="button" onClick={() => eliminarRecordatorio(indice)} style={estiloBotonQuitarRecordatorio} aria-label="Quitar recordatorio">✕</button>
+                        <button
+                          type="button"
+                          className="eventos-boton-quitar-recordatorio"
+                          onClick={() => eliminarRecordatorio(indice)}
+                          aria-label="Quitar recordatorio"
+                        >
+                          ✕
+                        </button>
                       </div>
                     ))}
-                    <button type="button" onClick={agregarRecordatorio} style={estiloAgregarRecordatorio}>+ Agregar notificación</button>
+                    <button type="button" className="eventos-agregar-recordatorio" onClick={agregarRecordatorio}>
+                      + Agregar notificación
+                    </button>
                   </div>
                 )}
 
-                {errorForm && <div style={estiloError}>{errorForm}</div>}
+                {errorForm && <div className="eventos-error">{errorForm}</div>}
 
-                <div style={{ display: 'flex', gap: spacing.sm, justifyContent: 'center' }}>
-                  <button onClick={() => setModalAbierto(false)} style={estiloBotonCancelarModal}>Cancelar</button>
-                  <button onClick={guardarEvento} style={estiloBotonGuardarModal}>
+                <div className="eventos-modal-acciones">
+                  <button className="eventos-boton-cancelar" onClick={() => setModalAbierto(false)}>Cancelar</button>
+                  <button className="eventos-boton-guardar" onClick={guardarEvento}>
                     {editandoId !== null ? 'Guardar cambios' : '+'}
                   </button>
                 </div>
@@ -645,275 +550,3 @@ export function EventosPage(): JSX.Element {
     </PlantillaLayout>
   );
 }
-
-const estiloTextoInstructivo: React.CSSProperties = {
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.lg,
-  fontWeight: typography.fontWeight.medium,
-  color: colors.textSecondary,
-  marginTop: 0,
-  marginBottom: spacing.md,
-};
-
-const estiloSubtitulo: React.CSSProperties = {
-  fontFamily: typography.fontFamily.body,
-  fontWeight: typography.fontWeight.bold,
-  fontSize: typography.fontSize.xl,
-  color: colors.textPrimary,
-  margin: 0,
-};
-
-const estiloSubtituloChico: React.CSSProperties = {
-  fontFamily: typography.fontFamily.body,
-  fontWeight: typography.fontWeight.bold,
-  fontSize: typography.fontSize.lg,
-  color: colors.textPrimary,
-  margin: 0,
-  marginBottom: spacing.sm,
-};
-
-const estiloCabeceraDiaSemana: React.CSSProperties = {
-  textAlign: 'center',
-  background: colors.surface,
-  padding: spacing.xs,
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.sm,
-  color: colors.textSecondary,
-  fontWeight: typography.fontWeight.medium,
-};
-
-const estiloBotonNav: React.CSSProperties = {
-  background: 'transparent',
-  border: `1px solid ${colors.border}`,
-  borderRadius: 6,
-  padding: `${spacing.xs} ${spacing.sm}`,
-  cursor: 'pointer',
-  fontFamily: typography.fontFamily.body,
-};
-
-const estiloBotonPrimario: React.CSSProperties = {
-  background: colors.primary,
-  color: colors.surface,
-  border: 'none',
-  borderRadius: 6,
-  padding: `${spacing.xs} ${spacing.md}`,
-  cursor: 'pointer',
-  fontFamily: typography.fontFamily.body,
-  fontWeight: typography.fontWeight.medium,
-};
-
-const estiloInput: React.CSSProperties = {
-  width: '100%',
-  padding: spacing.sm,
-  marginBottom: spacing.sm,
-  borderRadius: 6,
-  border: `1px solid ${colors.border}`,
-  fontFamily: typography.fontFamily.body,
-  boxSizing: 'border-box',
-};
-
-const estiloOverlay: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0,0,0,0.4)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
-const estiloModal: React.CSSProperties = {
-  background: colors.primaryLight,
-  borderRadius: 10,
-  padding: spacing.lg,
-  width: 420,
-  maxHeight: '90vh',
-  overflowY: 'auto',
-};
-
-const estiloTituloModal: React.CSSProperties = {
-  color: colors.surface,
-  fontFamily: typography.fontFamily.display,
-  fontSize: typography.fontSize.xl,
-  fontWeight: typography.fontWeight.bold,
-  textAlign: 'center',
-  margin: 0,
-  marginBottom: spacing.md,
-};
-
-const estiloEtiquetaCampo: React.CSSProperties = {
-  display: 'block',
-  color: colors.surface,
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.sm,
-  fontWeight: typography.fontWeight.medium,
-  marginBottom: spacing.xs,
-};
-
-const estiloPreguntaNotif: React.CSSProperties = {
-  color: colors.surface,
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.base,
-  textAlign: 'center',
-  margin: 0,
-  marginBottom: spacing.sm,
-};
-
-const estiloOpcionesNotif: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'center',
-  gap: spacing.lg,
-  marginBottom: spacing.md,
-};
-
-const estiloOpcionRadio: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: spacing.xs,
-  color: colors.surface,
-  fontFamily: typography.fontFamily.body,
-};
-
-const estiloFilaRecordatorio: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: spacing.xs,
-  marginBottom: spacing.xs,
-};
-
-const estiloEtiquetaRecordatorio: React.CSSProperties = {
-  flex: 2,
-  background: colors.surface,
-  borderRadius: 6,
-  padding: `${spacing.xs} ${spacing.sm}`,
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.sm,
-  color: colors.textPrimary,
-};
-
-const estiloInputNumeroRecordatorio: React.CSSProperties = {
-  width: 60,
-  padding: spacing.xs,
-  borderRadius: 6,
-  border: `1px solid ${colors.border}`,
-  fontFamily: typography.fontFamily.body,
-  textAlign: 'center',
-};
-
-const estiloSelectUnidadRecordatorio: React.CSSProperties = {
-  flex: 1,
-  padding: spacing.xs,
-  borderRadius: 6,
-  border: `1px solid ${colors.border}`,
-  fontFamily: typography.fontFamily.body,
-};
-
-const estiloBotonQuitarRecordatorio: React.CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  color: colors.surface,
-  cursor: 'pointer',
-  fontSize: typography.fontSize.base,
-  padding: spacing.xs,
-};
-
-const estiloAgregarRecordatorio: React.CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  color: colors.surface,
-  textDecoration: 'underline',
-  cursor: 'pointer',
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.sm,
-  padding: 0,
-  marginTop: spacing.xs,
-};
-
-const estiloBadgeCategoria: React.CSSProperties = {
-  fontSize: typography.fontSize.xs,
-  color: colors.textSecondary,
-  background: colors.background,
-  border: `1px solid ${colors.border}`,
-  borderRadius: 999,
-  padding: '2px 8px',
-  whiteSpace: 'nowrap',
-};
-
-const estiloFilaCategoria: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: spacing.xs,
-  marginBottom: spacing.xs,
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.sm,
-  color: colors.textPrimary,
-};
-
-const estiloInputInlineCategoria: React.CSSProperties = {
-  padding: '2px 6px',
-  borderRadius: 4,
-  border: `1px solid ${colors.border}`,
-  fontFamily: typography.fontFamily.body,
-  fontSize: typography.fontSize.sm,
-  boxSizing: 'border-box',
-};
-
-const estiloBotonQuitarCategoria: React.CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  color: colors.textSecondary,
-  cursor: 'pointer',
-  fontSize: typography.fontSize.sm,
-  padding: 0,
-};
-
-function estiloPildoraEvento(color: string): React.CSSProperties {
-  return {
-    background: color,
-    color: colors.surface,
-    borderRadius: 999,
-    padding: '1px 6px',
-    fontSize: 10,
-    lineHeight: '14px',
-    fontFamily: typography.fontFamily.body,
-    fontWeight: typography.fontWeight.medium,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    width: '100%',
-    boxSizing: 'border-box',
-    cursor: 'pointer',
-  };
-}
-
-const estiloError: React.CSSProperties = {
-  background: '#FBEAE9',
-  border: `1px solid ${colors.error}`,
-  borderRadius: 10,
-  padding: `${spacing.sm} ${spacing.md}`,
-  color: colors.error,
-  fontSize: typography.fontSize.sm,
-  textAlign: 'center',
-  marginBottom: spacing.sm,
-};
-
-const estiloBotonCancelarModal: React.CSSProperties = {
-  background: colors.surface,
-  color: colors.textPrimary,
-  border: `1px solid ${colors.border}`,
-  borderRadius: 999,
-  padding: `${spacing.xs} ${spacing.lg}`,
-  cursor: 'pointer',
-  fontFamily: typography.fontFamily.body,
-  fontWeight: typography.fontWeight.medium,
-};
-
-const estiloBotonGuardarModal: React.CSSProperties = {
-  background: colors.primary,
-  color: colors.surface,
-  border: 'none',
-  borderRadius: 999,
-  padding: `${spacing.xs} ${spacing.lg}`,
-  cursor: 'pointer',
-  fontFamily: typography.fontFamily.body,
-  fontWeight: typography.fontWeight.bold,
-};

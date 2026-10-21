@@ -3,10 +3,10 @@ import { materializarNodo } from "./materializador";
 import { Persistencia } from "../../persistencia/persistencia";
 import { Nodo } from "./entidades"
 
+// Cambia el nodoPadre de uno o más nodos
 export class MoverNodo {
     constructor(private readonly persistencia: Persistencia) {}
 
-    // Cambia el nodoPadre de un nodo
     async ejecutar(datos: MoverNodoDTO): Promise<Nodo> {
         const { id, idNuevoPadre } = datos;
 

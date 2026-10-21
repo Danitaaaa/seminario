@@ -1,5 +1,6 @@
 import { UsuarioFacialRepositorio } from '../../persistencia/usuarioFacialRepositorio'
- 
+
+// Registra los datos biométricos faciales de un usuario
 export class RegistrarRostro {
   private repositorio = new UsuarioFacialRepositorio()
  

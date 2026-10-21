@@ -3,7 +3,7 @@ import { Archivo } from './entidades';
 import { materializarArchivo } from './materializador';
 import { ModificarArchivoDTO } from './dto';
 
-// Renombra un archivo existente y devuelve el archivo actualizado.
+// Renombra un archivo existente y devuelve el archivo actualizado
 export class ModificarArchivo {
   constructor(private readonly persistencia: Persistencia) {}
 

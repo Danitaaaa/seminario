@@ -28,26 +28,26 @@ export class Archivos {
     private readonly actualizarContenidoArchivo: ActualizarContenidoArchivo
   ) {}
 
-  async crear(datos: CrearArchivoDTO): Promise<Archivo> {
-    return this.crearArchivo.ejecutar(datos);
-  }
   async buscar(criterios: BuscadorArchivoDTO): Promise<Archivo[]> {
     return this.buscarArchivos.ejecutar(criterios);
-  }
-  async modificar(datos: ModificarArchivoDTO): Promise<Archivo> {
-    return this.modificarArchivo.ejecutar(datos);
-  }
-  async eliminar(datos: EliminarArchivoDTO): Promise<void> {
-    return this.eliminarArchivo.ejecutar(datos);
-  }
-  async mover(datos: MoverArchivosDTO): Promise<Archivo[]> {
-    return this.moverArchivos.ejecutar(datos);
   }
   async obtener(datos: ObtenerArchivoDTO): Promise<Archivo> {
     return this.obtenerArchivo.ejecutar(datos);
   }
+  async crear(datos: CrearArchivoDTO): Promise<Archivo> {
+    return this.crearArchivo.ejecutar(datos);
+  }
+  async modificar(datos: ModificarArchivoDTO): Promise<Archivo> {
+    return this.modificarArchivo.ejecutar(datos);
+  }
   async actualizarContenido(id: number, rutaOrigen: string): Promise<Archivo> {
     return this.actualizarContenidoArchivo.ejecutar(id, rutaOrigen);
+  }
+  async mover(datos: MoverArchivosDTO): Promise<Archivo[]> {
+    return this.moverArchivos.ejecutar(datos);
+  }
+  async eliminar(datos: EliminarArchivoDTO): Promise<void> {
+    return this.eliminarArchivo.ejecutar(datos);
   }
 
   async abrirExterno(datos: { id: number }): Promise<void> {

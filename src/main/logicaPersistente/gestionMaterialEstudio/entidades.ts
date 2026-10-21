@@ -1,3 +1,4 @@
+// Representa una carpeta para la organización de material
 export interface Nodo {
     id: number;
     nombre: string;
@@ -7,7 +8,6 @@ export interface Nodo {
     tamaño: BigInt;
     nodoPadre: number | null;
 }
-
 
 export interface Archivo {
   id: number;
