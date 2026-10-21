@@ -7,7 +7,7 @@
   min-height: 100vh;
   background: var(--color-white);
   color: var(--color-text);
-  font-family: var(--fuente-base);
+  font-family: var(--fuente-body);
 }
 
 .app-principal {

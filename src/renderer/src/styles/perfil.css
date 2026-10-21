@@ -1,10 +1,11 @@
-/* Pantalla de perfil. Solo consume variables generadas por tema.ts. */
+/* Pantalla de perfil. Solo consume variables generadas por issue.ts. */
 
 .perfil {
   display: grid;
   grid-template-columns: 180px minmax(0, 1fr);
   gap: var(--espacio-xl);
   align-items: start;
+  font-family: var(--fuente-body);
 }
 
 .perfil__lateral {
@@ -39,7 +40,7 @@
   padding: var(--espacio-xs) var(--espacio-md);
   border: 0;
   border-radius: 999px;
-  background: var(--color-primary-dark);
+  background: var(--color-primary);
   color: var(--color-white);
   font: inherit;
   font-size: var(--tamano-xs);
@@ -51,9 +52,9 @@
 }
 
 .perfil__boton-lateral--contorno {
-  border: 1px solid var(--color-primary-dark);
+  border: 1px solid var(--color-primary);
   background: var(--color-white);
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
 }
 
 .perfil__boton-lateral--contorno:hover {
@@ -79,9 +80,10 @@
 
 .perfil__nombre {
   margin: 0;
+  font-family: var(--fuente-display);
   font-size: 1.6rem;
   font-weight: var(--peso-bold);
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
 }
 
 .perfil__dato {
@@ -95,9 +97,10 @@
 
 .perfil__titulo {
   margin: 0 0 var(--espacio-xs);
+  font-family: var(--fuente-display);
   font-size: var(--tamano-lg);
   font-weight: var(--peso-bold);
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
 }
 
 .perfil__campo {
@@ -185,6 +188,7 @@
   border-radius: var(--radio-md);
   background: var(--color-white);
   color: var(--color-storm);
+  font-family: var(--fuente-body);
 }
 
 .perfil__video {

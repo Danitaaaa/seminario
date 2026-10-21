@@ -6,6 +6,9 @@ primaryLight: '#4A5D9E',
 secondary: '#7A9E7E',
 // Acento: ámbar cálido — atención puntual (recordatorios, prioridad alta)
 accent: '#D9A441',
+primaryDark: '#1E2A4A',
+errorBg: '#FBEAEA',
+errorTexto: '#8A3535',
 // Neutros
 background: '#FAFAF8',
 surface: '#FFFFFF',
