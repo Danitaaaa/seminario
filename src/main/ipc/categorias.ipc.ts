@@ -8,11 +8,11 @@ import {
 } from '../logicaPersistente/gestionDeCategorias/dto';
 
 export function registerCategoriasIpc(categorias: Categorias): void {
-  ipcMain.handle('categorias:crear', async (_e, datos: unknown) =>
-    categorias.crear(crearCategoriaSchema.parse(datos))
-  );
   ipcMain.handle('categorias:listar', async (_e, datos: unknown) =>
     categorias.listar(listarCategoriasSchema.parse(datos))
+  );
+  ipcMain.handle('categorias:crear', async (_e, datos: unknown) =>
+    categorias.crear(crearCategoriaSchema.parse(datos))
   );
   ipcMain.handle('categorias:modificar', async (_e, datos: unknown) =>
     categorias.modificar(modificarCategoriaSchema.parse(datos))

@@ -4,7 +4,7 @@ const campoObligatorioSchema = z.string().min(1, "Este campo es obligatorio.");
 
 const nombreSchema = campoObligatorioSchema.regex(
     /^\p{L}{2,}( \p{L}{2,})*$/u,
-    "Cada palabra debe tener al menos dos letras; use solo letras y espacios."
+    "Cada palabra debe tener al menos dos letras; use solo letras y spacing."
 );
 
 const emailSchema = campoObligatorioSchema.pipe(

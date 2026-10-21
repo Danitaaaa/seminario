@@ -1,6 +1,4 @@
-// diaSemana usa el mismo criterio que Date.getDay() en JS: 0 = domingo, 6 = sábado.
-// Así, del lado del calendario, comparar "¿este día cae en este horario?" es un
-// simple fecha.getDay() === horario.diaSemana, sin tener que traducir nada.
+// Representa un horario fijo que se puede visualizar en el calendario o cronograma
 export interface HorarioCursado {
   id: number;
   usuarioId: number;

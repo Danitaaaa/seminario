@@ -10,6 +10,15 @@ export class Almacenamiento {
     fs.mkdirSync(this.base, { recursive: true });
   }
 
+  // Convierte la ruta relativa de la base en ruta completa, validando que no se escape de la base.
+  rutaCompleta(rutaRelativa: string): string {
+    const completa = path.resolve(this.base, rutaRelativa);
+    if (!completa.startsWith(this.base + path.sep)) {
+      throw new Error('Ruta de archivo inválida');
+    }
+    return completa;
+  }
+
   // Copia el archivo al almacenamiento con nombre único.
   // Devuelve la ruta RELATIVA (para guardar en la base) y el tamaño real.
   async guardar(rutaOrigen: string, extension: string): Promise<{ rutaFisica: string; tamanio: number }> {
@@ -28,15 +37,6 @@ export class Almacenamiento {
     await fs.promises.copyFile(rutaOrigen, temporal);
     await fs.promises.rename(temporal, destino);
     return (await fs.promises.stat(destino)).size;
-  }
-
-  // Convierte la ruta relativa de la base en ruta completa, validando que no se escape de la base.
-  rutaCompleta(rutaRelativa: string): string {
-    const completa = path.resolve(this.base, rutaRelativa);
-    if (!completa.startsWith(this.base + path.sep)) {
-      throw new Error('Ruta de archivo inválida');
-    }
-    return completa;
   }
 
   // Borra el archivo físico; no falla si ya no existe.

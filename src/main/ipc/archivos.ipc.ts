@@ -24,16 +24,21 @@ import { join } from 'node:path';
 // Carpeta propia de la app donde viven las copias de los archivos subidos.
 const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
 
-// Reemplaza el contenido físico escribiendo primero a un temporal, así un fallo no deja el archivo a medias.
-function escribirSeguro(ruta: string, contenido: Uint8Array): number {
-  const temporal = `${ruta}.tmp`;
-  fs.writeFileSync(temporal, contenido);
-  fs.renameSync(temporal, ruta);
-  return fs.statSync(ruta).size;
-}
-
 // Handlers IPC del módulo Archivos: validan con Zod antes de tocar la fachada.
 export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacenamiento): void {
+  ipcMain.handle('archivos:buscar', async (_event, datos: unknown) => {
+    const validado = BuscadorArchivoDTOSchema.parse(datos);
+    return archivos.buscar(validado);
+  });
+
+  // Devuelve la metadata y los bytes del archivo para visualizarlo en el renderer.
+  ipcMain.handle('archivos:leer', async (_event, datos: unknown) => {
+    const { id } = ObtenerArchivoDTOSchema.parse(datos);
+    const archivo = await archivos.obtener({ id });
+    const contenido = await fs.promises.readFile(almacenamiento.rutaCompleta(archivo.rutaFisica));
+    return { ...archivo, contenido };
+  });
+
   ipcMain.handle('archivos:crear', async (_event, datos: unknown) => {
     const validado = CrearArchivoDTOSchema.parse(datos);
 
@@ -59,45 +64,9 @@ export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacena
     }
   });
 
-  ipcMain.handle('archivos:buscar', async (_event, datos: unknown) => {
-    const validado = BuscadorArchivoDTOSchema.parse(datos);
-    return archivos.buscar(validado);
-  });
-
-  ipcMain.handle('archivos:mover', async (_event, datos: unknown) => {
-    const validado = MoverArchivosDTOSchema.parse(datos);
-    return archivos.mover(validado);
-  });
-
   ipcMain.handle('archivos:modificar', async (_event, datos: unknown) => {
     const validado = ModificarArchivoDTOSchema.parse(datos);
     return archivos.modificar(validado);
-  });
-
-  ipcMain.handle('archivos:eliminar', async (_event, datos: unknown) => {
-    const validado = EliminarArchivoDTOSchema.parse(datos);
-    return archivos.eliminar(validado);
-  });
-
-  // Abre el selector de archivos del SO y devuelve la metadata básica del elegido.
-  ipcMain.handle('archivos:seleccionar', async () => {
-    const resultado = await dialog.showOpenDialog({ properties: ['openFile'] });
-    if (resultado.canceled || resultado.filePaths.length === 0) return null;
-
-    const rutaFisica = resultado.filePaths[0];
-    const stats = fs.statSync(rutaFisica);
-    const extension = path.extname(rutaFisica).replace('.', '');
-    const nombre = path.basename(rutaFisica, path.extname(rutaFisica));
-
-    return { nombre, extension, rutaFisica, tamanio: stats.size };
-  });
-
-  // Devuelve la metadata y los bytes del archivo para visualizarlo en el renderer.
-  ipcMain.handle('archivos:leer', async (_event, datos: unknown) => {
-    const { id } = ObtenerArchivoDTOSchema.parse(datos);
-    const archivo = await archivos.obtener({ id });
-    const contenido = await fs.promises.readFile(almacenamiento.rutaCompleta(archivo.rutaFisica));
-    return { ...archivo, contenido };
   });
 
   // Escribe los bytes en un temporal y deja que actualizarContenido haga el reemplazo.
@@ -125,6 +94,16 @@ export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacena
     return guardarBytes(id, docx);
   });
 
+  ipcMain.handle('archivos:mover', async (_event, datos: unknown) => {
+    const validado = MoverArchivosDTOSchema.parse(datos);
+    return archivos.mover(validado);
+  });
+
+  ipcMain.handle('archivos:eliminar', async (_event, datos: unknown) => {
+    const validado = EliminarArchivoDTOSchema.parse(datos);
+    return archivos.eliminar(validado);
+  });
+
   // Abre el archivo con la aplicación predeterminada del sistema operativo.
   ipcMain.handle('archivos:abrirExterno', async (_event, datos: unknown) => {
     const archivo = await archivos.obtener(ObtenerArchivoDTOSchema.parse(datos));
@@ -132,4 +111,25 @@ export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacena
     if (error) throw new Error(error);
   });
 
+  // Abre el selector de archivos del SO y devuelve la metadata básica del elegido.
+  ipcMain.handle('archivos:seleccionar', async () => {
+    const resultado = await dialog.showOpenDialog({ properties: ['openFile'] });
+    if (resultado.canceled || resultado.filePaths.length === 0) return null;
+
+    const rutaFisica = resultado.filePaths[0];
+    const stats = fs.statSync(rutaFisica);
+    const extension = path.extname(rutaFisica).replace('.', '');
+    const nombre = path.basename(rutaFisica, path.extname(rutaFisica));
+
+    return { nombre, extension, rutaFisica, tamanio: stats.size };
+  });
+
+}
+
+// Reemplaza el contenido físico escribiendo primero a un temporal, así un fallo no deja el archivo a medias.
+function escribirSeguro(ruta: string, contenido: Uint8Array): number {
+  const temporal = `${ruta}.tmp`;
+  fs.writeFileSync(temporal, contenido);
+  fs.renameSync(temporal, ruta);
+  return fs.statSync(ruta).size;
 }

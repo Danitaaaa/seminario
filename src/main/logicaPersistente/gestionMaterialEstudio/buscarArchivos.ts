@@ -11,6 +11,7 @@ const COLUMNAS: Record<NonNullable<BuscadorArchivoDTO['ordenarPor']>, string> = 
   tamaño: 'tamaño',
 };
 
+// Lista archivos, fitra por parámetros y ordena por columna y dirección
 export class BuscarArchivos {
   constructor(private readonly persistencia: Persistencia) {}
 

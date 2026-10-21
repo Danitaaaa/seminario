@@ -1,6 +1,7 @@
 import { Persistencia } from '../../persistencia/persistencia';
 import { EliminarEventoDTO } from './dto';
 
+// Elimina el evento con el ID indicado
 export class EliminarEvento {
   constructor(private readonly persistencia: Persistencia) {}
 

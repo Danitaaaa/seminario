@@ -3,6 +3,7 @@ import { materializarNodo } from "./materializador";
 import { Persistencia } from "../../persistencia/persistencia";
 import { Nodo } from "./entidades"
 
+// Renombra un nodo existente
 export class ModificarNodo {
     constructor(private readonly persistencia: Persistencia) {}
 

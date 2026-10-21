@@ -3,6 +3,7 @@ import { Evento } from './entidades';
 import { materializarEvento } from './materializador';
 import { ListarEventosDTO } from './dto';
 
+// Lista los eventos registrados para el usuario indicado ordenado por fecha de forma ascendente
 export class ListarEventos {
   constructor(private readonly persistencia: Persistencia) {}
 

@@ -3,6 +3,7 @@ import { Categoria } from './entidades';
 import { materializarCategoria } from './materializador';
 import { ModificarCategoriaDTO } from './dto';
 
+// Modifica el nombre de la categoría
 export class ModificarCategoria {
   constructor(private readonly persistencia: Persistencia) {}
 

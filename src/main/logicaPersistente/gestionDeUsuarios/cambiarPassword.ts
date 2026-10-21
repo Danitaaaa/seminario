@@ -3,6 +3,7 @@ import { Persistencia } from '../../persistencia/persistencia';
 import { materializarUsuario } from './materializadorUsuarios';
 import type { CambiarPasswordDto } from './dto';
 
+// Cambia la contraseña del usuario indicado, verificando el correo 
 export class CambiarPassword {
     constructor(
         private readonly persistencia: Persistencia

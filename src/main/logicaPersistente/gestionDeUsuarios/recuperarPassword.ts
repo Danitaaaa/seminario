@@ -3,6 +3,7 @@ import type { RecuperarPasswordDto } from './dto';
 import { materializarUsuario } from './materializadorUsuarios';
 import { enviarCodigoVerificacion } from '../../servicios/correo';
 
+// Valida el email ingresado y envía un código de recuperación a esa dirección
 export class RecuperarPassword {
     constructor(
         private readonly persistencia: Persistencia
