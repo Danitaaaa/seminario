@@ -25,6 +25,13 @@
   color: var(--color-text);
 }
 
+.ajustes__subtitulo {
+  margin: var(--espacio-sm) 0 0;
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-medium);
+  color: var(--color-text);
+}
+
 .ajustes__fila {
   display: flex;
   align-items: center;
@@ -49,6 +56,7 @@
   flex: 1;
 }
 
+/* ---------- Modo ---------- */
 .ajustes__selector {
   display: inline-flex;
   align-self: flex-start;
@@ -77,8 +85,51 @@
   color: var(--color-white);
 }
 
+/* ---------- Paletas ---------- */
+.ajustes__paletas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: var(--espacio-sm);
+}
+
+.ajustes__paleta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-xs);
+  padding: var(--espacio-sm) var(--espacio-xs);
+  border: 0;
+  border-radius: var(--radio-md);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  cursor: pointer;
+}
+
+.ajustes__paleta:hover {
+  background: var(--color-surface);
+}
+
+.ajustes__muestra {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+.ajustes__paleta--activa {
+  background: var(--color-surface);
+  font-weight: var(--peso-bold);
+}
+
+.ajustes__paleta--activa .ajustes__muestra {
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary);
+}
+
 .ajustes__fila:focus-visible,
-.ajustes__opcion:focus-visible {
+.ajustes__opcion:focus-visible,
+.ajustes__paleta:focus-visible {
   outline: 2px solid var(--color-secondary);
   outline-offset: 2px;
 }
