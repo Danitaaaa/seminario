@@ -1,7 +1,7 @@
 export const typography = {
 fontFamily: {
-display: '"Fraunces", serif', // títulos — con carácter, no un serif genérico
-body: '"Inter", sans-serif', // texto — alta legibilidad en pantalla
+  display: '"Times New Roman", Times, serif',
+  body: '"Times New Roman", Times, serif',
 },
 fontSize: {
 xs: '0.75rem',
