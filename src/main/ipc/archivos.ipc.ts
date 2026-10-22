@@ -14,8 +14,14 @@ import {
   ObtenerArchivoDTOSchema,
   GuardarContenidoDTOSchema,
   GuardarDocxDTOSchema,
+  AbrirConAplicacionDTOSchema,
 } from '../logicaPersistente/gestionMaterialEstudio/dto';
 import { Almacenamiento } from '../persistencia/almacenamiento';
+import {
+  listarAplicaciones,
+  abrirConAplicacion,
+  elegirOtraAplicacion,
+} from '../logicaNoPersistente/abrirCon/aplicacionesSistema';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -108,6 +114,31 @@ export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacena
   ipcMain.handle('archivos:abrirExterno', async (_event, datos: unknown) => {
     const archivo = await archivos.obtener(ObtenerArchivoDTOSchema.parse(datos));
     const error = await shell.openPath(almacenamiento.rutaCompleta(archivo.rutaFisica));
+    if (error) throw new Error(error);
+  });
+
+  // Apps del sistema que pueden abrir el archivo. Al renderer solo le llegan id y nombre, nunca rutas.
+  ipcMain.handle('archivos:aplicacionesDisponibles', async (_event, datos: unknown) => {
+    const archivo = await archivos.obtener(ObtenerArchivoDTOSchema.parse(datos));
+    const aplicaciones = await listarAplicaciones(archivo.extension);
+    return aplicaciones.map(({ id, nombre }) => ({ id, nombre }));
+  });
+
+  // La app se vuelve a buscar acá: el renderer solo puede elegir entre las que listó el main.
+  ipcMain.handle('archivos:abrirConAplicacion', async (_event, datos: unknown) => {
+    const { id, aplicacionId } = AbrirConAplicacionDTOSchema.parse(datos);
+    const archivo = await archivos.obtener({ id });
+    const aplicacion = (await listarAplicaciones(archivo.extension)).find((a) => a.id === aplicacionId);
+    if (!aplicacion) throw new Error('La aplicación elegida no está disponible.');
+    await abrirConAplicacion(aplicacion, almacenamiento.rutaCompleta(archivo.rutaFisica));
+  });
+
+  // Diálogo nativo de Windows para elegir cualquier otra app; en otros sistemas usa la predeterminada.
+  ipcMain.handle('archivos:elegirAplicacion', async (_event, datos: unknown) => {
+    const archivo = await archivos.obtener(ObtenerArchivoDTOSchema.parse(datos));
+    const ruta = almacenamiento.rutaCompleta(archivo.rutaFisica);
+    if (process.platform === 'win32') return elegirOtraAplicacion(ruta);
+    const error = await shell.openPath(ruta);
     if (error) throw new Error(error);
   });
 

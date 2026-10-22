@@ -11,3 +11,8 @@ export interface Archivo {
   usuarioId: number | null;
   proyectoId: number | null;
 }
+
+export interface AplicacionExterna {
+  id: string;
+  nombre: string;
+}

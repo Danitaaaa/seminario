@@ -1,4 +1,4 @@
-import { Archivo } from './archivo';
+import { Archivo, AplicacionExterna } from './archivo';
 import { Nodo } from './nodo';
 import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput } from './eventos';
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
@@ -34,6 +34,9 @@ declare global {
       guardarArchivo: (datos: { id: number; contenido: Uint8Array }) => Promise<Archivo>;
       guardarDocx: (datos: { id: number; html: string }) => Promise<Archivo>;
       abrirExterno: (datos: { id: number }) => Promise<void>;
+      aplicacionesDisponibles: (datos: { id: number }) => Promise<AplicacionExterna[]>;
+      abrirConAplicacion: (datos: { id: number; aplicacionId: string }) => Promise<void>;
+      elegirAplicacion: (datos: { id: number }) => Promise<void>;
 
       // Gestion de usuarios
       iniciarSesion: (datos: { email: string; password: string }) => Promise<{ id: number }>;

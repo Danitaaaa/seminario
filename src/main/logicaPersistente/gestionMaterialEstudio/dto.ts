@@ -105,3 +105,8 @@ export const AbrirExternoDTOSchema = z.object({
     id: z.number().int(),
 }); 
 export type AbrirExternoDTO = z.infer<typeof AbrirExternoDTOSchema>;
+
+export const AbrirConAplicacionDTOSchema = z.object({
+  id: z.number().int().positive(),
+  aplicacionId: z.string().regex(/^[\w.\- ]+\.exe$/i),
+});

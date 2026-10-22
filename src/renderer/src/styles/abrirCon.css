@@ -1,0 +1,163 @@
+/* Cartel "Abrir con". Mismo estilo que los modales de eventos. Solo consume variables de issue.ts. */
+
+.abrir-con-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  width: min(460px, 90vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--espacio-lg);
+  border-radius: 16px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-family: var(--fuente-body);
+}
+
+.abrir-con-modal__titulo {
+  margin: 0;
+  font-family: var(--fuente-display);
+  font-size: var(--tamano-xl);
+  text-align: center;
+  color: var(--color-white);
+}
+
+.abrir-con-modal__archivo {
+  margin: calc(var(--espacio-sm) * -1) 0 0;
+  font-size: var(--tamano-sm);
+  text-align: center;
+  color: color-mix(in srgb, var(--color-white) 80%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.abrir-con__opciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--espacio-sm);
+}
+
+.abrir-con__opcion {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--espacio-sm) var(--espacio-md);
+  border: 0;
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.abrir-con__opcion span {
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+}
+
+.abrir-con__subtitulo {
+  margin: 0;
+  font-weight: var(--peso-bold);
+  color: var(--color-white);
+}
+
+.abrir-con__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: var(--espacio-xs);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+}
+
+.abrir-con__app {
+  padding: var(--espacio-sm) var(--espacio-md);
+  border: 0;
+  border-radius: var(--radio-sm);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.abrir-con__opcion:hover,
+.abrir-con__app:hover {
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+}
+
+.abrir-con__vacio {
+  margin: var(--espacio-sm) var(--espacio-md);
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.abrir-con__otra {
+  align-self: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-white);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.abrir-con-modal__aviso {
+  margin: 0;
+  padding: var(--espacio-sm) var(--espacio-md);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.abrir-con-modal__acciones {
+  display: flex;
+  justify-content: center;
+}
+
+.abrir-con-modal__cerrar {
+  padding: var(--espacio-sm) var(--espacio-lg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.abrir-con__opcion:focus-visible,
+.abrir-con__app:focus-visible,
+.abrir-con__otra:focus-visible,
+.abrir-con-modal__cerrar:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* ---------- Modo oscuro: igual que el modal de eventos ---------- */
+:root[data-modo="oscuro"] .abrir-con-modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+:root[data-modo="oscuro"] .abrir-con__opcion,
+:root[data-modo="oscuro"] .abrir-con__lista,
+:root[data-modo="oscuro"] .abrir-con-modal__aviso {
+  background: var(--color-background);
+}
+
+:root[data-modo="oscuro"] .abrir-con__app:hover,
+:root[data-modo="oscuro"] .abrir-con__opcion:hover {
+  background: color-mix(in srgb, var(--color-primary) 25%, var(--color-background));
+}
+
+:root[data-modo="oscuro"] .abrir-con-modal__cerrar {
+  background: transparent;
+}

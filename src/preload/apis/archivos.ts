@@ -11,5 +11,8 @@ export const archivosApi = {
   moverArchivos: (datos: unknown) => ipcRenderer.invoke('archivos:mover', datos),
   eliminarArchivo: (datos: unknown) => ipcRenderer.invoke('archivos:eliminar', datos),
   abrirExterno: (datos: unknown) => ipcRenderer.invoke('archivos:abrirExterno', datos),
+  aplicacionesDisponibles: (datos: unknown) => ipcRenderer.invoke('archivos:aplicacionesDisponibles', datos),
+  abrirConAplicacion: (datos: unknown) => ipcRenderer.invoke('archivos:abrirConAplicacion', datos),
+  elegirAplicacion: (datos: unknown) => ipcRenderer.invoke('archivos:elegirAplicacion', datos),
   seleccionarArchivo: () => ipcRenderer.invoke('archivos:seleccionar'),
 };

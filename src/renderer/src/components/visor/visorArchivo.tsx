@@ -6,6 +6,7 @@ import { VisorPdf } from './visorPdf';
 import { VisorDocx } from './visorDocx';
 import { VisorExcel } from './visorExcel';
 import { VisorTexto } from './visorTexto';
+import { MenuAbrirCon } from './menuAbrirCon';
 import '../../styles/visor.css';
 
 interface VisorArchivoProps {
@@ -50,16 +51,13 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado }: VisorArchivoProp
     }
   };
 
-  const abrirExterno = () =>
-    window.api.abrirExterno({ id: archivo.id }).catch((e) => setError(mensaje(e, 'No se pudo abrir.')));
-
   return (
     <div className="visor-overlay">
       <div className="visor">
         <header className="visor__encabezado">
           <h3 className="visor__titulo">{archivo.nombre}.{archivo.extension}</h3>
           <div className="visor__acciones">
-            <button className="visor-boton visor-boton--contorno" onClick={abrirExterno}>Abrir con app externa</button>
+            <MenuAbrirCon archivo={archivo} onError={setError} />
             <button className="visor-boton visor-boton--contorno" onClick={onCerrar}>Cerrar</button>
           </div>
         </header>
