@@ -1,0 +1,362 @@
+/* Módulo Sesión de estudio. Solo usa las variables que genera issue.ts (misma tipografía y colores que el resto). */
+
+.sesiones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  color: var(--color-storm);
+}
+
+.sesiones__cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-md);
+}
+
+.sesiones__cabecera-espacio {
+  flex: 1;
+}
+
+.sesiones__titulo {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: var(--tamano-lg);
+  font-weight: var(--peso-bold);
+}
+
+.sesiones__sub {
+  color: var(--color-steel);
+  font-size: var(--tamano-sm);
+}
+
+.sesiones__error {
+  padding: var(--espacio-sm) var(--espacio-md);
+  border-radius: var(--radio-md);
+  background: color-mix(in srgb, var(--color-error) 12%, var(--color-white));
+  color: var(--color-error);
+  font-size: var(--tamano-sm);
+}
+
+/* Tabla de sesiones */
+.sesiones__tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sesiones__tabla th {
+  padding: var(--espacio-sm) var(--espacio-md);
+  color: var(--color-steel);
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-medium);
+  text-align: left;
+}
+
+.sesiones__tabla td {
+  padding: var(--espacio-sm) var(--espacio-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.sesiones__fila {
+  cursor: pointer;
+}
+
+.sesiones__fila:hover {
+  background: var(--color-frost-claro);
+}
+
+.sesiones__vacio {
+  padding: var(--espacio-lg);
+  color: var(--color-steel);
+  text-align: center;
+}
+
+/* Etiqueta de estado */
+.sesiones__estado {
+  display: inline-block;
+  padding: 2px var(--espacio-md);
+  border-radius: 999px;
+  font-size: var(--tamano-xs);
+  font-weight: var(--peso-medium);
+}
+
+.sesiones__estado--sin_empezar {
+  background: color-mix(in srgb, var(--color-steel) 15%, var(--color-white));
+  color: var(--color-steel);
+}
+
+.sesiones__estado--en_curso {
+  background: color-mix(in srgb, var(--color-primary) 15%, var(--color-white));
+  color: var(--color-primary);
+}
+
+.sesiones__estado--atrasada {
+  background: color-mix(in srgb, var(--color-error) 15%, var(--color-white));
+  color: var(--color-error);
+}
+
+.sesiones__estado--completada {
+  background: color-mix(in srgb, var(--color-success) 15%, var(--color-white));
+  color: var(--color-success);
+}
+
+/* Menú de tres puntos */
+.sesiones__celda-menu {
+  position: relative;
+  width: 40px;
+}
+
+.sesiones__menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  padding: var(--espacio-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-white);
+  box-shadow: var(--sombra-card);
+}
+
+.sesiones__menu-opcion {
+  padding: var(--espacio-sm) var(--espacio-md);
+  border: 0;
+  border-radius: var(--radio-sm);
+  background: transparent;
+  color: var(--color-storm);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sesiones__menu-opcion:hover {
+  background: var(--color-frost-claro);
+}
+
+.sesiones__menu-opcion--peligro {
+  color: var(--color-error);
+}
+
+/* Formulario de creación */
+.sesiones__formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  max-width: 680px;
+}
+
+.sesiones__campo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-medium);
+}
+
+.sesiones__campo input,
+.sesiones__campo select {
+  padding: var(--espacio-sm);
+  border: 1px solid var(--color-frost-blue);
+  border-radius: var(--radio-sm);
+  background: var(--color-white);
+  color: var(--color-primary-dark);
+  font: inherit;
+  font-weight: var(--peso-regular);
+}
+
+.sesiones__fila-campos {
+  display: flex;
+  gap: var(--espacio-md);
+}
+
+.sesiones__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-sm);
+}
+
+.sesiones__chip {
+  padding: var(--espacio-xs) var(--espacio-md);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-storm);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.sesiones__chip--activo {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.sesiones__paso {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+  font-size: var(--tamano-sm);
+}
+
+.sesiones__paso-controles {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+}
+
+.sesiones__paso-valor {
+  min-width: 2ch;
+  text-align: center;
+  font-weight: var(--peso-bold);
+}
+
+.sesiones__check {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  font-size: var(--tamano-sm);
+}
+
+.sesiones__acciones {
+  display: flex;
+  gap: var(--espacio-sm);
+}
+
+/* Pantalla de una sesión */
+.sesiones__cuerpo {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: var(--espacio-lg);
+}
+
+.sesiones__lateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+}
+
+.sesiones__tarjeta {
+  padding: var(--espacio-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-white);
+}
+
+.sesiones__tarjeta-titulo {
+  margin: 0 0 var(--espacio-sm);
+  color: var(--color-primary-dark);
+  font-size: var(--tamano-base);
+  font-weight: var(--peso-bold);
+}
+
+.sesiones__nota {
+  margin: 0;
+  color: var(--color-steel);
+  font-size: var(--tamano-xs);
+}
+
+/* Pomodoro */
+.sesiones__reloj {
+  color: var(--color-primary);
+  font-size: var(--tamano-xl, 2rem);
+  font-weight: var(--peso-bold);
+  text-align: center;
+}
+
+.sesiones__reloj-fase {
+  color: var(--color-steel);
+  font-size: var(--tamano-sm);
+  text-align: center;
+}
+
+.sesiones__barra {
+  height: 6px;
+  margin-top: var(--espacio-sm);
+  border-radius: 3px;
+  background: var(--color-border);
+}
+
+.sesiones__barra-relleno {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--color-primary);
+}
+
+/* Objetivos */
+.sesiones__objetivo {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  padding: var(--espacio-xs) 0;
+  font-size: var(--tamano-sm);
+}
+
+.sesiones__objetivo-texto {
+  flex: 1;
+}
+
+.sesiones__objetivo-texto--hecho {
+  color: var(--color-steel);
+  text-decoration: line-through;
+}
+
+.sesiones__objetivo-nuevo {
+  display: flex;
+  gap: var(--espacio-sm);
+  margin-top: var(--espacio-sm);
+}
+
+.sesiones__objetivo-nuevo input {
+  flex: 1;
+  padding: var(--espacio-sm);
+  border: 1px solid var(--color-frost-blue);
+  border-radius: var(--radio-sm);
+  font: inherit;
+  font-size: var(--tamano-sm);
+}
+
+/* Modal */
+.sesiones__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 18, 47, 0.45);
+}
+
+.sesiones__modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  width: min(420px, 90vw);
+  padding: var(--espacio-lg);
+  border-radius: var(--radio-md);
+  background: var(--color-white);
+  color: var(--color-storm);
+}
+
+.sesiones__modal-titulo {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: var(--tamano-lg);
+  text-align: center;
+}
+
+.sesiones__modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espacio-sm);
+}
+
+@media (max-width: 900px) {
+  .sesiones__cuerpo {
+    grid-template-columns: 1fr;
+  }
+}

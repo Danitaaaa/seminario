@@ -3,10 +3,11 @@ import { Nodo } from './nodo';
 import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput } from './eventos';
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
+import type { SesionesEstudioApi } from './sesionesEstudio';
 
 declare global {
   interface Window {
-    api: {
+    api: SesionesEstudioApi & {
       // Gestion de material de estudio
       crearNodo: (datos: { nombre: string; idPadre: number | null }) => Promise<Nodo>;
       modificarNodo: (datos: { id: number; nombre: string }) => Promise<Nodo>;
@@ -72,6 +73,9 @@ declare global {
       listarHorarios: (datos: ListarHorariosInput) => Promise<HorarioCursado[]>;
       modificarHorario: (datos: ModificarHorarioInput) => Promise<HorarioCursado>;
       eliminarHorario: (datos: { id: number }) => Promise<{ ok: boolean }>;
+
+      // Gestion de sesion de estudio
+    
     };
   }
 }

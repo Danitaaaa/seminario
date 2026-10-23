@@ -13,6 +13,9 @@ import { cargarModelos } from "../lib/cargarModelos";
 import { Proximamente } from "./pages/proximamente/proximamente";
 import { EventosPage } from "./pages/eventos/eventosPage";
 import { HorariosPage } from "./pages/horarios/horariosPage";
+import { SesionesEstudioPage } from "./pages/sesionesEstudio/sesionesEstudioPage";
+import { CrearSesionEstudioPage } from "./pages/sesionesEstudio/crearSesionEstudioPage";
+import { SesionEstudioPage } from "./pages/sesionesEstudio/sesionEstudioPage";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -37,6 +40,10 @@ export default function App() {
       <Route path="/material" element={<NodoPage />} />
       <Route path="/eventos" element={<EventosPage />} />
       <Route path="/horarios" element={<HorariosPage />} />
+      <Route path="/sesiones" element={<SesionesEstudioPage />} />
+      <Route path="/sesiones/nueva" element={<CrearSesionEstudioPage />} />
+      <Route path="/sesiones/:idSesion" element={<SesionEstudioPage />} />
+      <Route path="/proximamente/:id" element={<Proximamente />} />
       <Route path="/proximamente/:id" element={<Proximamente />} />
     </Routes>
   );

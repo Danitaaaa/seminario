@@ -3,7 +3,7 @@ import { UsarCamara } from '../../hooks/usarCamara'
 import { ObtenerEmbedding } from '../../../lib/obtenerEmbeddings'
 import { Button } from '../../components/ui/button/button'
 import { Title } from '../../components/ui/title/title'
-import { CartelError } from '../../components/ui/commons/cartelesError'
+import { CartelError } from '../../components/comunes/cartelError'
  
 interface Props {
   usuarioId: number

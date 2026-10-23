@@ -62,6 +62,25 @@ import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/eliminarH
 import { Horarios } from './administracionDePersistencia/horarios';
 import { registerHorariosIpc } from './ipc/horarios.ipc';
 
+// Gestion de sesion de estudio
+import { CrearSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/CrearSesionEstudio';
+import { ListarSesionesEstudio } from './logicaPersistente/gestionDeSesionEstudio/ListarSesionesEstudio';
+import { ObtenerSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/ObtenerSesionEstudio';
+import { ModificarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/ModificarSesionEstudio';
+import { IniciarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/IniciarSesionEstudio';
+import { FinalizarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/FinalizarSesionEstudio';
+import { EliminarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/EliminarSesionEstudio';
+import { GestionarObjetivos } from './logicaPersistente/gestionDeSesionEstudio/GestionarObjetivos';
+import { ListarOpcionesSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/ListarOpcionesSesionEstudio';
+import { VerificarSesionesEstudioAtrasadas } from './logicaPersistente/gestionDeSesionEstudio/VerificarSesionesEstudioAtrasadas';
+import { RecuperarSesionInterrumpida } from './logicaPersistente/gestionDeSesionEstudio/RecuperarSesionInterrumpida';
+import { ObtenerSesionEnCurso } from './logicaPersistente/gestionDeSesionEstudio/ObtenerSesionEnCurso';
+import { RegistrarLatidoSesion } from './logicaPersistente/gestionDeSesionEstudio/RegistrarLatidoSesion';
+import { SesionesEstudio } from './administracionDePersistencia/SesionesEstudio';
+import { ProcesoSesionEstudio, CANAL_TICK_SESION } from './logicaNoPersistente/procesoSesionEstudio/ProcesoSesionEstudio';
+import { registerSesionesEstudioIpc } from './ipc/sesionesEstudio.ipc';
+import { DocumentoSesionEstudio } from './logicaNoPersistente/procesoSesionEstudio/documentoSesionEstudio';
+import { GuardarContenidoSesion } from './logicaPersistente/gestionDeSesionEstudio/guardarContenidoSesion';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -156,6 +175,24 @@ function wireDependencies(): void {
     new ModificarHorario(persistencia), new EliminarHorario(persistencia)
   );
   registerHorariosIpc(horarios);
+
+  // Gestion de sesion de estudio 
+   const documentoSesion = new DocumentoSesionEstudio(archivos, nodos, persistencia);
+    const sesionesEstudio = new SesionesEstudio(
+      new CrearSesionEstudio(persistencia, documentoSesion), new ListarSesionesEstudio(persistencia),
+      new ObtenerSesionEstudio(persistencia), new ModificarSesionEstudio(persistencia),
+      new IniciarSesionEstudio(persistencia), new FinalizarSesionEstudio(persistencia),
+      new EliminarSesionEstudio(persistencia), new GestionarObjetivos(persistencia),
+      new ListarOpcionesSesionEstudio(persistencia), new VerificarSesionesEstudioAtrasadas(persistencia),
+      new RecuperarSesionInterrumpida(persistencia), new ObtenerSesionEnCurso(persistencia),
+      new RegistrarLatidoSesion(persistencia), new GuardarContenidoSesion(persistencia, documentoSesion)
+    );
+    const proceso = new ProcesoSesionEstudio(sesionesEstudio, (canal, datos) =>
+      mainWindow?.webContents.send(canal, datos)
+    );
+    registerSesionesEstudioIpc(sesionesEstudio, proceso);
+    return proceso;
+
 }
 
 app.whenReady().then(async () => {
