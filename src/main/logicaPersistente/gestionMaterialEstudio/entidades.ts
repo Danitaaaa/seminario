@@ -19,6 +19,8 @@ export interface Archivo {
   ultimaFechaAcceso: Date;
   ultimaFechaModificacion: Date;
   idPadre: number;
+  // ID de la copia en Google Drive; null si el archivo nunca se subió.
+  driveId: string | null;
 }
 
 

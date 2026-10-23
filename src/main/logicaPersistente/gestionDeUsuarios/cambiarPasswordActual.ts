@@ -1,19 +1,18 @@
 import bcrypt from 'bcrypt';
 import { Persistencia } from '../../persistencia/persistencia';
+import { VerificarPassword } from './verificarPassword';
 import type { CambiarPasswordActualDto } from './dto';
 
+// Cambia la contraseña cuando el usuario conoce la actual.
+// La comprobación de la actual la hace VerificarPassword, así la regla vive en un solo lugar.
 export class CambiarPasswordActual {
-    constructor(private readonly persistencia: Persistencia) {}
+    constructor(
+        private readonly verificarPassword: VerificarPassword,
+        private readonly persistencia: Persistencia,
+    ) {}
 
     async ejecutar(datos: CambiarPasswordActualDto): Promise<void> {
-        const filas = await this.persistencia.ejecutar<{ password_hash: string }>(
-            `SELECT password_hash FROM usuarios WHERE id_usuario = $1`,
-            [datos.id]
-        );
-        if (filas.length === 0) throw new Error('El usuario no existe.');
-
-        const valida = await bcrypt.compare(datos.passwordActual, filas[0].password_hash);
-        if (!valida) throw new Error('La contraseña actual es incorrecta.');
+        await this.verificarPassword.ejecutar({ id: datos.id, password: datos.passwordActual });
 
         const hash = await bcrypt.hash(datos.passwordNueva, 10);
         await this.persistencia.ejecutar(

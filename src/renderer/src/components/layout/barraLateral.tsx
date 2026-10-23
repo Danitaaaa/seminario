@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { ItemNavegacion as Item } from "../../types/layout";
 import { ItemNavegacion } from './itemNavegacion';
-const logoSyntra = new URL("../../assets/logo-barra.png", import.meta.url).href;
+import { LogoSyntra } from './logoSyntra';
 
 interface BarraLateralProps {
   items: Item[];
@@ -15,7 +15,7 @@ interface BarraLateralProps {
 // Dibuja el menú que recibe
 export function BarraLateral({
   items, itemsInferiores, idActivo, colapsada, onNavegar,
-  logo = <img src={logoSyntra} alt="Syntra" className="app-lateral__logo-img" />,
+  logo = <LogoSyntra />,
 }: BarraLateralProps) {
   const renderGrupo = (lista: Item[], extra = "") => (
     <ul className={`app-lateral__grupo ${extra}`}>

@@ -34,6 +34,8 @@ declare global {
       guardarArchivo: (datos: { id: number; contenido: Uint8Array }) => Promise<Archivo>;
       guardarDocx: (datos: { id: number; html: string }) => Promise<Archivo>;
       abrirExterno: (datos: { id: number }) => Promise<void>;
+      abrirEnDrive: (datos: { id: number }) => Promise<void>;
+      traerVersionDrive: (datos: { id: number }) => Promise<void>;
       aplicacionesDisponibles: (datos: { id: number }) => Promise<AplicacionExterna[]>;
       abrirConAplicacion: (datos: { id: number; aplicacionId: string }) => Promise<void>;
       elegirAplicacion: (datos: { id: number }) => Promise<void>;

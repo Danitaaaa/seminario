@@ -121,6 +121,18 @@
 .abrir-con-modal__acciones {
   display: flex;
   justify-content: center;
+  gap: var(--espacio-sm);
+}
+
+.abrir-con-modal__confirmar {
+  padding: var(--espacio-sm) var(--espacio-lg);
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: var(--peso-bold);
+  cursor: pointer;
 }
 
 .abrir-con-modal__cerrar {
@@ -136,7 +148,8 @@
 .abrir-con__opcion:focus-visible,
 .abrir-con__app:focus-visible,
 .abrir-con__otra:focus-visible,
-.abrir-con-modal__cerrar:focus-visible {
+.abrir-con-modal__cerrar:focus-visible,
+.abrir-con-modal__confirmar:focus-visible {
   outline: 2px solid var(--color-secondary);
   outline-offset: 2px;
 }
@@ -160,4 +173,9 @@
 
 :root[data-modo="oscuro"] .abrir-con-modal__cerrar {
   background: transparent;
+}
+
+:root[data-modo="oscuro"] .abrir-con-modal__confirmar {
+  background: var(--color-primary);
+  color: var(--color-white);
 }

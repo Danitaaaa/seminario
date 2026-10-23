@@ -1,4 +1,3 @@
-import iconoFolder from '../assets/iconsFile1/folder.svg';
 import iconoCsv from '../assets/iconsFile1/file-csv.svg';
 import iconoGenerico from '../assets/iconsFile1/file-generic.svg';
 import iconoImagen from '../assets/iconsFile1/file-image.svg';
@@ -10,6 +9,7 @@ import iconoPptx from '../assets/iconsFile1/file-pptx.svg';
 import iconoVideo from '../assets/iconsFile1/file-video.svg';
 import iconoXlsx from '../assets/iconsFile1/file-xlsx.svg';
 import iconoDocumento from '../assets/iconsFile1/file-docx.svg';
+import { iconoCarpeta } from './colorearIconos';
 import { Nodo } from '../types/nodo';
 
 // Tabla extensión → { ícono, etiqueta de tipo }.
@@ -46,7 +46,8 @@ interface InfoNodo {
 // tipo: 'carpeta' o la extensión del archivo (pdf, docx, ...)
 export function resolverIconoNodo(nodo: Nodo): InfoNodo {
     if (nodo.tipo === 'carpeta') {
-        return { icono: iconoFolder, tipo: 'Carpeta' };
+        // La carpeta se dibuja con los colores de la paleta activa.
+        return { icono: iconoCarpeta(), tipo: 'Carpeta' };
     }
     const ext = (nodo.extension ?? '').replace(/^\./, '').toLowerCase();
     return ICONOS_POR_EXTENSION[ext] ?? { icono: iconoGenerico, tipo: 'Archivo' };

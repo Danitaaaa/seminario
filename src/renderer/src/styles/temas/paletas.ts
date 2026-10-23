@@ -25,7 +25,7 @@ export const PALETAS: Paleta[] = [
     { lateral: "#4A47A3", lateralTexto: "#FFFFFF", activo: "#2E2A6B", fondo: "#F6F5FB", superficie: "#FFFFFF", suave: "#ECEAF7", borde: "#DCD9EC", primario: "#4A47A3", primarioClaro: "#8C89D9", acento: "#E68AA8", texto: "#1D1A3A", textoSecundario: "#5E5A7D" },
     { lateral: "#100E24", lateralTexto: "#ECEAF7", activo: "#2A2650", fondo: "#14122B", superficie: "#1E1B3A", suave: "#2A2650", borde: "#3A3566", primario: "#6F6BC9", primarioClaro: "#B3B0EC", acento: "#F2A0BC", texto: "#ECEAF7", textoSecundario: "#A9A5C9" }),
 
-  paleta("bosque", "Bosque",
+  paleta("bosque", "Alba",
     { lateral: "#2F4A3A", lateralTexto: "#FFFFFF", activo: "#1F3328", fondo: "#F6F8F5", superficie: "#FFFFFF", suave: "#DCE8DF", borde: "#D9E2DB", primario: "#3E6B4F", primarioClaro: "#7FA88D", acento: "#C9A35A", texto: "#18241D", textoSecundario: "#55665B" },
     { lateral: "#0D1612", lateralTexto: "#DCE8DF", activo: "#24402F", fondo: "#0F1A15", superficie: "#16241D", suave: "#1D3027", borde: "#2B4436", primario: "#4F8A64", primarioClaro: "#8CC2A0", acento: "#D8B46A", texto: "#E3EDE6", textoSecundario: "#A9BCAF" }),
 

@@ -5,6 +5,7 @@ import { EliminarArchivo } from '../logicaPersistente/gestionMaterialEstudio/eli
 import { MoverArchivos } from '../logicaPersistente/gestionMaterialEstudio/moverArchivos';
 import { ObtenerArchivo } from '../logicaPersistente/gestionMaterialEstudio/obtenerArchivo';
 import { ActualizarContenidoArchivo } from '../logicaPersistente/gestionMaterialEstudio/actualizarContenidoArchivo';
+import { GuardarDriveId } from '../logicaPersistente/gestionMaterialEstudio/guardarDriveId';
 import { Archivo } from '../logicaPersistente/gestionMaterialEstudio/entidades';
 import {
   CrearArchivoDTO,
@@ -25,7 +26,8 @@ export class Archivos {
     private readonly eliminarArchivo: EliminarArchivo,
     private readonly moverArchivos: MoverArchivos,
     private readonly obtenerArchivo: ObtenerArchivo,
-    private readonly actualizarContenidoArchivo: ActualizarContenidoArchivo
+    private readonly actualizarContenidoArchivo: ActualizarContenidoArchivo,
+    private readonly guardarDriveId: GuardarDriveId
   ) {}
 
   async buscar(criterios: BuscadorArchivoDTO): Promise<Archivo[]> {
@@ -48,6 +50,9 @@ export class Archivos {
   }
   async eliminar(datos: EliminarArchivoDTO): Promise<void> {
     return this.eliminarArchivo.ejecutar(datos);
+  }
+  async guardarDrive(id: number, driveId: string | null): Promise<Archivo> {
+    return this.guardarDriveId.ejecutar({ id, driveId });
   }
 
   async abrirExterno(datos: { id: number }): Promise<void> {

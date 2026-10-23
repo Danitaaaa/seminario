@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { app, BrowserWindow, net, protocol } from 'electron';
+import { app, BrowserWindow, net, protocol, shell } from 'electron';
 import { isAbsolute, join, relative, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
@@ -25,8 +25,17 @@ import { MoverArchivos } from './logicaPersistente/gestionMaterialEstudio/moverA
 import { BuscarArchivos } from './logicaPersistente/gestionMaterialEstudio/buscarArchivos';
 import { ObtenerArchivo } from './logicaPersistente/gestionMaterialEstudio/obtenerArchivo';
 import { ActualizarContenidoArchivo } from './logicaPersistente/gestionMaterialEstudio/actualizarContenidoArchivo';
+import { GuardarDriveId } from './logicaPersistente/gestionMaterialEstudio/guardarDriveId';
 import { Almacenamiento } from './persistencia/almacenamiento';
 import path from 'path';
+
+// Google Drive
+import { AlmacenTokensDrive } from './logicaNoPersistente/drive/almacenTokensDrive';
+import { cifradorElectron } from './logicaNoPersistente/drive/cifradorElectron';
+import { OAuthDrive } from './logicaNoPersistente/drive/oauthDrive';
+import { DriveCliente } from './logicaNoPersistente/drive/driveCliente';
+import { DriveServicio } from './logicaNoPersistente/drive/driveServicio';
+import { registerDriveIpc } from './ipc/drive.ipc';
 
 // Gestion de usuarios
 import { IniciarSesion } from './logicaPersistente/gestionDeUsuarios/iniciarSesion';
@@ -106,9 +115,25 @@ function wireDependencies(): void {
   const moverArchivos = new MoverArchivos(persistencia);
   const obtenerArchivo = new ObtenerArchivo(persistencia);
   const actualizarContenidoArchivo = new ActualizarContenidoArchivo(persistencia, almacenamiento);
+  const guardarDriveId = new GuardarDriveId(persistencia);
   const archivos = new Archivos(crearArchivo, buscarArchivos, modificarArchivo, eliminarArchivo, moverArchivos,
-    obtenerArchivo, actualizarContenidoArchivo);
+    obtenerArchivo, actualizarContenidoArchivo, guardarDriveId);
   registerArchivosIpc(archivos, almacenamiento);
+
+  // Google Drive
+  const almacenTokens = new AlmacenTokensDrive(path.join(app.getPath('userData'), 'drive-token.bin'), cifradorElectron);
+  const oauth = new OAuthDrive(
+    { clientId: process.env.GOOGLE_CLIENT_ID ?? '', clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '' },
+    almacenTokens,
+    (url) => shell.openExternal(url),
+  );
+  const driveServicio = new DriveServicio(
+    new DriveCliente(() => oauth.obtenerAccessToken()),
+    archivos,
+    almacenamiento,
+    (url) => shell.openExternal(url),
+  );
+  registerDriveIpc(driveServicio);
 
   // Gestion de usuarios
   const iniciarSesion = new IniciarSesion(persistencia);
@@ -121,7 +146,7 @@ function wireDependencies(): void {
   const usuarios = new Usuarios(
     iniciarSesion, registrarUsuario, verificarMail, recuperarPassword, validarCodigo, cambiarPassword,
     new ObtenerPerfil(persistencia), new ModificarPerfil(persistencia),
-    new CambiarPasswordActual(persistencia), new EliminarUsuario(persistencia),
+    new CambiarPasswordActual(verificarPassword, persistencia), new EliminarUsuario(persistencia),
     new ObtenerFotoPerfil(persistencia),
     new ActualizarFotoPerfil(persistencia, path.join(app.getPath('userData'), 'fotosPerfil')),
     verificarPassword, new ActualizarRostro(verificarPassword)

@@ -25,5 +25,6 @@ export function materializarArchivo(fila: any): Archivo {
     ultimaFechaAcceso: fila.ultima_fecha_acceso,
     ultimaFechaModificacion: fila.ultima_fecha_modificacion,
     idPadre: fila.id_padre,
+    driveId: fila.drive_id ?? null,
   };
 }

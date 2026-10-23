@@ -15,6 +15,7 @@ import { ArchivosPage } from './archivosPage';
 import { VisorArchivo } from '../../components/visor/visorArchivo';
 import { ModalAbrirCon } from '../../components/visor/modalAbrirCon';
 import { tipoVisor } from '../../components/visor/formatos';
+import { leerVistaListado, guardarVistaListado } from '../../utils/vistaListadoGuardada';
 
 const usuarioLogueado = 'Usuario';
 
@@ -38,7 +39,8 @@ const eliminarUno = (n: Nodo) =>
 export function NodoPage() {
     const [nodos, setNodos] = useState<Nodo[]>([]);
 
-    const [vista, setVista] = useState<VistaListado>('lista');
+    const [vista, setVistaState] = useState<VistaListado>(leerVistaListado);
+    const setVista = (nueva: VistaListado) => {setVistaState(nueva); guardarVistaListado(nueva);};
     const [ordenActivo, setOrdenActivo] = useState<OrdenarPor>('nombre');
     const [direccion, setDireccion] = useState<Direccion>('ASC');
     const [busqueda, setBusqueda] = useState('');
