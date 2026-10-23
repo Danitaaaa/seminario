@@ -84,6 +84,9 @@ declare global {
       listarHorarios: (datos: ListarHorariosInput) => Promise<HorarioCursado[]>;
       modificarHorario: (datos: ModificarHorarioInput) => Promise<HorarioCursado>;
       eliminarHorario: (datos: { id: number }) => Promise<{ ok: boolean }>;
+
+      // Enlaces externos
+      abrirEnlace: (datos: { enlace: 'github-dana' }) => Promise<void>;
     };
   }
 }

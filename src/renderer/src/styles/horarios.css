@@ -325,6 +325,41 @@
   font-weight: var(--peso-regular);
 }
 
+/* Selector de días: se marcan varios al crear, uno solo al editar */
+.horarios__dias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-xs);
+}
+
+.horarios__dia-opcion {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-frost-blue);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: var(--peso-medium);
+  cursor: pointer;
+}
+
+.horarios__dia-opcion:hover {
+  background: var(--color-frost-claro);
+}
+
+.horarios__dia-opcion--activa,
+.horarios__dia-opcion--activa:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.horarios__dia-opcion:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
 .horarios__fila-campos {
   display: flex;
   gap: var(--espacio-md);

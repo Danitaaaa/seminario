@@ -5,6 +5,7 @@ import type { UsuarioActual } from "../../types/layout";
 import { itemsPrincipales, itemsInferiores, accionesSuperiores, rutaDe } from "../navegacion";
 import { BarraLateral } from "../../components/layout/barraLateral";
 import { BarraSuperior } from "../../components/layout/barraSuperior";
+import { PanelAyuda } from "../../components/layout/panelAyuda";
 import { cerrarSesion } from "../../../lib/sesion";
 
 interface PlantillaLayoutProps {
@@ -22,6 +23,7 @@ export function PlantillaLayout({
   titulo, idActivo, usuario, onNavegar, onBuscar, onAccion, children,
 }: PlantillaLayoutProps) {
   const [menuColapsado, setMenuColapsado] = useState(false);
+  const [mostrarAyuda, setMostrarAyuda] = useState(false);
   const navigate = useNavigate();
 
   // Si la pantalla no maneja la navegación, se va a la ruta del ítem.
@@ -29,6 +31,10 @@ export function PlantillaLayout({
     if (id === 'cerrar-sesion') cerrarSesion();
     navigate(rutaDe(id));
   });
+
+  // La ayuda es igual en todas las pantallas; el resto de las acciones las maneja cada pantalla.
+  const accionar = (id: string) => (id === 'ayuda' ? setMostrarAyuda(true) : onAccion?.(id));
+
   return (
     <div className="app-shell">
       <BarraLateral
@@ -44,13 +50,14 @@ export function PlantillaLayout({
           acciones={accionesSuperiores}
           onAlternarMenu={() => setMenuColapsado((v) => !v)}
           onBuscar={onBuscar}
-          onAccion={onAccion}
+          onAccion={accionar}
         />
         <main className="app-contenido">
           <h1 className="app-titulo">{titulo}</h1>
           <section className="app-panel">{children}</section>
         </main>
       </div>
+      {mostrarAyuda && <PanelAyuda onCerrar={() => setMostrarAyuda(false)} />}
     </div>
   );
 }

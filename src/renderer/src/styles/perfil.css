@@ -120,6 +120,23 @@
   color: var(--color-steel);
 }
 
+.perfil__olvide {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.perfil__olvide:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
 .perfil__peligro {
   display: flex;
   align-items: center;

@@ -66,7 +66,7 @@ import { ModificarHorario } from './logicaPersistente/gestionDeHorarios/modifica
 import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/eliminarHorario';
 import { Horarios } from './administracionDePersistencia/horarios';
 import { registerHorariosIpc } from './ipc/horarios.ipc';
-
+import { registerEnlacesIpc } from './ipc/enlaces.ipc';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -143,7 +143,7 @@ function wireDependencies(): void {
     new CrearHorario(persistencia), new ListarHorarios(persistencia),
     new ModificarHorario(persistencia), new EliminarHorario(persistencia)
   );
-  registerHorariosIpc(horarios);
+  registerHorariosIpc(horarios); registerEnlacesIpc();
 }
 
 function createWindow(): void {

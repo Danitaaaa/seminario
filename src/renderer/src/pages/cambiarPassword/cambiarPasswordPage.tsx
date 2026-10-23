@@ -21,10 +21,13 @@ export function CambiarPasswordPage() {
 
         try {
             await window.api.cambiarPassword({ email, nuevaPassword });
+            // Si se llegó desde el perfil, vuelve ahí; si no, al login.
+            const volverA = localStorage.getItem("volverA") ?? "/";
             localStorage.removeItem("emailPendiente");
+            localStorage.removeItem("volverA");
             alert("Contraseña cambiada exitosamente");
 
-            navigate("/");
+            navigate(volverA);
 
         } catch (error) {
             setError(error instanceof Error ? error.message : "No se pudo cambiar la contraseña.");

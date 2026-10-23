@@ -11,6 +11,7 @@ import '../../styles/horarios.css';
  
 const ALTO_HORA = 56; // px por hora en la grilla
 const DIAS_BASE = [1, 2, 3, 4, 5]; // lunes a viernes
+const DIAS_FORMULARIO = [1, 2, 3, 4, 5, 6, 0]; // lunes a domingo
 const TONOS = ['frost', 'salvia', 'ambar', 'rosa', 'acero'] as const;
  
 type Vista = 'semanal' | 'materia';
@@ -48,7 +49,7 @@ export function HorariosPage(): JSX.Element {
  
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [formDia, setFormDia] = useState(1);
+  const [formDias, setFormDias] = useState<number[]>([1]);
   const [formHoraInicio, setFormHoraInicio] = useState('08:00');
   const [formHoraFin, setFormHoraFin] = useState('09:00');
   const [formTitulo, setFormTitulo] = useState('');
@@ -70,7 +71,7 @@ export function HorariosPage(): JSX.Element {
  
   function abrirModalNuevo(dia = 1, horaInicio = '08:00'): void {
     setEditandoId(null);
-    setFormDia(dia);
+    setFormDias([dia]);
     setFormHoraInicio(horaInicio);
     setFormHoraFin(aHora(Math.min(aMinutos(horaInicio) + 60, 23 * 60 + 59)));
     setFormTitulo('');
@@ -80,7 +81,7 @@ export function HorariosPage(): JSX.Element {
  
   function abrirModalEditar(horario: HorarioCursado): void {
     setEditandoId(horario.id);
-    setFormDia(horario.diaSemana);
+    setFormDias([horario.diaSemana]);
     setFormHoraInicio(horario.horaInicio);
     setFormHoraFin(horario.horaFin);
     setFormTitulo(horario.titulo);
@@ -88,9 +89,24 @@ export function HorariosPage(): JSX.Element {
     setModalAbierto(true);
   }
  
+  // Al crear se pueden marcar varios días; al editar, cada bloque tiene un solo día.
+  function alternarDia(dia: number): void {
+    if (editandoId !== null) {
+      setFormDias([dia]);
+      return;
+    }
+    setFormDias((actuales) =>
+      actuales.includes(dia) ? actuales.filter((d) => d !== dia) : [...actuales, dia]
+    );
+  }
+
   async function guardarHorario(): Promise<void> {
     if (!formTitulo.trim()) {
       setErrorForm('El nombre de la materia es obligatorio.');
+      return;
+    }
+    if (formDias.length === 0) {
+      setErrorForm('Elegí al menos un día.');
       return;
     }
     if (formHoraFin <= formHoraInicio) {
@@ -103,21 +119,24 @@ export function HorariosPage(): JSX.Element {
       if (editandoId !== null) {
         const cambios: ModificarHorarioInput = {
           id: editandoId,
-          diaSemana: formDia,
+          diaSemana: formDias[0],
           horaInicio: formHoraInicio,
           horaFin: formHoraFin,
           titulo: formTitulo.trim(),
         };
         await window.api.modificarHorario(cambios);
       } else {
-        const nuevo: CrearHorarioInput = {
-          usuarioId: USUARIO_ID_ACTUAL,
-          diaSemana: formDia,
-          horaInicio: formHoraInicio,
-          horaFin: formHoraFin,
-          titulo: formTitulo.trim(),
-        };
-        await window.api.crearHorario(nuevo);
+        // Un bloque por cada día marcado, con la misma materia y el mismo horario.
+        for (const dia of formDias) {
+          const nuevo: CrearHorarioInput = {
+            usuarioId: USUARIO_ID_ACTUAL,
+            diaSemana: dia,
+            horaInicio: formHoraInicio,
+            horaFin: formHoraFin,
+            titulo: formTitulo.trim(),
+          };
+          await window.api.crearHorario(nuevo);
+        }
       }
       setModalAbierto(false);
       await cargarHorarios();
@@ -126,6 +145,8 @@ export function HorariosPage(): JSX.Element {
       setErrorForm(
         extraerMensajeError(err, 'No se pudo guardar el horario. Revisá la consola para más detalles.')
       );
+      // Si falló a mitad de camino, se muestran los días que sí se guardaron.
+      await cargarHorarios();
     }
   }
  
@@ -335,14 +356,31 @@ export function HorariosPage(): JSX.Element {
                 />
               </label>
  
-              <label className="horarios__campo">
-                Día
-                <select value={formDia} onChange={(e) => setFormDia(Number(e.target.value))}>
-                  {[1, 2, 3, 4, 5, 6, 0].map((d) => (
-                    <option key={d} value={d}>{NOMBRES_DIA_SEMANA[d]}</option>
-                  ))}
-                </select>
-              </label>
+              <div className="horarios__campo">
+                {editandoId !== null ? 'Día' : 'Días'}
+                <div
+                  className="horarios__dias"
+                  role={editandoId !== null ? 'radiogroup' : 'group'}
+                  aria-label={editandoId !== null ? 'Día' : 'Días'}
+                >
+                  {DIAS_FORMULARIO.map((d) => {
+                    const activo = formDias.includes(d);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        role={editandoId !== null ? 'radio' : 'checkbox'}
+                        aria-checked={activo}
+                        aria-label={NOMBRES_DIA_SEMANA[d]}
+                        className={`horarios__dia-opcion${activo ? ' horarios__dia-opcion--activa' : ''}`}
+                        onClick={() => alternarDia(d)}
+                      >
+                        {NOMBRES_DIA_SEMANA[d].slice(0, 2)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
  
               <div className="horarios__fila-campos">
                 <label className="horarios__campo">

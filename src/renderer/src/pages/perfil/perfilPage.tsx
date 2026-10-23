@@ -102,6 +102,20 @@ export function PerfilPage() {
     }
   }
 
+  // Reutiliza el flujo de recuperación del login: el email ya se conoce y al final vuelve al perfil.
+  async function olvideMiPassword(): Promise<void> {
+    if (!perfil) return;
+    setError("");
+    try {
+      await window.api.recuperarPassword({ email: perfil.email });
+      localStorage.setItem("emailPendiente", perfil.email);
+      localStorage.setItem("volverA", "/perfil");
+      navigate("/verificar-codigo");
+    } catch (e) {
+      setError(mensajeDe(e));
+    }
+  }
+
   async function eliminar(): Promise<void> {
     if (!usuarioId) return;
     try {
@@ -169,6 +183,9 @@ export function PerfilPage() {
               <span className="perfil__etiqueta">Contraseña actual</span>
               <Input type="password" placeholder="Contraseña actual" value={passwordActual}
                 onChange={(e) => setPasswordActual(e.target.value)} />
+              <button type="button" className="perfil__olvide" onClick={olvideMiPassword}>
+                ¿Olvidaste tu contraseña?
+              </button>
             </div>
             <div className="perfil__campo">
               <span className="perfil__etiqueta">Contraseña nueva</span>
