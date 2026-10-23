@@ -54,6 +54,9 @@ export function HorariosPage(): JSX.Element {
   const [formHoraFin, setFormHoraFin] = useState('09:00');
   const [formTitulo, setFormTitulo] = useState('');
   const [errorForm, setErrorForm] = useState<string | null>(null);
+  // Si se marcan varios días, cada uno puede tener su propio horario.
+  const [mismoHorario, setMismoHorario] = useState(true);
+  const [horasPorDia, setHorasPorDia] = useState<Record<number, { inicio: string; fin: string }>>({});
  
   useEffect(() => {
     cargarHorarios();
@@ -76,6 +79,8 @@ export function HorariosPage(): JSX.Element {
     setFormHoraFin(aHora(Math.min(aMinutos(horaInicio) + 60, 23 * 60 + 59)));
     setFormTitulo('');
     setErrorForm(null);
+    setMismoHorario(true);
+    setHorasPorDia({});
     setModalAbierto(true);
   }
  
@@ -86,6 +91,8 @@ export function HorariosPage(): JSX.Element {
     setFormHoraFin(horario.horaFin);
     setFormTitulo(horario.titulo);
     setErrorForm(null);
+    setMismoHorario(true);
+    setHorasPorDia({});
     setModalAbierto(true);
   }
  
@@ -100,6 +107,21 @@ export function HorariosPage(): JSX.Element {
     );
   }
 
+  const usaHorarioPorDia = editandoId === null && formDias.length > 1 && !mismoHorario;
+  const diasOrdenados = DIAS_FORMULARIO.filter((d) => formDias.includes(d));
+
+  const horaDe = (dia: number) =>
+    usaHorarioPorDia
+      ? horasPorDia[dia] ?? { inicio: formHoraInicio, fin: formHoraFin }
+      : { inicio: formHoraInicio, fin: formHoraFin };
+
+  function cambiarHoraDia(dia: number, campo: 'inicio' | 'fin', valor: string): void {
+    setHorasPorDia((actuales) => ({
+      ...actuales,
+      [dia]: { ...(actuales[dia] ?? { inicio: formHoraInicio, fin: formHoraFin }), [campo]: valor },
+    }));
+  }
+
   async function guardarHorario(): Promise<void> {
     if (!formTitulo.trim()) {
       setErrorForm('El nombre de la materia es obligatorio.');
@@ -109,8 +131,13 @@ export function HorariosPage(): JSX.Element {
       setErrorForm('Elegí al menos un día.');
       return;
     }
-    if (formHoraFin <= formHoraInicio) {
-      setErrorForm('La hora de fin debe ser posterior a la hora de inicio.');
+    const diaInvalido = diasOrdenados.find((d) => horaDe(d).fin <= horaDe(d).inicio);
+    if (diaInvalido !== undefined) {
+      setErrorForm(
+        usaHorarioPorDia
+          ? `El ${NOMBRES_DIA_SEMANA[diaInvalido].toLowerCase()}, la hora de fin debe ser posterior a la de inicio.`
+          : 'La hora de fin debe ser posterior a la hora de inicio.'
+      );
       return;
     }
  
@@ -127,12 +154,13 @@ export function HorariosPage(): JSX.Element {
         await window.api.modificarHorario(cambios);
       } else {
         // Un bloque por cada día marcado, con la misma materia y el mismo horario.
-        for (const dia of formDias) {
+        for (const dia of diasOrdenados) {
+          const { inicio, fin } = horaDe(dia);
           const nuevo: CrearHorarioInput = {
             usuarioId: USUARIO_ID_ACTUAL,
             diaSemana: dia,
-            horaInicio: formHoraInicio,
-            horaFin: formHoraFin,
+            horaInicio: inicio,
+            horaFin: fin,
             titulo: formTitulo.trim(),
           };
           await window.api.crearHorario(nuevo);
@@ -382,16 +410,50 @@ export function HorariosPage(): JSX.Element {
                 </div>
               </div>
  
-              <div className="horarios__fila-campos">
-                <label className="horarios__campo">
-                  Desde
-                  <input type="time" value={formHoraInicio} onChange={(e) => setFormHoraInicio(e.target.value)} />
+              {editandoId === null && formDias.length > 1 && (
+                <label className="horarios__check">
+                  <input
+                    type="checkbox"
+                    checked={mismoHorario}
+                    onChange={(e) => setMismoHorario(e.target.checked)}
+                  />
+                  Mismo horario todos los días
                 </label>
-                <label className="horarios__campo">
-                  Hasta
-                  <input type="time" value={formHoraFin} onChange={(e) => setFormHoraFin(e.target.value)} />
-                </label>
-              </div>
+              )}
+
+              {usaHorarioPorDia ? (
+                <div className="horarios__horas-dia">
+                  {diasOrdenados.map((d) => (
+                    <div key={d} className="horarios__fila-dia">
+                      <span className="horarios__fila-dia-nombre">{NOMBRES_DIA_SEMANA[d]}</span>
+                      <input
+                        type="time"
+                        aria-label={`Desde, ${NOMBRES_DIA_SEMANA[d]}`}
+                        value={horaDe(d).inicio}
+                        onChange={(e) => cambiarHoraDia(d, 'inicio', e.target.value)}
+                      />
+                      <span aria-hidden="true">a</span>
+                      <input
+                        type="time"
+                        aria-label={`Hasta, ${NOMBRES_DIA_SEMANA[d]}`}
+                        value={horaDe(d).fin}
+                        onChange={(e) => cambiarHoraDia(d, 'fin', e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="horarios__fila-campos">
+                  <label className="horarios__campo">
+                    Desde
+                    <input type="time" value={formHoraInicio} onChange={(e) => setFormHoraInicio(e.target.value)} />
+                  </label>
+                  <label className="horarios__campo">
+                    Hasta
+                    <input type="time" value={formHoraFin} onChange={(e) => setFormHoraFin(e.target.value)} />
+                  </label>
+                </div>
+              )}
  
               {errorForm && <div className="horarios__error">{errorForm}</div>}
  

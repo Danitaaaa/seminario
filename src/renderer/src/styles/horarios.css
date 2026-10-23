@@ -360,6 +360,48 @@
   outline-offset: 2px;
 }
 
+/* Horario distinto por día */
+.horarios__check {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.horarios__check input {
+  accent-color: var(--color-primary);
+}
+
+.horarios__horas-dia {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+}
+
+.horarios__fila-dia {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  font-size: var(--tamano-sm);
+}
+
+.horarios__fila-dia-nombre {
+  width: 80px;
+  font-weight: var(--peso-medium);
+}
+
+.horarios__fila-dia input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--espacio-xs) var(--espacio-sm);
+  border: 1px solid var(--color-frost-blue);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
 .horarios__fila-campos {
   display: flex;
   gap: var(--espacio-md);

@@ -103,17 +103,13 @@ export function PerfilPage() {
   }
 
   // Reutiliza el flujo de recuperación del login: el email ya se conoce y al final vuelve al perfil.
+  // Si falla, el error lo muestra quien la llamó (la página o el cartel del rostro).
   async function olvideMiPassword(): Promise<void> {
     if (!perfil) return;
-    setError("");
-    try {
-      await window.api.recuperarPassword({ email: perfil.email });
-      localStorage.setItem("emailPendiente", perfil.email);
-      localStorage.setItem("volverA", "/perfil");
-      navigate("/verificar-codigo");
-    } catch (e) {
-      setError(mensajeDe(e));
-    }
+    await window.api.recuperarPassword({ email: perfil.email });
+    localStorage.setItem("emailPendiente", perfil.email);
+    localStorage.setItem("volverA", "/perfil");
+    navigate("/verificar-codigo");
   }
 
   async function eliminar(): Promise<void> {
@@ -183,7 +179,14 @@ export function PerfilPage() {
               <span className="perfil__etiqueta">Contraseña actual</span>
               <Input type="password" placeholder="Contraseña actual" value={passwordActual}
                 onChange={(e) => setPasswordActual(e.target.value)} />
-              <button type="button" className="perfil__olvide" onClick={olvideMiPassword}>
+              <button
+                type="button"
+                className="perfil__olvide"
+                onClick={() => {
+                  setError("");
+                  olvideMiPassword().catch((e) => setError(mensajeDe(e)));
+                }}
+              >
                 ¿Olvidaste tu contraseña?
               </button>
             </div>
@@ -241,6 +244,7 @@ export function PerfilPage() {
           usuarioId={usuarioId}
           onCerrar={() => setMostrarRostro(false)}
           onListo={rostroActualizado}
+          onOlvide={olvideMiPassword}
         />
       )}
     </PlantillaLayout>

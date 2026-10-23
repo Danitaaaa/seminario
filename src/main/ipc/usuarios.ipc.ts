@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { Usuarios } from "../administracionDePersistencia/usuarios";
 import {
+    actualizarRostroSchema,
     cambiarPasswordActualSchema,
     cambiarPasswordSchema,
     eliminarUsuarioSchema,
@@ -13,6 +14,7 @@ import {
     registrarUsuarioSchema,
     validarCodigoSchema,
     verificarMailSchema,
+    verificarPasswordSchema,
 } from "../logicaPersistente/gestionDeUsuarios/dto";
 import type { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios/dto";
 import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/loginFacial";
@@ -78,6 +80,15 @@ export function registerUsuariosIpc(usuarios: Usuarios): void {
 
     ipcMain.handle("usuarios:eliminarUsuario", async (_event, datos: unknown) =>
         usuarios.eliminarUsuario(validarDatos(eliminarUsuarioSchema, datos))
+    );
+
+    // Acciones sensibles del perfil: el main vuelve a pedir la contraseña.
+    ipcMain.handle("usuarios:verificarPassword", async (_event, datos: unknown) =>
+        usuarios.verificarPassword(validarDatos(verificarPasswordSchema, datos))
+    );
+
+    ipcMain.handle("usuarios:actualizarRostro", async (_event, datos: unknown) =>
+        usuarios.actualizarRostro(validarDatos(actualizarRostroSchema, datos))
     );
 
     ipcMain.handle("usuarios:obtenerFotoPerfil", async (_event, datos: unknown) => {

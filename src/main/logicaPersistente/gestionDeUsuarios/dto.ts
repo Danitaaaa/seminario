@@ -134,3 +134,15 @@ export type ObtenerPerfilDto = z.infer<typeof obtenerPerfilSchema>;
 export type ModificarPerfilDto = z.infer<typeof modificarPerfilSchema>;
 export type CambiarPasswordActualDto = z.infer<typeof cambiarPasswordActualSchema>;
 export type EliminarUsuarioDto = z.infer<typeof eliminarUsuarioSchema>;
+
+export const verificarPasswordSchema = z.object({
+    id: idSchema,
+    password: z.string().min(1, "Ingresá tu contraseña."),
+});
+
+export const actualizarRostroSchema = verificarPasswordSchema.extend({
+    embedding: z.array(z.number().finite()).length(128, "El rostro capturado no es válido."),
+});
+
+export type VerificarPasswordDto = z.infer<typeof verificarPasswordSchema>;
+export type ActualizarRostroDto = z.infer<typeof actualizarRostroSchema>;

@@ -66,6 +66,8 @@ declare global {
       eliminarUsuario: (datos: { id: number }) => Promise<void>;
       obtenerFotoPerfil: (datos: { id: number }) => Promise<string | null>;
       elegirFotoPerfil: (datos: { id: number }) => Promise<string | null>;
+      verificarPassword: (datos: { id: number; password: string }) => Promise<void>;
+      actualizarRostro: (datos: { id: number; password: string; embedding: number[] }) => Promise<{ exito: boolean; mensaje: string }>;
 
       // Gestion de eventos
       crearEvento: (datos: CrearEventoInput) => Promise<Evento>;

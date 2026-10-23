@@ -132,6 +132,12 @@
   cursor: pointer;
 }
 
+.perfil__error {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-error);
+}
+
 .perfil__olvide:focus-visible {
   outline: 2px solid var(--color-secondary);
   outline-offset: 2px;

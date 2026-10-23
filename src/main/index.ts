@@ -67,6 +67,9 @@ import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/eliminarH
 import { Horarios } from './administracionDePersistencia/horarios';
 import { registerHorariosIpc } from './ipc/horarios.ipc';
 import { registerEnlacesIpc } from './ipc/enlaces.ipc';
+import { VerificarPassword } from './logicaPersistente/gestionDeUsuarios/verificarPassword';
+import { ActualizarRostro } from './logicaPersistente/gestionDeUsuarios/actualizarRostro';
+
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -114,12 +117,14 @@ function wireDependencies(): void {
   const recuperarPassword = new RecuperarPassword(persistencia);
   const validarCodigo = new ValidarCodigo(persistencia);
   const cambiarPassword = new CambiarPassword(persistencia);
+  const verificarPassword = new VerificarPassword(persistencia);
   const usuarios = new Usuarios(
     iniciarSesion, registrarUsuario, verificarMail, recuperarPassword, validarCodigo, cambiarPassword,
     new ObtenerPerfil(persistencia), new ModificarPerfil(persistencia),
     new CambiarPasswordActual(persistencia), new EliminarUsuario(persistencia),
     new ObtenerFotoPerfil(persistencia),
-    new ActualizarFotoPerfil(persistencia, path.join(app.getPath('userData'), 'fotosPerfil'))
+    new ActualizarFotoPerfil(persistencia, path.join(app.getPath('userData'), 'fotosPerfil')),
+    verificarPassword, new ActualizarRostro(verificarPassword)
   );
   registerUsuariosIpc(usuarios);
 
@@ -143,7 +148,10 @@ function wireDependencies(): void {
     new CrearHorario(persistencia), new ListarHorarios(persistencia),
     new ModificarHorario(persistencia), new EliminarHorario(persistencia)
   );
-  registerHorariosIpc(horarios); registerEnlacesIpc();
+  registerHorariosIpc(horarios);
+
+  // Enlaces externos
+  registerEnlacesIpc();
 }
 
 function createWindow(): void {
