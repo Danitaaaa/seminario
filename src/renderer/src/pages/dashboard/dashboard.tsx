@@ -23,7 +23,7 @@ const MODULOS: Modulo[] = [
   { titulo: 'Horarios', descripcion: 'Horarios de cursado.', ruta: '/horarios', icono: CalendarClock, tono: 'horarios' },
   { titulo: 'Métodos', descripcion: 'Creá tus métodos para tus sesiones de estudio.', ruta: '/proximamente/metodos', icono: Lightbulb, tono: 'metodos' },
   { titulo: 'Proyectos', descripcion: 'Visualizá tus proyectos creados.', ruta: '/proximamente/proyectos', icono: FolderKanban, tono: 'proyectos' },
-  { titulo: 'Cronograma', descripcion: 'Visualización del calendario y listado de actividad.', ruta: '/proximamente/cronograma', icono: CalendarDays, tono: 'cronograma' },
+  { titulo: 'Cronograma', descripcion: 'Visualización del calendario y listado de actividad.', ruta: '/cronograma', icono: CalendarDays, tono: 'cronograma' },
 ];
 
 export function Dashboard() {

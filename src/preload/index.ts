@@ -9,6 +9,7 @@ import { enlacesApi } from './apis/enlaces';
 import { driveApi } from './apis/drive';
 import { metasApi } from './apis/metas';
 import { inicioApi } from './apis/inicio';
+import { notificacionesApi } from './apis/notificaciones';
 
 contextBridge.exposeInMainWorld('api', {
   ...nodosApi,
@@ -21,4 +22,5 @@ contextBridge.exposeInMainWorld('api', {
   ...driveApi,
   ...metasApi,
   ...inicioApi,
+  ...notificacionesApi,
 });

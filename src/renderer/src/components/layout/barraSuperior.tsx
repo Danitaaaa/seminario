@@ -3,6 +3,7 @@ import type { AccionSuperior, UsuarioActual } from "../../types/layout";
 import { BotonIcono } from "../comunes/botonIcono";
 import { BuscadorGlobal } from "./buscadorGlobal";
 import { MenuUsuario } from "./menuUsuario";
+import { MenuNotificaciones } from "./menuNotificaciones";
 import { usarModo } from "../../hooks/usarModo";
 
 interface BarraSuperiorProps {
@@ -26,6 +27,7 @@ export function BarraSuperior({ usuario, acciones, onAlternarMenu, onBuscar, onA
         {acciones.map((a) => (
           <BotonIcono key={a.id} icono={a.icono} etiqueta={a.etiqueta} onClick={() => onAccion?.(a.id)} />
         ))}
+        <MenuNotificaciones />
         <BotonIcono
           icono={oscuro ? Sun : Moon}
           etiqueta={oscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}

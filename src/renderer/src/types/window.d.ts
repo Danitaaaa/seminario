@@ -5,6 +5,7 @@ import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCa
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
 import type { Perfil } from './perfil';
 import type { Meta, CrearMetaInput, CompletarMetaInput, EliminarMetaInput } from './metas';
+import type { Notificacion } from './notificaciones';
 
 declare global {
   interface Window {
@@ -99,6 +100,16 @@ declare global {
       // Pantalla de inicio
       obtenerFondoInicio: (datos: { id: number }) => Promise<string | null>;
       elegirFondoInicio: (datos: { id: number }) => Promise<string | null>;
+
+      // Notificaciones
+      listarNotificaciones: (datos: { usuarioId: number }) => Promise<Notificacion[]>;
+      marcarNotificacionesLeidas: (datos: { usuarioId: number; ids?: number[] }) => Promise<void>;
+      obtenerSilencioNotificaciones: (datos: { usuarioId: number }) => Promise<boolean>;
+      silenciarNotificaciones: (datos: { usuarioId: number; silenciadas: boolean }) => Promise<boolean>;
+      vigilarNotificaciones: (datos: { usuarioId: number }) => Promise<void>;
+      detenerNotificaciones: () => Promise<void>;
+      alLlegarNotificacion: (escuchar: () => void) => () => void;
+      alTocarNotificacion: (escuchar: () => void) => () => void;
 
       // Enlaces externos
       abrirEnlace: (datos: { enlace: 'github-dana' }) => Promise<void>;

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { app, BrowserWindow, net, protocol, shell } from 'electron';
+import { app, BrowserWindow, net, Notification, protocol, shell } from 'electron';
 import { isAbsolute, join, relative, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
@@ -92,8 +92,39 @@ import { ObtenerFondoInicio, ActualizarFondoInicio } from './logicaPersistente/g
 import { Inicio } from './administracionDePersistencia/inicio';
 import { registerInicioIpc } from './ipc/inicio.ipc';
 
+// Notificaciones
+import { CrearNotificacion } from './logicaPersistente/gestionDeNotificaciones/crearNotificacion';
+import { ListarNotificaciones } from './logicaPersistente/gestionDeNotificaciones/listarNotificaciones';
+import { MarcarLeidas } from './logicaPersistente/gestionDeNotificaciones/marcarLeidas';
+import { ObtenerSilencio, CambiarSilencio } from './logicaPersistente/gestionDeNotificaciones/silencio';
+import type { Notificacion } from './logicaPersistente/gestionDeNotificaciones/entidades';
+import { Notificaciones } from './administracionDePersistencia/notificaciones';
+import { Notificador } from './logicaNoPersistente/notificaciones/notificador';
+import { VigiaNotificaciones } from './logicaNoPersistente/notificaciones/vigiaNotificaciones';
+import { registerNotificacionesIpc } from './ipc/notificaciones.ipc';
+
 
 let mainWindow: BrowserWindow | null = null;
+
+// Se guardan mientras están en pantalla: si no, Windows puede perder el clic.
+const avisosVisibles = new Set<Notification>();
+
+// Muestra el aviso en las notificaciones de la compu. Al tocarlo se abre Syntra con la campanita.
+function mostrarEnSistema(notificacion: Notificacion): void {
+  if (!Notification.isSupported()) return;
+  const aviso = new Notification({ title: notificacion.titulo, body: notificacion.mensaje });
+  avisosVisibles.add(aviso);
+  aviso.on('close', () => avisosVisibles.delete(aviso));
+  aviso.on('click', () => {
+    avisosVisibles.delete(aviso);
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('notificaciones:abrir');
+  });
+  aviso.show();
+}
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -202,6 +233,23 @@ function wireDependencies(): void {
   );
   registerInicioIpc(inicio);
 
+  // Notificaciones
+  const notificaciones = new Notificaciones(
+    new CrearNotificacion(persistencia), new ListarNotificaciones(persistencia),
+    new MarcarLeidas(persistencia), new ObtenerSilencio(persistencia), new CambiarSilencio(persistencia)
+  );
+  const notificador = new Notificador(
+    notificaciones, mostrarEnSistema, () => mainWindow?.webContents.send('notificaciones:nuevas')
+  );
+  const vigia = new VigiaNotificaciones(
+    {
+      eventos: (usuarioId, desde) => eventos.listar({ usuarioId, desde }),
+      metas: (usuarioId) => metas.listar({ usuarioId }),
+    },
+    notificador
+  );
+  registerNotificacionesIpc(notificaciones, vigia);
+
   // Enlaces externos
   registerEnlacesIpc();
 }
@@ -230,6 +278,9 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
+  // Windows necesita este nombre para mostrar las notificaciones de la app.
+  if (process.platform === 'win32') app.setAppUserModelId(is.dev ? process.execPath : 'com.syntra.app');
+
   const carpetaModelos = resolve(__dirname, '../renderer/models');
   protocol.handle('modelos', (request) => {
     const url = new URL(request.url);

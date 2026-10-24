@@ -1,0 +1,207 @@
+/* Campanita de la barra superior. Mismo estilo de cartel que el panel de perfil. */
+
+.notificaciones__boton {
+  position: relative;
+}
+
+.notificaciones__contador {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--color-error);
+  color: var(--color-white);
+  font-size: 11px;
+  font-weight: var(--peso-bold);
+  line-height: 18px;
+  text-align: center;
+}
+
+.notificaciones__fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--color-background) 60%, transparent);
+}
+
+.notificaciones {
+  position: absolute;
+  top: 72px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  width: 380px;
+  max-height: calc(100vh - 96px);
+  box-sizing: border-box;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--color-frost-blue);
+  color: var(--color-text);
+  font-family: var(--fuente-body);
+  box-shadow: 0 8px 24px rgba(2, 18, 47, 0.2);
+  animation: notificaciones-entrar 0.15s ease-out;
+}
+
+@keyframes notificaciones-entrar {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.notificaciones__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-sm);
+}
+
+.notificaciones__titulo {
+  margin: 0;
+  font-family: var(--fuente-display);
+  font-size: var(--tamano-lg);
+}
+
+.notificaciones__silenciar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.notificaciones__silenciar--activo {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.notificaciones__nota,
+.notificaciones__vacio,
+.notificaciones__error {
+  margin: 0;
+  font-size: var(--tamano-sm);
+}
+
+.notificaciones__nota,
+.notificaciones__vacio {
+  color: var(--color-text-secondary);
+}
+
+.notificaciones__vacio {
+  padding: var(--espacio-md) 0;
+  text-align: center;
+}
+
+.notificaciones__error {
+  color: var(--color-error-texto);
+}
+
+.notificaciones__marcar {
+  align-self: flex-end;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.notificaciones__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.notificaciones__aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-sm);
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radio-md);
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notificaciones__aviso--nuevo {
+  background: var(--color-surface);
+}
+
+.notificaciones__aviso:hover {
+  filter: brightness(1.04);
+}
+
+.notificaciones__icono {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--color-text);
+}
+
+.notificaciones__icono--evento { background: color-mix(in srgb, var(--color-warning) 35%, var(--color-surface)); }
+.notificaciones__icono--meta { background: color-mix(in srgb, var(--color-success) 30%, var(--color-surface)); }
+.notificaciones__icono--sesion,
+.notificaciones__icono--proyecto { background: color-mix(in srgb, var(--color-primary) 22%, var(--color-surface)); }
+
+.notificaciones__texto {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.notificaciones__aviso-titulo {
+  font-weight: var(--peso-bold);
+  overflow-wrap: anywhere;
+}
+
+.notificaciones__aviso-mensaje {
+  font-size: var(--tamano-sm);
+  overflow-wrap: anywhere;
+}
+
+.notificaciones__aviso-hora {
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+}
+
+.notificaciones__punto {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+}
+
+.notificaciones__silenciar:focus-visible,
+.notificaciones__marcar:focus-visible,
+.notificaciones__aviso:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
