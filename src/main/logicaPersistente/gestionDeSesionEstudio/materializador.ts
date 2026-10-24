@@ -1,6 +1,7 @@
 import {
   Materia,
   ObjetivoSesion,
+  PestanaSesion,
   SesionEstudio,
   TipoMetodoEstudio,
 } from './entidades';
@@ -21,9 +22,18 @@ export function materializarSesionEstudio(fila: any): SesionEstudio {
     fechaUltimoAcceso: fila.fecha_ultimo_acceso,
     fechaInicio: fila.fecha_inicio,
     fechaFin: fila.fecha_fin,
+    pausada: fila.fecha_pausa !== null && fila.fecha_pausa !== undefined,
+    fechaPausa: fila.fecha_pausa ?? null,
+    segundosPausados: fila.segundos_pausados ?? 0,
     pomodoroMin: fila.pomodoro_min,
     descansoCortoMin: fila.descanso_corto_min,
     descansoLargoMin: fila.descanso_largo_min,
+    pomodoro: {
+      fase: fila.pomodoro_fase ?? 'pomodoro',
+      restanteSeg: fila.pomodoro_restante_seg ?? null,
+      corriendoDesde: fila.pomodoro_corriendo_desde ?? null,
+      completados: fila.pomodoros_completados ?? 0,
+    },
     recibirNotificacion: fila.recibir_notificacion,
     contenido: fila.contenido ?? '',
     idArchivo: fila.id_archivo ?? null,
@@ -39,6 +49,18 @@ export function materializarObjetivo(fila: any, idSesion: number): ObjetivoSesio
     descripcion: fila.descripcion,
     completado: fila.completado,
     orden: fila.orden,
+  };
+}
+
+// Convierte una fila de pestana_sesion en una PestanaSesion.
+export function materializarPestana(fila: any): PestanaSesion {
+  return {
+    idPestana: fila.id_pestana,
+    idSesion: fila.id_sesion_estudio,
+    titulo: fila.titulo,
+    contenido: fila.contenido ?? '',
+    orden: fila.orden,
+    fechaModificacion: fila.fecha_modificacion,
   };
 }
 

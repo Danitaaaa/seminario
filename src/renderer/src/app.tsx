@@ -16,6 +16,8 @@ import { HorariosPage } from "./pages/horarios/horariosPage";
 import { SesionesEstudioPage } from "./pages/sesionesEstudio/sesionesEstudioPage";
 import { CrearSesionEstudioPage } from "./pages/sesionesEstudio/crearSesionEstudioPage";
 import { SesionEstudioPage } from "./pages/sesionesEstudio/sesionEstudioPage";
+import { ProveedorAvisos } from "./hooks/usarAvisos";
+import { ProveedorSpotify } from "./hooks/usarSpotify";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -29,22 +31,25 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/registro" element={<RegistrarUsuarioPage />} />
-      <Route path="/verificar-mail" element={<VerificarMailPage />} />
-      <Route path="/recuperar-contraseña" element={<RecuperarPasswordPage />} />
-      <Route path="/verificar-codigo" element={<VerificarCodigoPage />} />
-      <Route path="/cambioPassword" element={<CambiarPasswordPage />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/material" element={<NodoPage />} />
-      <Route path="/eventos" element={<EventosPage />} />
-      <Route path="/horarios" element={<HorariosPage />} />
-      <Route path="/sesiones" element={<SesionesEstudioPage />} />
-      <Route path="/sesiones/nueva" element={<CrearSesionEstudioPage />} />
-      <Route path="/sesiones/:idSesion" element={<SesionEstudioPage />} />
-      <Route path="/proximamente/:id" element={<Proximamente />} />
-      <Route path="/proximamente/:id" element={<Proximamente />} />
-    </Routes>
+     <ProveedorAvisos>
+     <ProveedorSpotify>
+     <Routes>
+       <Route path="/" element={<LoginPage />} />
+       <Route path="/registro" element={<RegistrarUsuarioPage />} />
+       <Route path="/verificar-mail" element={<VerificarMailPage />} />
+       <Route path="/recuperar-contraseña" element={<RecuperarPasswordPage />} />
+       <Route path="/verificar-codigo" element={<VerificarCodigoPage />} />
+       <Route path="/cambioPassword" element={<CambiarPasswordPage />} />
+       <Route path="/dashboard" element={<Dashboard />} />
+       <Route path="/material" element={<NodoPage />} />
+       <Route path="/eventos" element={<EventosPage />} />
+       <Route path="/horarios" element={<HorariosPage />} />
+       <Route path="/sesiones" element={<SesionesEstudioPage />} />
+       <Route path="/sesiones/nueva" element={<CrearSesionEstudioPage />} />
+       <Route path="/sesiones/:idSesion" element={<SesionEstudioPage />} />
+       <Route path="/proximamente/:id" element={<Proximamente />} />
+     </Routes>
+     </ProveedorSpotify>
+     </ProveedorAvisos>
   );
 }

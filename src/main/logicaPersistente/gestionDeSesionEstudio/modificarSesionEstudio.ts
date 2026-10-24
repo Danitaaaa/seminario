@@ -4,7 +4,7 @@ import { ModificarSesionEstudioDTO } from './dto';
 import { SELECT_SESION_ESTUDIO } from './consultas';
 import { materializarSesionEstudio } from './materializador';
 
-// Modifica nombre, duración, fecha programada o notificación de una sesión (CU12, modificar()).
+// Modifica nombre, duración, fecha programada, notificación o minutos del Pomodoro de una sesión (CU12, modificar()).
 // Si la sesión estaba "atrasada" y la nueva fecha aún no venció, vuelve a "sin_empezar".
 export class ModificarSesionEstudio {
   constructor(private readonly persistencia: Persistencia) {}
@@ -16,6 +16,9 @@ export class ModificarSesionEstudio {
               duracion = COALESCE($4::int, duracion),
               fecha_programada = COALESCE($5::timestamptz, fecha_programada),
               recibir_notificacion = COALESCE($6::boolean, recibir_notificacion),
+              pomodoro_min = COALESCE($7::int, pomodoro_min),
+              descanso_corto_min = COALESCE($8::int, descanso_corto_min),
+              descanso_largo_min = COALESCE($9::int, descanso_largo_min),
               estado = CASE
                 WHEN estado = 'atrasada'
                  AND COALESCE($5::timestamptz, fecha_programada)
@@ -32,6 +35,9 @@ export class ModificarSesionEstudio {
         datos.duracion ?? null,
         datos.fechaProgramada ?? null,
         datos.recibirNotificacion ?? null,
+        datos.pomodoroMin ?? null,
+        datos.descansoCortoMin ?? null,
+        datos.descansoLargoMin ?? null,
       ]
     );
     if (modificadas.length === 0) {

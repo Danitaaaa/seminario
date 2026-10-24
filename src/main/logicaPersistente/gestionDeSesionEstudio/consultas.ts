@@ -1,5 +1,6 @@
 // Consulta base que arma la sesión completa (materia, métodos y objetivos) en una sola pasada.
 // Quien la use agrega su propio WHERE y ORDER BY al final.
+// El contenido de las pestañas no viaja acá (puede ser pesado): se pide aparte con GestionarPestanas.
 export const SELECT_SESION_ESTUDIO = `
   SELECT s.*,
          m.nombre AS materia_nombre,
@@ -27,4 +28,23 @@ export const SELECT_SESION_ESTUDIO = `
          ), '[]'::json) AS objetivos
     FROM sesion_estudio s
     JOIN materia m ON m.id_materia = s.id_materia
+`;
+
+// Duración en segundos de la fase actual del Pomodoro, según la configuración de la sesión.
+export const SEGUNDOS_FASE_POMODORO = `
+  (CASE pomodoro_fase
+     WHEN 'pomodoro' THEN pomodoro_min
+     WHEN 'descanso_corto' THEN descanso_corto_min
+     ELSE descanso_largo_min
+   END * 60)
+`;
+
+// Segundos que le quedan al Pomodoro en este instante (si está corriendo, descuenta lo transcurrido).
+export const SEGUNDOS_RESTANTES_POMODORO = `
+  GREATEST(0,
+    COALESCE(pomodoro_restante_seg, ${SEGUNDOS_FASE_POMODORO})
+    - CASE WHEN pomodoro_corriendo_desde IS NULL THEN 0
+           ELSE floor(extract(epoch FROM now() - pomodoro_corriendo_desde))::int
+      END
+  )::int
 `;

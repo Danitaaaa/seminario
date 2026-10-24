@@ -17,6 +17,12 @@ background: var(--color-background);
 color: #1E1E1E;
 }
 
+/* Botones y campos no heredan la letra por defecto: sin esto usan la del sistema (Arial)
+   y se ven distintos al resto de la app. Así toman la misma tipografía que el texto. */
+button, input, select, textarea {
+font-family: inherit;
+}
+
 .auth-layout {
   display: grid;
   grid-template-columns: minmax(280px, 380px) minmax(280px, 1fr);

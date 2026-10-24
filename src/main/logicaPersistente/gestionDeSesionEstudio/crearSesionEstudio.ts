@@ -5,8 +5,8 @@ import { SELECT_SESION_ESTUDIO } from './consultas';
 import { materializarSesionEstudio } from './materializador';
 import { DocumentoSesionEstudio } from '../../logicaNoPersistente/procesoSesionEstudio/documentoSesionEstudio';
 
-// Crea una sesión de estudio (CU11) junto con sus métodos y objetivos en una sola sentencia atómica.
-// La sesión nace "sin_empezar" y se le genera su documento Word en Material.
+// Crea una sesión de estudio (CU11) junto con sus métodos, objetivos y su primera pestaña
+// en una sola sentencia atómica. La sesión nace "sin_empezar" y se le genera su documento Word en Material.
 export class CrearSesionEstudio {
   constructor(
     private readonly persistencia: Persistencia,
@@ -31,6 +31,9 @@ export class CrearSesionEstudio {
          INSERT INTO objetivo_sesion (id_sesion_estudio, descripcion, orden)
          SELECT nueva.id_sesion_estudio, o.descripcion, (o.orden - 1)::int
            FROM nueva, unnest($11::text[]) WITH ORDINALITY AS o(descripcion, orden)
+       ), pestana AS (
+         INSERT INTO pestana_sesion (id_sesion_estudio, titulo, orden)
+         SELECT nueva.id_sesion_estudio, 'Pestaña 1', 0 FROM nueva
        )
        SELECT id_sesion_estudio FROM nueva`,
       [

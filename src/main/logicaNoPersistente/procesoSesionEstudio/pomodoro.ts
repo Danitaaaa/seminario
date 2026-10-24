@@ -8,70 +8,49 @@ export interface ConfiguracionPomodoro {
   descansoLargoMin: number;
 }
 
-// Estado del Pomodoro en un instante dado.
+// Estado del Pomodoro tal como está guardado en la sesión.
+export interface PomodoroGuardado {
+  fase: FasePomodoro;
+  restanteSeg: number | null;
+  corriendoDesde: Date | string | null;
+  completados: number;
+}
+
+// Estado del Pomodoro en un instante dado (lo que se muestra en pantalla).
 export interface EstadoPomodoro {
   fase: FasePomodoro;
   segundosFase: number;
   segundosRestantes: number;
-  // Número de pomodoro dentro del ciclo de 4 (1 a 4).
-  numeroPomodoro: number;
+  corriendo: boolean;
   pomodorosCompletados: number;
 }
 
-// Cantidad de pomodoros antes del descanso largo.
-const POMODOROS_POR_CICLO = 4;
+// Duración en segundos de una fase según la configuración.
+export function segundosDeFase(config: ConfiguracionPomodoro, fase: FasePomodoro): number {
+  if (fase === 'pomodoro') return config.pomodoroMin * 60;
+  if (fase === 'descanso_corto') return config.descansoCortoMin * 60;
+  return config.descansoLargoMin * 60;
+}
 
-// Calcula en qué fase del Pomodoro se está a partir de los segundos transcurridos desde el inicio de la sesión.
-// El ciclo es: pomodoro, descanso corto (x3) y, tras el cuarto pomodoro, descanso largo.
-// Al depender solo del tiempo transcurrido, no hay contadores en memoria: sobrevive a recargas y reinicios.
+// Calcula los segundos restantes a partir de lo guardado: si está corriendo descuenta el tiempo
+// transcurrido desde el START. Al depender solo de datos persistidos, sobrevive a recargas y reinicios.
 export function calcularEstadoPomodoro(
   config: ConfiguracionPomodoro,
-  segundosTranscurridos: number
+  guardado: PomodoroGuardado,
+  ahoraMs: number = Date.now()
 ): EstadoPomodoro {
-  const segundosPomodoro = config.pomodoroMin * 60;
-  const segundosCorto = config.descansoCortoMin * 60;
-  const segundosLargo = config.descansoLargoMin * 60;
+  const segundosFase = segundosDeFase(config, guardado.fase);
+  const base = guardado.restanteSeg ?? segundosFase;
+  const corriendo = guardado.corriendoDesde !== null;
+  const transcurridos = corriendo
+    ? Math.max(0, Math.floor((ahoraMs - new Date(guardado.corriendoDesde as string).getTime()) / 1000))
+    : 0;
 
-  const segundosCiclo =
-    POMODOROS_POR_CICLO * segundosPomodoro +
-    (POMODOROS_POR_CICLO - 1) * segundosCorto +
-    segundosLargo;
-
-  const ciclosCompletos = Math.floor(segundosTranscurridos / segundosCiclo);
-  let resto = segundosTranscurridos - ciclosCompletos * segundosCiclo;
-
-  for (let numero = 1; numero <= POMODOROS_POR_CICLO; numero++) {
-    if (resto < segundosPomodoro) {
-      return {
-        fase: 'pomodoro',
-        segundosFase: segundosPomodoro,
-        segundosRestantes: Math.ceil(segundosPomodoro - resto),
-        numeroPomodoro: numero,
-        pomodorosCompletados: ciclosCompletos * POMODOROS_POR_CICLO + (numero - 1),
-      };
-    }
-    resto -= segundosPomodoro;
-
-    const esUltimo = numero === POMODOROS_POR_CICLO;
-    const segundosDescanso = esUltimo ? segundosLargo : segundosCorto;
-    if (resto < segundosDescanso) {
-      return {
-        fase: esUltimo ? 'descanso_largo' : 'descanso_corto',
-        segundosFase: segundosDescanso,
-        segundosRestantes: Math.ceil(segundosDescanso - resto),
-        numeroPomodoro: numero,
-        pomodorosCompletados: ciclosCompletos * POMODOROS_POR_CICLO + numero,
-      };
-    }
-    resto -= segundosDescanso;
-  }
-
-  // No debería alcanzarse: el resto siempre cae dentro de alguna fase del ciclo.
   return {
-    fase: 'pomodoro',
-    segundosFase: segundosPomodoro,
-    segundosRestantes: segundosPomodoro,
-    numeroPomodoro: 1,
-    pomodorosCompletados: ciclosCompletos * POMODOROS_POR_CICLO,
+    fase: guardado.fase,
+    segundosFase,
+    segundosRestantes: Math.max(0, base - transcurridos),
+    corriendo,
+    pomodorosCompletados: guardado.completados,
   };
 }

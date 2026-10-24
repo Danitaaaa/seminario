@@ -1,0 +1,314 @@
+/* Tarjeta de Spotify (components/spotify/reproductorSpotify.tsx). Solo usa variables de issue.ts. */
+
+.spotify {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px 12px;
+  border-radius: var(--radio-md);
+  background: var(--color-noche);
+  color: var(--color-white);
+}
+
+.spotify--mensaje {
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px;
+}
+
+.spotify__titulo-mensaje {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-bold);
+}
+
+.spotify__texto-suave {
+  margin: 0;
+  color: var(--color-frost-blue);
+  font-size: var(--tamano-xs);
+  line-height: 1.45;
+}
+
+.spotify__conectar {
+  margin-top: 6px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-noche);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  font-weight: var(--peso-bold);
+  cursor: pointer;
+}
+
+.spotify__conectar:hover:not(:disabled) {
+  background: var(--color-frost-claro);
+}
+
+.spotify__conectar:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* Fila superior: punto de estado a la izquierda, opciones a la derecha */
+.spotify__superior {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.spotify__punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-frost-blue);
+  opacity: 0.8;
+}
+
+.spotify__punto--activo {
+  background: var(--color-secondary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-secondary) 30%, transparent);
+  opacity: 1;
+}
+
+.spotify__menu-contenedor {
+  position: relative;
+}
+
+.spotify__opciones {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-frost-blue) 2.5px, transparent 3px);
+  cursor: pointer;
+}
+
+.spotify__opciones:hover {
+  background-color: var(--color-noche-claro);
+}
+
+.spotify__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 5;
+  min-width: 200px;
+  padding: 4px;
+  border-radius: var(--radio-sm);
+  background: var(--color-white);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.spotify__menu-titulo {
+  display: block;
+  padding: 6px 10px 4px;
+  color: var(--color-steel);
+  font-size: 0.7rem;
+}
+
+.spotify__menu-opcion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-storm);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.spotify__menu-opcion:hover {
+  background: var(--color-crema);
+}
+
+.spotify__menu-opcion--peligro {
+  color: var(--color-error);
+}
+
+.spotify__menu-marca {
+  display: inline-flex;
+  width: 14px;
+  color: var(--color-primary);
+}
+
+.spotify__menu-separador {
+  display: block;
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--color-border);
+}
+
+/* Punto de estado + dónde suena la música */
+.spotify__modo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-frost-blue);
+  font-size: 0.7rem;
+}
+
+/* Carátula + título */
+.spotify__info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.spotify__caratula {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radio-sm);
+  object-fit: cover;
+}
+
+.spotify__caratula--vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-noche-claro);
+  color: var(--color-frost-blue);
+}
+
+.spotify__textos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.spotify__titulo,
+.spotify__subtitulo,
+.spotify__pista {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotify__titulo {
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-bold);
+}
+
+.spotify__subtitulo {
+  color: var(--color-frost-blue);
+  font-size: var(--tamano-xs);
+}
+
+.spotify__guardado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-frost-claro);
+  font-size: var(--tamano-xs);
+}
+
+.spotify__guardado svg {
+  color: var(--color-frost-blue);
+}
+
+/* Controles */
+.spotify__controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.spotify__control {
+  display: inline-flex;
+  padding: 6px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-frost-blue);
+  cursor: pointer;
+}
+
+.spotify__control:hover {
+  color: var(--color-white);
+}
+
+.spotify__play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-noche);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.spotify__play:hover {
+  transform: scale(1.06);
+}
+
+.spotify__play:focus-visible,
+.spotify__control:focus-visible,
+.spotify__conectar:focus-visible {
+  outline: 2px solid var(--color-frost-blue);
+  outline-offset: 2px;
+}
+
+/* Línea divisoria que también muestra el avance de la canción */
+.spotify__progreso {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-noche-claro);
+  overflow: hidden;
+}
+
+.spotify__progreso-relleno {
+  height: 100%;
+  background: var(--color-frost-blue);
+  transition: width 1s linear;
+}
+
+.spotify__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--color-frost-blue);
+  font-size: var(--tamano-xs);
+}
+
+.spotify__duracion {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.spotify__escuchar-aca {
+  padding: 6px 10px;
+  border: 1px solid var(--color-noche-claro);
+  border-radius: var(--radio-sm);
+  background: transparent;
+  color: var(--color-frost-claro);
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.spotify__escuchar-aca:hover {
+  background: var(--color-noche-claro);
+  color: var(--color-white);
+}
+
+.spotify__aviso {
+  margin: 0;
+  color: var(--color-frost-blue);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}

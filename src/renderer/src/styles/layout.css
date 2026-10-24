@@ -233,7 +233,8 @@
   color: var(--color-white);
 }
 
-.app-boton--primario:hover {
+.app-boton--primario:hover:not(:disabled) {
+  border-color: var(--color-primary-dark);
   background: var(--color-primary-dark);
 }
 
@@ -242,8 +243,13 @@
   color: var(--color-primary);
 }
 
-.app-boton--contorno:hover {
-  background: color-mix(in srgb, var(--color-secondary) 20%, var(--color-white));
+.app-boton--contorno:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-frost-claro) 45%, var(--color-white));
+}
+
+.app-boton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* ---------- Accesibilidad ---------- */

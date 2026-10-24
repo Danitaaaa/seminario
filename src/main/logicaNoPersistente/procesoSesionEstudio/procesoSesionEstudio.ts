@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { SesionesEstudio } from '../../administracionDePersistencia/sesionesEstudio';
 import { SesionEstudio } from '../../logicaPersistente/gestionDeSesionEstudio/entidades';
-import { calcularEstadoPomodoro, EstadoPomodoro, FasePomodoro } from './pomodoro';
+import { calcularEstadoPomodoro, EstadoPomodoro } from './pomodoro';
 
 // Canal por el que el main avisa al renderer cada segundo.
 export const CANAL_TICK_SESION = 'sesionEstudio:tick';
@@ -12,13 +12,15 @@ export type EmitirAlRenderer = (canal: string, datos: unknown) => void;
 // Foto del estado de la sesión en curso que recibe el renderer.
 export interface SnapshotSesionEnCurso {
   idSesion: number;
+  pausada: boolean;
+  // Tiempo estudiado: desde el inicio, sin contar las pausas.
   segundosTranscurridos: number;
   segundosPlanificados: number;
   tiempoPlanificadoCumplido: boolean;
   pomodoro: EstadoPomodoro;
 }
 
-// Si la app estuvo cerrada más que esto con una sesión en curso, se la da por interrumpida.
+// Si la app estuvo cerrada más que esto con una sesión corriendo, se la deja pausada.
 const SEGUNDOS_MAXIMO_SIN_ACCESO = 5 * 60;
 const INTERVALO_TICK_MS = 1000;
 const INTERVALO_LATIDO_MS = 30 * 1000;
@@ -26,11 +28,11 @@ const INTERVALO_ATRASADAS_MS = 60 * 1000;
 
 // Proceso que corre en el main mientras la app está abierta: es la fuente de verdad del tiempo.
 // El renderer solo muestra lo que recibe, así recargar la pantalla no reinicia nada.
-// Emite los eventos internos 'inicio', 'fin' y 'faseCambio' para que otros módulos (Spotify) se enganchen.
+// Emite los eventos internos 'inicio', 'fin', 'faseCambio' y 'tiempoCumplido' para que otros módulos se enganchen.
 export class ProcesoSesionEstudio extends EventEmitter {
   private sesionSeguida: SesionEstudio | null = null;
-  private faseAnterior: FasePomodoro | null = null;
   private avisoTiempoCumplidoEnviado = false;
+  private completandoFase = false;
   private temporizadores: NodeJS.Timeout[] = [];
 
   constructor(
@@ -48,7 +50,7 @@ export class ProcesoSesionEstudio extends EventEmitter {
     await this.ejecutarSeguro(() => this.sesiones.verificarSesionesEstudioAtrasadas());
 
     this.temporizadores.push(
-      setInterval(() => this.tick(), INTERVALO_TICK_MS),
+      setInterval(() => void this.tick(), INTERVALO_TICK_MS),
       setInterval(() => void this.latido(), INTERVALO_LATIDO_MS),
       setInterval(
         () => void this.ejecutarSeguro(() => this.sesiones.verificarSesionesEstudioAtrasadas()),
@@ -57,23 +59,25 @@ export class ProcesoSesionEstudio extends EventEmitter {
     );
   }
 
-  // Empieza a seguir una sesión en curso (al iniciarla o al reabrir la app con una en curso).
+  // Empieza a seguir una sesión en curso, o refresca sus datos tras un cambio (pausa, Pomodoro, etc.).
   seguir(sesion: SesionEstudio): void {
+    if (sesion.estado !== 'en_curso') {
+      if (this.sesionSeguida?.idSesion === sesion.idSesion) this.dejarDeSeguir();
+      return;
+    }
     const esNueva = this.sesionSeguida?.idSesion !== sesion.idSesion;
     this.sesionSeguida = sesion;
     if (esNueva) {
-      this.faseAnterior = null;
       this.avisoTiempoCumplidoEnviado = false;
       this.emit('inicio', sesion);
     }
-    this.tick();
+    void this.tick();
   }
 
   // Deja de seguir la sesión (al finalizarla).
   dejarDeSeguir(): void {
     const sesion = this.sesionSeguida;
     this.sesionSeguida = null;
-    this.faseAnterior = null;
     if (sesion) this.emit('fin', sesion);
   }
 
@@ -88,14 +92,17 @@ export class ProcesoSesionEstudio extends EventEmitter {
     const sesion = this.sesionSeguida;
     if (!sesion || !sesion.fechaInicio) return null;
 
+    const ahora = Date.now();
+    const hasta = sesion.fechaPausa ? new Date(sesion.fechaPausa).getTime() : ahora;
     const segundosTranscurridos = Math.max(
       0,
-      Math.floor((Date.now() - new Date(sesion.fechaInicio).getTime()) / 1000)
+      Math.floor((hasta - new Date(sesion.fechaInicio).getTime()) / 1000) - sesion.segundosPausados
     );
     const segundosPlanificados = sesion.duracion * 60;
 
     return {
       idSesion: sesion.idSesion,
+      pausada: sesion.pausada,
       segundosTranscurridos,
       segundosPlanificados,
       tiempoPlanificadoCumplido: segundosTranscurridos >= segundosPlanificados,
@@ -105,27 +112,44 @@ export class ProcesoSesionEstudio extends EventEmitter {
           descansoCortoMin: sesion.descansoCortoMin,
           descansoLargoMin: sesion.descansoLargoMin,
         },
-        segundosTranscurridos
+        sesion.pomodoro,
+        ahora
       ),
     };
   }
 
-  // Cada segundo calcula el snapshot, lo envía al renderer y avisa los cambios de fase.
-  private tick(): void {
+  // Cada segundo calcula el snapshot y lo envía al renderer. Si el Pomodoro llegó a cero,
+  // pasa a la siguiente fase (en la base) y avisa con 'faseCambio'.
+  private async tick(): Promise<void> {
     const snapshot = this.obtenerSnapshot();
     if (!snapshot) return;
 
     this.emitir(CANAL_TICK_SESION, snapshot);
 
-    if (snapshot.pomodoro.fase !== this.faseAnterior) {
-      const huboFaseAnterior = this.faseAnterior !== null;
-      this.faseAnterior = snapshot.pomodoro.fase;
-      if (huboFaseAnterior) this.emit('faseCambio', snapshot.pomodoro.fase, snapshot);
+    if (snapshot.pomodoro.corriendo && snapshot.pomodoro.segundosRestantes === 0 && !this.completandoFase) {
+      await this.completarFase(snapshot.idSesion, snapshot.pomodoro.fase);
     }
 
     if (snapshot.tiempoPlanificadoCumplido && !this.avisoTiempoCumplidoEnviado) {
       this.avisoTiempoCumplidoEnviado = true;
       this.emit('tiempoCumplido', snapshot);
+    }
+  }
+
+  private async completarFase(idSesion: number, faseTerminada: string): Promise<void> {
+    this.completandoFase = true;
+    try {
+      const actualizada = await this.sesiones.completarFasePomodoro(idSesion);
+      if (actualizada && this.sesionSeguida?.idSesion === idSesion) {
+        this.sesionSeguida = actualizada;
+        this.emit('faseCambio', faseTerminada, actualizada.pomodoro.fase);
+        const snapshot = this.obtenerSnapshot();
+        if (snapshot) this.emitir(CANAL_TICK_SESION, snapshot);
+      }
+    } catch (error) {
+      console.error('[ProcesoSesionEstudio]', error);
+    } finally {
+      this.completandoFase = false;
     }
   }
 

@@ -1,29 +1,38 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, BookOpen, FileText, ListTree, PanelRightClose } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
-import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
-import { EstadoBadge } from '../../components/sesionEstudio/estadoBadge';
 import { EditorSesion } from '../../components/sesionEstudio/editorSesion';
 import { ListaObjetivos } from '../../components/sesionEstudio/listaObjetivos';
-import { PanelPomodoro } from '../../components/sesionEstudio/panelPomodoro';
-import { formatearFecha } from '../../utils/formatearFecha';
+import { PanelPomodoro, type ConfiguracionPomodoro } from '../../components/sesionEstudio/panelPomodoro';
+import { TarjetaLateral } from '../../components/sesionEstudio/tarjetaLateral';
+import { TarjetaProximaSesion } from '../../components/sesionEstudio/tarjetaProximaSesion';
+import { ModalConfirmar } from '../../components/sesionEstudio/modalConfirmar';
+import { ReproductorSpotify } from '../../components/spotify/reproductorSpotify';
+import { usarAvisos } from '../../hooks/usarAvisos';
+import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { obtenerUsuarioId } from '../../../lib/sesion';
-import type { SesionEstudio } from '../../types/sesionesEstudio';
-import { extraerMensajeError, formatearTiempo } from './utilidades';
+import type { FasePomodoro, SesionEstudio } from '../../types/sesionesEstudio';
+import { ETIQUETA_FASE, extraerMensajeError, formatearTiempo, segundosEstudiados } from './utilidades';
 import { useSesionEnCurso } from './useSesionEnCurso';
 import '../../styles/sesionesEstudio.css';
 
-// Pantalla de una sesión: cabecera con Iniciar/Finalizar, editor, Pomodoro y objetivos.
+// Pantalla de una sesión: cabecera (tema, materia, estado, Iniciar / Pausar / Reanudar y Finalizar),
+// editor con pestañas y panel derecho con Pomodoro, Spotify, Objetivos, Métodos y Próxima sesión.
 // El tiempo lo calcula el main; acá solo se muestra el snapshot que llega por el tick.
 export function SesionEstudioPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
   const idSesion = Number(useParams().idSesion);
   const navigate = useNavigate();
+  const avisos = usarAvisos();
   const [sesion, setSesion] = useState<SesionEstudio | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
-  const [sinGuardar, setSinGuardar] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
+  const [confirmarFin, setConfirmarFin] = useState(false);
+  const [proxima, setProxima] = useState<SesionEstudio | null>(null);
+  const [cargandoProxima, setCargandoProxima] = useState(true);
+  const [panelVisible, setPanelVisible] = usarPreferencia('sesion-panel-visible', true);
   const { snapshot, setSnapshot } = useSesionEnCurso(usuarioId);
 
   // Abre la sesión (actualiza su último acceso en la base).
@@ -40,45 +49,72 @@ export function SesionEstudioPage() {
     void cargar();
   }, [cargar]);
 
-  // Inicia la sesión; el main empieza a seguirla y a emitir el tick.
-  async function iniciar() {
+  useEffect(() => {
+    setCargandoProxima(true);
+    window.api
+      .obtenerResumenSesiones({ usuarioId, excluirIdSesion: idSesion })
+      .then((r) => setProxima(r.proximaSesion))
+      .catch(() => setProxima(null))
+      .finally(() => setCargandoProxima(false));
+  }, [usuarioId, idSesion]);
+
+  // Ejecuta una acción sobre la sesión: actualiza la pantalla y muestra el cartel de éxito o error.
+  async function accion(
+    llamada: () => Promise<SesionEstudio>,
+    mensajeExito: string | null,
+    mensajeError: string
+  ): Promise<SesionEstudio | null> {
+    setOcupado(true);
     try {
-      const actualizada = await window.api.iniciarSesionEstudio(usuarioId, idSesion);
-      setSesion((s) => (s ? { ...actualizada, contenido: s.contenido } : actualizada));
-      setError(null);
+      const actualizada = await llamada();
+      setSesion(actualizada);
+      if (mensajeExito) avisos.exito(mensajeExito);
+      return actualizada;
     } catch (e) {
-      setError(extraerMensajeError(e, 'No se pudo iniciar la sesión.'));
+      avisos.error(extraerMensajeError(e, mensajeError));
+      return null;
+    } finally {
+      setOcupado(false);
     }
   }
 
-  // Finaliza la sesión y deja de mostrar el timer.
+  const iniciar = () =>
+    accion(() => window.api.iniciarSesionEstudio(usuarioId, idSesion), 'Se inició la sesión. ¡A estudiar!', 'No se pudo iniciar la sesión.');
+  const pausar = () =>
+    accion(() => window.api.pausarSesionEstudio(usuarioId, idSesion), 'Sesión pausada.', 'No se pudo pausar la sesión.');
+  const reanudar = () =>
+    accion(() => window.api.reanudarSesionEstudio(usuarioId, idSesion), 'Se reanudó la sesión.', 'No se pudo reanudar la sesión.');
+
   async function finalizar() {
-    try {
-      const actualizada = await window.api.finalizarSesionEstudio(usuarioId, idSesion);
-      setSesion((s) => (s ? { ...actualizada, contenido: s.contenido } : actualizada));
+    setConfirmarFin(false);
+    const actualizada = await accion(
+      () => window.api.finalizarSesionEstudio(usuarioId, idSesion),
+      null,
+      'No se pudo finalizar la sesión.'
+    );
+    if (actualizada) {
       setSnapshot(null);
-      setError(null);
-    } catch (e) {
-      setError(extraerMensajeError(e, 'No se pudo finalizar la sesión.'));
+      const estudiado = segundosEstudiados(actualizada);
+      avisos.exito(`Sesión finalizada${estudiado !== null ? `: estudiaste ${formatearTiempo(estudiado)}` : ''}.`);
     }
   }
 
-  // Guarda el editor en la sesión y en el Word de Material.
-  async function guardarContenido(html: string) {
-    try {
-      await window.api.guardarContenidoSesionEstudio({ usuarioId, idSesion, contenido: html });
-      setAviso('Cambios guardados en la sesión y en Material.');
-      setError(null);
-    } catch (e) {
-      setError(extraerMensajeError(e, 'No se pudo guardar el contenido.'));
-      throw e;
+  // START del Pomodoro: si la sesión todavía no empezó, primero la inicia.
+  async function iniciarPomodoro() {
+    if (!sesion) return;
+    if (sesion.estado === 'sin_empezar' || sesion.estado === 'atrasada') {
+      const iniciada = await iniciar();
+      if (!iniciada) return;
     }
+    await accion(() => window.api.iniciarPomodoro(usuarioId, idSesion), null, 'No se pudo iniciar el Pomodoro.');
   }
 
-  // Vuelve a la lista, pidiendo confirmación si hay cambios sin guardar.
-  function volver() {
-    if (sinGuardar && !window.confirm('Hay cambios sin guardar. ¿Salir igual?')) return;
-    navigate('/sesiones');
+  async function guardarConfiguracion(config: ConfiguracionPomodoro) {
+    await accion(
+      () => window.api.modificarSesionEstudio({ usuarioId, idSesion, ...config }),
+      'Se guardaron los tiempos del Pomodoro.',
+      'No se pudieron guardar los tiempos.'
+    );
   }
 
   // Tilda o destilda un objetivo y actualiza el estado local.
@@ -86,96 +122,205 @@ export function SesionEstudioPage() {
     try {
       const actualizado = await window.api.actualizarObjetivoSesion({ usuarioId, idObjetivo, completado });
       setSesion((s) => s && { ...s, objetivos: s.objetivos.map((o) => (o.idObjetivo === idObjetivo ? actualizado : o)) });
+      if (completado) avisos.exito('¡Objetivo cumplido!');
     } catch (e) {
-      setError(extraerMensajeError(e, 'No se pudo actualizar el objetivo.'));
+      avisos.error(extraerMensajeError(e, 'No se pudo actualizar el objetivo.'));
     }
   }
 
-  // Agrega un objetivo nuevo a la sesión.
   async function agregarObjetivo(descripcion: string) {
     try {
       const nuevo = await window.api.agregarObjetivoSesion({ usuarioId, idSesion, descripcion });
       setSesion((s) => s && { ...s, objetivos: [...s.objetivos, nuevo] });
+      avisos.exito('Se agregó el objetivo.');
     } catch (e) {
-      setError(extraerMensajeError(e, 'No se pudo agregar el objetivo.'));
+      avisos.error(extraerMensajeError(e, 'No se pudo agregar el objetivo.'));
     }
   }
 
-  // Elimina un objetivo de la sesión.
   async function eliminarObjetivo(idObjetivo: number) {
     try {
       await window.api.eliminarObjetivoSesion(usuarioId, idObjetivo);
       setSesion((s) => s && { ...s, objetivos: s.objetivos.filter((o) => o.idObjetivo !== idObjetivo) });
+      avisos.exito('Se quitó el objetivo.');
     } catch (e) {
-      setError(extraerMensajeError(e, 'No se pudo eliminar el objetivo.'));
+      avisos.error(extraerMensajeError(e, 'No se pudo eliminar el objetivo.'));
     }
   }
 
-  const titulo = sesion ? sesion.nombre : 'Sesión de estudio';
-  const puedeIniciar = sesion?.estado === 'sin_empezar' || sesion?.estado === 'atrasada';
   const enCurso = sesion?.estado === 'en_curso';
-  const tiempoReal =
-    sesion?.fechaInicio && sesion.fechaFin
-      ? (new Date(sesion.fechaFin).getTime() - new Date(sesion.fechaInicio).getTime()) / 1000
-      : null;
+  const puedeIniciar = sesion?.estado === 'sin_empezar' || sesion?.estado === 'atrasada';
+  const snapshotPropio = snapshot && sesion && snapshot.idSesion === sesion.idSesion ? snapshot : null;
 
   return (
-    <PlantillaLayout titulo={titulo} idActivo="sesiones" usuario={{ nombre: 'Usuario' }}>
-      <div className="sesiones">
-        {error && <CartelError mensaje={error} onCerrar={() => setError(null)} />}
+    <PlantillaLayout titulo="Sesiones de estudio" idActivo="sesiones" usuario={{ nombre: 'Usuario' }}>
+      <div className="sesion">
+        {error && <CartelError mensaje={error} onCerrar={() => setError(null)} onReintentar={cargar} />}
         {!sesion && !error && <p className="sesiones__vacio">Cargando sesión…</p>}
 
         {sesion && (
           <>
-            <div className="sesiones__cabecera">
-              <Boton variante="contorno" onClick={volver}>← Volver</Boton>
-              <span className="sesiones__sub">Materia: {sesion.materiaAsociada.nombre}</span>
-              <EstadoBadge estado={sesion.estado} />
-              <span className="sesiones__cabecera-espacio" />
-              <Boton disabled={!puedeIniciar} onClick={() => void iniciar()}>Iniciar sesión</Boton>
-              <Boton variante="contorno" disabled={!enCurso} onClick={() => void finalizar()}>Finalizar sesión</Boton>
+            <div className="sesion__cabecera">
+              <button type="button" className="sesion__volver" aria-label="Volver a la lista" title="Volver" onClick={() => navigate('/sesiones')}>
+                <ArrowLeft size={16} />
+              </button>
+              <span className="sesion__dato">
+                <span className="sesion__dato-icono"><FileText size={13} /></span>
+                <span className="sesion__dato-etiqueta">Tema:</span> {sesion.nombre}
+              </span>
+              <span className="sesion__divisor" aria-hidden="true" />
+              <span className="sesion__dato">
+                <span className="sesion__dato-icono sesion__dato-icono--materia"><BookOpen size={13} /></span>
+                <span className="sesion__dato-etiqueta">Materia:</span> {sesion.materiaAsociada.nombre}
+              </span>
+
+              <span className="sesion__espacio" />
+
+              <EstadoReloj sesion={sesion} segundos={snapshotPropio?.segundosTranscurridos ?? null} />
+
+              {puedeIniciar && (
+                <button type="button" className="sesion__boton" disabled={ocupado} onClick={() => void iniciar()}>
+                  Iniciar sesión
+                </button>
+              )}
+              {enCurso && (
+                <button
+                  type="button"
+                  className="sesion__boton"
+                  disabled={ocupado}
+                  onClick={() => void (sesion.pausada ? reanudar() : pausar())}
+                >
+                  {sesion.pausada ? 'Reanudar sesión' : 'Pausar sesión'}
+                </button>
+              )}
+              <button
+                type="button"
+                className="sesion__boton sesion__boton--claro"
+                disabled={!enCurso || ocupado}
+                onClick={() => setConfirmarFin(true)}
+              >
+                Finalizar sesión
+              </button>
+              {panelVisible && (
+                <button
+                  type="button"
+                  className="sesion__icono"
+                  aria-label="Ocultar panel lateral"
+                  title="Ocultar panel"
+                  onClick={() => setPanelVisible(false)}
+                >
+                  <PanelRightClose size={17} />
+                </button>
+              )}
             </div>
 
-            <div className="sesiones__cuerpo">
-              <div>
-                <EditorSesion
-                  key={sesion.idSesion}
-                  contenidoInicial={sesion.contenido}
-                  onGuardar={guardarContenido}
-                  onModificadoChange={setSinGuardar}
-                />
-                <p className="sesiones__nota">
-                  {aviso ?? 'Se guarda en la sesión y como Word en Material › Sesiones de estudio.'}
-                </p>
-              </div>
+            {snapshotPropio?.tiempoPlanificadoCumplido && enCurso && (
+              <p className="sesion__aviso">Cumpliste los {sesion.duracion} minutos planificados. Podés finalizar la sesión cuando quieras.</p>
+            )}
 
-              <aside className="sesiones__lateral">
-                <PanelPomodoro sesion={sesion} snapshot={snapshot} />
+            <div className={`sesion__cuerpo${panelVisible ? '' : ' sesion__cuerpo--sin-panel'}`}>
+              <EditorSesion key={sesion.idSesion} usuarioId={usuarioId} idSesion={sesion.idSesion} />
 
-                <section>
-                  <h4 className="sesiones__tarjeta-titulo">Objetivos</h4>
-                  <ListaObjetivos
-                    objetivos={sesion.objetivos.map((o) => ({
-                      clave: o.idObjetivo,
-                      descripcion: o.descripcion,
-                      completado: o.completado,
-                    }))}
-                    onAgregar={(d) => void agregarObjetivo(d)}
-                    onAlternar={(clave, completado) => void alternarObjetivo(Number(clave), completado)}
-                    onEliminar={(clave) => void eliminarObjetivo(Number(clave))}
-                  />
-                </section>
+              {panelVisible ? (
+                <aside className="sesion__lateral" aria-label="Herramientas de la sesión">
+                  <TarjetaLateral titulo="Pomodoro" id="pomodoro">
+                    <PanelPomodoro
+                      sesion={sesion}
+                      snapshot={snapshotPropio}
+                      ocupado={ocupado}
+                      onIniciar={() => void iniciarPomodoro()}
+                      onPausar={() => void accion(() => window.api.pausarPomodoro(usuarioId, idSesion), null, 'No se pudo pausar el Pomodoro.')}
+                      onReiniciar={() => void accion(() => window.api.reiniciarPomodoro(usuarioId, idSesion), null, 'No se pudo reiniciar el Pomodoro.')}
+                      onCambiarFase={(fase: FasePomodoro) =>
+                        void accion(
+                          () => window.api.cambiarFasePomodoro({ usuarioId, idSesion, fase }),
+                          null,
+                          `No se pudo cambiar a ${ETIQUETA_FASE[fase]}.`
+                        )
+                      }
+                      onGuardarConfiguracion={guardarConfiguracion}
+                    />
+                  </TarjetaLateral>
 
-                <section className="sesiones__sub">
-                  <div>Programada: {formatearFecha(sesion.fechaProgramada)}</div>
-                  <div>Duración planificada: {sesion.duracion} min</div>
-                  {tiempoReal !== null && <div>Tiempo estudiado: {formatearTiempo(tiempoReal)}</div>}
-                </section>
-              </aside>
+                  <TarjetaLateral titulo="Spotify" id="spotify">
+                    <ReproductorSpotify />
+                  </TarjetaLateral>
+
+                  <TarjetaLateral titulo="Objetivos" id="objetivos">
+                    <ListaObjetivos
+                      titulo="Objetivos de la sesión"
+                      objetivos={sesion.objetivos.map((o) => ({ clave: o.idObjetivo, descripcion: o.descripcion, completado: o.completado }))}
+                      onAgregar={(d) => void agregarObjetivo(d)}
+                      onAlternar={(clave, completado) => void alternarObjetivo(Number(clave), completado)}
+                      onEliminar={(clave) => void eliminarObjetivo(Number(clave))}
+                    />
+                  </TarjetaLateral>
+
+                  <TarjetaLateral titulo="Métodos de estudio" id="metodos">
+                    {sesion.metodosEstudio.length === 0 ? (
+                      <p className="sesion__nota">Esta sesión no tiene métodos de estudio asignados.</p>
+                    ) : (
+                      <div className="sesion__metodos">
+                        {sesion.metodosEstudio.map((m) => (
+                          <span key={m.idTipoMetodoEstudio} className="sesion__metodo">{m.nombre}</span>
+                        ))}
+                      </div>
+                    )}
+                  </TarjetaLateral>
+
+                  <TarjetaLateral titulo="Próxima sesión" id="proxima">
+                    <TarjetaProximaSesion sesion={proxima} cargando={cargandoProxima} />
+                  </TarjetaLateral>
+                </aside>
+              ) : (
+                <button
+                  type="button"
+                  className="sesion__mostrar-panel"
+                  aria-label="Mostrar panel lateral"
+                  title="Mostrar Pomodoro, Spotify, objetivos y próxima sesión"
+                  onClick={() => setPanelVisible(true)}
+                >
+                  <ListTree size={18} />
+                </button>
+              )}
             </div>
           </>
         )}
       </div>
+
+      {confirmarFin && sesion && (
+        <ModalConfirmar
+          titulo="Finalizar sesión"
+          mensaje={<>¿Querés finalizar <strong>{sesion.nombre}</strong>? Después no se puede volver a iniciar.</>}
+          textoConfirmar="Finalizar"
+          peligro={false}
+          onConfirmar={() => void finalizar()}
+          onCancelar={() => setConfirmarFin(false)}
+        />
+      )}
     </PlantillaLayout>
+  );
+}
+
+// Punto de estado con el tiempo estudiado: "Sin iniciar", "En curso 12:34", "Pausada 12:34", "Completada · 52:10".
+function EstadoReloj({ sesion, segundos }: { sesion: SesionEstudio; segundos: number | null }) {
+  let clase = 'sin-iniciar';
+  let texto = 'Sin iniciar';
+  if (sesion.estado === 'atrasada') {
+    clase = 'atrasada';
+    texto = 'Atrasada';
+  } else if (sesion.estado === 'en_curso') {
+    clase = sesion.pausada ? 'pausada' : 'en-curso';
+    texto = `${sesion.pausada ? 'Pausada' : 'En curso'}${segundos !== null ? ` · ${formatearTiempo(segundos)}` : ''}`;
+  } else if (sesion.estado === 'completada') {
+    const estudiado = segundosEstudiados(sesion);
+    clase = 'completada';
+    texto = `Completada${estudiado !== null ? ` · ${formatearTiempo(estudiado)}` : ''}`;
+  }
+  return (
+    <span className={`sesion__estado sesion__estado--${clase}`} title={`Duración planificada: ${sesion.duracion} min`}>
+      <span className="sesion__estado-punto" aria-hidden="true" />
+      {texto}
+    </span>
   );
 }

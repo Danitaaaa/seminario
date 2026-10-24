@@ -4,6 +4,8 @@ import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
 import { ListaObjetivos } from '../../components/sesionEstudio/listaObjetivos';
+import { ModalRegistrarMateria } from '../../components/sesionEstudio/modalRegistrarMateria';
+import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import type { OpcionesSesionEstudio } from '../../types/sesionesEstudio';
 import { aInputFechaHora, desdeInputFechaHora, extraerMensajeError } from './utilidades';
@@ -40,6 +42,8 @@ function Paso({ etiqueta, valor, min, max, onCambio }: PasoProps) {
 export function CrearSesionEstudioPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
   const navigate = useNavigate();
+  const avisos = usarAvisos();
+  const [registrandoMateria, setRegistrandoMateria] = useState(false);
   const [opciones, setOpciones] = useState<OpcionesSesionEstudio>({ materias: [], metodosEstudio: [] });
   const [nombre, setNombre] = useState('');
   const [idMateria, setIdMateria] = useState<number | ''>('');
@@ -89,6 +93,7 @@ export function CrearSesionEstudioPage() {
         recibirNotificacion,
         objetivos: objetivos.map((o) => o.descripcion),
       });
+      avisos.exito(`Se creó correctamente la sesión "${creada.nombre}".`);
       navigate(`/sesiones/${creada.idSesion}`);
     } catch (e) {
       setError(extraerMensajeError(e, 'No se pudo crear la sesión.'));
@@ -105,7 +110,12 @@ export function CrearSesionEstudioPage() {
         </label>
 
         <label className="sesiones__campo">
-          Materia
+          <span className="sesiones__campo-cabecera">
+            Materia
+            <button type="button" className="sesiones__registrar-materia" onClick={() => setRegistrandoMateria(true)}>
+              Registrar materia +
+            </button>
+          </span>
           <select
             value={idMateria}
             onChange={(e) => setIdMateria(e.target.value === '' ? '' : Number(e.target.value))}
@@ -185,6 +195,21 @@ export function CrearSesionEstudioPage() {
           <Boton variante="contorno" onClick={() => navigate('/sesiones')} disabled={enviando}>Cancelar</Boton>
         </div>
       </form>
+
+      {registrandoMateria && (
+        <ModalRegistrarMateria
+          onCancelar={() => setRegistrandoMateria(false)}
+          onRegistrada={(materia) => {
+            setRegistrandoMateria(false);
+            setOpciones((o) => ({
+              ...o,
+              materias: [...o.materias, materia].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
+            }));
+            setIdMateria(materia.idMateria);
+            avisos.exito(`Se registró la materia "${materia.nombre}" correctamente.`);
+          }}
+        />
+      )}
     </PlantillaLayout>
   );
 }

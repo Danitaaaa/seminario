@@ -6,6 +6,7 @@ import { eventosApi } from './apis/eventos';
 import { categoriasApi } from './apis/categorias';
 import { horariosApi } from './apis/horarios';
 import { sesionesEstudioApi } from './apis/sesionesEstudio';
+import { spotifyApi } from './apis/spotify';
 
 contextBridge.exposeInMainWorld('api', {
   ...nodosApi,
@@ -15,4 +16,5 @@ contextBridge.exposeInMainWorld('api', {
   ...categoriasApi,
   ...horariosApi,
   ...sesionesEstudioApi,
+  ...spotifyApi,
 });

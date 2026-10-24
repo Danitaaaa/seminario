@@ -22,6 +22,22 @@ export interface ObjetivoSesion {
   orden: number;
 }
 
+export interface PestanaSesion {
+  idPestana: number;
+  idSesion: number;
+  titulo: string;
+  contenido: string;
+  orden: number;
+  fechaModificacion: string;
+}
+
+export interface EstadoPomodoroGuardado {
+  fase: FasePomodoro;
+  restanteSeg: number | null;
+  corriendoDesde: string | null;
+  completados: number;
+}
+
 export interface SesionEstudio {
   idSesion: number;
   idUsuario: number;
@@ -35,9 +51,13 @@ export interface SesionEstudio {
   fechaUltimoAcceso: string;
   fechaInicio: string | null;
   fechaFin: string | null;
+  pausada: boolean;
+  fechaPausa: string | null;
+  segundosPausados: number;
   pomodoroMin: number;
   descansoCortoMin: number;
   descansoLargoMin: number;
+  pomodoro: EstadoPomodoroGuardado;
   recibirNotificacion: boolean;
   objetivos: ObjetivoSesion[];
   contenido: string;
@@ -49,16 +69,22 @@ export interface OpcionesSesionEstudio {
   metodosEstudio: TipoMetodoEstudio[];
 }
 
+export interface ResumenSesionesEstudio {
+  nombreUsuario: string;
+  proximaSesion: SesionEstudio | null;
+}
+
 export interface EstadoPomodoro {
   fase: FasePomodoro;
   segundosFase: number;
   segundosRestantes: number;
-  numeroPomodoro: number;
+  corriendo: boolean;
   pomodorosCompletados: number;
 }
 
 export interface SnapshotSesionEnCurso {
   idSesion: number;
+  pausada: boolean;
   segundosTranscurridos: number;
   segundosPlanificados: number;
   tiempoPlanificadoCumplido: boolean;
@@ -86,6 +112,9 @@ export interface ModificarSesionEstudioEntrada {
   duracion?: number;
   fechaProgramada?: string;
   recibirNotificacion?: boolean;
+  pomodoroMin?: number;
+  descansoCortoMin?: number;
+  descansoLargoMin?: number;
 }
 
 // Funciones que expone el preload para este módulo (se suman al tipo Window.api en window.d.ts).
@@ -94,10 +123,23 @@ export interface SesionesEstudioApi {
   listarSesionesEstudio(filtros: { usuarioId: number; desde?: string; hasta?: string }): Promise<SesionEstudio[]>;
   abrirSesionEstudio(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
   iniciarSesionEstudio(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
+  pausarSesionEstudio(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
+  reanudarSesionEstudio(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
   finalizarSesionEstudio(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
   modificarSesionEstudio(datos: ModificarSesionEstudioEntrada): Promise<SesionEstudio>;
-  guardarContenidoSesionEstudio(datos: { usuarioId: number; idSesion: number; contenido: string }): Promise<void>;
   eliminarSesionEstudio(usuarioId: number, idSesion: number): Promise<void>;
+
+  listarPestanasSesion(usuarioId: number, idSesion: number): Promise<PestanaSesion[]>;
+  crearPestanaSesion(datos: { usuarioId: number; idSesion: number; titulo?: string }): Promise<PestanaSesion>;
+  renombrarPestanaSesion(datos: { usuarioId: number; idPestana: number; titulo: string }): Promise<PestanaSesion>;
+  eliminarPestanaSesion(usuarioId: number, idPestana: number): Promise<void>;
+  guardarContenidoSesionEstudio(datos: {
+    usuarioId: number;
+    idSesion: number;
+    idPestana: number;
+    contenido: string;
+  }): Promise<PestanaSesion>;
+
   agregarObjetivoSesion(datos: { usuarioId: number; idSesion: number; descripcion: string }): Promise<ObjetivoSesion>;
   actualizarObjetivoSesion(datos: {
     usuarioId: number;
@@ -106,7 +148,15 @@ export interface SesionesEstudioApi {
     completado?: boolean;
   }): Promise<ObjetivoSesion>;
   eliminarObjetivoSesion(usuarioId: number, idObjetivo: number): Promise<void>;
+
+  iniciarPomodoro(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
+  pausarPomodoro(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
+  reiniciarPomodoro(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
+  cambiarFasePomodoro(datos: { usuarioId: number; idSesion: number; fase: FasePomodoro }): Promise<SesionEstudio>;
+
   listarOpcionesSesionEstudio(): Promise<OpcionesSesionEstudio>;
+  registrarMateria(datos: { nombre: string }): Promise<Materia>;
+  obtenerResumenSesiones(datos: { usuarioId: number; excluirIdSesion?: number }): Promise<ResumenSesionesEstudio>;
   obtenerSesionEnCurso(usuarioId: number): Promise<{
     sesion: SesionEstudio | null;
     snapshot: SnapshotSesionEnCurso | null;
