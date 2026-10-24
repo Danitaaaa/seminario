@@ -3,9 +3,8 @@ import { Proyecto, ProyectoMiembro, CambioPendiente } from './entidades';
 // Convierte el registro de un proyecto de la BD a un objeto Proyecto
 export function materializarProyecto(fila: any): Proyecto {
     return {
-        id: fila.id_proyecto,
+        idProyecto: fila.id_proyecto,
         nombre: fila.nombre,
-        numeroProyecto: fila.numero_proyecto,
         materiaAsociada: fila.materia_asociada ?? null,
         fechaCreacion: fila.fecha_creacion,
         fechaFin: fila.fecha_fin ?? null,
@@ -21,9 +20,8 @@ export function materializarProyecto(fila: any): Proyecto {
 // Convierte un objeto Proyecto a un registro de la BD
 export function desmaterializarProyecto(p: Proyecto): Record<string, unknown> {
     return {
-        id_proyecto: p.id,
+        id_proyecto: p.idProyecto,
         nombre: p.nombre,
-        numero_proyecto: p.numeroProyecto,
         materia_asociada: p.materiaAsociada,
         fecha_creacion: p.fechaCreacion,
         fecha_fin: p.fechaFin,
@@ -39,7 +37,7 @@ export function desmaterializarProyecto(p: Proyecto): Record<string, unknown> {
 // Convierte el registro de un miembro de la BD a un objeto ProyectoMiembro
 export function materializarMiembro(fila: any): ProyectoMiembro {
     return {
-        id: fila.id_proyecto_miembro,
+        idProyectoMiembro: fila.id_proyecto_miembro,
         idProyecto: fila.id_proyecto,
         idUsuario: fila.id_usuario,
         rol: fila.rol,
@@ -51,7 +49,7 @@ export function materializarMiembro(fila: any): ProyectoMiembro {
 // Convierte un objeto ProyectoMiembro a un registro de la BD
 export function desmaterializarMiembro(m: ProyectoMiembro): Record<string, unknown> {
     return {
-        id_proyecto_miembro: m.id,
+        id_proyecto_miembro: m.idProyectoMiembro,
         id_proyecto: m.idProyecto,
         id_usuario: m.idUsuario,
         rol: m.rol,

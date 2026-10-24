@@ -17,7 +17,7 @@ export class AgregarMiembro {
                 [dto.idProyecto, dto.idUsuarioNuevo, dto.rol],
             ); // el índice único parcial rechaza duplicados activos
             const m = materializarMiembro(filas[0]);
-            await registrarCambio(tx, dto.idProyecto, 'miembro', m.id, 'crear', { idUsuario: m.idUsuario, rol: m.rol });
+            await registrarCambio(tx, dto.idProyecto, 'miembro', m.idProyectoMiembro, 'crear', { idUsuario: m.idUsuario, rol: m.rol });
             return m;
         });
 

@@ -53,7 +53,7 @@ export function ProyectosPage() {
             <div className="proyectos-grilla">
                 {proyectos.map((p) => (
                     <TarjetaProyecto
-                        key={p.id_proyecto}
+                        key={p.idProyecto}
                         proyecto={p}
                         onAbrir={(proyecto) => navigate(`/proyectos/${proyecto.id_proyecto}`)}
                         onEliminar={setAEliminar}
@@ -87,7 +87,7 @@ export function ProyectosPage() {
                     onConfirmar={async () => {
                         try {
                             await window.api.eliminarProyecto({
-                                id: aEliminar.id_proyecto,
+                                id: aEliminar.idProyecto,
                                 idUsuario: ID_USUARIO_ACTUAL,
                             });
                             await cargar();

@@ -5,29 +5,28 @@ import { z } from 'zod';
 export const CrearProyectoDTOSchema = z.object({
     idUsuario: z.number().int(), // usuario que crea (queda como propietario)
     nombre: z.string().min(1).max(100),
-    numeroProyecto: z.string().min(1).max(100),
-    materiaAsociada: z.string().max(100).optional(),
+    //materiaAsociada: z.string().max(100).optional(),
     fechaFin: z.coerce.date().optional(),
 });
 export type CrearProyectoDTO = z.infer<typeof CrearProyectoDTOSchema>;
 
 export const ModificarProyectoDTOSchema = z.object({
-    id: z.number().int(),
+    idProyecto: z.number().int(),
     idUsuario: z.number().int(), // quien solicita (control de permisos)
     nombre: z.string().min(1).max(100).optional(),
-    materiaAsociada: z.string().max(100).nullable().optional(),
+    //materiaAsociada: z.string().max(100).nullable().optional(),
     fechaFin: z.coerce.date().nullable().optional(),
 });
 export type ModificarProyectoDTO = z.infer<typeof ModificarProyectoDTOSchema>;
 
 export const EliminarProyectoDTOSchema = z.object({
-    id: z.number().int(),
+    idProyecto: z.number().int(),
     idUsuario: z.number().int(),
 });
 export type EliminarProyectoDTO = z.infer<typeof EliminarProyectoDTOSchema>;
 
 export const ObtenerProyectoDTOSchema = z.object({
-    id: z.number().int(),
+    idProyecto: z.number().int(),
     idUsuario: z.number().int(),
 });
 export type ObtenerProyectoDTO = z.infer<typeof ObtenerProyectoDTOSchema>;

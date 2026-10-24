@@ -1,9 +1,8 @@
 export type RolMiembro = 'propietario' | 'editor' | 'lector';
 
 export interface Proyecto {
-    id: number;
+    idProyecto: number;
     nombre: string;
-    numeroProyecto: string;
     materiaAsociada: string | null;
     fechaCreacion: Date;
     fechaFin: Date | null;
@@ -16,7 +15,7 @@ export interface Proyecto {
 }
 
 export interface ProyectoMiembro {
-    id: number;
+    idProyectoMiembro: number;
     idProyecto: number;
     idUsuario: number;
     rol: RolMiembro;

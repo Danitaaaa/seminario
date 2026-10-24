@@ -22,15 +22,15 @@ export class CrearProyecto {
             const filas = await tx.ejecutar(
                 `INSERT INTO proyectos (nombre, numero_proyecto, materia_asociada, fecha_fin, id_nodo_raiz)
                  VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-                [dto.nombre, dto.numeroProyecto, dto.materiaAsociada ?? null, dto.fechaFin ?? null, nodoRaiz.id],
+                [dto.nombre, dto.fechaFin ?? null, nodoRaiz.id],
             );
             const proyecto = materializarProyecto(filas[0]);
 
             await tx.ejecutar(
                 `INSERT INTO proyecto_miembros (id_proyecto, id_usuario, rol) VALUES ($1, $2, 'propietario')`,
-                [proyecto.id, dto.idUsuario],
+                [proyecto.idProyecto, dto.idUsuario],
             );
-            await registrarCambio(tx, proyecto.id, 'proyecto', proyecto.id, 'crear', { nombre: proyecto.nombre });
+            await registrarCambio(tx, proyecto.idProyecto, 'proyecto', proyecto.idProyecto, 'crear', { nombre: proyecto.nombre });
             return proyecto;
         });
     }

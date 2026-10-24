@@ -1,10 +1,9 @@
 export type RolMiembro = 'propietario' | 'editor' | 'lector';
 
 export interface Proyecto {
-    id_proyecto: number;
+    idProyecto: number;
     nombre: string;
-    numeroProyecto: string;
-    materiaAsociada: string | null;
+    //materiaAsociada: string | null;
     fechaCreacion: string;
     fechaFin: string | null;
     rol?: RolMiembro; // rol del usuario que consulta, si el backend lo devuelve
@@ -19,32 +18,29 @@ export interface Miembro {
     activo: boolean;
 }
 
-export const claveProyecto = (p: Proyecto) => `proyecto-${p.id_proyecto}`;
-
-/* ---------- Datos de entrada (espejo de los DTOs del main) ---------- */
+export const claveProyecto = (p: Proyecto) => `proyecto-${p.idProyecto}`;
 
 export interface CrearProyectoDatos {
     idUsuario: number;
     nombre: string;
-    numeroProyecto: string;
-    materiaAsociada?: string;
+    //materiaAsociada?: string;
 }
 
 export interface ModificarProyectoDatos {
-    id: number;
+    idProyecto: number;
     idUsuario: number;
     nombre?: string;
-    materiaAsociada?: string | null;
+    //materiaAsociada?: string | null;
     fechaFin?: string | Date | null;
 }
 
 export interface EliminarProyectoDatos {
-    id: number;
+    idProyecto: number;
     idUsuario: number;
 }
 
 export interface ObtenerProyectoDatos {
-    id: number;
+    idProyecto: number;
     idUsuario: number;
 }
 
@@ -84,21 +80,4 @@ export interface SincronizarProyectoDatos {
 export interface UnirseAProyectoDatos {
     idUsuario: number;
     enlace: string;
-}
-
-/* ---------- API expuesta por el preload ---------- */
-
-export interface ProyectosApi {
-    crearProyecto: (datos: CrearProyectoDatos) => Promise<Proyecto>;
-    modificarProyecto: (datos: ModificarProyectoDatos) => Promise<Proyecto>;
-    eliminarProyecto: (datos: EliminarProyectoDatos) => Promise<void>;
-    obtenerProyecto: (datos: ObtenerProyectoDatos) => Promise<Proyecto>;
-    listarProyectos: (criterios: ListarProyectosCriterios) => Promise<Proyecto[]>;
-
-    agregarMiembro: (datos: AgregarMiembroDatos) => Promise<Miembro>;
-    quitarMiembro: (datos: QuitarMiembroDatos) => Promise<void>;
-    listarMiembros: (criterios: ListarMiembrosCriterios) => Promise<Miembro[]>;
-
-    sincronizarProyecto: (datos: SincronizarProyectoDatos) => Promise<void>;
-    unirseAProyecto: (datos: UnirseAProyectoDatos) => Promise<Proyecto>;
 }

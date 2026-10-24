@@ -5,8 +5,7 @@
 CREATE TABLE IF NOT EXISTS proyectos (
     id_proyecto SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    numero_proyecto VARCHAR(100) NOT NULL UNIQUE,
-    materia_asociada VARCHAR(100),
+    --materia_asociada VARCHAR(100),
     fecha_creacion TIMESTAMP NOT NULL DEFAULT NOW(),
     fecha_fin TIMESTAMP,
     enlace VARCHAR(2048),                       -- enlace de invitación (lo emite el servidor de sincronización)

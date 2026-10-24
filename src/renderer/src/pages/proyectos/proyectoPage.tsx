@@ -60,7 +60,7 @@ export function ProyectoDetallePage() {
 
     return (
         <NodoPage
-            key={proyecto.id_proyecto}
+            key={proyecto.idProyecto}
             titulo={proyecto.nombre}
             idActivo="proyectos"
             raiz={{ id: proyecto.id_nodo_raiz, nombre: proyecto.nombre }}

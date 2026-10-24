@@ -9,9 +9,9 @@ export class ObtenerProyecto {
 
     async ejecutar(entrada: ObtenerProyectoDTO): Promise<Proyecto> {
         const dto = ObtenerProyectoDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.id, dto.idUsuario, ['propietario', 'editor', 'lector']);
+        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuario, ['propietario', 'editor', 'lector']);
 
-        const filas = await this.persistencia.ejecutar(`SELECT * FROM proyectos WHERE id_proyecto = $1`, [dto.id]);
+        const filas = await this.persistencia.ejecutar(`SELECT * FROM proyectos WHERE id_proyecto = $1`, [dto.idProyecto]);
         if (!filas[0]) throw new Error('Proyecto inexistente');
         return materializarProyecto(filas[0]);
     }
