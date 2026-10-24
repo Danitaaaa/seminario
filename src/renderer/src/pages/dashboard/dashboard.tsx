@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { MiniCalendario } from './miniCalendario';
+import { MetasDashboard } from './metasDashboard';
 import '../../styles/dashboard.css';
 
 type Modulo = {
@@ -46,6 +47,7 @@ export function Dashboard() {
 
         <div className="dashboard__lateral">
           <MiniCalendario />
+          <MetasDashboard />
         </div>
       </div>
     </PlantillaLayout>

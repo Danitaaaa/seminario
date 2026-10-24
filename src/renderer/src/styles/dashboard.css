@@ -78,7 +78,10 @@
 }
 
 .dashboard__lateral {
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
+  gap: var(--espacio-md);
   width: 260px;
 }
 

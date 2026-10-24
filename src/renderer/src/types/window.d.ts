@@ -4,6 +4,7 @@ import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
 import type { Perfil } from './perfil';
+import type { Meta, CrearMetaInput, CompletarMetaInput, EliminarMetaInput } from './metas';
 
 declare global {
   interface Window {
@@ -88,6 +89,12 @@ declare global {
       listarHorarios: (datos: ListarHorariosInput) => Promise<HorarioCursado[]>;
       modificarHorario: (datos: ModificarHorarioInput) => Promise<HorarioCursado>;
       eliminarHorario: (datos: { id: number }) => Promise<{ ok: boolean }>;
+
+      // Gestion de metas
+      listarMetas: (datos: { usuarioId: number }) => Promise<Meta[]>;
+      crearMeta: (datos: CrearMetaInput) => Promise<Meta>;
+      completarMeta: (datos: CompletarMetaInput) => Promise<Meta>;
+      eliminarMeta: (datos: EliminarMetaInput) => Promise<void>;
 
       // Enlaces externos
       abrirEnlace: (datos: { enlace: 'github-dana' }) => Promise<void>;

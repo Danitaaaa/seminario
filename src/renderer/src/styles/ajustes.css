@@ -126,6 +126,29 @@
   box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary);
 }
 
+/* ---------- Metas del inicio ---------- */
+.ajustes__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-sm) var(--espacio-lg);
+}
+
+.ajustes__check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  color: var(--color-text);
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.ajustes__check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
 .ajustes__fila:focus-visible,
 .ajustes__opcion:focus-visible,
 .ajustes__paleta:focus-visible {

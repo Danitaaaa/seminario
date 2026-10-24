@@ -1,0 +1,298 @@
+/* Metas del dashboard: tres estilos que se eligen en Ajustes. Solo consume variables de issue.ts. */
+
+.metas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  padding: var(--espacio-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--fuente-body);
+}
+
+.metas__cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espacio-sm);
+}
+
+.metas__titulo {
+  margin: 0;
+  font-family: var(--fuente-display);
+  font-size: var(--tamano-lg);
+  font-weight: var(--peso-bold);
+  color: var(--color-text);
+}
+
+.metas__contador {
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.metas__progreso {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary-light) 35%, var(--color-surface));
+  overflow: hidden;
+}
+
+.metas__progreso-barra {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-success);
+  transition: width 0.3s ease;
+}
+
+.metas__lista {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.metas__item {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  padding: var(--espacio-xs) 0;
+}
+
+.metas__alternar {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--espacio-sm);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--tamano-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.metas__texto {
+  overflow-wrap: anywhere;
+}
+
+.metas__item--hecha .metas__texto {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+.metas__fecha {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary-light) 30%, var(--color-surface));
+  color: var(--color-text);
+  font-size: var(--tamano-xs);
+  white-space: nowrap;
+}
+
+.metas__fecha--alerta {
+  border-color: var(--color-error);
+  background: transparent;
+  color: var(--color-error);
+}
+
+/* La X no ocupa lugar: aparece al pasar el mouse o al llegar con el teclado */
+.metas__eliminar {
+  display: flex;
+  flex-shrink: 0;
+  width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0;
+  transition: width 0.15s ease, opacity 0.15s ease;
+}
+
+.metas__item:hover .metas__eliminar,
+.metas__eliminar:focus-visible {
+  width: 18px;
+  opacity: 1;
+}
+
+.metas__eliminar:hover {
+  color: var(--color-error);
+}
+
+.metas__vacio {
+  padding: var(--espacio-xs) 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.metas__nueva {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--espacio-xs);
+}
+
+.metas__input {
+  min-width: 0;
+  padding: var(--espacio-xs) var(--espacio-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+}
+
+.metas__input--fecha {
+  grid-column: 1 / -1;
+  color: var(--color-text-secondary);
+}
+
+/* Que el calendario del campo de fecha se vea en oscuro */
+:root[data-modo="oscuro"] .metas__input {
+  color-scheme: dark;
+}
+
+.metas__agregar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  border: 0;
+  border-radius: var(--radio-sm);
+  background: var(--color-primary);
+  color: var(--color-white);
+  cursor: pointer;
+}
+
+.metas__error {
+  margin: 0;
+  font-size: var(--tamano-xs);
+  color: var(--color-error);
+}
+
+.metas__alternar:focus-visible,
+.metas__agregar:focus-visible,
+.metas__input:focus-visible,
+.metas__eliminar:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* ---------- Completa: casillas, contador y barra ---------- */
+.metas--completa .metas__item + .metas__item {
+  border-top: 1px solid var(--color-border);
+}
+
+.metas__casilla {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-text-secondary);
+  border-radius: 5px;
+  color: var(--color-white);
+}
+
+.metas__item--hecha .metas__casilla {
+  border-color: var(--color-success);
+  background: var(--color-success);
+}
+
+/* ---------- Minimalista: un punto por meta, sin fechas ni contador ---------- */
+.metas__punto {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.metas__item--hecha .metas__punto {
+  background: var(--color-text-secondary);
+}
+
+.metas--minimalista .metas__nueva {
+  grid-template-columns: 1fr;
+}
+
+.metas--minimalista .metas__input {
+  padding-left: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Cuaderno: hoja rayada con margen ---------- */
+.metas--cuaderno {
+  --renglon: 32px;
+  --linea-margen: color-mix(in srgb, var(--color-error) 45%, transparent);
+  --linea-renglon: color-mix(in srgb, var(--color-primary-light) 45%, transparent);
+  gap: 0;
+  background: color-mix(in srgb, var(--color-background) 55%, var(--color-surface));
+}
+
+.metas--cuaderno .metas__cabecera {
+  padding: 0 0 var(--espacio-xs) calc(var(--espacio-md) + var(--espacio-sm));
+}
+
+.metas--cuaderno .metas__lista,
+.metas--cuaderno .metas__nueva {
+  margin-left: var(--espacio-md);
+  padding-left: var(--espacio-sm);
+  border-left: 2px solid var(--linea-margen);
+}
+
+.metas--cuaderno .metas__item {
+  min-height: var(--renglon);
+  padding: 0;
+  border-bottom: 1px solid var(--linea-renglon);
+}
+
+.metas--cuaderno .metas__texto {
+  font-style: italic;
+}
+
+.metas--cuaderno .metas__item--hecha .metas__texto {
+  text-decoration-color: var(--color-primary);
+  text-decoration-thickness: 2px;
+}
+
+.metas--cuaderno .metas__nueva {
+  grid-template-columns: 1fr;
+}
+
+.metas--cuaderno .metas__input {
+  height: var(--renglon);
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--linea-renglon);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.metas--cuaderno .metas__vacio {
+  display: flex;
+  align-items: center;
+  min-height: var(--renglon);
+  padding: 0;
+  border-bottom: 1px solid var(--linea-renglon);
+  font-style: italic;
+}
+
+.metas--cuaderno .metas__error {
+  margin-top: var(--espacio-xs);
+}

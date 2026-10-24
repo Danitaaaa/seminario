@@ -79,6 +79,14 @@ import { registerEnlacesIpc } from './ipc/enlaces.ipc';
 import { VerificarPassword } from './logicaPersistente/gestionDeUsuarios/verificarPassword';
 import { ActualizarRostro } from './logicaPersistente/gestionDeUsuarios/actualizarRostro';
 
+// Gestion de metas
+import { CrearMeta } from './logicaPersistente/gestionDeMetas/crearMeta';
+import { ListarMetas } from './logicaPersistente/gestionDeMetas/listarMetas';
+import { CompletarMeta } from './logicaPersistente/gestionDeMetas/completarMeta';
+import { EliminarMeta } from './logicaPersistente/gestionDeMetas/eliminarMeta';
+import { Metas } from './administracionDePersistencia/metas';
+import { registerMetasIpc } from './ipc/metas.ipc';
+
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -174,6 +182,13 @@ function wireDependencies(): void {
     new ModificarHorario(persistencia), new EliminarHorario(persistencia)
   );
   registerHorariosIpc(horarios);
+
+  // Gestion de metas
+  const metas = new Metas(
+    new CrearMeta(persistencia), new ListarMetas(persistencia),
+    new CompletarMeta(persistencia), new EliminarMeta(persistencia)
+  );
+  registerMetasIpc(metas);
 
   // Enlaces externos
   registerEnlacesIpc();
