@@ -6,6 +6,7 @@ type ResultadoLogin =
   | { exito: true; usuarioId: number }
   | { exito: false; mensaje: string }
  
+// Valida los datos biométricos faciales contra los datos registrados
 export class LoginFacial {
   private repositorio = new UsuarioFacialRepositorio()
  

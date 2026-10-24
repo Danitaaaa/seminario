@@ -18,7 +18,7 @@ import { EliminarProyecto } from '../logicaPersistente/gestionDeProyectos/elimin
 import { ObtenerProyecto } from '../logicaPersistente/gestionDeProyectos/obtenerProyecto';
 import { ListarProyectos } from '../logicaPersistente/gestionDeProyectos/listarProyectos';
 import { AgregarMiembro } from '../logicaPersistente/gestionDeProyectos/agregarMiembro';
-import { QuitarMiembro } from '../logicaPersistente/gestionDeProyectos/quitarMiebro';
+import { QuitarMiembro } from '../logicaPersistente/gestionDeProyectos/quitarMiembro';
 import { ListarMiembros } from '../logicaPersistente/gestionDeProyectos/listarMienbros';
 import { SincronizarProyecto } from '../logicaPersistente/gestionDeProyectos/sincronizarProyecto';
 

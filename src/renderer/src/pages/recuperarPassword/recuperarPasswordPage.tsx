@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/button/button';
 import { Input } from '../../components/ui/input/input';
 import { Card } from '../../components/ui/card/card';
 import { Title } from '../../components/ui/title/title';
-import { CartelError } from '../../components/ui/commons/cartelesError';
+import { CartelError } from '../../components/comunes/cartelError';
 
 export function RecuperarPasswordPage(){
     const [email, setEmail] = useState("");

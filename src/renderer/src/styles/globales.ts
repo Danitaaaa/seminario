@@ -1,5 +1,5 @@
 export const globales = {
-  colores: {
+  colors: {
     fondo: "#F0ECDD",
 
     primario: "#495B7D",

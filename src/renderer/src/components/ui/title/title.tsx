@@ -1,4 +1,4 @@
-import styles from "./title.module.css";
+import styles from "../../../styles/title.module.css";
 
 interface TitleProps {
     children: React.ReactNode;

@@ -1,0 +1,352 @@
+/* Pantalla de horarios. Solo consume variables generadas por issue.ts. */
+ 
+.horarios {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  color: var(--color-storm);
+}
+ 
+/* Cabecera */
+.horarios__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-md);
+}
+ 
+.horarios__subtitulo {
+  margin: 0;
+  color: var(--color-steel);
+  font-size: var(--tamano-sm);
+}
+ 
+/* Botones */
+.horarios__boton-primario,
+.horarios__boton-secundario,
+.horarios__boton-peligro {
+  padding: var(--espacio-sm) var(--espacio-lg);
+  border-radius: 999px;
+  font: inherit;
+  font-weight: var(--peso-medium);
+  cursor: pointer;
+}
+ 
+.horarios__boton-primario {
+  border: 0;
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+  box-shadow: var(--sombra-card);
+}
+ 
+.horarios__boton-primario:hover {
+  background: var(--color-storm);
+}
+ 
+.horarios__boton-secundario {
+  border: 1px solid var(--color-primary-dark);
+  background: var(--color-white);
+  color: var(--color-primary-dark);
+}
+ 
+.horarios__boton-secundario:hover {
+  background: var(--color-frost-claro);
+}
+ 
+.horarios__boton-peligro {
+  margin-right: auto;
+  border: 1px solid var(--color-error);
+  background: var(--color-white);
+  color: var(--color-error);
+}
+ 
+/* Pestañas */
+.horarios__pestanas {
+  display: flex;
+  gap: var(--espacio-sm);
+}
+ 
+.horarios__pestana {
+  padding: var(--espacio-sm) var(--espacio-lg);
+  border: 1px solid var(--color-frost-claro);
+  border-radius: var(--radio-md);
+  background: var(--color-white);
+  color: var(--color-steel);
+  font: inherit;
+  cursor: pointer;
+}
+ 
+.horarios__pestana--activa {
+  border-color: var(--color-frost-blue);
+  background: var(--color-frost-claro);
+  color: var(--color-primary-dark);
+  font-weight: var(--peso-bold);
+}
+ 
+/* Cuerpo: grilla + lateral */
+.horarios__cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: var(--espacio-md);
+  align-items: start;
+}
+ 
+/* Grilla semanal */
+.horarios__grilla {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--color-frost-claro);
+  border-radius: var(--radio-md);
+  background: var(--color-white);
+  box-shadow: var(--sombra-card);
+}
+ 
+.horarios__esquina,
+.horarios__dia {
+  padding: var(--espacio-sm);
+  border-bottom: 1px solid var(--color-frost-claro);
+  background: color-mix(in srgb, var(--color-frost-claro) 60%, var(--color-white));
+}
+ 
+.horarios__dia {
+  border-left: 1px solid var(--color-frost-claro);
+  color: var(--color-primary-dark);
+  font-weight: var(--peso-bold);
+  text-align: center;
+}
+ 
+.horarios__horas {
+  position: relative;
+}
+ 
+.horarios__horas span {
+  position: absolute;
+  right: var(--espacio-sm);
+  transform: translateY(-50%);
+  color: var(--color-steel);
+  font-size: var(--tamano-xs);
+}
+ 
+.horarios__horas span:first-child {
+  transform: none;
+}
+ 
+.horarios__columna {
+  position: relative;
+  border-left: 1px solid var(--color-frost-claro);
+  background-image: linear-gradient(to bottom, var(--color-frost-claro) 1px, transparent 1px);
+  cursor: copy;
+}
+ 
+/* Bloques de clase — un tono por materia */
+.horarios__bloque {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  padding: var(--espacio-xs) var(--espacio-sm);
+  border: 0;
+  border-left: 4px solid var(--tono-fuerte);
+  border-radius: var(--radio-sm);
+  background: var(--tono-suave);
+  color: var(--color-primary-dark);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+ 
+.horarios__bloque:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--sombra-card);
+}
+ 
+.horarios__bloque-titulo {
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-bold);
+  line-height: 1.2;
+}
+ 
+.horarios__bloque-hora {
+  color: var(--color-steel);
+  font-size: var(--tamano-xs);
+}
+ 
+.horarios__bloque--frost  { --tono-suave: var(--color-frost-claro); --tono-fuerte: var(--color-steel); }
+.horarios__bloque--salvia { --tono-suave: color-mix(in srgb, var(--color-success) 22%, var(--color-white)); --tono-fuerte: var(--color-success); }
+.horarios__bloque--ambar  { --tono-suave: color-mix(in srgb, var(--color-warning) 25%, var(--color-white)); --tono-fuerte: var(--color-warning); }
+.horarios__bloque--rosa   { --tono-suave: color-mix(in srgb, var(--color-error) 20%, var(--color-white)); --tono-fuerte: var(--color-error); }
+.horarios__bloque--acero  { --tono-suave: color-mix(in srgb, var(--color-storm) 15%, var(--color-white)); --tono-fuerte: var(--color-storm); }
+ 
+/* Vista por materia */
+.horarios__materias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--espacio-md);
+}
+ 
+.horarios__materia {
+  padding: var(--espacio-md);
+  border-left: 4px solid var(--tono-fuerte);
+  border-radius: var(--radio-md);
+  background: var(--tono-suave);
+}
+ 
+.horarios__materia-titulo {
+  margin: 0 0 var(--espacio-sm);
+  color: var(--color-primary-dark);
+  font-size: var(--tamano-base);
+}
+ 
+.horarios__materia-fila {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--espacio-xs) 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--tono-fuerte) 25%, transparent);
+  background: transparent;
+  color: var(--color-storm);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+ 
+/* Lateral: próximas clases */
+.horarios__lateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  padding: var(--espacio-md);
+  border: 1px solid var(--color-frost-claro);
+  border-radius: var(--radio-md);
+  background: var(--color-white);
+  box-shadow: var(--sombra-card);
+}
+ 
+.horarios__lateral-titulo {
+  margin: 0 0 var(--espacio-xs);
+  color: var(--color-primary-dark);
+  font-size: var(--tamano-lg);
+}
+ 
+.horarios__proxima {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--espacio-sm) var(--espacio-sm) var(--espacio-sm) var(--espacio-md);
+  border: 0;
+  border-left: 4px solid var(--tono-fuerte);
+  border-radius: var(--radio-sm);
+  background: transparent;
+  color: var(--color-primary-dark);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+ 
+.horarios__proxima:hover {
+  background: var(--tono-suave);
+}
+ 
+.horarios__proxima-titulo {
+  font-weight: var(--peso-medium);
+}
+ 
+.horarios__proxima-detalle {
+  color: var(--color-steel);
+  font-size: var(--tamano-sm);
+}
+ 
+.horarios__vacio {
+  margin: 0;
+  color: var(--color-steel);
+  font-size: var(--tamano-sm);
+}
+ 
+/* Resumen */
+.horarios__resumen {
+  padding: var(--espacio-sm) var(--espacio-md);
+  border-radius: var(--radio-md);
+  background: var(--color-frost-claro);
+  color: var(--color-primary-dark);
+  font-size: var(--tamano-sm);
+}
+ 
+/* Modal */
+.horarios__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 18, 47, 0.45);
+}
+ 
+.horarios__modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  width: min(420px, 90vw);
+  padding: var(--espacio-lg);
+  border-radius: var(--radio-md);
+  background: var(--color-white);
+  color: var(--color-storm);
+}
+ 
+.horarios__modal-titulo {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: var(--tamano-lg);
+  text-align: center;
+}
+ 
+.horarios__campo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-medium);
+}
+ 
+.horarios__campo input,
+.horarios__campo select {
+  padding: var(--espacio-sm);
+  border: 1px solid var(--color-frost-blue);
+  border-radius: var(--radio-sm);
+  background: var(--color-white);
+  color: var(--color-primary-dark);
+  font: inherit;
+  font-weight: var(--peso-regular);
+}
+ 
+.horarios__fila-campos {
+  display: flex;
+  gap: var(--espacio-md);
+}
+ 
+.horarios__error {
+  padding: var(--espacio-sm) var(--espacio-md);
+  border-radius: var(--radio-md);
+  background: color-mix(in srgb, var(--color-error) 12%, var(--color-white));
+  color: var(--color-error);
+  font-size: var(--tamano-sm);
+  text-align: center;
+}
+ 
+.horarios__modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espacio-sm);
+}
+ 
+@media (max-width: 900px) {
+  .horarios__cuerpo {
+    grid-template-columns: 1fr;
+  }
+}

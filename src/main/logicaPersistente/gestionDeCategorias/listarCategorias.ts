@@ -3,6 +3,7 @@ import { Categoria } from './entidades';
 import { materializarCategoria } from './materializador';
 import { ListarCategoriasDTO } from './dto';
 
+// Lista las categirías registradas ordenadas por nombre de forma ascendente
 export class ListarCategorias {
   constructor(private readonly persistencia: Persistencia) {}
 

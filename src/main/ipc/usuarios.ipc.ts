@@ -14,14 +14,6 @@ import type { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios
 import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/loginFacial";
 import { RegistrarRostro } from "../logicaPersistente/gestionDeUsuarios/registrarRostro";
 
-function validarDatos<T extends z.ZodType>(schema: T, datos: unknown): z.output<T> {
-    const resultado = schema.safeParse(datos);
-    if (!resultado.success) {
-        throw new Error(resultado.error.issues[0]?.message ?? "Los datos ingresados no son válidos.");
-    }
-    return resultado.data;
-}
-
 export function registerUsuariosIpc(
     usuarios: Usuarios
 ): void {
@@ -34,12 +26,22 @@ export function registerUsuariosIpc(
         }
     );
 
+    ipcMain.handle('usuarios:loginFacial', (_evento, embedding: number[]) =>
+        new LoginFacial().ejecutar(embedding)
+    );
+
     ipcMain.handle(
         "usuarios:registrarUsuario",
         async (_event, datos: unknown) => {
             const validado = validarDatos(registrarUsuarioSchema, datos) as RegistrarUsuarioDto;
             return usuarios.registrarUsuario(validado);
         }
+    );
+
+    ipcMain.handle(
+        'usuarios:registrarRostro',
+        (_evento, usuarioId: number, embedding: number[]) =>
+            new RegistrarRostro().ejecutar(usuarioId, embedding)
     );
 
     ipcMain.handle(
@@ -59,14 +61,6 @@ export function registerUsuariosIpc(
     );
 
     ipcMain.handle(
-        "usuarios:cambiarPassword",
-        async (_event, datos: unknown) => {
-            const validado = validarDatos(cambiarPasswordSchema, datos);
-            return usuarios.cambiarPassword(validado);
-        }
-    );
-
-    ipcMain.handle(
         "usuarios:validarCodigo",
         async (_event, datos: unknown) => {
             const validado = validarDatos(validarCodigoSchema, datos);
@@ -75,13 +69,18 @@ export function registerUsuariosIpc(
     );
 
     ipcMain.handle(
-    'usuarios:registrarRostro',
-    (_evento, usuarioId: number, embedding: number[]) =>
-        new RegistrarRostro().ejecutar(usuarioId, embedding)
+        "usuarios:cambiarPassword",
+        async (_event, datos: unknown) => {
+            const validado = validarDatos(cambiarPasswordSchema, datos);
+            return usuarios.cambiarPassword(validado);
+        }
     );
-    
-    ipcMain.handle('usuarios:loginFacial', (_evento, embedding: number[]) =>
-    new LoginFacial().ejecutar(embedding)
-    );
+}
 
+function validarDatos<T extends z.ZodType>(schema: T, datos: unknown): z.output<T> {
+    const resultado = schema.safeParse(datos);
+    if (!resultado.success) {
+        throw new Error(resultado.error.issues[0]?.message ?? "Los datos ingresados no son válidos.");
+    }
+    return resultado.data;
 }

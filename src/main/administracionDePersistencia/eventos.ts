@@ -18,12 +18,11 @@ export class Eventos {
     private readonly eliminarEvento: EliminarEvento
   ) {}
 
-  async crear(datos: CrearEventoDTO): Promise<Evento> {
-    return this.crearEvento.ejecutar(datos);
-  }
-
   async listar(datos: ListarEventosDTO): Promise<Evento[]> {
     return this.listarEventos.ejecutar(datos);
+  }
+  async crear(datos: CrearEventoDTO): Promise<Evento> {
+    return this.crearEvento.ejecutar(datos);
   }
 
   async modificar(datos: ModificarEventoDTO): Promise<Evento> {

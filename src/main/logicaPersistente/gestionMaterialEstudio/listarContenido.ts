@@ -5,6 +5,7 @@ import { ListarContenidoDTO, BuscadorArchivoDTO } from "./dto";
 
 type Comparador = (a: ElementoContenido, b: ElementoContenido) => number;
 
+// Lista nodos y archivos y los ordena y filtra por los criterios pasados
 export class ListarContenido {
     constructor(
         private readonly buscarNodos: BuscarNodos,

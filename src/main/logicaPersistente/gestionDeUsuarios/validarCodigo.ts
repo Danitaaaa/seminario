@@ -1,6 +1,7 @@
 import { Persistencia } from '../../persistencia/persistencia';
 import type { ValidarCodigoDto } from './dto';
 
+// Valida el código de recuperación de contraseña
 export class ValidarCodigo {
     constructor(
         private readonly persistencia: Persistencia
