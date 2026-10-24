@@ -149,6 +149,54 @@
   cursor: pointer;
 }
 
+/* ---------- Banner de inicio ---------- */
+.ajustes__fondo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-md);
+}
+
+.ajustes__miniatura {
+  width: 160px;
+  height: 64px;
+  border-radius: var(--radio-sm);
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+.ajustes__ayuda {
+  max-width: 320px;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.ajustes__boton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  padding: var(--espacio-xs) var(--espacio-md);
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.ajustes__boton:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.ajustes__error {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-error);
+}
+
+.ajustes__boton:focus-visible,
 .ajustes__fila:focus-visible,
 .ajustes__opcion:focus-visible,
 .ajustes__paleta:focus-visible {

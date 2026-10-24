@@ -9,7 +9,7 @@ import { PanelAyuda } from "../../components/layout/panelAyuda";
 import { cerrarSesion } from "../../../lib/sesion";
 
 interface PlantillaLayoutProps {
-  titulo: string;
+  titulo?: string; // si no se pasa, la pantalla pone su propio título (ej. el saludo del inicio)
   idActivo: string;
   usuario: UsuarioActual;
   onNavegar?: (id: string) => void;
@@ -53,7 +53,7 @@ export function PlantillaLayout({
           onAccion={accionar}
         />
         <main className="app-contenido">
-          <h1 className="app-titulo">{titulo}</h1>
+          {titulo && <h1 className="app-titulo">{titulo}</h1>}
           <section className="app-panel">{children}</section>
         </main>
       </div>

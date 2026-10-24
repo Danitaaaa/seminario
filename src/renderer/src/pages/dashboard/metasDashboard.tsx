@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Check, Plus, X } from "lucide-react";
 import { obtenerUsuarioId } from "../../../lib/sesion";
-import type { Meta } from "../../types/metas";
+import { EVENTO_METAS_ACTUALIZADAS, type Meta } from "../../types/metas";
 import { usarPreferenciaMetas } from "../../hooks/usarPreferenciaMetas";
 import "../../styles/metas.css";
 
@@ -38,20 +38,23 @@ function etiquetaFecha(meta: Meta): { texto: string; alerta: boolean } | null {
 // "Mis metas" del dashboard, en el estilo que el usuario eligió en Ajustes.
 export function MetasDashboard() {
   const usuarioId = obtenerUsuarioId();
-  const { estilo, mostrar } = usarPreferenciaMetas();
+  const { visible, estilo, mostrar } = usarPreferenciaMetas();
   const [metas, setMetas] = useState<Meta[]>([]);
   const [titulo, setTitulo] = useState("");
   const [fecha, setFecha] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!usuarioId) return;
+    if (!usuarioId || !visible) return;
     window.api.listarMetas({ usuarioId })
       .then(setMetas)
       .catch((e) => setError(mensajeDe(e)));
-  }, [usuarioId]);
+  }, [usuarioId, visible]);
 
-  if (!usuarioId) return null;
+  if (!usuarioId || !visible) return null;
+
+  // El banner de inicio muestra cuántas metas quedan: se le avisa de cada cambio.
+  const avisarCambio = () => window.dispatchEvent(new Event(EVENTO_METAS_ACTUALIZADAS));
 
   const completa = estilo === "completa";
   const conFechas = completa && mostrar.fechas;
@@ -67,6 +70,7 @@ export function MetasDashboard() {
         fechaLimite: conFechas && fecha ? fecha : null,
       });
       setMetas((actuales) => [...actuales, nueva]);
+      avisarCambio();
       setTitulo("");
       setFecha("");
       setError("");
@@ -79,6 +83,7 @@ export function MetasDashboard() {
     try {
       const actualizada = await window.api.completarMeta({ id: meta.id, usuarioId, completada: !meta.completada });
       setMetas((actuales) => actuales.map((m) => (m.id === meta.id ? actualizada : m)));
+      avisarCambio();
     } catch (err) {
       setError(mensajeDe(err));
     }
@@ -88,6 +93,7 @@ export function MetasDashboard() {
     try {
       await window.api.eliminarMeta({ id: meta.id, usuarioId });
       setMetas((actuales) => actuales.filter((m) => m.id !== meta.id));
+      avisarCambio();
     } catch (err) {
       setError(mensajeDe(err));
     }

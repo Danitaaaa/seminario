@@ -9,6 +9,7 @@ export interface MostrarMetas {
   progreso: boolean;
 }
 
+const CLAVE_VISIBLE = "syntra:metas-visible";
 const CLAVE_ESTILO = "syntra:metas-estilo";
 const CLAVE_MOSTRAR = "syntra:metas-mostrar";
 const EVENTO = "syntra:metas-cambiadas";
@@ -28,6 +29,11 @@ function guardar(clave: string, valor: string): void {
     // Si no se puede guardar, igual se aplica en esta sesión
   }
   window.dispatchEvent(new Event(EVENTO));
+}
+
+// Las metas se ven salvo que el usuario las haya ocultado.
+export function leerVisible(): boolean {
+  return leer(CLAVE_VISIBLE) !== "no";
 }
 
 export function leerEstilo(): EstiloMetas {
@@ -50,11 +56,13 @@ export function leerMostrar(): MostrarMetas {
 
 // Cómo se ven las metas del inicio. Se elige en Ajustes y se comparte con el dashboard.
 export function usarPreferenciaMetas() {
+  const [visible, setVisible] = useState(leerVisible);
   const [estilo, setEstilo] = useState(leerEstilo);
   const [mostrar, setMostrar] = useState(leerMostrar);
 
   useEffect(() => {
     const sincronizar = () => {
+      setVisible(leerVisible());
       setEstilo(leerEstilo());
       setMostrar(leerMostrar());
     };
@@ -63,8 +71,10 @@ export function usarPreferenciaMetas() {
   }, []);
 
   return {
+    visible,
     estilo,
     mostrar,
+    cambiarVisible: (valor: boolean) => guardar(CLAVE_VISIBLE, valor ? "si" : "no"),
     cambiarEstilo: (nuevo: EstiloMetas) => guardar(CLAVE_ESTILO, nuevo),
     cambiarMostrar: (opcion: keyof MostrarMetas, valor: boolean) =>
       guardar(CLAVE_MOSTRAR, JSON.stringify({ ...leerMostrar(), [opcion]: valor })),

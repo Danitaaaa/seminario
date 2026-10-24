@@ -2,7 +2,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { Persistencia } from '../../persistencia/persistencia';
 
-const FORMATOS: Record<string, string> = {
+// Exportados para reutilizarlos con la imagen de fondo del inicio.
+export const FORMATOS: Record<string, string> = {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
@@ -10,7 +11,7 @@ const FORMATOS: Record<string, string> = {
 };
 
 // Devuelve la imagen como data URL para que el renderer la muestre sin acceder al disco.
-async function leerComoDataUrl(ruta: string): Promise<string | null> {
+export async function leerComoDataUrl(ruta: string): Promise<string | null> {
     const tipo = FORMATOS[path.extname(ruta).toLowerCase()];
     if (!tipo) return null;
     try {

@@ -8,6 +8,7 @@ import { horariosApi } from './apis/horarios';
 import { enlacesApi } from './apis/enlaces';
 import { driveApi } from './apis/drive';
 import { metasApi } from './apis/metas';
+import { inicioApi } from './apis/inicio';
 
 contextBridge.exposeInMainWorld('api', {
   ...nodosApi,
@@ -19,4 +20,5 @@ contextBridge.exposeInMainWorld('api', {
   ...enlacesApi,
   ...driveApi,
   ...metasApi,
+  ...inicioApi,
 });

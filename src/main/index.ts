@@ -87,6 +87,11 @@ import { EliminarMeta } from './logicaPersistente/gestionDeMetas/eliminarMeta';
 import { Metas } from './administracionDePersistencia/metas';
 import { registerMetasIpc } from './ipc/metas.ipc';
 
+// Pantalla de inicio
+import { ObtenerFondoInicio, ActualizarFondoInicio } from './logicaPersistente/gestionDeInicio/fondoInicio';
+import { Inicio } from './administracionDePersistencia/inicio';
+import { registerInicioIpc } from './ipc/inicio.ipc';
+
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -189,6 +194,13 @@ function wireDependencies(): void {
     new CompletarMeta(persistencia), new EliminarMeta(persistencia)
   );
   registerMetasIpc(metas);
+
+  // Pantalla de inicio
+  const inicio = new Inicio(
+    new ObtenerFondoInicio(persistencia),
+    new ActualizarFondoInicio(persistencia, path.join(app.getPath('userData'), 'fondosInicio'))
+  );
+  registerInicioIpc(inicio);
 
   // Enlaces externos
   registerEnlacesIpc();

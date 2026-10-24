@@ -1,0 +1,198 @@
+/* Banner de bienvenida del dashboard. Solo consume variables de issue.ts. */
+
+.banner {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-lg);
+  margin-bottom: var(--espacio-md);
+  padding: var(--espacio-md) var(--espacio-lg);
+  border-radius: var(--radio-lg);
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-family: var(--fuente-body);
+  overflow: hidden;
+}
+
+/* Círculos de fondo: toman el color claro de la paleta */
+.banner::before,
+.banner::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.banner::before {
+  top: -90px;
+  right: -40px;
+  width: 250px;
+  height: 250px;
+  background: color-mix(in srgb, var(--color-splash-brillo) 35%, transparent);
+}
+
+.banner::after {
+  right: 210px;
+  bottom: -130px;
+  width: 190px;
+  height: 190px;
+  background: color-mix(in srgb, var(--color-white) 8%, transparent);
+}
+
+:root[data-modo="oscuro"] .banner {
+  background: var(--color-primary-dark);
+}
+
+/* Con imagen propia: la foto de fondo y un velo oscuro para que el texto se lea */
+.banner--imagen {
+  background-position: center;
+  background-size: cover;
+}
+
+.banner--imagen::before {
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: rgb(0 0 0 / 45%);
+}
+
+.banner--imagen::after {
+  display: none;
+}
+
+.banner__texto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+  min-width: 0;
+}
+
+.banner__fecha,
+.banner__frase {
+  margin: 0;
+  color: color-mix(in srgb, var(--color-white) 86%, transparent);
+}
+
+.banner__fecha {
+  font-size: var(--tamano-sm);
+}
+
+.banner__saludo {
+  margin: 0;
+  font-family: var(--fuente-display);
+  font-size: 1.9rem;
+  font-weight: var(--peso-bold);
+  line-height: 1.1;
+  color: var(--color-white);
+}
+
+.banner__frase {
+  font-size: var(--tamano-base);
+}
+
+/* ---------- Carrusel ---------- */
+.banner__carrusel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--espacio-sm);
+  width: 280px;
+}
+
+.banner__ventana {
+  width: 100%;
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  box-shadow: var(--sombra-card);
+  overflow: hidden;
+}
+
+.banner__pista {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.banner__tarjeta {
+  display: flex;
+  flex: 0 0 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  box-sizing: border-box;
+  min-height: 84px;
+  padding: var(--espacio-sm) var(--espacio-md);
+}
+
+.banner__etiqueta {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.banner__titulo {
+  margin: 0;
+  font-family: var(--fuente-display);
+  font-size: var(--tamano-base);
+  font-weight: var(--peso-bold);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.banner__detalle {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.banner__puntos {
+  display: flex;
+  gap: var(--espacio-xs);
+}
+
+.banner__punto {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-white) 45%, transparent);
+  cursor: pointer;
+  transition: width 0.3s ease;
+}
+
+.banner__punto--activo {
+  width: 24px;
+  background: var(--color-white);
+}
+
+.banner__punto:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner__pista,
+  .banner__punto {
+    transition: none;
+  }
+}
+
+/* En ventanas angostas, el carrusel baja debajo del saludo */
+@media (max-width: 900px) {
+  .banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .banner__carrusel {
+    width: 100%;
+  }
+}

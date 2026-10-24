@@ -24,3 +24,6 @@ export interface EliminarMetaInput {
   id: number;
   usuarioId: number;
 }
+
+// Avisa que las metas cambiaron, para que el banner de inicio actualice su tarjeta.
+export const EVENTO_METAS_ACTUALIZADAS = 'syntra:metas-actualizadas';

@@ -5,6 +5,7 @@ import {
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { MiniCalendario } from './miniCalendario';
 import { MetasDashboard } from './metasDashboard';
+import { BannerInicio } from './bannerInicio';
 import '../../styles/dashboard.css';
 
 type Modulo = {
@@ -29,7 +30,8 @@ export function Dashboard() {
   const navigate = useNavigate();
 
   return (
-    <PlantillaLayout titulo="Dashboard" idActivo="inicio" usuario={{ nombre: 'Usuario' }}>
+    <PlantillaLayout idActivo="inicio" usuario={{ nombre: 'Usuario' }}>
+      <BannerInicio />
       <div className="dashboard">
         <div className="dashboard__modulos">
           {MODULOS.map(({ titulo, descripcion, ruta, icono: Icono, tono }) => (

@@ -96,6 +96,10 @@ declare global {
       completarMeta: (datos: CompletarMetaInput) => Promise<Meta>;
       eliminarMeta: (datos: EliminarMetaInput) => Promise<void>;
 
+      // Pantalla de inicio
+      obtenerFondoInicio: (datos: { id: number }) => Promise<string | null>;
+      elegirFondoInicio: (datos: { id: number }) => Promise<string | null>;
+
       // Enlaces externos
       abrirEnlace: (datos: { enlace: 'github-dana' }) => Promise<void>;
     };
