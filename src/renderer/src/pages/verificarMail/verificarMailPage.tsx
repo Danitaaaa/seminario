@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/button/button';
 import { Card } from '../../components/ui/card/card';
 import { Input } from '../../components/ui/input/input';
 import { Title } from '../../components/ui/title/title';
-import { CartelError } from '../../components/ui/commons/cartelesError';
+import { CartelError } from '../../components/comunes/cartelError';
 
 export function VerificarMailPage() {
 
@@ -53,7 +53,12 @@ export function VerificarMailPage() {
                         />
 
                         {error && <CartelError mensaje={error} onCerrar={() => setError("")} />}
-                        <Button onClick={verificar}>Verificar</Button>
+                        <div className="login-actions">
+                            <Button onClick={verificar}>Verificar</Button>
+                            <Button variant="secondary" onClick={() => navigate(-1)}>
+                                Volver
+                            </Button>
+                        </div>
                     </div>
                 </Card>
             </div>

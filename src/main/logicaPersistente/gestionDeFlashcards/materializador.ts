@@ -1,4 +1,4 @@
-import { Deck } from "./entidades";
+import { Deck, Flashcard } from "./entidades";
 
 export function materializarDeck(
     fila: any
@@ -11,20 +11,17 @@ export function materializarDeck(
         descripcion: fila.descripcion,
         materiaAsociada: fila.materia_asociada,
         fechaCreacion: fila.fecha_creacion,
+        cantidadFlashcards: Number(fila.cantidad_flashcards ?? 0),
+        ultimaRevision: fila.ultima_revision ?? null,
     };
 }
 
-export function desmaterializarDeck(
-    deck: Deck
-): Record<string, unknown> {
-
+export function materializarFlashcard(fila: any): Flashcard {
     return {
-
-        id_deck: deck.idDeck,
-        id_usuario: deck.usuarioId,
-        nombre: deck.nombre,
-        descripcion: deck.descripcion,
-        materia_asociada: deck.materiaAsociada,
-        fecha_creacion: deck.fechaCreacion,
+        idFlashcard: fila.id_flashcard,
+        deckId: fila.id_deck,
+        pregunta: fila.pregunta,
+        respuesta: fila.respuesta,
+        fechaCreacion: fila.fecha_creacion,
     };
 }

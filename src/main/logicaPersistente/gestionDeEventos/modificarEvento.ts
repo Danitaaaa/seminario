@@ -3,6 +3,7 @@ import { Evento } from './entidades';
 import { materializarEvento } from './materializador';
 import { ModificarEventoDTO } from './dto';
 
+// Modifica los parámetros indicados de un evento
 export class ModificarEvento {
   constructor(private readonly persistencia: Persistencia) {}
 
@@ -10,8 +11,6 @@ export class ModificarEvento {
     const campos: string[] = [];
     const valores: unknown[] = [];
 
-    // CAMBIO: "cast" opcional, porque recordatorios necesita ::jsonb igual
-    // que en CrearEvento (las demás columnas no necesitan casteo especial).
     const agregar = (columna: string, valor: unknown, cast?: string): void => {
       if (valor !== undefined) {
         valores.push(valor);

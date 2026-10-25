@@ -76,7 +76,7 @@ VALUES
 
     -- Frontend
     (21, 'Diseño de pantallas',     'pdf',  'seed/diseno-pantallas.pdf',        '2026-02-02 09:30:00', '2026-09-24 09:55:00', '2026-09-23 18:30:00',   1572864, 17),
-    (22, 'Paleta de colores',       'png',  'seed/paleta-colores.png',          '2026-02-04 15:00:00', '2026-09-24 09:57:00', '2026-02-04 15:00:00',     40960, 17);
+    (22, 'Paleta de colors',       'png',  'seed/paleta-colors.png',          '2026-02-04 15:00:00', '2026-09-24 09:57:00', '2026-02-04 15:00:00',     40960, 17);
 
 -- Resincronizar las secuencias de los SERIAL para que el próximo INSERT
 -- automático (sin id explícito) continúe desde el máximo id insertado.

@@ -3,7 +3,7 @@ import { Archivo } from './entidades';
 import { materializarArchivo } from './materializador';
 import { ObtenerArchivoDTO } from './dto';
 
-// Devuelve un archivo por id y registra el acceso.
+// Devuelve un archivo por id y registra el acceso
 export class ObtenerArchivo {
   constructor(private readonly persistencia: Persistencia) {}
 

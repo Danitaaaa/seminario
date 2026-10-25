@@ -9,17 +9,13 @@ export class Flashcards {
         private readonly listarDecksCasoUso: ListarDecks
     ) {}
 
-    async crearDeck(
-        datos: CrearDeckDTO
-    ) {
+    async crearDeck(datos: CrearDeckDTO) {
         return this.crearDeckCasoUso.ejecutar(
             datos
         );
     }
 
-    async listarDecks(
-        usuarioId: number
-    ) {
+    async listarDecks(usuarioId: number) {
         return this.listarDecksCasoUso.ejecutar(
             usuarioId
         );

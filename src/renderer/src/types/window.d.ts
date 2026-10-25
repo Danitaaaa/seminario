@@ -3,6 +3,7 @@ import { Nodo } from './nodo';
 import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput } from './eventos';
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
+import type { Deck, Flashcard, FlashcardPendiente, RepeticionMaterial } from './flashcards';
 
 declare global {
   interface Window {
@@ -72,19 +73,15 @@ declare global {
       listarHorarios: (datos: ListarHorariosInput) => Promise<HorarioCursado[]>;
       modificarHorario: (datos: ModificarHorarioInput) => Promise<HorarioCursado>;
       eliminarHorario: (datos: { id: number }) => Promise<{ ok: boolean }>;
-      
-    crearDeck: (
-      datos: {usuarioId: number;
-        nombre: string;
-        descripcion?: string;
-        materiaAsociada?: string;
-      }
-    ) => Promise<unknown>;
 
-    listarDecks: (
-      usuarioId: number
-    ) => Promise<unknown>;
-
+      crearDeck: (datos: { usuarioId: number; nombre: string; descripcion?: string; materiaAsociada?: string }) => Promise<Deck>;
+      listarDecks: (usuarioId: number) => Promise<Deck[]>;
+      crearFlashcard: (datos: { usuarioId: number; deckId: number; pregunta: string; respuesta: string }) => Promise<Flashcard>;
+      listarFlashcards: (datos: { usuarioId: number; deckId: number }) => Promise<Flashcard[]>;
+      listarFlashcardsPendientes: (usuarioId: number) => Promise<FlashcardPendiente[]>;
+      registrarRevision: (datos: { usuarioId: number; flashcardId: number; dificultad: 'dificil' | 'intermedio' | 'facil' }) => Promise<FlashcardPendiente>;
+      listarRepeticionesMaterial: (usuarioId: number) => Promise<RepeticionMaterial[]>;
+      guardarRepeticionMaterial: (datos: { usuarioId: number; nodoId: number; intervaloDias: 1 | 3 | 7 | 14 }) => Promise<RepeticionMaterial>;
   };
 }
     

@@ -13,4 +13,16 @@ export const flashcardsApi = {
       "flashcards:listarDecks",
       usuarioId
     ),
+
+  crearFlashcard: (datos: unknown) =>
+    ipcRenderer.invoke(
+      "flashcards:crearFlashcard",
+      datos
+    ),
+
+  listarFlashcards: (datos: { usuarioId: number; deckId: number }) =>
+    ipcRenderer.invoke(
+      "flashcards:listarFlashcards",
+      datos
+    ),
 };

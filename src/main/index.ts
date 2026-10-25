@@ -1,11 +1,11 @@
 import 'dotenv/config';
-import { app, BrowserWindow, net, protocol } from 'electron';
+import { app, BrowserWindow, dialog, net, protocol } from 'electron';
 import { isAbsolute, join, relative, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
 
 import { pool, verifyDbConnection } from './persistencia/baseDeDatos';
-import { Persistencia } from './persistencia/persistencia';
+import { Persistencia } from './persistencia/Persistencia';
 
 // Gestion de material de estudio
 import { CrearNodo } from './logicaPersistente/gestionMaterialEstudio/crearNodo';
@@ -65,9 +65,17 @@ import { registerHorariosIpc } from './ipc/horarios.ipc';
 // Gestion de flashcards
 import { CrearDeck } from './logicaPersistente/gestionDeFlashcards/crearDeck';
 import { ListarDecks } from './logicaPersistente/gestionDeFlashcards/listarDecks';
+import { CrearFlashcard } from './logicaPersistente/gestionDeFlashcards/crearFlashcard';
+import { ListarFlashcards } from './logicaPersistente/gestionDeFlashcards/listarFlashcards';
 import { Flashcards } from './administracionDePersistencia/flashcards';
 import { registerFlashcardsIpc } from './ipc/flashcards.ipc';
-import { flashcardsApi } from "./apis/flashcards";
+import { RegistrarRevision } from './logicaPersistente/gestionDeRepeticionEspaciada/registrarRevision';
+import { ListarFlashcardsPendientes } from './logicaPersistente/gestionDeRepeticionEspaciada/listarFlashcardsPendientes';
+import { ListarRepeticionesMaterial } from './logicaPersistente/gestionDeRepeticionEspaciada/listarRepeticionesMaterial';
+import { GuardarRepeticionMaterial } from './logicaPersistente/gestionDeRepeticionEspaciada/guardarRepeticionMaterial';
+import { RepeticionEspaciada } from './administracionDePersistencia/repeticionEspaciada';
+import { registerRepeticionEspaciadaIpc } from './ipc/repeticionEspaciada.ipc';
+import { EnviarRecordatoriosPendientes } from './logicaPersistente/gestionDeRepeticionEspaciada/enviarRecordatoriosPendientes';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -82,29 +90,6 @@ protocol.registerSchemesAsPrivileged([
     },
   },
 ]);
-
-function createWindow(): void {
-  mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    show: false,
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: false,
-    },
-  });
-
-  mainWindow.on('ready-to-show', () => mainWindow?.show());
-  mainWindow.on('closed', () => { mainWindow = null; });
-
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
-  }
-}
 
 function wireDependencies(): void {
   const persistencia = new Persistencia(pool);
@@ -166,12 +151,48 @@ function wireDependencies(): void {
   // Gestion de flashcards
   const crearDeck = new CrearDeck(persistencia);
   const listarDecks =new ListarDecks(persistencia);
-  const flashcards =new Flashcards(crearDeck,listarDecks);
+  const flashcards = new Flashcards(
+    crearDeck,
+    listarDecks,
+    new CrearFlashcard(persistencia),
+    new ListarFlashcards(persistencia)
+  );
 
   registerFlashcardsIpc(
     flashcards
   );
 
+  const repeticionEspaciada = new RepeticionEspaciada(
+    new ListarFlashcardsPendientes(persistencia),
+    new RegistrarRevision(persistencia),
+    new ListarRepeticionesMaterial(persistencia),
+    new GuardarRepeticionMaterial(persistencia)
+  );
+  registerRepeticionEspaciadaIpc(repeticionEspaciada);
+
+}
+
+function createWindow(): void {
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    show: false,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  });
+
+  mainWindow.on('ready-to-show', () => mainWindow?.show());
+  mainWindow.on('closed', () => { mainWindow = null; });
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
+  } else {
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
+  }
 }
 
 app.whenReady().then(async () => {
@@ -198,11 +219,32 @@ app.whenReady().then(async () => {
 
   try {
     await verifyDbConnection();
-  } catch (err) {
-    console.error('[startup] No se pudo conectar a Postgres:', err);
+  } catch (error) {
+    console.error('[startup] No se pudo preparar la base de datos:', error);
+    dialog.showErrorBox(
+      'No se pudo preparar la base de datos',
+      'Revisá la conexión y el esquema de PostgreSQL y volvé a abrir la aplicación.'
+    );
+    app.quit();
+    return;
   }
 
   wireDependencies();
+  const recordatorios = new EnviarRecordatoriosPendientes(new Persistencia(pool));
+  let recordatoriosEnCurso = false;
+  const enviarRecordatorios = async () => {
+    if (recordatoriosEnCurso) return;
+    recordatoriosEnCurso = true;
+    try {
+      await recordatorios.ejecutar();
+    } catch (error) {
+      console.error('[repeticion-espaciada] No se pudieron enviar los recordatorios pendientes.', error);
+    } finally {
+      recordatoriosEnCurso = false;
+    }
+  };
+  void enviarRecordatorios();
+  setInterval(() => void enviarRecordatorios(), 15 * 60 * 1000);
   createWindow();
 
   app.on('activate', () => {

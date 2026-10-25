@@ -13,6 +13,9 @@ import { cargarModelos } from "../lib/cargarModelos";
 import { Proximamente } from "./pages/proximamente/proximamente";
 import { EventosPage } from "./pages/eventos/eventosPage";
 import { HorariosPage } from "./pages/horarios/horariosPage";
+import { MetodosPage } from "./pages/metodos/metodosPage";
+import { RepeticionEspaciadaPage } from "./pages/metodos/repeticionEspaciadaPage";
+import { DeckFlashcardsPage, EstudiarFlashcardsPage, FlashcardsPage } from "./pages/flashcards/flashcardsPage";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -37,6 +40,11 @@ export default function App() {
       <Route path="/material" element={<NodoPage />} />
       <Route path="/eventos" element={<EventosPage />} />
       <Route path="/horarios" element={<HorariosPage />} />
+      <Route path="/metodos" element={<MetodosPage />} />
+      <Route path="/flashcards" element={<FlashcardsPage />} />
+      <Route path="/flashcards/:deckId" element={<DeckFlashcardsPage />} />
+      <Route path="/flashcards/:deckId/estudiar" element={<EstudiarFlashcardsPage />} />
+      <Route path="/repeticion-espaciada" element={<RepeticionEspaciadaPage />} />
       <Route path="/proximamente/:id" element={<Proximamente />} />
     </Routes>
   );

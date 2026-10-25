@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { Flashcards } from "../administracionDePersistencia/flashcards";
-import { crearDeckSchema } from "../logicaPersistente/gestionDeFlashcards/dto";
+import { crearDeckSchema, crearFlashcardSchema, listarFlashcardsSchema } from "../logicaPersistente/gestionDeFlashcards/dto";
 
 export function registerFlashcardsIpc(
     flashcards: Flashcards
@@ -18,6 +18,7 @@ export function registerFlashcardsIpc(
             return flashcards.crearDeck(
                 validado
             );
+
         }
     );
 
@@ -28,6 +29,20 @@ export function registerFlashcardsIpc(
             return flashcards.listarDecks(
                 usuarioId
             );
+        }
+    );
+
+    ipcMain.handle(
+        "flashcards:crearFlashcard",
+        async (_event, datos: unknown) =>
+            flashcards.crearFlashcard(crearFlashcardSchema.parse(datos))
+    );
+
+    ipcMain.handle(
+        "flashcards:listarFlashcards",
+        async (_event, datos: unknown) => {
+            const validado = listarFlashcardsSchema.parse(datos);
+            return flashcards.listarFlashcards(validado.usuarioId, validado.deckId);
         }
     );
 }

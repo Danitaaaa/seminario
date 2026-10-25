@@ -34,6 +34,7 @@ const rutasPorItem: Record<string, string> = {
   material: '/material',
   horarios: '/horarios',
   calendario: '/eventos',
+  metodos: '/metodos',
   'cerrar-sesion': '/',
 };
 

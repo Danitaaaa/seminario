@@ -3,6 +3,7 @@ import { HorarioCursado } from './entidades';
 import { materializarHorario } from './materializador';
 import { ListarHorariosDTO } from './dto';
 
+// Lista los horarios registrados en el sistema ordenados por dia y hora de inicio
 export class ListarHorarios {
   constructor(private readonly persistencia: Persistencia) {}
 

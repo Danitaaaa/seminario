@@ -5,6 +5,8 @@ import { usuariosApi } from './apis/usuarios';
 import { eventosApi } from './apis/eventos';
 import { categoriasApi } from './apis/categorias';
 import { horariosApi } from './apis/horarios';
+import { flashcardsApi } from './apis/flashcards';
+import { repeticionEspaciadaApi } from './apis/repeticionEspaciada';
 
 contextBridge.exposeInMainWorld('api', {
   ...nodosApi,
@@ -13,4 +15,6 @@ contextBridge.exposeInMainWorld('api', {
   ...eventosApi,
   ...categoriasApi,
   ...horariosApi,
+  ...flashcardsApi,
+  ...repeticionEspaciadaApi,
 });

@@ -18,12 +18,11 @@ export class Horarios {
     private readonly eliminarHorario: EliminarHorario
   ) {}
 
-  async crear(datos: CrearHorarioDTO): Promise<HorarioCursado> {
-    return this.crearHorario.ejecutar(datos);
-  }
-
   async listar(datos: ListarHorariosDTO): Promise<HorarioCursado[]> {
     return this.listarHorarios.ejecutar(datos);
+  }
+  async crear(datos: CrearHorarioDTO): Promise<HorarioCursado> {
+    return this.crearHorario.ejecutar(datos);
   }
 
   async modificar(datos: ModificarHorarioDTO): Promise<HorarioCursado> {

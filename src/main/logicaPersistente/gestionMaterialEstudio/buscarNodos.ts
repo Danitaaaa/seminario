@@ -11,6 +11,7 @@ const COLUMNAS: Record<BuscarNodosDTO['ordenarPor'] & string, string> = {
     tamaño: 'tamaño',
 };
 
+// Lista nodos, fitra por parámetros y ordena por columna y dirección
 export class BuscarNodos {
     constructor(private readonly persistencia: Persistencia) {}
 

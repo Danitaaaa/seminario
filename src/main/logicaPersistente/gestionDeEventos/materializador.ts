@@ -1,5 +1,6 @@
 import { Evento } from './entidades';
 
+// Convierte un registro de la BD a un objeto del tipo Evento.
 export function materializarEvento(fila: any): Evento {
   return {
     id: fila.id,
@@ -12,21 +13,6 @@ export function materializarEvento(fila: any): Evento {
     prioridad: fila.prioridad ?? 'media',
     notificacionesActivas: fila.notificaciones_activas ?? false,
     recordatorios: fila.recordatorios ?? [],
-  };
-}
-
-export function desmaterializarEvento(evento: Evento): Record<string, unknown> {
-  return {
-    id: evento.id,
-    usuario_id: evento.usuarioId,
-    titulo: evento.titulo,
-    descripcion: evento.descripcion,
-    lugar: evento.lugar,
-    fecha: evento.fecha,
-    categoria: evento.categoria,
-    prioridad: evento.prioridad,
-    notificaciones_activas: evento.notificacionesActivas,
-    recordatorios: JSON.stringify(evento.recordatorios),
   };
 }
 
