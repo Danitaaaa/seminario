@@ -9,11 +9,8 @@ import { enlacesApi } from './apis/enlaces';
 import { driveApi } from './apis/drive';
 import { metasApi } from './apis/metas';
 import { inicioApi } from './apis/inicio';
-<<<<<<< HEAD
 import { flashcardsApi } from './apis/flashcards';
 import { repeticionEspaciadaApi } from './apis/repeticionEspaciada';
-=======
->>>>>>> modulo/perfil
 import { notificacionesApi } from './apis/notificaciones';
 
 contextBridge.exposeInMainWorld('api', {
@@ -27,10 +24,7 @@ contextBridge.exposeInMainWorld('api', {
   ...driveApi,
   ...metasApi,
   ...inicioApi,
-<<<<<<< HEAD
   ...flashcardsApi,
   ...repeticionEspaciadaApi,
-=======
->>>>>>> modulo/perfil
   ...notificacionesApi,
 });

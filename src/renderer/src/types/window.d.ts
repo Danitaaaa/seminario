@@ -5,10 +5,7 @@ import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCa
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
 import type { Perfil } from './perfil';
 import type { Meta, CrearMetaInput, CompletarMetaInput, EliminarMetaInput } from './metas';
-<<<<<<< HEAD
 import type { Deck, Flashcard, FlashcardPendiente, RepeticionMaterial } from './flashcards';
-=======
->>>>>>> modulo/perfil
 import type { Notificacion } from './notificaciones';
 
 declare global {
