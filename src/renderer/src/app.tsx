@@ -16,9 +16,12 @@ import { HorariosPage } from "./pages/horarios/horariosPage";
 import { PerfilPage } from "./pages/perfil/perfilPage";
 import { PanelPerfil } from "./pages/perfil/panelPerfil";
 import { AjustesPage } from "./pages/ajustes/ajustesPage";
+<<<<<<< HEAD
 import { MetodosPage } from "./pages/metodos/metodosPage";
 import { RepeticionEspaciadaPage } from "./pages/metodos/repeticionEspaciadaPage";
 import { DeckFlashcardsPage, EstudiarFlashcardsPage, FlashcardsPage } from "./pages/flashcards/flashcardsPage";
+=======
+>>>>>>> modulo/perfil
 import { CronogramaPage } from "./pages/cronograma/cronogramaPage";
 
 export default function App() {

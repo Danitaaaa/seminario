@@ -1,5 +1,9 @@
 import 'dotenv/config';
+<<<<<<< HEAD
 import { app, BrowserWindow, dialog, net, Notification, protocol, shell } from 'electron';
+=======
+import { app, BrowserWindow, net, Notification, protocol, shell } from 'electron';
+>>>>>>> modulo/perfil
 import { isAbsolute, join, relative, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
@@ -92,6 +96,7 @@ import { ObtenerFondoInicio, ActualizarFondoInicio } from './logicaPersistente/g
 import { Inicio } from './administracionDePersistencia/inicio';
 import { registerInicioIpc } from './ipc/inicio.ipc';
 
+<<<<<<< HEAD
 // Gestion de flashcards
 import { CrearDeck } from './logicaPersistente/gestionDeFlashcards/crearDeck';
 import { ListarDecks } from './logicaPersistente/gestionDeFlashcards/listarDecks';
@@ -107,6 +112,8 @@ import { RepeticionEspaciada } from './administracionDePersistencia/repeticionEs
 import { registerRepeticionEspaciadaIpc } from './ipc/repeticionEspaciada.ipc';
 import { EnviarRecordatoriosPendientes } from './logicaPersistente/gestionDeRepeticionEspaciada/enviarRecordatoriosPendientes';
 
+=======
+>>>>>>> modulo/perfil
 // Notificaciones
 import { CrearNotificacion } from './logicaPersistente/gestionDeNotificaciones/crearNotificacion';
 import { ListarNotificaciones } from './logicaPersistente/gestionDeNotificaciones/listarNotificaciones';
@@ -117,6 +124,10 @@ import { Notificaciones } from './administracionDePersistencia/notificaciones';
 import { Notificador } from './logicaNoPersistente/notificaciones/notificador';
 import { VigiaNotificaciones } from './logicaNoPersistente/notificaciones/vigiaNotificaciones';
 import { registerNotificacionesIpc } from './ipc/notificaciones.ipc';
+<<<<<<< HEAD
+=======
+
+>>>>>>> modulo/perfil
 
 let mainWindow: BrowserWindow | null = null;
 

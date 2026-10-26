@@ -4,7 +4,10 @@ import { BotonIcono } from "../comunes/botonIcono";
 import { BuscadorGlobal } from "./buscadorGlobal";
 import { MenuUsuario } from "./menuUsuario";
 import { MenuNotificaciones } from "./menuNotificaciones";
+<<<<<<< HEAD
 import { FlechasNavegacion } from "./flechasNavegacion";
+=======
+>>>>>>> modulo/perfil
 import { usarModo } from "../../hooks/usarModo";
 
 interface BarraSuperiorProps {

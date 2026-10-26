@@ -1,7 +1,7 @@
 import {
-  Home, Library, BookOpen, CalendarClock, List, Briefcase,
+  Home, Library, BookOpen, CalendarClock, List, Briefcase, CalendarRange,
   CalendarDays, MessageCircle, Settings, LogOut,
-  CircleHelp, Mail, Bell,
+  CircleHelp,
 } from "lucide-react";
 import type { AccionSuperior, ItemNavegacion } from '../types/layout';
 
@@ -13,6 +13,7 @@ export const itemsPrincipales: ItemNavegacion[] = [
   { id: "horarios", etiqueta: "Horarios", icono: CalendarClock },
   { id: "metodos", etiqueta: "Métodos", icono: List },
   { id: "proyectos", etiqueta: "Proyectos", icono: Briefcase },
+  { id: "cronograma", etiqueta: "Cronograma", icono: CalendarRange },
   { id: "calendario", etiqueta: "Calendario", icono: CalendarDays },
   { id: "chat", etiqueta: "Chat", icono: MessageCircle },
 ];
@@ -24,8 +25,6 @@ export const itemsInferiores: ItemNavegacion[] = [
 
 export const accionesSuperiores: AccionSuperior[] = [
   { id: "ayuda", etiqueta: "Ayuda", icono: CircleHelp },
-  { id: "mensajes", etiqueta: "Mensajes", icono: Mail },
-  { id: "notificaciones", etiqueta: "Notificaciones", icono: Bell },
 ];
 
 // A qué ruta lleva cada ítem de la barra lateral.
@@ -33,6 +32,7 @@ const rutasPorItem: Record<string, string> = {
   inicio: '/dashboard',
   material: '/material',
   horarios: '/horarios',
+  cronograma: '/cronograma',
   calendario: '/eventos',
   perfil: '/perfil',
   metodos: '/metodos',

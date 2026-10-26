@@ -1,0 +1,317 @@
+/* Cronograma semanal del usuario. Solo consume variables de issue.ts. */
+
+.cronograma {
+  --hora: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  font-family: var(--fuente-body);
+  color: var(--color-text);
+}
+
+.cronograma__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-md);
+}
+
+/* ---------- Pestañas ---------- */
+.cronograma__pestanas {
+  display: inline-flex;
+  gap: var(--espacio-xs);
+  padding: var(--espacio-xs);
+  border-radius: 999px;
+  background: var(--color-frost-claro);
+}
+
+.cronograma__pestana {
+  padding: var(--espacio-xs) var(--espacio-md);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.cronograma__pestana--activa {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* ---------- Navegación de semana ---------- */
+.cronograma__semana {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+}
+
+.cronograma__titulo-semana {
+  min-width: 220px;
+  font-weight: var(--peso-bold);
+  text-align: center;
+}
+
+.cronograma__flecha,
+.cronograma__hoy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.cronograma__flecha {
+  width: 34px;
+}
+
+.cronograma__hoy {
+  padding: 0 var(--espacio-md);
+}
+
+/* ---------- Filtros ---------- */
+.cronograma__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-xs);
+}
+
+.cronograma__filtros-texto,
+.cronograma__vacio {
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.cronograma__vacio {
+  margin-left: var(--espacio-sm);
+}
+
+.cronograma__filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  padding: 4px var(--espacio-md);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.cronograma__filtro--activo {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.cronograma__muestra {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.cronograma__muestra--clase { background: var(--color-primary); }
+.cronograma__muestra--evento { background: color-mix(in srgb, var(--color-warning) 55%, var(--color-surface)); }
+.cronograma__muestra--meta { background: color-mix(in srgb, var(--color-success) 45%, var(--color-surface)); }
+
+.cronograma__aviso,
+.cronograma__error {
+  margin: 0;
+  padding: var(--espacio-md);
+  border-radius: var(--radio-md);
+  font-size: var(--tamano-sm);
+}
+
+.cronograma__aviso {
+  background: var(--color-frost-claro);
+}
+
+.cronograma__error {
+  background: var(--color-error-bg);
+  color: var(--color-error-texto);
+}
+
+/* ---------- Grilla ---------- */
+.cronograma__grilla {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.cronograma__fila {
+  display: grid;
+  grid-template-columns: 56px repeat(7, minmax(0, 1fr));
+}
+
+.cronograma__fila--cabecera,
+.cronograma__fila--superior {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cronograma__dia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--espacio-xs) 0;
+}
+
+.cronograma__dia--hoy {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+
+.cronograma__dia-nombre {
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+}
+
+.cronograma__dia-numero {
+  font-size: var(--tamano-lg);
+  font-weight: var(--peso-bold);
+}
+
+.cronograma__dia--hoy .cronograma__dia-numero {
+  color: var(--color-primary-light);
+}
+
+.cronograma__etiqueta-fila {
+  align-self: center;
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.cronograma__celda-superior {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  border-left: 1px solid var(--color-border);
+}
+
+.cronograma__chip {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-size: var(--tamano-xs);
+  text-align: left;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.cronograma__chip--evento {
+  background: color-mix(in srgb, var(--color-warning) 30%, var(--color-surface));
+  cursor: pointer;
+}
+
+.cronograma__chip--meta {
+  background: color-mix(in srgb, var(--color-success) 22%, var(--color-surface));
+}
+
+.cronograma__chip--hecha {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+.cronograma__cuerpo {
+  position: relative;
+}
+
+.cronograma__horas {
+  position: relative;
+}
+
+.cronograma__hora {
+  position: absolute;
+  right: var(--espacio-xs);
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+  transform: translateY(2px);
+}
+
+.cronograma__columna {
+  position: relative;
+  border-left: 1px solid var(--color-border);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 calc(var(--hora) - 1px),
+    color-mix(in srgb, var(--color-border) 70%, transparent) calc(var(--hora) - 1px) var(--hora)
+  );
+}
+
+.cronograma__columna--hoy {
+  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-surface));
+}
+
+.cronograma__bloque {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 7px;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.cronograma__bloque--clase {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.cronograma__bloque--evento {
+  background: color-mix(in srgb, var(--color-warning) 30%, var(--color-surface));
+  color: var(--color-text);
+}
+
+.cronograma__bloque:hover {
+  filter: brightness(1.08);
+}
+
+.cronograma__bloque-titulo {
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-bold);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.cronograma__bloque-detalle {
+  font-size: var(--tamano-xs);
+  opacity: 0.85;
+}
+
+.cronograma__ahora {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--color-error);
+  pointer-events: none;
+}
+
+.cronograma__pestana:focus-visible,
+.cronograma__flecha:focus-visible,
+.cronograma__hoy:focus-visible,
+.cronograma__filtro:focus-visible,
+.cronograma__chip:focus-visible,
+.cronograma__bloque:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}

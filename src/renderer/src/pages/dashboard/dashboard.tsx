@@ -19,12 +19,21 @@ type Modulo = {
 
 // El tono de cada portada se define en dashboard.css.
 const MODULOS: Modulo[] = [
+<<<<<<< HEAD
   { titulo: 'Material', descripcion: '¡Administrá tus apuntes, bibliografía y demás!', ruta: rutaDe('material'), icono: BookOpen, tono: 'material' },
   { titulo: 'Sesiones de estudio', descripcion: 'Ingresá a las sesiones de estudio para una mejor concentración.', ruta: rutaDe('sesiones'), icono: Timer, tono: 'sesiones' },
   { titulo: 'Horarios', descripcion: 'Horarios de cursado.', ruta: rutaDe('horarios'), icono: CalendarClock, tono: 'horarios' },
   { titulo: 'Métodos', descripcion: 'Creá tus métodos para tus sesiones de estudio.', ruta: rutaDe('metodos'), icono: Lightbulb, tono: 'metodos' },
   { titulo: 'Proyectos', descripcion: 'Visualizá tus proyectos creados.', ruta: rutaDe('proyectos'), icono: FolderKanban, tono: 'proyectos' },
   { titulo: 'Cronograma', descripcion: 'Visualización del calendario y listado de actividad.', ruta: rutaDe('cronograma'), icono: CalendarDays, tono: 'cronograma' },
+=======
+  { titulo: 'Material', descripcion: '¡Administrá tus apuntes, bibliografía y demás!', ruta: '/material', icono: BookOpen, tono: 'material' },
+  { titulo: 'Sesiones de estudio', descripcion: 'Ingresá a las sesiones de estudio para una mejor concentración.', ruta: '/proximamente/sesiones', icono: Timer, tono: 'sesiones' },
+  { titulo: 'Horarios', descripcion: 'Horarios de cursado.', ruta: '/horarios', icono: CalendarClock, tono: 'horarios' },
+  { titulo: 'Métodos', descripcion: 'Creá tus métodos para tus sesiones de estudio.', ruta: '/proximamente/metodos', icono: Lightbulb, tono: 'metodos' },
+  { titulo: 'Proyectos', descripcion: 'Visualizá tus proyectos creados.', ruta: '/proximamente/proyectos', icono: FolderKanban, tono: 'proyectos' },
+  { titulo: 'Cronograma', descripcion: 'Visualización del calendario y listado de actividad.', ruta: '/cronograma', icono: CalendarDays, tono: 'cronograma' },
+>>>>>>> modulo/perfil
 ];
 
 export function Dashboard() {
