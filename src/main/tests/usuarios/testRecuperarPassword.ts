@@ -1,6 +1,6 @@
-import { pool, verifyDbConnection } from '../../persistencia/BaseDeDatos';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
 import type { Persistencia } from '../../persistencia/Persistencia';
-import { RecuperarPassword } from '../../logicaPersistente/gestionDeUsuarios/RecuperarPassword';
+import { RecuperarPassword } from '../../logicaPersistente/gestionDeUsuarios/recuperarPassword';
 
 
 const comprobar = (ok: boolean, mensaje: string): void => {

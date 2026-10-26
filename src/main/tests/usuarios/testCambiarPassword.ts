@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import { pool, verifyDbConnection } from '../../persistencia/BaseDeDatos';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
 import type { Persistencia } from '../../persistencia/Persistencia';
-import { CambiarPassword } from '../../logicaPersistente/gestionDeUsuarios/CambiarPassword';
+import { CambiarPassword } from '../../logicaPersistente/gestionDeUsuarios/cambiarPassword';
 
 
 const comprobar = (ok: boolean, mensaje: string): void => {

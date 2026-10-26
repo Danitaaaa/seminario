@@ -118,6 +118,34 @@
   gap: var(--espacio-md);
 }
 
+.app-flechas {
+  display: flex;
+  gap: var(--espacio-xs);
+}
+
+.app-flecha {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.app-flecha:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-border) 22%, var(--color-surface));
+  color: var(--color-text);
+}
+
+.app-flecha:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .app-boton-icono {
   display: inline-flex;
   align-items: center;

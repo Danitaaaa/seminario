@@ -1,0 +1,353 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--color-text);
+}
+
+.intro {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.methodGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 20px;
+}
+
+.methodCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 17px;
+  min-height: 160px;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: 0 5px 18px rgb(44 62 96 / 7%);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.methodCard:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-primary-light);
+  box-shadow: 0 10px 25px rgb(44 62 96 / 12%);
+}
+
+.methodCard:focus-visible,
+.backLink:focus-visible,
+.tabs button:focus-visible,
+.breadcrumb button:focus-visible {
+  outline: 3px solid var(--color-primary-light);
+  outline-offset: 3px;
+}
+
+.methodIcon,
+.reviewIcon {
+  display: grid;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 14px;
+}
+
+.indigo {
+  background: var(--color-frost-claro);
+  color: var(--color-primary);
+}
+
+.blue {
+  background: var(--color-frost-claro);
+  color: var(--color-secondary);
+}
+
+.lavender {
+  background: var(--color-frost-claro);
+  color: var(--color-accent);
+}
+
+.slate {
+  background: var(--color-frost-claro);
+  color: var(--color-text-secondary);
+}
+
+.methodCopy,
+.reviewText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.methodCopy strong {
+  color: var(--color-text);
+  font-size: 1.08rem;
+}
+
+.methodCopy > span {
+  color: var(--color-text-light);
+  font-size: 0.91rem;
+  line-height: 1.5;
+}
+
+.chevron {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-text-light);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 8px;
+  color: var(--color-primary);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tabs {
+  display: flex;
+  width: fit-content;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 12px;
+  background: var(--color-frost-claro);
+}
+
+.tabs button {
+  padding: 10px 19px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabs .activeTab {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: 0 2px 7px rgb(44 62 96 / 9%);
+}
+
+.reviewPanel {
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 17px;
+  background: var(--color-surface);
+  box-shadow: 0 5px 18px rgb(44 62 96 / 5%);
+}
+
+.panelHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.panelHeading h2 {
+  margin: 0 0 6px;
+  color: var(--color-text);
+  font-size: 1.2rem;
+}
+
+.panelHeading p {
+  margin: 0;
+  color: var(--color-text-light);
+  font-size: 0.91rem;
+}
+
+.countBadge {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-frost-claro);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.reviewList,
+.materialList {
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewItem,
+.materialItem {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 17px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.reviewIcon {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+  border-radius: 12px;
+  background: var(--color-frost-claro);
+  color: var(--color-primary);
+}
+
+.reviewText strong {
+  color: var(--color-text);
+  font-size: 0.96rem;
+}
+
+.reviewText span {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+}
+
+.reviewText small,
+.nextReview {
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+}
+
+.emptyText {
+  margin: 0;
+  padding: 20px 0;
+  color: var(--color-text-light);
+  line-height: 1.5;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 14px;
+}
+
+.breadcrumb button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.87rem;
+  cursor: pointer;
+}
+
+.materialItem {
+  flex-wrap: wrap;
+}
+
+.folderName {
+  display: flex;
+  flex: 0 0 190px;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.folderName span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folderName svg:first-child {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+
+.folderName svg:last-child {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.scheduleControls {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.scheduleControls label {
+  color: var(--color-text-light);
+  font-size: 0.84rem;
+}
+
+.scheduleControls select {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: inherit;
+}
+
+.nextReview {
+  width: 100%;
+  margin-left: 205px;
+}
+
+@media (max-width: 700px) {
+  .reviewPanel {
+    padding: 17px;
+  }
+
+  .reviewItem {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .reviewItem > button {
+    margin-left: 57px;
+  }
+
+  .reviewText {
+    min-width: calc(100% - 62px);
+  }
+
+  .folderName {
+    flex: 1 0 100%;
+  }
+
+  .scheduleControls {
+    justify-content: flex-start;
+  }
+
+  .nextReview {
+    margin-left: 0;
+  }
+}
+
+.fileItem .folderName {
+  flex: 1 1 auto;
+  cursor: default;
+}
+
+.fileItem .folderName svg:first-child {
+  color: var(--color-text-secondary);
+}

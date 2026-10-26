@@ -1,6 +1,6 @@
-import { pool, verifyDbConnection } from '../../persistencia/BaseDeDatos';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
 import type { Persistencia } from '../../persistencia/Persistencia';
-import { ValidarCodigo } from '../../logicaPersistente/gestionDeUsuarios/ValidarCodigo';
+import { ValidarCodigo } from '../../logicaPersistente/gestionDeUsuarios/validarCodigo';
 
 
 const comprobar = (ok: boolean, mensaje: string): void => {

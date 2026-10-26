@@ -53,7 +53,12 @@ export function VerificarMailPage() {
                         />
 
                         {error && <CartelError mensaje={error} onCerrar={() => setError("")} />}
-                        <Button onClick={verificar}>Verificar</Button>
+                        <div className="login-actions">
+                            <Button onClick={verificar}>Verificar</Button>
+                            <Button variant="secondary" onClick={() => navigate(-1)}>
+                                Volver
+                            </Button>
+                        </div>
                     </div>
                 </Card>
             </div>

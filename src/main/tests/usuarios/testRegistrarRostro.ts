@@ -1,6 +1,6 @@
-import { pool, verifyDbConnection } from '../../persistencia/BaseDeDatos';
-import { UsuarioFacialRepositorio } from '../../persistencia/UsuarioFacialRepositorio';
-import { RegistrarRostro } from '../../logicaPersistente/gestionDeUsuarios/RegistrarRostro';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { UsuarioFacialRepositorio } from '../../persistencia/usuarioFacialRepositorio';
+import { RegistrarRostro } from '../../logicaPersistente/gestionDeUsuarios/registrarRostro';
 
 
 const comprobar = (ok: boolean, mensaje: string): void => {

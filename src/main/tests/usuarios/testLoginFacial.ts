@@ -1,6 +1,6 @@
-import { pool, verifyDbConnection } from '../../persistencia/BaseDeDatos';
-import { UsuarioFacialRepositorio, type EmbeddingGuardado } from '../../persistencia/UsuarioFacialRepositorio';
-import { LoginFacial } from '../../logicaPersistente/gestionDeUsuarios/LoginFacial';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
+import { UsuarioFacialRepositorio, type EmbeddingGuardado } from '../../persistencia/usuarioFacialRepositorio';
+import { LoginFacial } from '../../logicaPersistente/gestionDeUsuarios/loginFacial';
 
 const comprobar = (ok: boolean, mensaje: string): void => {
     if (!ok) throw new Error(mensaje);

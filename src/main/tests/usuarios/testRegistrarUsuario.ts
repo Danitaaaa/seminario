@@ -1,6 +1,6 @@
-import { pool, verifyDbConnection } from '../../persistencia/BaseDeDatos';
+import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
 import type { Persistencia } from '../../persistencia/Persistencia';
-import { RegistrarUsuario } from '../../logicaPersistente/gestionDeUsuarios/RegistrarUsuario';
+import { RegistrarUsuario } from '../../logicaPersistente/gestionDeUsuarios/registrarUsuario';
 
 
 async function main(): Promise<void> {

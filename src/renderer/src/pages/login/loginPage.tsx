@@ -7,6 +7,7 @@ import { Title } from '../../components/ui/title/title';
 import { CartelError } from '../../components/comunes/cartelError';
 import LoginFacial from './loginFacialPage';
 import { guardarSesion } from '../../../lib/sesion';
+import { enterParaAvanzar } from '../../utils/enterParaAvanzar';
 
 export function LoginPage(){
     const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export function LoginPage(){
 
     const finalizarInicioSesion = (usuarioId: number) => {
     guardarSesion(usuarioId);
-    navigate("/dashboard");
+    navigate("/dashboard", { replace: true });
     };
 
     const iniciarSesion = async () => {
@@ -39,7 +40,7 @@ export function LoginPage(){
     return (
         <main className="auth-layout">
             <Card>
-                <div className="login-card">
+                <div className="login-card" onKeyDown={enterParaAvanzar(iniciarSesion)}>
 
                     <Title>
                         Iniciar sesión

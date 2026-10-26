@@ -1,11 +1,11 @@
 import 'dotenv/config';
-import { app, BrowserWindow, net, protocol, shell } from 'electron';
+import { app, BrowserWindow, dialog, net, Notification, protocol, shell } from 'electron';
 import { isAbsolute, join, relative, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
 
 import { pool, verifyDbConnection } from './persistencia/baseDeDatos';
-import { Persistencia } from './persistencia/persistencia';
+import { Persistencia } from './persistencia/Persistencia';
 
 // Gestion de material de estudio
 import { CrearNodo } from './logicaPersistente/gestionMaterialEstudio/crearNodo';
@@ -92,8 +92,53 @@ import { ObtenerFondoInicio, ActualizarFondoInicio } from './logicaPersistente/g
 import { Inicio } from './administracionDePersistencia/inicio';
 import { registerInicioIpc } from './ipc/inicio.ipc';
 
+// Gestion de flashcards
+import { CrearDeck } from './logicaPersistente/gestionDeFlashcards/crearDeck';
+import { ListarDecks } from './logicaPersistente/gestionDeFlashcards/listarDecks';
+import { CrearFlashcard } from './logicaPersistente/gestionDeFlashcards/crearFlashcard';
+import { ListarFlashcards } from './logicaPersistente/gestionDeFlashcards/listarFlashcards';
+import { Flashcards } from './administracionDePersistencia/flashcards';
+import { registerFlashcardsIpc } from './ipc/flashcards.ipc';
+import { RegistrarRevision } from './logicaPersistente/gestionDeRepeticionEspaciada/registrarRevision';
+import { ListarFlashcardsPendientes } from './logicaPersistente/gestionDeRepeticionEspaciada/listarFlashcardsPendientes';
+import { ListarRepeticionesMaterial } from './logicaPersistente/gestionDeRepeticionEspaciada/listarRepeticionesMaterial';
+import { GuardarRepeticionMaterial } from './logicaPersistente/gestionDeRepeticionEspaciada/guardarRepeticionMaterial';
+import { RepeticionEspaciada } from './administracionDePersistencia/repeticionEspaciada';
+import { registerRepeticionEspaciadaIpc } from './ipc/repeticionEspaciada.ipc';
+import { EnviarRecordatoriosPendientes } from './logicaPersistente/gestionDeRepeticionEspaciada/enviarRecordatoriosPendientes';
+
+// Notificaciones
+import { CrearNotificacion } from './logicaPersistente/gestionDeNotificaciones/crearNotificacion';
+import { ListarNotificaciones } from './logicaPersistente/gestionDeNotificaciones/listarNotificaciones';
+import { MarcarLeidas } from './logicaPersistente/gestionDeNotificaciones/marcarLeidas';
+import { ObtenerSilencio, CambiarSilencio } from './logicaPersistente/gestionDeNotificaciones/silencio';
+import type { Notificacion } from './logicaPersistente/gestionDeNotificaciones/entidades';
+import { Notificaciones } from './administracionDePersistencia/notificaciones';
+import { Notificador } from './logicaNoPersistente/notificaciones/notificador';
+import { VigiaNotificaciones } from './logicaNoPersistente/notificaciones/vigiaNotificaciones';
+import { registerNotificacionesIpc } from './ipc/notificaciones.ipc';
 
 let mainWindow: BrowserWindow | null = null;
+
+// Se guardan mientras están en pantalla: si no, Windows puede perder el clic.
+const avisosVisibles = new Set<Notification>();
+
+// Muestra el aviso en las notificaciones de la compu. Al tocarlo se abre Syntra con la campanita.
+function mostrarEnSistema(notificacion: Notificacion): void {
+  if (!Notification.isSupported()) return;
+  const aviso = new Notification({ title: notificacion.titulo, body: notificacion.mensaje });
+  avisosVisibles.add(aviso);
+  aviso.on('close', () => avisosVisibles.delete(aviso));
+  aviso.on('click', () => {
+    avisosVisibles.delete(aviso);
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('notificaciones:abrir');
+  });
+  aviso.show();
+}
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -202,8 +247,42 @@ function wireDependencies(): void {
   );
   registerInicioIpc(inicio);
 
+  // Notificaciones
+  const notificaciones = new Notificaciones(
+    new CrearNotificacion(persistencia), new ListarNotificaciones(persistencia),
+    new MarcarLeidas(persistencia), new ObtenerSilencio(persistencia), new CambiarSilencio(persistencia)
+  );
+  const notificador = new Notificador(
+    notificaciones, mostrarEnSistema, () => mainWindow?.webContents.send('notificaciones:nuevas')
+  );
+  const vigia = new VigiaNotificaciones(
+    {
+      eventos: (usuarioId, desde) => eventos.listar({ usuarioId, desde }),
+      metas: (usuarioId) => metas.listar({ usuarioId }),
+    },
+    notificador
+  );
+  registerNotificacionesIpc(notificaciones, vigia);
+
   // Enlaces externos
   registerEnlacesIpc();
+
+  // Gestion de flashcards
+  const flashcards = new Flashcards(
+    new CrearDeck(persistencia),
+    new ListarDecks(persistencia),
+    new CrearFlashcard(persistencia),
+    new ListarFlashcards(persistencia)
+  );
+  registerFlashcardsIpc(flashcards);
+
+  const repeticionEspaciada = new RepeticionEspaciada(
+    new ListarFlashcardsPendientes(persistencia),
+    new RegistrarRevision(persistencia),
+    new ListarRepeticionesMaterial(persistencia),
+    new GuardarRepeticionMaterial(persistencia)
+  );
+  registerRepeticionEspaciadaIpc(repeticionEspaciada);
 }
 
 function createWindow(): void {
@@ -230,6 +309,9 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
+  // Windows necesita este nombre para mostrar las notificaciones de la app.
+  if (process.platform === 'win32') app.setAppUserModelId(is.dev ? process.execPath : 'com.syntra.app');
+
   const carpetaModelos = resolve(__dirname, '../renderer/models');
   protocol.handle('modelos', (request) => {
     const url = new URL(request.url);
@@ -253,11 +335,32 @@ app.whenReady().then(async () => {
 
   try {
     await verifyDbConnection();
-  } catch (err) {
-    console.error('[startup] No se pudo conectar a Postgres:', err);
+  } catch (error) {
+    console.error('[startup] No se pudo preparar la base de datos:', error);
+    dialog.showErrorBox(
+      'No se pudo preparar la base de datos',
+      'Revisá la conexión y el esquema de PostgreSQL y volvé a abrir la aplicación.'
+    );
+    app.quit();
+    return;
   }
 
   wireDependencies();
+  const recordatorios = new EnviarRecordatoriosPendientes(new Persistencia(pool));
+  let recordatoriosEnCurso = false;
+  const enviarRecordatorios = async () => {
+    if (recordatoriosEnCurso) return;
+    recordatoriosEnCurso = true;
+    try {
+      await recordatorios.ejecutar();
+    } catch (error) {
+      console.error('[repeticion-espaciada] No se pudieron enviar los recordatorios pendientes.', error);
+    } finally {
+      recordatoriosEnCurso = false;
+    }
+  };
+  void enviarRecordatorios();
+  setInterval(() => void enviarRecordatorios(), 15 * 60 * 1000);
   createWindow();
 
   app.on('activate', () => {

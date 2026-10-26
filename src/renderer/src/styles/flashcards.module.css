@@ -1,0 +1,536 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: var(--color-text);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 7px;
+  color: var(--color-text-light);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+}
+
+.heading {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+  font-weight: 700;
+}
+
+.description {
+  margin: 7px 0 0;
+  color: var(--color-text-light);
+  font-size: 0.94rem;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 440px;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-light);
+}
+
+.search:focus-within {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+}
+
+.deckGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 245px), 1fr));
+  gap: 18px;
+}
+
+.deckCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-height: 144px;
+  padding: 21px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 0 5px 18px rgb(44 62 96 / 6%);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.deckCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgb(44 62 96 / 11%);
+}
+
+.deckCard:focus-visible,
+.backLink:focus-visible,
+.iconButton:focus-visible,
+.studyCard:focus-visible {
+  outline: 3px solid var(--color-primary-light);
+  outline-offset: 3px;
+}
+
+.deckIcon,
+.questionIcon {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--color-frost-claro);
+  color: var(--color-primary);
+}
+
+.deckCardText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.deckCardText strong {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 1.02rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deckCardText span {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.deckCardText small {
+  color: var(--color-text-light);
+  font-size: 0.78rem;
+}
+
+.chevron {
+  flex: 0 0 auto;
+  color: var(--color-text-light);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  padding: 48px 20px;
+  border: 1px dashed var(--color-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+  text-align: center;
+}
+
+.emptyIcon,
+.finishedIcon {
+  display: grid;
+  width: 55px;
+  height: 55px;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--color-frost-claro);
+  color: var(--color-primary);
+}
+
+.empty h3 {
+  margin: 3px 0 0;
+  color: var(--color-text);
+}
+
+.empty p,
+.notice {
+  margin: 0;
+  color: var(--color-text-light);
+  line-height: 1.5;
+}
+
+.modalBackdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(28 38 56 / 42%);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  width: min(100%, 440px);
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: 0 24px 70px rgb(25 35 52 / 24%);
+}
+
+.modal h2 {
+  margin: 0 0 5px;
+  color: var(--color-text);
+}
+
+.modal label,
+.createForm label {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.modal input,
+.createForm input,
+.createForm textarea {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.modal input:focus,
+.createForm input:focus,
+.createForm textarea:focus {
+  border-color: var(--color-primary-light);
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.modalActions,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 9px;
+}
+
+.actions {
+  margin: 0;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 8px;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.createForm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 0 4px 15px rgb(44 62 96 / 5%);
+}
+
+.createForm h3 {
+  margin: 0 0 3px;
+  color: var(--color-text);
+}
+
+.createForm textarea {
+  min-height: 125px;
+  resize: vertical;
+}
+
+.cardList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 13px;
+}
+
+.questionCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 17px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+}
+
+.questionIcon {
+  flex-basis: 37px;
+  width: 37px;
+  height: 37px;
+}
+
+.questionCard strong {
+  display: block;
+  color: var(--color-text);
+  line-height: 1.45;
+}
+
+.questionCard p {
+  margin: 6px 0 0;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.studyShell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: min(100%, 1000px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 28px;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.studyHeader {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: min(100%, 760px);
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.iconButton {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.progressTrack {
+  overflow: hidden;
+  flex: 1;
+  height: 7px;
+  border-radius: 99px;
+  background: var(--color-frost-claro);
+}
+
+.progressTrack > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+  transition: width 200ms ease;
+}
+
+.studyCard {
+  display: grid;
+  width: min(100%, 720px);
+  min-height: min(56vh, 470px);
+  padding: clamp(25px, 6vw, 70px);
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: var(--color-surface);
+  box-shadow: 0 18px 50px rgb(43 58 84 / 12%);
+  color: var(--color-text);
+  cursor: pointer;
+  perspective: 1000px;
+  animation: card-in 260ms ease both;
+}
+
+.cardSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  white-space: pre-wrap;
+}
+
+.cardSide > small:first-child {
+  color: var(--color-text-light);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.cardSide > span {
+  font-size: clamp(1.35rem, 3.4vw, 2.2rem);
+  line-height: 1.5;
+}
+
+.cardSide .flipHint {
+  margin-top: 30px;
+  color: var(--color-text-light);
+  font-size: 0.91rem;
+  letter-spacing: 0;
+}
+
+.studyCardFlipped {
+  animation: card-flip 280ms ease both;
+}
+
+.rating {
+  width: min(100%, 720px);
+}
+
+.rating p {
+  margin: 0 0 13px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.ratingButtons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.ratingButtons button {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 13px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ratingButtons button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.ratingButtons small {
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.difficult {
+  border-color: var(--color-error) !important;
+  background: var(--color-error-bg);
+  color: var(--color-error-texto);
+}
+
+.medium {
+  border-color: var(--color-warning) !important;
+  background: color-mix(in srgb, var(--color-warning) 15%, var(--color-surface));
+  color: var(--color-warning);
+}
+
+.easy {
+  border-color: var(--color-success) !important;
+  background: color-mix(in srgb, var(--color-success) 15%, var(--color-surface));
+  color: var(--color-success);
+}
+
+.finishedIcon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-success) 15%, var(--color-surface));
+  color: var(--color-success);
+}
+
+.studyShell h1 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.studyShell > p:not(.eyebrow) {
+  margin: 0;
+  color: var(--color-text-light);
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes card-flip {
+  0% { transform: rotateY(0); }
+  45% { transform: rotateY(90deg); opacity: 0.4; }
+  55% { transform: rotateY(90deg); opacity: 0.4; }
+  100% { transform: rotateY(0); opacity: 1; }
+}
+
+@media (max-width: 680px) {
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbar > button {
+    width: 100%;
+  }
+
+  .toolbar .actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .studyShell {
+    gap: 19px;
+    padding: 16px;
+  }
+
+  .studyHeader {
+    flex-wrap: wrap;
+  }
+
+  .studyCard {
+    min-height: 48vh;
+    border-radius: 18px;
+  }
+
+  .ratingButtons {
+    gap: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deckCard,
+  .studyCard,
+  .studyCardFlipped {
+    animation: none;
+    transition: none;
+  }
+}
