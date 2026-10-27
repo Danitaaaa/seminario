@@ -6,4 +6,5 @@ export interface HorarioCursado {
   horaInicio: string; // "HH:MM", ej "13:00"
   horaFin: string; // "HH:MM", ej "14:30" — tiene que ser posterior a horaInicio
   titulo: string; // nombre de la materia
+  tono: number | null; // tono de la paleta (0-5); null = automático
 }

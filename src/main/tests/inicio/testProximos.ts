@@ -15,7 +15,7 @@ const comprobar = (ok: boolean, mensaje: string): void => {
 const AHORA = new Date(2026, 9, 24, 7, 30);
 
 const horario = (diaSemana: number, horaInicio: string, horaFin: string, titulo: string): HorarioCursado =>
-    ({ id: 1, usuarioId: 12, diaSemana, horaInicio, horaFin, titulo });
+    ({ id: 1, usuarioId: 12, diaSemana, horaInicio, horaFin, titulo, tono: null });
 
 const evento = (titulo: string, fecha: Date): Evento => ({
     id: 1, usuarioId: 12, titulo, descripcion: null, lugar: null, fecha,

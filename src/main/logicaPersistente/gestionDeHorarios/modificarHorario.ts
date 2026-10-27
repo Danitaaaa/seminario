@@ -45,12 +45,21 @@ export class ModificarHorario {
     agregar('hora_inicio', datos.horaInicio);
     agregar('hora_fin', datos.horaFin);
     agregar('titulo', datos.titulo);
+    agregar('tono', datos.tono);
     valores.push(datos.id);
 
     const filas = await this.persistencia.ejecutar(
       `UPDATE horarios_cursado SET ${campos.join(', ')} WHERE id = $${valores.length} RETURNING *`,
       valores
     );
+
+    // El color es de la materia: todos sus bloques quedan con el mismo tono.
+    if (datos.tono !== undefined) {
+      await this.persistencia.ejecutar(
+        `UPDATE horarios_cursado SET tono = $3 WHERE usuario_id = $1 AND titulo = $2`,
+        [actual.usuario_id, filas[0].titulo, datos.tono]
+      );
+    }
     return materializarHorario(filas[0]);
   }
 }

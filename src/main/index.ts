@@ -126,7 +126,8 @@ const avisosVisibles = new Set<Notification>();
 // Muestra el aviso en las notificaciones de la compu. Al tocarlo se abre Syntra con la campanita.
 function mostrarEnSistema(notificacion: Notificacion): void {
   if (!Notification.isSupported()) return;
-  const aviso = new Notification({ title: notificacion.titulo, body: notificacion.mensaje });
+  // Sin sonido de Windows: el sonido lo pone la app, así suena aunque Windows tenga los avisos sin sonido.
+  const aviso = new Notification({ title: notificacion.titulo, body: notificacion.mensaje, silent: true });
   avisosVisibles.add(aviso);
   aviso.on('close', () => avisosVisibles.delete(aviso));
   aviso.on('click', () => {
@@ -138,6 +139,7 @@ function mostrarEnSistema(notificacion: Notificacion): void {
     mainWindow.webContents.send('notificaciones:abrir');
   });
   aviso.show();
+  mainWindow?.webContents.send('notificaciones:sonar');
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -295,6 +297,8 @@ function createWindow(): void {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      // Para que el sonido de los avisos pueda reproducirse sin que se haya hecho clic.
+      autoplayPolicy: 'no-user-gesture-required',
     },
   });
 

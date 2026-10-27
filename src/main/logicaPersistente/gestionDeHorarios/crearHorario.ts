@@ -28,10 +28,18 @@ export class CrearHorario {
     }
 
     const filas = await this.persistencia.ejecutar(
-      `INSERT INTO horarios_cursado (usuario_id, dia_semana, hora_inicio, hora_fin, titulo)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [datos.usuarioId, datos.diaSemana, datos.horaInicio, datos.horaFin, datos.titulo]
+      `INSERT INTO horarios_cursado (usuario_id, dia_semana, hora_inicio, hora_fin, titulo, tono)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [datos.usuarioId, datos.diaSemana, datos.horaInicio, datos.horaFin, datos.titulo, datos.tono ?? null]
     );
+
+    // El color es de la materia: todos sus bloques quedan con el mismo tono.
+    if (datos.tono !== undefined) {
+      await this.persistencia.ejecutar(
+        `UPDATE horarios_cursado SET tono = $3 WHERE usuario_id = $1 AND titulo = $2`,
+        [datos.usuarioId, datos.titulo, datos.tono]
+      );
+    }
     return materializarHorario(filas[0]);
   }
 }

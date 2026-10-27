@@ -29,7 +29,7 @@ export const PALETAS: Paleta[] = [
     { lateral: "#2F4A3A", lateralTexto: "#FFFFFF", activo: "#1F3328", fondo: "#F6F8F5", superficie: "#FFFFFF", suave: "#DCE8DF", borde: "#D9E2DB", primario: "#3E6B4F", primarioClaro: "#7FA88D", acento: "#C9A35A", texto: "#18241D", textoSecundario: "#55665B" },
     { lateral: "#0D1612", lateralTexto: "#DCE8DF", activo: "#24402F", fondo: "#0F1A15", superficie: "#16241D", suave: "#1D3027", borde: "#2B4436", primario: "#4F8A64", primarioClaro: "#8CC2A0", acento: "#D8B46A", texto: "#E3EDE6", textoSecundario: "#A9BCAF" }),
 
-  paleta("oceano", "Océano",
+  paleta("oceano", "Dana",
     { lateral: "#0F4C5C", lateralTexto: "#FFFFFF", activo: "#0A3540", fondo: "#F3F8F9", superficie: "#FFFFFF", suave: "#D3E9EE", borde: "#D2E2E6", primario: "#1A7A8C", primarioClaro: "#6FB3C1", acento: "#F2A65A", texto: "#0B2A33", textoSecundario: "#4F6D75" },
     { lateral: "#06171C", lateralTexto: "#D3E9EE", activo: "#124A57", fondo: "#081C22", superficie: "#0E2830", suave: "#13343D", borde: "#1F4A55", primario: "#1F8A9E", primarioClaro: "#5CC8DB", acento: "#F2A65A", texto: "#E2F1F4", textoSecundario: "#9FBFC6" }),
 

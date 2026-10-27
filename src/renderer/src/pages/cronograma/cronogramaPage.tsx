@@ -10,6 +10,7 @@ import {
   armarSemana, fechaISO, inicioDeSemana, rangoDeHoras, sumarDias, textoHora, tituloSemana,
   type BloqueUbicado, type DiaCronograma,
 } from "../../utils/cronograma";
+import { claseTono } from "../../utils/tonos";
 import "../../styles/cronograma.css";
 
 type Vista = "mio" | "proyectos";
@@ -191,7 +192,7 @@ export function CronogramaPage() {
                       <button
                         key={`${bloque.tipo}${bloque.id}-${bloque.desde}`}
                         type="button"
-                        className={`cronograma__bloque cronograma__bloque--${bloque.tipo}`}
+                        className={`cronograma__bloque cronograma__bloque--${bloque.tipo}${bloque.tono !== undefined ? ` ${claseTono(bloque.tono)}` : ""}`}
                         aria-label={`${bloque.titulo}, ${bloque.detalle}`}
                         onClick={() => abrir(dia, bloque)}
                         style={{

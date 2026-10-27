@@ -7,12 +7,12 @@ import {
   NOMBRES_DIA_SEMANA,
 } from '../../types/horarios';
 import { obtenerUsuarioId } from '../../../lib/sesion';
+import { TONOS, claseTono, tonoDeMateria } from '../../utils/tonos';
 import '../../styles/horarios.css';
  
 const ALTO_HORA = 56; // px por hora en la grilla
 const DIAS_BASE = [1, 2, 3, 4, 5]; // lunes a viernes
 const DIAS_FORMULARIO = [1, 2, 3, 4, 5, 6, 0]; // lunes a domingo
-const TONOS = ['frost', 'salvia', 'ambar', 'rosa', 'acero'] as const;
  
 type Vista = 'semanal' | 'materia';
  
@@ -32,12 +32,6 @@ const aMinutos = (hora: string): number => {
 const aHora = (minutos: number): string =>
   `${String(Math.floor(minutos / 60)).padStart(2, '0')}:${String(minutos % 60).padStart(2, '0')}`;
  
-// Misma materia -> mismo color, siempre.
-function tonoDe(titulo: string): string {
-  let hash = 0;
-  for (const c of titulo.toLowerCase()) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
-  return TONOS[hash % TONOS.length];
-}
  
 export function HorariosPage(): JSX.Element {
   const USUARIO_ID_ACTUAL = obtenerUsuarioId() ?? 0;
@@ -53,6 +47,7 @@ export function HorariosPage(): JSX.Element {
   const [formHoraInicio, setFormHoraInicio] = useState('08:00');
   const [formHoraFin, setFormHoraFin] = useState('09:00');
   const [formTitulo, setFormTitulo] = useState('');
+  const [formTono, setFormTono] = useState<number | null>(null);
   const [errorForm, setErrorForm] = useState<string | null>(null);
   // Si se marcan varios días, cada uno puede tener su propio horario.
   const [mismoHorario, setMismoHorario] = useState(true);
@@ -78,6 +73,7 @@ export function HorariosPage(): JSX.Element {
     setFormHoraInicio(horaInicio);
     setFormHoraFin(aHora(Math.min(aMinutos(horaInicio) + 60, 23 * 60 + 59)));
     setFormTitulo('');
+    setFormTono(null);
     setErrorForm(null);
     setMismoHorario(true);
     setHorasPorDia({});
@@ -90,6 +86,7 @@ export function HorariosPage(): JSX.Element {
     setFormHoraInicio(horario.horaInicio);
     setFormHoraFin(horario.horaFin);
     setFormTitulo(horario.titulo);
+    setFormTono(tonoDeMateria(horario.titulo, horarios));
     setErrorForm(null);
     setMismoHorario(true);
     setHorasPorDia({});
@@ -141,6 +138,9 @@ export function HorariosPage(): JSX.Element {
       return;
     }
  
+    // Si no se tocó el selector, se mantiene el tono que ya tenía la materia.
+    const tonoElegido = formTono ?? tonoDeMateria(formTitulo.trim(), horarios);
+
     try {
       setErrorForm(null);
       if (editandoId !== null) {
@@ -150,6 +150,7 @@ export function HorariosPage(): JSX.Element {
           horaInicio: formHoraInicio,
           horaFin: formHoraFin,
           titulo: formTitulo.trim(),
+          tono: tonoElegido,
         };
         await window.api.modificarHorario(cambios);
       } else {
@@ -162,6 +163,7 @@ export function HorariosPage(): JSX.Element {
             horaInicio: inicio,
             horaFin: fin,
             titulo: formTitulo.trim(),
+            tono: tonoElegido,
           };
           await window.api.crearHorario(nuevo);
         }
@@ -306,7 +308,7 @@ export function HorariosPage(): JSX.Element {
                       return (
                         <button
                           key={h.id}
-                          className={`horarios__bloque horarios__bloque--${tonoDe(h.titulo)}`}
+                          className={`horarios__bloque ${claseTono(tonoDeMateria(h.titulo, horarios))}`}
                           style={{
                             top: (inicio / 60) * ALTO_HORA + 2,
                             height: (duracion / 60) * ALTO_HORA - 4,
@@ -329,7 +331,7 @@ export function HorariosPage(): JSX.Element {
                 <p className="horarios__vacio">Todavía no cargaste horarios.</p>
               )}
               {porMateria.map(({ titulo, lista }) => (
-                <div key={titulo} className={`horarios__materia horarios__bloque--${tonoDe(titulo)}`}>
+                <div key={titulo} className={`horarios__materia ${claseTono(tonoDeMateria(titulo, horarios))}`}>
                   <h3 className="horarios__materia-titulo">{titulo}</h3>
                   {lista.map((h) => (
                     <button key={h.id} className="horarios__materia-fila" onClick={() => abrirModalEditar(h)}>
@@ -348,7 +350,7 @@ export function HorariosPage(): JSX.Element {
             {proximas.map((h) => (
               <button
                 key={h.id}
-                className={`horarios__proxima horarios__bloque--${tonoDe(h.titulo)}`}
+                className={`horarios__proxima ${claseTono(tonoDeMateria(h.titulo, horarios))}`}
                 onClick={() => abrirModalEditar(h)}
               >
                 <span className="horarios__proxima-titulo">{h.titulo}</span>
@@ -384,6 +386,27 @@ export function HorariosPage(): JSX.Element {
                 />
               </label>
  
+              <div className="horarios__campo">
+                Color
+                <div className="tono-selector" role="radiogroup" aria-label="Color de la materia">
+                  {TONOS.map((t) => {
+                    const activo = (formTono ?? tonoDeMateria(formTitulo.trim(), horarios)) === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={activo}
+                        aria-label={t.nombre}
+                        title={t.nombre}
+                        className={`tono-opcion ${claseTono(t.id)}${activo ? ' tono-opcion--activa' : ''}`}
+                        onClick={() => setFormTono(t.id)}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="horarios__campo">
                 {editandoId !== null ? 'Día' : 'Días'}
                 <div

@@ -1,6 +1,7 @@
 import type { HorarioCursado } from '../types/horarios';
 import type { Evento } from '../types/eventos';
 import type { Meta } from '../types/metas';
+import { tonoDeMateria } from './tonos';
 
 export type TipoBloque = 'clase' | 'evento';
 
@@ -12,6 +13,7 @@ export interface Bloque {
   detalle: string;
   desde: number;
   hasta: number;
+  tono?: number; // solo las clases: el color de la materia
 }
 
 // Un bloque ya ubicado: si se superpone con otros, comparte el ancho en columnas.
@@ -105,6 +107,7 @@ export function armarSemana(inicio: Date, horarios: HorarioCursado[], eventos: E
         detalle: `${h.horaInicio.slice(0, 5)} – ${h.horaFin.slice(0, 5)}`,
         desde: aMinutos(h.horaInicio),
         hasta: aMinutos(h.horaFin),
+        tono: tonoDeMateria(h.titulo, horarios),
       }));
 
     const delDia = eventos.filter((e) => fechaISO(new Date(e.fecha)) === iso);

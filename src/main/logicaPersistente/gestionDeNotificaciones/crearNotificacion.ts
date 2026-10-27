@@ -9,11 +9,12 @@ export class CrearNotificacion {
 
   async ejecutar(datos: CrearNotificacionDTO): Promise<Notificacion | null> {
     const filas = await this.persistencia.ejecutar(
-      `INSERT INTO notificaciones (usuario_id, tipo, titulo, mensaje, clave)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO notificaciones (usuario_id, tipo, titulo, mensaje, clave, fecha)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (usuario_id, clave) DO NOTHING
        RETURNING *`,
-      [datos.usuarioId, datos.tipo, datos.titulo, datos.mensaje, datos.clave]
+      // La fecha la pone la app: Postgres corre en UTC y con NOW() quedaba 3 horas adelantada.
+      [datos.usuarioId, datos.tipo, datos.titulo, datos.mensaje, datos.clave, new Date()]
     );
     return filas.length ? materializarNotificacion(filas[0]) : null;
   }

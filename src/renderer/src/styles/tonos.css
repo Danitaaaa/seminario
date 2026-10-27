@@ -1,0 +1,37 @@
+/* Tonos de materias: se arman con los colores de la paleta activa. */
+.tono--0 { --tono-fuerte: var(--color-primary); }
+.tono--1 { --tono-fuerte: var(--color-primary-light); }
+.tono--2 { --tono-fuerte: var(--color-accent); }
+.tono--3 { --tono-fuerte: color-mix(in srgb, var(--color-primary) 50%, var(--color-accent)); }
+.tono--4 { --tono-fuerte: var(--color-steel); }
+.tono--5 { --tono-fuerte: var(--color-storm); }
+
+.tono {
+  --tono-suave: color-mix(in srgb, var(--tono-fuerte) 18%, var(--color-surface));
+}
+
+/* Selector de tono */
+.tono-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-sm);
+}
+
+.tono-opcion {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
+  background: var(--tono-fuerte);
+  box-shadow: 0 0 0 1px var(--color-border);
+  cursor: pointer;
+}
+
+.tono-opcion--activa {
+  box-shadow: 0 0 0 2px var(--color-text);
+}
+
+.tono-opcion:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}

@@ -29,9 +29,10 @@ function aRgb(hex: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-// Recolorea el logo: la luminancia de cada píxel decide entre el color "oscuro" y el "claro"
-// de la paleta, y se conserva la transparencia. Devuelve una imagen PNG en data URL.
-export function colorearLogo(claro: string, oscuro: string): Promise<string> {
+// Recolorea una imagen del logo: la luminancia de cada píxel decide entre el color "oscuro"
+// y el "claro" de la paleta, y se conserva la transparencia. Devuelve una imagen PNG en data URL.
+// La imagen tiene que importarse con ?inline para que el canvas pueda leerla.
+export function colorearLogo(claro: string, oscuro: string, origen: string = logoSrc): Promise<string> {
   return new Promise((resolve, reject) => {
     const imagen = new Image();
     imagen.onload = () => {
@@ -59,7 +60,7 @@ export function colorearLogo(claro: string, oscuro: string): Promise<string> {
       resolve(lienzo.toDataURL('image/png'));
     };
     imagen.onerror = () => reject(new Error('No se pudo cargar el logo.'));
-    imagen.src = logoSrc;
+    imagen.src = origen;
   });
 }
 

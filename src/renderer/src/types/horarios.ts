@@ -9,6 +9,7 @@ export interface HorarioCursado {
   horaInicio: string; // "HH:MM"
   horaFin: string; // "HH:MM"
   titulo: string;
+  tono: number | null; // tono de la paleta (0-5); null = automático
 }
 
 export interface CrearHorarioInput {
@@ -17,6 +18,7 @@ export interface CrearHorarioInput {
   horaInicio: string;
   horaFin: string;
   titulo: string;
+  tono?: number;
 }
 
 export interface ModificarHorarioInput {
@@ -25,6 +27,7 @@ export interface ModificarHorarioInput {
   horaInicio?: string;
   horaFin?: string;
   titulo?: string;
+  tono?: number;
 }
 
 export interface ListarHorariosInput {

@@ -4,6 +4,7 @@ import { Bell, BellOff, CalendarDays, Target, Timer, Briefcase, type LucideIcon 
 import { obtenerUsuarioId } from "../../../lib/sesion";
 import type { Notificacion, TipoNotificacion } from "../../types/notificaciones";
 import { rutaDeNotificacion, textoContador, tiempoRelativo } from "../../utils/notificaciones";
+import { sonarNotificacion } from "../../utils/sonidoNotificacion";
 import "../../styles/notificaciones.css";
 
 const ICONOS: Record<TipoNotificacion, LucideIcon> = {
@@ -33,12 +34,14 @@ export function MenuNotificaciones() {
     window.api.obtenerSilencioNotificaciones({ usuarioId }).then(setSilenciadas).catch(() => {});
     window.api.vigilarNotificaciones({ usuarioId }).catch(console.error);
     const dejarDeEscuchar = window.api.alLlegarNotificacion(cargar);
+    const dejarDeEscucharSonido = window.api.alSonarNotificacion(sonarNotificacion);
     const dejarDeEscucharClic = window.api.alTocarNotificacion(() => {
       cargar();
       setAbierto(true);
     });
     return () => {
       dejarDeEscuchar();
+      dejarDeEscucharSonido();
       dejarDeEscucharClic();
       // Al salir de las pantallas con barra (ej. cerrar sesión) se deja de vigilar.
       window.api.detenerNotificaciones().catch(() => {});
@@ -54,6 +57,13 @@ export function MenuNotificaciones() {
 
   const sinLeer = lista.filter((n) => !n.leida).length;
   const ahora = new Date();
+  const inicioDeHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+  const esDeHoy = (n: Notificacion) => new Date(n.fecha) >= inicioDeHoy;
+  // Los de días anteriores van en su propia sección: su texto ("vence hoy") era del día en que salieron.
+  const secciones = [
+    { titulo: "Hoy", avisos: lista.filter(esDeHoy) },
+    { titulo: "Anteriores", avisos: lista.filter((n) => !esDeHoy(n)) },
+  ].filter((s) => s.avisos.length > 0);
 
   async function alternarSilencio(): Promise<void> {
     if (!usuarioId) return;
@@ -125,7 +135,9 @@ export function MenuNotificaciones() {
                   </button>
                 )}
                 <ul className="notificaciones__lista">
-                  {lista.map((n) => {
+                  {secciones.flatMap((s) => [
+                    <li key={s.titulo} className="notificaciones__seccion">{s.titulo}</li>,
+                    ...s.avisos.map((n) => {
                     const Icono = ICONOS[n.tipo] ?? Bell;
                     return (
                       <li key={n.id}>
@@ -146,7 +158,8 @@ export function MenuNotificaciones() {
                         </button>
                       </li>
                     );
-                  })}
+                    }),
+                  ])}
                 </ul>
               </>
             )}

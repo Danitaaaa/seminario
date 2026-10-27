@@ -111,6 +111,7 @@ declare global {
       detenerNotificaciones: () => Promise<void>;
       alLlegarNotificacion: (escuchar: () => void) => () => void;
       alTocarNotificacion: (escuchar: () => void) => () => void;
+      alSonarNotificacion: (escuchar: () => void) => () => void;
 
       // Enlaces externos
       abrirEnlace: (datos: { enlace: 'github-dana' }) => Promise<void>;

@@ -175,11 +175,7 @@
   font-size: var(--tamano-xs);
 }
 
-.horarios__bloque--frost  { --tono-suave: var(--color-frost-claro); --tono-fuerte: var(--color-steel); }
-.horarios__bloque--salvia { --tono-suave: color-mix(in srgb, var(--color-success) 22%, var(--color-surface)); --tono-fuerte: var(--color-success); }
-.horarios__bloque--ambar  { --tono-suave: color-mix(in srgb, var(--color-warning) 25%, var(--color-surface)); --tono-fuerte: var(--color-warning); }
-.horarios__bloque--rosa   { --tono-suave: color-mix(in srgb, var(--color-error) 20%, var(--color-surface)); --tono-fuerte: var(--color-error); }
-.horarios__bloque--acero  { --tono-suave: color-mix(in srgb, var(--color-storm) 15%, var(--color-surface)); --tono-fuerte: var(--color-storm); }
+/* Los tonos (--tono-fuerte / --tono-suave) se definen en tonos.css */
 
 /* Vista por materia */
 .horarios__materias {

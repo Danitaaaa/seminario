@@ -205,3 +205,12 @@
   outline: 2px solid var(--color-secondary);
   outline-offset: 2px;
 }
+
+.notificaciones__seccion {
+  margin-top: var(--espacio-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--tamano-xs);
+  font-weight: var(--peso-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

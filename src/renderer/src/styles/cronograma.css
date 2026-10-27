@@ -272,8 +272,9 @@
 }
 
 .cronograma__bloque--clase {
-  background: var(--color-primary);
-  color: var(--color-white);
+  border-left: 3px solid var(--tono-fuerte, var(--color-primary));
+  background: var(--tono-suave, var(--color-primary));
+  color: var(--color-text);
 }
 
 .cronograma__bloque--evento {

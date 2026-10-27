@@ -9,5 +9,6 @@ export function materializarHorario(fila: any): HorarioCursado {
     horaInicio: fila.hora_inicio,
     horaFin: fila.hora_fin,
     titulo: fila.titulo,
+    tono: fila.tono ?? null,
   };
 }

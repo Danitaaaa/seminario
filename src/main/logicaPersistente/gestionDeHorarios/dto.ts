@@ -4,6 +4,9 @@ const horaSchema = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'La hora debe tener formato HH:MM, ej. 13:00');
 
+// Índice del tono de la paleta (0-5). El color real lo decide la paleta activa.
+const tonoSchema = z.number().int().min(0).max(5);
+
 export const crearHorarioSchema = z
   .object({
     usuarioId: z.number().int().positive(),
@@ -11,6 +14,7 @@ export const crearHorarioSchema = z
     horaInicio: horaSchema,
     horaFin: horaSchema,
     titulo: z.string().min(1).max(200),
+    tono: tonoSchema.optional(),
   })
   .refine((d) => d.horaFin > d.horaInicio, {
     message: 'La hora de fin debe ser posterior a la hora de inicio',
@@ -28,6 +32,7 @@ export const modificarHorarioSchema = z.object({
   horaInicio: horaSchema.optional(),
   horaFin: horaSchema.optional(),
   titulo: z.string().min(1).max(200).optional(),
+  tono: tonoSchema.optional(),
 });
 export type ModificarHorarioDTO = z.infer<typeof modificarHorarioSchema>;
 
