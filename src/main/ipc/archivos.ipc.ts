@@ -29,9 +29,11 @@ import { join } from 'node:path';
 
 // Carpeta propia de la app donde viven las copias de los archivos subidos.
 const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
+  // Se llama después de guardar un Word desde el visor (lo usa Sesión de estudio para traer los cambios).
+  type AlGuardarDocx = (idArchivo: number, html: string) => Promise<unknown>;
 
-// Handlers IPC del módulo Archivos: validan con Zod antes de tocar la fachada.
-export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacenamiento): void {
+  export function registerArchivosIpc(
+  archivos: Archivos, almacenamiento: Almacenamiento, alGuardarDocx?: AlGuardarDocx): void {
   ipcMain.handle('archivos:buscar', async (_event, datos: unknown) => {
     const validado = BuscadorArchivoDTOSchema.parse(datos);
     return archivos.buscar(validado);
@@ -44,6 +46,7 @@ export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacena
     const contenido = await fs.promises.readFile(almacenamiento.rutaCompleta(archivo.rutaFisica));
     return { ...archivo, contenido };
   });
+
 
   ipcMain.handle('archivos:crear', async (_event, datos: unknown) => {
     const validado = CrearArchivoDTOSchema.parse(datos);
@@ -97,7 +100,13 @@ export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacena
   ipcMain.handle('archivos:guardarDocx', async (_event, datos: unknown) => {
     const { id, html } = GuardarDocxDTOSchema.parse(datos);
     const docx = (await HTMLtoDOCX(html, null, {})) as Buffer;
-    return guardarBytes(id, docx);
+    const archivo = await guardarBytes(id, docx);
+    try {
+      await alGuardarDocx?.(id, html);
+    } catch (error) {
+      console.error('[Archivos] No se pudo actualizar la sesión de estudio del Word:', error);
+    }
+    return archivo;
   });
 
   ipcMain.handle('archivos:mover', async (_event, datos: unknown) => {

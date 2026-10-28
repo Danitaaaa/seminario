@@ -20,6 +20,12 @@ import { MetodosPage } from "./pages/metodos/metodosPage";
 import { RepeticionEspaciadaPage } from "./pages/metodos/repeticionEspaciadaPage";
 import { DeckFlashcardsPage, EstudiarFlashcardsPage, FlashcardsPage } from "./pages/flashcards/flashcardsPage";
 import { CronogramaPage } from "./pages/cronograma/cronogramaPage";
+import { SesionesEstudioPage } from "./pages/sesionesEstudio/sesionesEstudioPage";
+import { CrearSesionEstudioPage } from "./pages/sesionesEstudio/crearSesionEstudioPage";
+import { SesionEstudioPage } from "./pages/sesionesEstudio/sesionEstudioPage";
+import { ProveedorAvisos } from "./hooks/usarAvisos";
+import { ProveedorSpotify } from "./hooks/usarSpotify";
+
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -33,7 +39,8 @@ export default function App() {
   }
 
   return (
-    <>
+    <ProveedorAvisos>
+    <ProveedorSpotify>
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/registro" element={<RegistrarUsuarioPage />} />
@@ -53,9 +60,13 @@ export default function App() {
         <Route path="/flashcards/:deckId" element={<DeckFlashcardsPage />} />
         <Route path="/flashcards/:deckId/estudiar" element={<EstudiarFlashcardsPage />} />
         <Route path="/repeticion-espaciada" element={<RepeticionEspaciadaPage />} />
+        <Route path="/sesiones" element={<SesionesEstudioPage />} />
+        <Route path="/sesiones/nueva" element={<CrearSesionEstudioPage />} />
+        <Route path="/sesiones/:idSesion" element={<SesionEstudioPage />} />
         <Route path="/proximamente/:id" element={<Proximamente />} />
       </Routes>
       <PanelPerfil />
-    </>
+    </ProveedorSpotify>
+    </ProveedorAvisos>
   );
 }

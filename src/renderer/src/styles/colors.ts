@@ -38,4 +38,12 @@ splashFondo: '#495B7D',
 splashCentro: '#5A6E93',
 splashBrillo: '#8BA3C5',
 
+
+//Sesion de estudio
+crema: "#EEEADF",        
+cremaOscuro: "#E2DDCD",  
+frostSuave: "#E8EDF5",   
+noche: "#0B1A33",       
+nocheClaro: "#1C2C4C",
+
 };
