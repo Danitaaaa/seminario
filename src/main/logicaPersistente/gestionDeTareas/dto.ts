@@ -19,7 +19,11 @@ export const CrearTareaDTOSchema = z.object({
     descripcion: z.string().max(1000).nullable().optional(),
     prioridad: PrioridadSchema.default('media'),
     fechaLimite: FechaSchema.nullable().optional(),
+    // Desde cuándo se trabaja en la tarea (para el cronograma de proyectos).
+    fechaInicio: FechaSchema.nullable().optional(),
     idAsignado: z.number().int().nullable().optional(), // solo válido en tareas de proyecto
+}).refine(d => !d.fechaInicio || !d.fechaLimite || d.fechaInicio <= d.fechaLimite, {
+    message: 'La fecha de inicio no puede ser posterior a la fecha límite',
 });
 export type CrearTareaDTO = z.input<typeof CrearTareaDTOSchema>;
 
@@ -38,6 +42,7 @@ export const ModificarTareaDTOSchema = z.object({
     descripcion: z.string().max(1000).nullable().optional(),
     prioridad: PrioridadSchema.optional(),
     fechaLimite: FechaSchema.nullable().optional(),
+    fechaInicio: FechaSchema.nullable().optional(),
 });
 export type ModificarTareaDTO = z.infer<typeof ModificarTareaDTOSchema>;
 
@@ -68,4 +73,4 @@ export const EliminarTareaDTOSchema = z.object({
     idTarea: z.number().int(),
     idUsuario: z.number().int(),
 });
-export type EliminarTareaDTO = z.infer<typeof EliminarTareaDTOSchema>;
+export type EliminarTareaDTO = z.infer<typeof EliminarTareaDTOSchema>;

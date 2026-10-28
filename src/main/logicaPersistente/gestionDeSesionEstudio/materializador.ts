@@ -37,6 +37,7 @@ export function materializarSesionEstudio(fila: any): SesionEstudio {
     recibirNotificacion: fila.recibir_notificacion,
     contenido: fila.contenido ?? '',
     idArchivo: fila.id_archivo ?? null,
+    idDeck: fila.id_deck ?? null,
     metas: (fila.metas as any[]).map((o) => materializarObjetivo(o, idSesion)),
   };
 }

@@ -17,6 +17,8 @@ export const crearSesionEstudioSchema = z.object({
   fechaProgramada: z.coerce.date(),
   recibirNotificacion: z.boolean().default(false),
   metas: z.array(z.string().trim().min(1).max(300)).max(50).default([]),
+  // Mazo de flashcards para repasar en la sesión (si se eligió el método Flashcards).
+  idDeck: idPositivo.nullable().default(null),
 });
 export type CrearSesionEstudioDTO = z.infer<typeof crearSesionEstudioSchema>;
 
@@ -32,6 +34,10 @@ export const modificarSesionEstudioSchema = z.object({
   pomodoroMin: z.number().int().min(1).max(180).optional(),
   descansoCortoMin: z.number().int().min(1).max(60).optional(),
   descansoLargoMin: z.number().int().min(1).max(120).optional(),
+  // Mazo de flashcards de la sesión. null lo quita; si no viene, no se toca.
+  idDeck: idPositivo.nullable().optional(),
+  // Métodos de estudio de la sesión: si viene, reemplaza a los que tenía.
+  idsMetodosEstudio: z.array(idPositivo).max(10).optional(),
 });
 export type ModificarSesionEstudioDTO = z.infer<typeof modificarSesionEstudioSchema>;
 

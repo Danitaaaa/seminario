@@ -11,6 +11,7 @@ import {
   type BloqueUbicado, type DiaCronograma,
 } from "../../utils/cronograma";
 import { claseTono } from "../../utils/tonos";
+import { CronogramaProyectos } from "../../components/cronograma/cronogramaProyectos";
 import "../../styles/cronograma.css";
 
 type Vista = "mio" | "proyectos";
@@ -126,10 +127,7 @@ export function CronogramaPage() {
         </div>
 
         {vista === "proyectos" ? (
-          <p className="cronograma__aviso">
-            El cronograma de proyectos se suma cuando unamos Proyectos: vas a ver las tareas de cada proyecto,
-            con un color por integrante.
-          </p>
+          usuarioId && <CronogramaProyectos idUsuario={usuarioId} eventos={eventos} />
         ) : (
           <>
             <div className="cronograma__filtros">
@@ -228,4 +226,4 @@ export function CronogramaPage() {
       </div>
     </PlantillaLayout>
   );
-}
+}

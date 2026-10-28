@@ -4,7 +4,7 @@ import {
   ChartColumn,
 } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
-import { MiniCalendario } from './miniCalendario';
+import { MiniCalendario } from '../../components/comunes/miniCalendario';
 import { MetasDashboard } from './metasDashboard';
 import { BannerInicio } from './bannerInicio';
 import { rutaDe } from '../navegacion';

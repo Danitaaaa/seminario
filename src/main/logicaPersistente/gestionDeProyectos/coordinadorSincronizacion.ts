@@ -88,7 +88,8 @@ export class CoordinadorSincronizacion {
                  JOIN proyecto_miembros m ON m.id_proyecto = p.id_proyecto
                  WHERE m.id_usuario = $1 AND m.rol = 'propietario' AND m.fecha_baja IS NULL AND p.id_remoto IS NULL`,
                 [this.idUsuario]);
-            console.log('[sync] proyectos a publicar:', filas.length);
+            // El barrido corre cada 5 segundos: solo se avisa cuando hay algo para publicar.
+            if (filas.length > 0) console.log('[sync] proyectos a publicar:', filas.length);
             for (const f of filas) {
                 try {
                     await this.sincronizar.ejecutar({ idProyecto: f.id_proyecto, idUsuario: this.idUsuario });

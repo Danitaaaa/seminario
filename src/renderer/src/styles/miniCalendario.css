@@ -1,0 +1,138 @@
+/* ---------- Mini calendario ---------- */
+.calendario {
+  padding: var(--espacio-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  font-family: var(--fuente-body);
+}
+
+.calendario__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-xs);
+  margin-bottom: var(--espacio-sm);
+}
+
+.calendario__flecha {
+  display: flex;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.calendario__select {
+  padding: 2px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--tamano-sm);
+}
+
+.calendario__grilla {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.calendario__dia-semana {
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+}
+
+.calendario__dia {
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+  position: relative;
+}
+
+.calendario__dia:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+
+.calendario__dia--hoy,
+.calendario__dia--hoy:hover {
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-weight: var(--peso-bold);
+}
+
+/* Lo que hay en el día: un puntito de color por tipo, debajo del número */
+.calendario__puntos {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  display: flex;
+  gap: 2px;
+  transform: translateX(-50%);
+}
+
+.calendario__punto {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.calendario__punto--eventos {
+  background: var(--color-accent);
+}
+
+.calendario__punto--tareas {
+  background: var(--color-primary);
+}
+
+.calendario__punto--metas {
+  background: var(--color-success);
+}
+
+/* Sobre el fondo del día de hoy, un borde claro para que se distingan */
+.calendario__dia--hoy .calendario__punto {
+  box-shadow: 0 0 0 1px var(--color-white);
+}
+
+.calendario__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-sm);
+  margin: var(--espacio-sm) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-secondary);
+  font-size: var(--tamano-xs);
+}
+
+.calendario__leyenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.calendario__dia-ajeno {
+  line-height: 28px;
+  font-size: var(--tamano-sm);
+  color: var(--color-border);
+}
+
+.calendario__link {
+  margin-top: var(--espacio-xs);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-light);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  text-decoration: underline;
+  cursor: pointer;
+}

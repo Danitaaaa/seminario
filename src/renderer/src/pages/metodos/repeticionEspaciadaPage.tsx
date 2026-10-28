@@ -5,6 +5,7 @@ import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Button } from '../../components/ui/button/button';
 import { CartelError } from '../../components/comunes/cartelError';
 import type { FlashcardPendiente, RepeticionMaterial } from '../../types/flashcards';
+import { TextoConFormulas } from '../../components/comunes/textoConFormulas';
 import type { Nodo } from '../../types/nodo';
 import styles from '../../styles/metodos.module.css';
 
@@ -126,7 +127,7 @@ export function RepeticionEspaciadaPage() {
                     <span className={styles.reviewIcon}><BookOpen size={19} /></span>
                     <div className={styles.reviewText}>
                       <strong>{tarjeta.nombreDeck}</strong>
-                      <span>{tarjeta.pregunta}</span>
+                      <span><TextoConFormulas texto={tarjeta.pregunta} /></span>
                       <small>{fechaDeVencimiento(tarjeta.proximaRevision)}</small>
                     </div>
                     <Button variant="secondary" onClick={() => navigate(`/flashcards/${tarjeta.deckId}/estudiar`)}>Estudiar</Button>

@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Clock, FolderKanban, Target, Timer, UserX } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { AlertTriangle } from "lucide-react";
 import { PlantillaLayout } from "../plantillaLayout/plantillaLayout";
 import { obtenerUsuarioId } from "../../../lib/sesion";
 import { CartelError } from "../../components/comunes/cartelError";
-import { mesDe, type EstadisticasMetas } from "../../types/metas";
-import type { ResumenProyecto, ResumenSesiones } from "../../types/estadisticas";
+import { mesDe, type Meta } from "../../types/metas";
+import type { Evento } from "../../types/eventos";
+import type { HorarioCursado } from "../../types/horarios";
+import type { AporteIntegrante, ResumenMaterial, ResumenProyecto, ResumenSesiones } from "../../types/estadisticas";
 import "../../styles/estadisticas.css";
 
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 const CANTIDAD_MESES = 6;
 
@@ -20,13 +23,16 @@ const mensajeDe = (error: unknown) =>
 const dosCifras = (n: number) => String(n).padStart(2, "0");
 const diaDe = (d: Date) => `${d.getFullYear()}-${dosCifras(d.getMonth() + 1)}-${dosCifras(d.getDate())}`;
 const porcentaje = (parte: number, total: number) => (total > 0 ? Math.round((parte / total) * 100) : 0);
+const nombreMes = (mes: string) => `${MESES_CORTOS[Number(mes.slice(5, 7)) - 1]} ${mes.slice(2, 4)}`;
+const aMinutos = (hora: string) => {
+  const [h, m] = hora.split(":").map(Number);
+  return h * 60 + m;
+};
 
 // Los últimos meses (AAAA-MM), del más viejo al actual.
 function ultimosMeses(cantidad: number, hoy: Date): string[] {
   return Array.from({ length: cantidad }, (_, i) => mesDe(new Date(hoy.getFullYear(), hoy.getMonth() - (cantidad - 1 - i), 1)));
 }
-
-const nombreMes = (mes: string) => `${MESES_CORTOS[Number(mes.slice(5, 7)) - 1]} ${mes.slice(2, 4)}`;
 
 // 95 -> "1 h 35 min", 40 -> "40 min"
 function textoMinutos(minutos: number): string {
@@ -36,150 +42,246 @@ function textoMinutos(minutos: number): string {
   return resto ? `${horas} h ${resto} min` : `${horas} h`;
 }
 
-// Una barra del gráfico: altura en % del alto del gráfico y los textos que la describen.
-interface Barra {
+// 185000000 -> "176,4 MB"
+function textoBytes(bytes: number): string {
+  const unidades = ["B", "KB", "MB", "GB"];
+  let valor = bytes;
+  let i = 0;
+  while (valor >= 1024 && i < unidades.length - 1) {
+    valor /= 1024;
+    i++;
+  }
+  return `${valor.toLocaleString("es-AR", { maximumFractionDigits: i === 0 ? 0 : 1 })} ${unidades[i]}`;
+}
+
+// Una fila de barra horizontal: nombre, barra proporcional al máximo y el valor.
+interface FilaBarra {
   clave: string;
-  etiqueta: string;
-  altura: number | null; // null = sin datos ese mes
-  valor: string;
-  detalle: string;
+  nombre: string;
+  valor: number;
+  texto: string;
 }
 
-interface MesMetas {
-  mes: string;
-  total: number;
-  completadas: number;
-}
-
-// Reportes del usuario: metas personales, proyectos y (cuando exista el módulo) sesiones de estudio.
+// Reportes del usuario: material, metas, eventos, clases, sesiones de estudio y proyectos.
 export function EstadisticasPage() {
   const usuarioId = obtenerUsuarioId();
   const [hoy] = useState(() => new Date());
-  const [metas, setMetas] = useState<EstadisticasMetas | null>(null);
-  const [proyectos, setProyectos] = useState<ResumenProyecto[] | null>(null);
+  const [material, setMaterial] = useState<ResumenMaterial | null>(null);
+  const [metas, setMetas] = useState<Meta[] | null>(null);
+  const [eventos, setEventos] = useState<Evento[] | null>(null);
+  const [horarios, setHorarios] = useState<HorarioCursado[] | null>(null);
   const [sesiones, setSesiones] = useState<ResumenSesiones | null>(null);
+  const [proyectos, setProyectos] = useState<ResumenProyecto[] | null>(null);
   const [error, setError] = useState("");
 
   const meses = ultimosMeses(CANTIDAD_MESES, hoy);
+  const mesActual = mesDe(hoy);
 
   useEffect(() => {
     if (!usuarioId) return;
-    window.api.estadisticasMetas({ idUsuario: usuarioId, desde: meses[0], hasta: meses[meses.length - 1] })
-      .then(setMetas)
-      .catch((e) => setError(mensajeDe(e)));
-    window.api.resumenProyectos({ idUsuario: usuarioId, mes: mesDe(hoy), hoy: diaDe(hoy) })
-      .then(setProyectos)
-      .catch((e) => setError(mensajeDe(e)));
-    window.api.resumenSesionesEstudio({
-      idUsuario: usuarioId,
-      desde: `${meses[0]}-01`,
-      zonaHoraria: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    })
-      .then(setSesiones)
-      .catch((e) => setError(mensajeDe(e)));
+    const fallo = (e: unknown) => setError(mensajeDe(e));
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59);
+    window.api.resumenMaterial({ idUsuario: usuarioId }).then(setMaterial).catch(fallo);
+    window.api.listarMetas({ idUsuario: usuarioId, mes: mesActual }).then(setMetas).catch(fallo);
+    window.api.listarEventos({ usuarioId, desde: inicioMes.toISOString(), hasta: finMes.toISOString() }).then(setEventos).catch(fallo);
+    window.api.listarHorarios({ usuarioId }).then(setHorarios).catch(fallo);
+    // Sesiones y proyectos se cuentan desde el mismo día, con la hora de la compu.
+    // getTimezoneOffset da UTC - local (Argentina: 180); el main necesita local - UTC.
+    const periodo = { idUsuario: usuarioId, desde: `${meses[0]}-01`, desfaseMinutos: -hoy.getTimezoneOffset() };
+    window.api.resumenSesionesEstudio(periodo).then(setSesiones).catch(fallo);
+    window.api.resumenProyectos({ ...periodo, mes: mesActual, hoy: diaDe(hoy) }).then(setProyectos).catch(fallo);
   }, [usuarioId]);
 
-  // Todos los meses aparecen en el gráfico, aunque no tengan metas.
-  const porMes: MesMetas[] = meses.map((mes) => {
-    const dato = metas?.porMes.find((m) => m.mes === mes);
-    return { mes, total: dato?.total ?? 0, completadas: dato?.completadas ?? 0 };
-  });
-  const actual = porMes[porMes.length - 1];
-  const totalPeriodo = porMes.reduce((n, m) => n + m.total, 0);
-  const hechasPeriodo = porMes.reduce((n, m) => n + m.completadas, 0);
-  const trasladadas = metas?.porMes.reduce((n, m) => n + m.trasladadas, 0) ?? 0;
+  // ---- Metas personales del mes ----
+  const hoyISO = diaDe(hoy);
+  const cumplidas = metas?.filter((m) => m.completada).length ?? 0;
+  const pendientes = (metas?.length ?? 0) - cumplidas;
+  const conFechaPasada = metas?.filter((m) => !m.completada && m.fechaLimite !== null && m.fechaLimite < hoyISO).length ?? 0;
+
+  // ---- Eventos del mes ----
+  const enUnaSemana = new Date(hoy.getTime() + 7 * 86_400_000);
+  const proximos = eventos?.filter((e) => new Date(e.fecha) >= hoy && new Date(e.fecha) <= enUnaSemana).length ?? 0;
+  const porCategoria = agrupar(eventos ?? [], (e) => e.categoria || "Sin categoría");
+
+  // ---- Clases: horas por semana de cada materia ----
+  const minutosPorMateria = new Map<string, number>();
+  for (const h of horarios ?? []) {
+    const minutos = Math.max(0, aMinutos(h.horaFin) - aMinutos(h.horaInicio));
+    minutosPorMateria.set(h.titulo, (minutosPorMateria.get(h.titulo) ?? 0) + minutos);
+  }
+  const minutosClase = [...minutosPorMateria.values()].reduce((n, m) => n + m, 0);
+  const clases: FilaBarra[] = [...minutosPorMateria]
+    .sort((a, b) => b[1] - a[1])
+    .map(([materia, minutos]) => ({ clave: materia, nombre: materia, valor: minutos, texto: textoMinutos(minutos) }));
 
   return (
     <PlantillaLayout titulo="Estadísticas" idActivo="estadisticas" usuario={{ nombre: "Usuario" }}>
       <div className="estadisticas">
         {error && <CartelError mensaje={error} onCerrar={() => setError("")} />}
 
-        <section className="estadisticas__seccion" aria-labelledby="titulo-metas">
-          <header className="estadisticas__cabecera">
-            <Target size={20} aria-hidden="true" />
-            <h2 id="titulo-metas" className="estadisticas__titulo">Mis metas</h2>
-            <span className="estadisticas__nota">Últimos {CANTIDAD_MESES} meses</span>
-          </header>
+        <div className="estadisticas__kpis">
+          <Kpi
+            valor={material ? String(material.archivos) : "—"}
+            etiqueta="archivos"
+            detalle={material ? `${textoBytes(material.bytes)} en ${material.carpetas} ${material.carpetas === 1 ? "carpeta" : "carpetas"}` : "Cargando…"}
+          />
+          <Kpi
+            valor={metas?.length ? `${porcentaje(cumplidas, metas.length)}%` : "—"}
+            etiqueta="metas cumplidas"
+            detalle={metas ? `${cumplidas} de ${metas.length} este mes` : "Cargando…"}
+          />
+          <Kpi
+            valor={eventos ? String(eventos.length) : "—"}
+            etiqueta={`eventos en ${MESES[hoy.getMonth()]}`}
+            detalle={eventos ? `${proximos} en los próximos 7 días` : "Cargando…"}
+          />
+          <Kpi
+            valor={horarios ? textoMinutos(minutosClase) : "—"}
+            etiqueta="de clase por semana"
+            detalle={horarios ? `${minutosPorMateria.size} ${minutosPorMateria.size === 1 ? "materia" : "materias"}` : "Cargando…"}
+          />
+        </div>
 
-          <div className="estadisticas__tiles">
-            <Tile etiqueta="Este mes" valor={`${actual.completadas} de ${actual.total}`} detalle={actual.total ? `${porcentaje(actual.completadas, actual.total)}% cumplidas` : "Sin metas todavía"} />
-            <Tile etiqueta={`Últimos ${CANTIDAD_MESES} meses`} valor={`${porcentaje(hechasPeriodo, totalPeriodo)}%`} detalle={`${hechasPeriodo} de ${totalPeriodo} cumplidas`} />
-            <Tile etiqueta="Pasadas al mes siguiente" valor={String(trasladadas)} detalle="Pendientes que copiaste a otro mes" />
-          </div>
+        <div className="estadisticas__grilla">
+          <Tarjeta titulo="Metas del mes">
+            {metas === null ? <Cargando /> : metas.length === 0 ? (
+              <Vacio>Todavía no anotaste metas este mes. Las del inicio aparecen acá.</Vacio>
+            ) : (
+              <div className="dona-metas">
+                <Dona parte={cumplidas} total={metas.length} />
+                <ul className="dona-metas__leyenda">
+                  <li><span className="punto punto--cumplida" /> {cumplidas} {cumplidas === 1 ? "cumplida" : "cumplidas"}</li>
+                  <li><span className="punto punto--pendiente" /> {pendientes} {pendientes === 1 ? "pendiente" : "pendientes"}</li>
+                  {conFechaPasada > 0 && (
+                    <li className="dona-metas__alerta">
+                      <AlertTriangle size={14} aria-hidden="true" /> {conFechaPasada} con la fecha pasada
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </Tarjeta>
 
-          {metas === null ? (
-            <p className="estadisticas__vacio" role="status">Cargando…</p>
-          ) : totalPeriodo === 0 ? (
-            <p className="estadisticas__vacio">Todavía no anotaste metas en estos meses. Las del inicio aparecen acá.</p>
-          ) : (
-            <GraficoBarras
-              titulo="Metas cumplidas por mes"
-              guias={[{ posicion: 100, texto: "100%" }, { posicion: 50, texto: "50%" }, { posicion: 0, texto: "0%" }]}
-              actual={actual.mes}
-              barras={porMes.map((d) => {
-                const valor = porcentaje(d.completadas, d.total);
-                return {
-                  clave: d.mes,
-                  etiqueta: nombreMes(d.mes),
-                  altura: d.total ? valor : null,
-                  valor: `${valor}%`,
-                  detalle: d.total ? `${nombreMes(d.mes)}: ${d.completadas} de ${d.total} cumplidas (${valor}%)` : `${nombreMes(d.mes)}: sin metas`,
-                };
-              })}
-            />
-          )}
-        </section>
+          <Tarjeta titulo={`Eventos de ${MESES[hoy.getMonth()]} por categoría`}>
+            {eventos === null ? <Cargando /> : porCategoria.length === 0 ? (
+              <Vacio>No tenés eventos este mes.</Vacio>
+            ) : (
+              <Barras filas={porCategoria.map(([nombre, cantidad]) => ({ clave: nombre, nombre, valor: cantidad, texto: String(cantidad) }))} />
+            )}
+          </Tarjeta>
 
-        <section className="estadisticas__seccion" aria-labelledby="titulo-proyectos">
-          <header className="estadisticas__cabecera">
-            <FolderKanban size={20} aria-hidden="true" />
-            <h2 id="titulo-proyectos" className="estadisticas__titulo">Proyectos</h2>
-          </header>
+          <Tarjeta titulo="Horas de clase por materia">
+            {horarios === null ? <Cargando /> : clases.length === 0 ? (
+              <Vacio>Cargá tus horarios de cursado para ver cuántas horas tenés de cada materia.</Vacio>
+            ) : (
+              <Barras filas={clases} />
+            )}
+          </Tarjeta>
 
-          {proyectos === null ? (
-            <p className="estadisticas__vacio" role="status">Cargando…</p>
-          ) : proyectos.length === 0 ? (
-            <p className="estadisticas__vacio">No estás en ningún proyecto todavía.</p>
-          ) : (
-            <div className="estadisticas__proyectos">
-              {proyectos.map((p) => <TarjetaProyecto key={p.idProyecto} proyecto={p} />)}
-            </div>
-          )}
-        </section>
+          <Tarjeta titulo="Sesiones de estudio" ancha nota={`Últimos ${CANTIDAD_MESES} meses`}>
+            {sesiones === null ? <Cargando /> : <SeccionSesiones resumen={sesiones} meses={meses} mesActual={mesActual} />}
+          </Tarjeta>
 
-        <section className="estadisticas__seccion" aria-labelledby="titulo-sesiones">
-          <header className="estadisticas__cabecera">
-            <Timer size={20} aria-hidden="true" />
-            <h2 id="titulo-sesiones" className="estadisticas__titulo">Sesiones de estudio</h2>
-            <span className="estadisticas__nota">Últimos {CANTIDAD_MESES} meses</span>
-          </header>
-          {sesiones === null ? (
-            <p className="estadisticas__vacio" role="status">Cargando…</p>
-          ) : (
-            <SeccionSesiones resumen={sesiones} meses={meses} mesActual={actual.mes} />
-          )}
-        </section>
+          <Tarjeta titulo="Proyectos" ancha nota={`Últimos ${CANTIDAD_MESES} meses`}>
+            {proyectos === null ? <Cargando /> : proyectos.length === 0 ? (
+              <Vacio>No estás en ningún proyecto todavía. <Link to="/proyectos">Creá uno</Link> o pedí que te inviten.</Vacio>
+            ) : (
+              <SeccionProyectos proyectos={proyectos} meses={meses} mesActual={mesActual} />
+            )}
+          </Tarjeta>
+        </div>
       </div>
     </PlantillaLayout>
   );
 }
 
-function Tile({ etiqueta, valor, detalle }: { etiqueta: string; valor: string; detalle: string }) {
+// Cuenta cuántos elementos hay de cada grupo, de mayor a menor.
+function agrupar<T>(lista: T[], clave: (item: T) => string): [string, number][] {
+  const cuentas = new Map<string, number>();
+  for (const item of lista) cuentas.set(clave(item), (cuentas.get(clave(item)) ?? 0) + 1);
+  return [...cuentas].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
+function Kpi({ valor, etiqueta, detalle }: { valor: string; etiqueta: string; detalle: string }) {
   return (
-    <div className="estadisticas__tile">
-      <span className="estadisticas__tile-etiqueta">{etiqueta}</span>
-      <strong className="estadisticas__tile-valor">{valor}</strong>
-      <span className="estadisticas__tile-detalle">{detalle}</span>
+    <div className="estadisticas__kpi">
+      <strong className="estadisticas__kpi-valor">{valor}</strong>
+      <span className="estadisticas__kpi-etiqueta">{etiqueta}</span>
+      <span className="estadisticas__kpi-detalle">{detalle}</span>
     </div>
   );
 }
 
-// Gráfico de barras por mes. El mes actual va resaltado; al pasar el mouse se ve el detalle.
-function GraficoBarras({ titulo, barras, guias, actual }: {
+function Tarjeta({ titulo, nota, ancha, children }: { titulo: string; nota?: string; ancha?: boolean; children: ReactNode }) {
+  return (
+    <section className={`estadisticas__tarjeta${ancha ? " estadisticas__tarjeta--ancha" : ""}`}>
+      <header className="estadisticas__tarjeta-cabecera">
+        <h2 className="estadisticas__tarjeta-titulo">{titulo}</h2>
+        {nota && <span className="estadisticas__nota">{nota}</span>}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+const Cargando = () => <p className="estadisticas__vacio" role="status">Cargando…</p>;
+const Vacio = ({ children }: { children: ReactNode }) => <p className="estadisticas__vacio">{children}</p>;
+
+// Anillo con el % cumplido en el centro.
+function Dona({ parte, total }: { parte: number; total: number }) {
+  const radio = 42;
+  const vuelta = 2 * Math.PI * radio;
+  const valor = porcentaje(parte, total);
+  return (
+    <svg className="dona" viewBox="0 0 100 100" role="img" aria-label={`${valor}% de las metas cumplidas`}>
+      <circle className="dona__fondo" cx="50" cy="50" r={radio} />
+      <circle
+        className="dona__valor"
+        cx="50"
+        cy="50"
+        r={radio}
+        strokeDasharray={`${(vuelta * valor) / 100} ${vuelta}`}
+        transform="rotate(-90 50 50)"
+      />
+      <text className="dona__texto" x="50" y="50" textAnchor="middle" dominantBaseline="central">{valor}%</text>
+    </svg>
+  );
+}
+
+// Barras horizontales: el largo es proporcional al valor más alto.
+function Barras({ filas }: { filas: FilaBarra[] }) {
+  const maximo = Math.max(1, ...filas.map((f) => f.valor));
+  return (
+    <ul className="barras">
+      {filas.map((f) => (
+        <li key={f.clave} className="barras__fila" title={`${f.nombre}: ${f.texto}`}>
+          <span className="barras__nombre">{f.nombre}</span>
+          <span className="barras__pista" aria-hidden="true">
+            <span className="barras__relleno" style={{ width: `${(f.valor / maximo) * 100}%` }} />
+          </span>
+          <span className="barras__valor">{f.texto}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// Una barra del gráfico mensual: null = el mes no tiene datos.
+interface BarraMes {
+  mes: string;
+  valor: number | null;
+}
+
+// Barras verticales por mes. El mes actual va resaltado; al pasar el mouse se ve el detalle.
+function GraficoMeses({ titulo, barras, tope, actual, texto, guia, sinDatos }: {
   titulo: string;
-  barras: Barra[];
-  guias: { posicion: number; texto: string }[];
+  barras: BarraMes[];
+  tope: number;
   actual: string;
+  texto: (valor: number) => string;
+  guia: (valor: number) => string;
+  sinDatos: string;
 }) {
   const [activo, setActivo] = useState<string | null>(null);
 
@@ -187,42 +289,44 @@ function GraficoBarras({ titulo, barras, guias, actual }: {
     <figure className="grafico">
       <figcaption className="grafico__titulo">{titulo}</figcaption>
       <div className="grafico__area">
-        {guias.map((g) => (
-          <span key={g.posicion} className="grafico__guia" style={{ bottom: `${g.posicion}%` }}>
-            <span className="grafico__guia-texto">{g.texto}</span>
+        {[100, 50, 0].map((pos) => (
+          <span key={pos} className="grafico__guia" style={{ bottom: `${pos}%` }}>
+            <span className="grafico__guia-texto">{pos === 0 ? "0" : guia((tope * pos) / 100)}</span>
           </span>
         ))}
-        <ol className="grafico__barras">
+        <ol className="grafico__barras" style={{ gridTemplateColumns: `repeat(${barras.length}, 1fr)` }}>
           {barras.map((b) => {
-            const mostrarValor = activo === b.clave || (activo === null && b.clave === actual && b.altura !== null);
+            const detalle = `${nombreMes(b.mes)}: ${b.valor === null ? sinDatos : texto(b.valor)}`;
+            const altura = b.valor === null ? 0 : (b.valor / tope) * 100;
+            const mostrar = activo === b.mes || (activo === null && b.mes === actual && b.valor !== null);
             return (
               <li
-                key={b.clave}
+                key={b.mes}
                 className="grafico__columna"
                 tabIndex={0}
-                aria-label={b.detalle}
-                onMouseEnter={() => setActivo(b.clave)}
+                aria-label={detalle}
+                onMouseEnter={() => setActivo(b.mes)}
                 onMouseLeave={() => setActivo(null)}
-                onFocus={() => setActivo(b.clave)}
+                onFocus={() => setActivo(b.mes)}
                 onBlur={() => setActivo(null)}
               >
-                {mostrarValor && (
-                  <span className="grafico__valor" style={{ bottom: `calc(${b.altura ?? 0}% + 6px)` }}>
-                    {activo === b.clave ? b.detalle : b.valor}
+                {mostrar && (
+                  <span className="grafico__valor" style={{ bottom: `calc(${altura}% + 6px)` }}>
+                    {activo === b.mes ? detalle : texto(b.valor ?? 0)}
                   </span>
                 )}
-                {b.altura !== null ? (
-                  <span className={`grafico__barra${b.clave === actual ? " grafico__barra--actual" : ""}`} style={{ height: `${Math.max(b.altura, 2)}%` }} />
-                ) : (
+                {b.valor === null ? (
                   <span className="grafico__sin-dato" aria-hidden="true">—</span>
+                ) : (
+                  <span className={`grafico__barra${b.mes === actual ? " grafico__barra--actual" : ""}`} style={{ height: `${Math.max(altura, 2)}%` }} />
                 )}
               </li>
             );
           })}
         </ol>
       </div>
-      <ol className="grafico__ejes" aria-hidden="true">
-        {barras.map((b) => <li key={b.clave}>{b.etiqueta}</li>)}
+      <ol className="grafico__ejes" aria-hidden="true" style={{ gridTemplateColumns: `repeat(${barras.length}, 1fr)` }}>
+        {barras.map((b) => <li key={b.mes}>{nombreMes(b.mes)}</li>)}
       </ol>
     </figure>
   );
@@ -234,121 +338,169 @@ function SeccionSesiones({ resumen, meses, mesActual }: { resumen: ResumenSesion
 
   if (vencidas === 0 && minutos.estudiados === 0) {
     return (
-      <p className="estadisticas__vacio">
+      <Vacio>
         Todavía no terminaste sesiones en estos meses. <Link to="/sesiones">Planificá una sesión</Link> y acá vas a ver cuánto estudiaste.
-      </p>
+      </Vacio>
     );
   }
 
-  // La escala del gráfico se redondea a horas enteras para que las guías sean claras.
-  const maximo = Math.max(60, ...porMes.map((m) => m.minutos));
-  const tope = Math.ceil(maximo / 60) * 60;
-  const maxMateria = Math.max(1, ...porMateria.map((m) => m.minutos));
+  // La escala se redondea a horas enteras para que las guías sean claras.
+  const tope = Math.ceil(Math.max(60, ...porMes.map((m) => m.minutos)) / 60) * 60;
 
   return (
-    <>
-      <div className="estadisticas__tiles">
-        <Tile etiqueta="Tiempo estudiado" valor={textoMinutos(minutos.estudiados)} detalle={minutos.planificados ? `${porcentaje(minutos.estudiados, minutos.planificados)}% de lo planificado` : "Sin sesiones terminadas"} />
-        <Tile etiqueta="Sesiones cumplidas" valor={`${sesiones.completadas} de ${vencidas}`} detalle={sesiones.atrasadas ? `${sesiones.atrasadas} quedaron atrasadas` : "Ninguna atrasada"} />
-        <Tile etiqueta="Objetivos de sesión" valor={`${objetivos.completados} de ${objetivos.total}`} detalle={objetivos.total ? `${porcentaje(objetivos.completados, objetivos.total)}% tildados` : "Sin objetivos cargados"} />
+    <div className="sesiones-resumen">
+      <div className="sesiones-resumen__numeros">
+        <Numero valor={textoMinutos(minutos.estudiados)} etiqueta="estudiados" detalle={minutos.planificados ? `${porcentaje(minutos.estudiados, minutos.planificados)}% de lo planificado` : ""} />
+        <Numero valor={`${sesiones.completadas} de ${vencidas}`} etiqueta="sesiones cumplidas" detalle={sesiones.atrasadas ? `${sesiones.atrasadas} quedaron atrasadas` : "Ninguna atrasada"} />
+        <Numero valor={`${objetivos.completados} de ${objetivos.total}`} etiqueta="objetivos tildados" detalle={objetivos.total ? `${porcentaje(objetivos.completados, objetivos.total)}%` : "Sin objetivos"} />
       </div>
-
-      <GraficoBarras
-        titulo="Tiempo estudiado por mes"
-        guias={[{ posicion: 100, texto: `${tope / 60} h` }, { posicion: 50, texto: `${tope / 120} h` }, { posicion: 0, texto: "0" }]}
-        actual={mesActual}
-        barras={meses.map((mes) => {
-          const dato = porMes.find((m) => m.mes === mes);
-          return {
-            clave: mes,
-            etiqueta: nombreMes(mes),
-            altura: dato ? (dato.minutos / tope) * 100 : null,
-            valor: dato ? textoMinutos(dato.minutos) : "",
-            detalle: dato ? `${nombreMes(mes)}: ${textoMinutos(dato.minutos)} estudiados` : `${nombreMes(mes)}: sin sesiones terminadas`,
-          };
-        })}
-      />
-
-      {porMateria.length > 0 && (
-        <div className="aporte">
-          <span className="aporte__titulo">Tiempo por materia</span>
-          <ul className="aporte__lista">
-            {porMateria.map((m) => (
-              <li key={m.materia} className="aporte__fila aporte__fila--ancha" title={`${m.materia}: ${textoMinutos(m.minutos)}`}>
-                <span className="aporte__nombre">{m.materia}</span>
-                <span className="aporte__pista" aria-hidden="true">
-                  <span className="aporte__hechas" style={{ width: `${(m.minutos / maxMateria) * 100}%` }} />
-                </span>
-                <span className="aporte__numero">{textoMinutos(m.minutos)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </>
+      <div className="sesiones-resumen__graficos">
+        <GraficoMeses
+          titulo="Tiempo estudiado por mes"
+          tope={tope}
+          actual={mesActual}
+          texto={textoMinutos}
+          guia={(minutos) => `${minutos / 60} h`}
+          sinDatos="sin sesiones terminadas"
+          barras={meses.map((mes) => ({ mes, valor: porMes.find((m) => m.mes === mes)?.minutos ?? null }))}
+        />
+        {porMateria.length > 0 && (
+          <div>
+            <p className="grafico__titulo">Tiempo por materia</p>
+            <Barras filas={porMateria.map((m) => ({ clave: m.materia, nombre: m.materia, valor: m.minutos, texto: textoMinutos(m.minutos) }))} />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
-function TarjetaProyecto({ proyecto }: { proyecto: ResumenProyecto }) {
-  const { tareas, metasMes, integrantes } = proyecto;
-  const avance = porcentaje(tareas.hechas, tareas.total);
+function Numero({ valor, etiqueta, detalle }: { valor: string; etiqueta: string; detalle: string }) {
+  return (
+    <div className="estadisticas__numero">
+      <strong>{valor}</strong>
+      <span>{etiqueta}</span>
+      {detalle && <small>{detalle}</small>}
+    </div>
+  );
+}
+
+// Proyectos con el mismo formato que las sesiones: números, tareas completadas por mes y aporte de cada integrante.
+// Se puede ver un proyecto o todos juntos.
+function SeccionProyectos({ proyectos, meses, mesActual }: { proyectos: ResumenProyecto[]; meses: string[]; mesActual: string }) {
+  const [elegido, setElegido] = useState<number | null>(null);
+  const visibles = elegido === null ? proyectos : proyectos.filter((p) => p.idProyecto === elegido);
+  const sumar = (valor: (p: ResumenProyecto) => number) => visibles.reduce((n, p) => n + valor(p), 0);
+
+  const total = sumar((p) => p.tareas.total);
+  const hechas = sumar((p) => p.tareas.hechas);
+  const pendientes = sumar((p) => p.tareas.pendientes);
+  const vencidas = sumar((p) => p.tareas.vencidas);
+  const sinAsignar = sumar((p) => p.tareas.sinAsignar);
+  const metasTotal = sumar((p) => p.metasMes.total);
+  const metasCumplidas = sumar((p) => p.metasMes.completadas);
+  const avisos = [vencidas && `${vencidas} ${vencidas === 1 ? "vencida" : "vencidas"}`, sinAsignar && `${sinAsignar} sin asignar`].filter(Boolean);
+
+  // Con todos los proyectos, el aporte de cada persona se suma entre proyectos.
+  const aportes = new Map<number, AporteIntegrante>();
+  for (const p of visibles) {
+    for (const i of p.integrantes) {
+      const previo = aportes.get(i.idUsuario);
+      aportes.set(i.idUsuario, previo ? { ...previo, hechas: previo.hechas + i.hechas, pendientes: previo.pendientes + i.pendientes } : { ...i });
+    }
+  }
+  const integrantes = [...aportes.values()]
+    .filter((i) => i.hechas + i.pendientes > 0)
+    .sort((a, b) => b.hechas - a.hechas || a.nombre.localeCompare(b.nombre));
   const maximo = Math.max(1, ...integrantes.map((i) => i.hechas + i.pendientes));
 
+  const barras: BarraMes[] = meses.map((mes) => {
+    const cantidad = visibles.reduce((n, p) => n + (p.porMes.find((m) => m.mes === mes)?.hechas ?? 0), 0);
+    return { mes, valor: cantidad || null };
+  });
+  // Escala par para que la guía del medio sea un número entero.
+  const tope = Math.max(2, Math.ceil(Math.max(...barras.map((b) => b.valor ?? 0)) / 2) * 2);
+  const tareas = (n: number) => `${n} ${n === 1 ? "tarea" : "tareas"}`;
+
   return (
-    <article className="estadisticas__proyecto">
-      <header className="estadisticas__proyecto-cabecera">
-        <h3 className="estadisticas__proyecto-nombre">{proyecto.nombre}</h3>
-        <span className="estadisticas__proyecto-avance">{tareas.total ? `${avance}%` : "—"}</span>
-      </header>
-
-      <div
-        className="estadisticas__progreso"
-        role="progressbar"
-        aria-label="Tareas hechas"
-        aria-valuemin={0}
-        aria-valuemax={tareas.total}
-        aria-valuenow={tareas.hechas}
-      >
-        <span style={{ width: `${avance}%` }} />
-      </div>
-      <p className="estadisticas__proyecto-texto">
-        {tareas.total ? `${tareas.hechas} de ${tareas.total} tareas hechas` : "Todavía no hay tareas"}
-      </p>
-
-      <ul className="estadisticas__chips">
-        <li className="estadisticas__chip"><Clock size={14} aria-hidden="true" /> {tareas.pendientes} pendientes</li>
-        {tareas.vencidas > 0 && (
-          <li className="estadisticas__chip estadisticas__chip--alerta"><AlertTriangle size={14} aria-hidden="true" /> {tareas.vencidas} vencidas</li>
-        )}
-        {tareas.sinAsignar > 0 && (
-          <li className="estadisticas__chip"><UserX size={14} aria-hidden="true" /> {tareas.sinAsignar} sin asignar</li>
-        )}
-        <li className="estadisticas__chip"><CheckCircle2 size={14} aria-hidden="true" /> Metas del mes: {metasMes.completadas} de {metasMes.total}</li>
-      </ul>
-
-      {integrantes.length > 0 && (
-        <div className="aporte">
-          <div className="aporte__cabecera">
-            <span className="aporte__titulo">Aporte de cada integrante</span>
-            <span className="aporte__leyenda">
-              <span className="aporte__muestra aporte__muestra--hechas" /> Hechas
-              <span className="aporte__muestra aporte__muestra--pendientes" /> Pendientes
-            </span>
-          </div>
-          <ul className="aporte__lista">
-            {integrantes.map((i) => (
-              <li key={i.idUsuario} className="aporte__fila" title={`${i.nombre}: ${i.hechas} hechas, ${i.pendientes} pendientes`}>
-                <span className="aporte__nombre">{i.nombre}</span>
-                <span className="aporte__pista" aria-hidden="true">
-                  {i.hechas > 0 && <span className="aporte__hechas" style={{ width: `${(i.hechas / maximo) * 100}%` }} />}
-                  {i.pendientes > 0 && <span className="aporte__pendientes" style={{ width: `${(i.pendientes / maximo) * 100}%` }} />}
-                </span>
-                <span className="aporte__numero">{i.hechas}/{i.hechas + i.pendientes}</span>
-              </li>
-            ))}
-          </ul>
+    <div className="sesiones-resumen">
+      {proyectos.length > 1 && (
+        <div className="estadisticas__filtros" role="group" aria-label="Proyecto">
+          <button type="button" className="estadisticas__filtro" aria-pressed={elegido === null} onClick={() => setElegido(null)}>
+            Todos
+          </button>
+          {proyectos.map((p) => (
+            <button
+              key={p.idProyecto}
+              type="button"
+              className="estadisticas__filtro"
+              aria-pressed={elegido === p.idProyecto}
+              onClick={() => setElegido(p.idProyecto)}
+            >
+              {p.nombre}
+            </button>
+          ))}
         </div>
       )}
-    </article>
+
+      <div className="sesiones-resumen__numeros">
+        <Numero valor={`${hechas} de ${total}`} etiqueta="tareas hechas" detalle={total ? `${porcentaje(hechas, total)}% del total` : "Todavía no hay tareas"} />
+        <Numero valor={String(pendientes)} etiqueta={pendientes === 1 ? "tarea pendiente" : "tareas pendientes"} detalle={avisos.length ? avisos.join(" · ") : "Ninguna vencida"} />
+        <Numero valor={`${metasCumplidas} de ${metasTotal}`} etiqueta="metas del mes" detalle={metasTotal ? `${porcentaje(metasCumplidas, metasTotal)}% cumplidas` : "Sin metas este mes"} />
+      </div>
+
+      <div className="sesiones-resumen__graficos">
+        <GraficoMeses
+          titulo="Tareas completadas por mes"
+          tope={tope}
+          actual={mesActual}
+          texto={tareas}
+          guia={String}
+          sinDatos="ninguna completada"
+          barras={barras}
+        />
+        <div className="proyectos-resumen__lado">
+          {elegido === null && proyectos.length > 1 && (
+            <div>
+              <p className="grafico__titulo">Avance de cada proyecto</p>
+              <Barras
+                filas={proyectos.map((p) => ({
+                  clave: String(p.idProyecto),
+                  nombre: p.nombre,
+                  valor: porcentaje(p.tareas.hechas, p.tareas.total),
+                  texto: p.tareas.total ? `${porcentaje(p.tareas.hechas, p.tareas.total)}%` : "—",
+                }))}
+              />
+            </div>
+          )}
+          {integrantes.length > 0 && (
+            <div className="aporte">
+              <div className="aporte__cabecera">
+                <span className="grafico__titulo">Aporte de cada integrante</span>
+                <span className="aporte__leyenda">
+                  <span className="aporte__muestra aporte__muestra--hechas" /> Hechas
+                  <span className="aporte__muestra aporte__muestra--pendientes" /> Pendientes
+                </span>
+              </div>
+              <ul className="aporte__lista">
+                {integrantes.map((i) => (
+                  <li key={i.idUsuario} className="aporte__fila" title={`${i.nombre}: ${i.hechas} hechas, ${i.pendientes} pendientes`}>
+                    <span className="aporte__nombre">{i.nombre}</span>
+                    <span className="aporte__pista" aria-hidden="true">
+                      {i.hechas > 0 && <span className="aporte__hechas" style={{ width: `${(i.hechas / maximo) * 100}%` }} />}
+                      {i.pendientes > 0 && <span className="aporte__pendientes" style={{ width: `${(i.pendientes / maximo) * 100}%` }} />}
+                    </span>
+                    <span className="aporte__numero">{i.hechas}/{i.hechas + i.pendientes}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {elegido !== null && (
+            <Link className="estadisticas__enlace" to={`/proyectos/${elegido}/tareas`}>Abrir la división de tareas →</Link>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

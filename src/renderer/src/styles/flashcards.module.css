@@ -226,6 +226,54 @@
 }
 
 .modalActions,
+.formulaHint {
+  margin: 0;
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.formulaPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.formulaPreview small {
+  color: var(--color-text-light);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.formulaPreview p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Una fórmula larga en la tarjeta de estudio se desplaza en vez de salirse */
+.cardSide :global(.katex) {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  vertical-align: middle;
+}
+
+/* Las fórmulas en bloque no se salen de la tarjeta */
+.page :global(.katex-display),
+.studyShell :global(.katex-display) {
+  max-width: 100%;
+  margin: 0.4em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -298,6 +346,56 @@
   flex-basis: 37px;
   width: 37px;
   height: 37px;
+}
+
+/* Lápiz de la derecha: carga la tarjeta en el formulario para editarla */
+.editButton {
+  display: grid;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-light);
+  cursor: pointer;
+}
+
+.editButton:hover,
+.editButton[aria-pressed="true"] {
+  border-color: var(--color-border);
+  background: var(--color-frost-claro);
+  color: var(--color-primary);
+}
+
+.editButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.questionText {
+  flex: 1;
+  min-width: 0;
+}
+
+/* La tarjeta que se está editando arriba queda marcada */
+.questionCardEditing {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+/* El formulario grande cuando se edita una tarjeta */
+.createForm.createFormEditing {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .questionCard strong {

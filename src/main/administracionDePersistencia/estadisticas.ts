@@ -1,6 +1,7 @@
 import { ResumenProyectos } from '../logicaPersistente/gestionDeEstadisticas/resumenProyectos';
 import { ResumenSesionesEstudio } from '../logicaPersistente/gestionDeEstadisticas/resumenSesiones';
-import { ResumenProyecto, ResumenSesiones } from '../logicaPersistente/gestionDeEstadisticas/entidades';
+import { ResumenDeMaterial } from '../logicaPersistente/gestionDeEstadisticas/resumenMaterial';
+import { ResumenMaterial, ResumenProyecto, ResumenSesiones } from '../logicaPersistente/gestionDeEstadisticas/entidades';
 import { ResumenProyectosDTO, ResumenSesionesDTO } from '../logicaPersistente/gestionDeEstadisticas/dto';
 
 // Punto de entrada único al módulo de estadísticas.
@@ -8,7 +9,8 @@ import { ResumenProyectosDTO, ResumenSesionesDTO } from '../logicaPersistente/ge
 export class Estadisticas {
   constructor(
     private readonly resumenProyectos: ResumenProyectos,
-    private readonly resumenSesiones: ResumenSesionesEstudio
+    private readonly resumenSesiones: ResumenSesionesEstudio,
+    private readonly resumenMaterial: ResumenDeMaterial
   ) {}
 
   async proyectos(datos: ResumenProyectosDTO): Promise<ResumenProyecto[]> {
@@ -16,5 +18,8 @@ export class Estadisticas {
   }
   async sesiones(datos: ResumenSesionesDTO): Promise<ResumenSesiones> {
     return this.resumenSesiones.ejecutar(datos);
+  }
+  async material(): Promise<ResumenMaterial> {
+    return this.resumenMaterial.ejecutar();
   }
 }

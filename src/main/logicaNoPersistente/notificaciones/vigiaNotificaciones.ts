@@ -12,6 +12,11 @@ export interface FuentesDeAvisos {
 const dosCifras = (n: number) => String(n).padStart(2, '0');
 const diaDe = (d: Date) => `${d.getFullYear()}-${dosCifras(d.getMonth() + 1)}-${dosCifras(d.getDate())}`;
 
+function avisarFallo<T>(fuente: string, error: unknown, vacio: T): T {
+  console.error(`[avisos] No se pudieron leer las ${fuente} para los recordatorios:`, error);
+  return vacio;
+}
+
 // Cada minuto revisa si a la persona que tiene la sesión abierta le toca algún aviso.
 export class VigiaNotificaciones {
   private usuarioId: number | null = null;
@@ -43,9 +48,11 @@ export class VigiaNotificaciones {
     const usuarioId = this.usuarioId;
     if (!usuarioId) return;
     const ahora = this.ahora();
+    // Cada fuente por separado: si falla una (por ejemplo, a la base le falta una columna),
+    // los avisos de la otra siguen saliendo y el error queda en la terminal.
     const [eventos, metas] = await Promise.all([
-      this.fuentes.eventos(usuarioId, ahora),
-      this.fuentes.metas(usuarioId, diaDe(ahora)),
+      this.fuentes.eventos(usuarioId, ahora).catch((e) => avisarFallo('eventos', e, [] as Evento[])),
+      this.fuentes.metas(usuarioId, diaDe(ahora)).catch((e) => avisarFallo('metas', e, [] as Meta[])),
     ]);
     for (const aviso of avisosPendientes(usuarioId, eventos, metas, ahora)) {
       await this.notificador.notificar(aviso);

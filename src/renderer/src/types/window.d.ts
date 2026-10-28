@@ -8,7 +8,7 @@ import type {
   Meta, EstadisticasMetas, ListarMetasInput, CrearMetaInput, ModificarMetaInput, AlternarMetaInput,
   EliminarMetaInput, CopiarMetasInput, EstadisticasMetasInput,
 } from './metas';
-import type { ResumenProyecto, ResumenSesiones } from './estadisticas';
+import type { ResumenMaterial, ResumenProyecto, ResumenSesiones } from './estadisticas';
 import type { Deck, Flashcard, FlashcardPendiente, RepeticionMaterial } from './flashcards';
 import type { Notificacion } from './notificaciones';
 import type { 
@@ -146,6 +146,7 @@ declare global {
       listarDecks: (usuarioId: number) => Promise<Deck[]>;
       crearFlashcard: (datos: { usuarioId: number; deckId: number; pregunta: string; respuesta: string }) => Promise<Flashcard>;
       listarFlashcards: (datos: { usuarioId: number; deckId: number }) => Promise<Flashcard[]>;
+      modificarFlashcard: (datos: { usuarioId: number; idFlashcard: number; pregunta: string; respuesta: string }) => Promise<Flashcard>;
       listarFlashcardsPendientes: (usuarioId: number) => Promise<FlashcardPendiente[]>;
       registrarRevision: (datos: { usuarioId: number; flashcardId: number; dificultad: 'dificil' | 'intermedio' | 'facil' }) => Promise<FlashcardPendiente>;
       listarRepeticionesMaterial: (usuarioId: number) => Promise<RepeticionMaterial[]>;
@@ -170,8 +171,9 @@ declare global {
       listarInvitaciones: (datos: { idProyecto: number; idUsuarioSolicitante: number }) => Promise<InvitacionPendiente[]>;
       cancelarInvitacion: (datos: { idProyecto: number; idUsuarioSolicitante: number; idInvitacion: number }) => Promise<void>;
       // Estadísticas
-      resumenProyectos: (datos: { idUsuario: number; mes: string; hoy: string }) => Promise<ResumenProyecto[]>;
-      resumenSesionesEstudio: (datos: { idUsuario: number; desde: string; zonaHoraria: string }) => Promise<ResumenSesiones>;
+      resumenProyectos: (datos: { idUsuario: number; mes: string; hoy: string; desde: string; desfaseMinutos: number }) => Promise<ResumenProyecto[]>;
+      resumenMaterial: (datos: { idUsuario: number }) => Promise<ResumenMaterial>;
+      resumenSesionesEstudio: (datos: { idUsuario: number; desde: string; desfaseMinutos: number }) => Promise<ResumenSesiones>;
 
       // Portada del proyecto (imagen local; null = colores de la paleta)
       obtenerPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;

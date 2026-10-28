@@ -5,8 +5,11 @@ import { ListarEventos } from '../../logicaPersistente/gestionDeEventos/listarEv
 import { EliminarEvento } from '../../logicaPersistente/gestionDeEventos/eliminarEvento';
 
 describe('Casos de Uso de Eventos', () => {
-  const mockPersistencia = {
-    ejecutar: vi.fn()
+  // Los casos de uso escriben dentro de una transacción (sincronización de proyectos):
+  // el mock la resuelve con el mismo `ejecutar` para poder revisar el SQL.
+  const mockPersistencia: any = {
+    ejecutar: vi.fn(),
+    transaccion: async (trabajo: (tx: any) => Promise<unknown>) => trabajo(mockPersistencia)
   };
 
   // Objeto de retorno simulado para que materializarEvento no lance error por undefined
@@ -22,6 +25,7 @@ describe('Casos de Uso de Eventos', () => {
 
   it('8. Inserción con parámetros SQL en CrearEvento', async () => {
     mockPersistencia.ejecutar.mockReset();
+    mockPersistencia.ejecutar.mockResolvedValue([eventoMockFila]);
     mockPersistencia.ejecutar.mockResolvedValueOnce([eventoMockFila]);
     const casoUso = new CrearEvento(mockPersistencia as any);
 
@@ -40,6 +44,7 @@ describe('Casos de Uso de Eventos', () => {
 
   it('9. Modificar un único campo con UPDATE dinámico', async () => {
     mockPersistencia.ejecutar.mockReset();
+    mockPersistencia.ejecutar.mockResolvedValue([eventoMockFila]);
     mockPersistencia.ejecutar.mockResolvedValueOnce([eventoMockFila]);
     const casoUso = new ModificarEvento(mockPersistencia as any);
 
@@ -58,6 +63,7 @@ describe('Casos de Uso de Eventos', () => {
 
   it('10. Modificar múltiples campos simultáneamente', async () => {
     mockPersistencia.ejecutar.mockReset();
+    mockPersistencia.ejecutar.mockResolvedValue([eventoMockFila]);
     mockPersistencia.ejecutar.mockResolvedValueOnce([eventoMockFila]);
     const casoUso = new ModificarEvento(mockPersistencia as any);
 
@@ -75,6 +81,7 @@ describe('Casos de Uso de Eventos', () => {
 
   it('11. Aplique de casteo ::jsonb en recordatorios', async () => {
     mockPersistencia.ejecutar.mockReset();
+    mockPersistencia.ejecutar.mockResolvedValue([eventoMockFila]);
     mockPersistencia.ejecutar.mockResolvedValueOnce([eventoMockFila]);
     const casoUso = new ModificarEvento(mockPersistencia as any);
     const recordatorios = [{ cantidad: 10, unidad: 'minutos' }];
@@ -93,6 +100,7 @@ describe('Casos de Uso de Eventos', () => {
 
   it('12. Listar eventos sin filtros de fechas', async () => {
     mockPersistencia.ejecutar.mockReset();
+    mockPersistencia.ejecutar.mockResolvedValue([eventoMockFila]);
     mockPersistencia.ejecutar.mockResolvedValueOnce([eventoMockFila]);
     const casoUso = new ListarEventos(mockPersistencia as any);
 
@@ -107,6 +115,7 @@ describe('Casos de Uso de Eventos', () => {
 
   it('13. Listar eventos filtrando solo por fecha desde', async () => {
     mockPersistencia.ejecutar.mockReset();
+    mockPersistencia.ejecutar.mockResolvedValue([eventoMockFila]);
     mockPersistencia.ejecutar.mockResolvedValueOnce([eventoMockFila]);
     const casoUso = new ListarEventos(mockPersistencia as any);
     const desde = new Date('2026-10-01');
@@ -125,6 +134,7 @@ describe('Casos de Uso de Eventos', () => {
 
   it('14. Listar eventos filtrando solo por fecha hasta', async () => {
     mockPersistencia.ejecutar.mockReset();
+    mockPersistencia.ejecutar.mockResolvedValue([eventoMockFila]);
     mockPersistencia.ejecutar.mockResolvedValueOnce([eventoMockFila]);
     const casoUso = new ListarEventos(mockPersistencia as any);
     const hasta = new Date('2026-10-31');
@@ -143,6 +153,7 @@ describe('Casos de Uso de Eventos', () => {
 
   it('15. Listar eventos filtrando por rango de fechas completo', async () => {
     mockPersistencia.ejecutar.mockReset();
+    mockPersistencia.ejecutar.mockResolvedValue([eventoMockFila]);
     mockPersistencia.ejecutar.mockResolvedValueOnce([eventoMockFila]);
     const casoUso = new ListarEventos(mockPersistencia as any);
     const desde = new Date('2026-10-01');
@@ -162,18 +173,18 @@ describe('Casos de Uso de Eventos', () => {
 
   it('21. Eliminar evento existente por ID', async () => {
     mockPersistencia.ejecutar.mockReset();
-    mockPersistencia.ejecutar.mockResolvedValueOnce([]);
+    mockPersistencia.ejecutar.mockResolvedValue([eventoMockFila]);
     const casoUso = new EliminarEvento(mockPersistencia as any);
 
-    await casoUso.ejecutar({ id: 5 } as any);
+    await casoUso.ejecutar({ id: 5, usuarioId: 'usr-1' } as any);
 
     const callArgs = mockPersistencia.ejecutar.mock.calls[0];
     console.log('[TEST 21 OUTPUT] Query DELETE:', callArgs[0]);
     console.log('[TEST 21 OUTPUT] ID a eliminar:', callArgs[1]);
 
     expect(mockPersistencia.ejecutar).toHaveBeenCalledWith(
-      'DELETE FROM eventos WHERE id = $1',
+      expect.stringContaining('DELETE FROM eventos WHERE id = $1'),
       expect.arrayContaining([5])
     );
   });
-});
+});

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, BookOpen, Check, ChevronRight, RotateCcw, Search, SkipForward, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, ChevronRight, RotateCcw, Search, SkipForward } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Button } from '../../components/ui/button/button';
 import { CartelError } from '../../components/comunes/cartelError';
+import { TextoConFormulas } from '../../components/comunes/textoConFormulas';
+import { LARGO_PREGUNTA, LARGO_RESPUESTA, pegarConFormulas, tieneFormulas } from '../../utils/formulas';
+import { TarjetaFlashcard } from '../../components/flashcards/tarjetaFlashcard';
 import type { Deck, Flashcard } from '../../types/flashcards';
 import { ESTILOS_TARJETA, usarEstiloFlashcards, type EstiloTarjeta } from '../../hooks/usarEstiloFlashcards';
 import styles from '../../styles/flashcards.module.css';
@@ -158,6 +161,8 @@ export function DeckFlashcardsPage() {
   const [respuesta, setRespuesta] = useState('');
   const [error, setError] = useState('');
   const [errorFormulario, setErrorFormulario] = useState('');
+  // Flashcard que se está editando en el formulario de arriba; null = se está creando una nueva.
+  const [editandoId, setEditandoId] = useState<number | null>(null);
 
   const cargarMazo = useCallback(async () => {
     try {
@@ -180,7 +185,8 @@ export function DeckFlashcardsPage() {
 
   useEffect(() => { void cargarMazo(); }, [cargarMazo]);
 
-  async function crearFlashcard(evento: React.FormEvent<HTMLFormElement>) {
+  // Guarda el formulario: crea una flashcard nueva o, si se está editando una, le guarda los cambios.
+  async function guardarFlashcard(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const preguntaLimpia = pregunta.trim();
     const respuestaLimpia = respuesta.trim();
@@ -188,31 +194,64 @@ export function DeckFlashcardsPage() {
       setErrorFormulario('La pregunta es obligatoria.');
       return;
     }
-    if (preguntaLimpia.length > 100) {
-      setErrorFormulario('La pregunta no puede superar los 100 caracteres.');
+    if (preguntaLimpia.length > LARGO_PREGUNTA) {
+      setErrorFormulario(`La pregunta no puede superar los ${LARGO_PREGUNTA} caracteres.`);
       return;
     }
     if (!respuestaLimpia) {
       setErrorFormulario('La respuesta es obligatoria.');
       return;
     }
-    if (respuestaLimpia.length > 1000) {
-      setErrorFormulario('La respuesta no puede superar los 1000 caracteres.');
+    if (respuestaLimpia.length > LARGO_RESPUESTA) {
+      setErrorFormulario(`La respuesta no puede superar los ${LARGO_RESPUESTA} caracteres.`);
       return;
     }
     try {
       setGuardando(true);
       setError('');
       setErrorFormulario('');
-      await window.api.crearFlashcard({ usuarioId: usuarioIdActual(), deckId, pregunta: preguntaLimpia, respuesta: respuestaLimpia });
-      setPregunta('');
-      setRespuesta('');
-      await cargarMazo();
+      if (editandoId !== null) {
+        const editada = await window.api.modificarFlashcard({
+          usuarioId: usuarioIdActual(),
+          idFlashcard: editandoId,
+          pregunta: preguntaLimpia,
+          respuesta: respuestaLimpia,
+        });
+        setTarjetas((lista) => lista.map((t) => (t.idFlashcard === editandoId ? editada : t)));
+        limpiarFormulario();
+      } else {
+        await window.api.crearFlashcard({ usuarioId: usuarioIdActual(), deckId, pregunta: preguntaLimpia, respuesta: respuestaLimpia });
+        limpiarFormulario();
+        await cargarMazo();
+      }
     } catch (fallo) {
       setErrorFormulario(fallo instanceof Error ? fallo.message : 'No se pudo guardar la flashcard.');
     } finally {
       setGuardando(false);
     }
+  }
+
+  function limpiarFormulario() {
+    setEditandoId(null);
+    setPregunta('');
+    setRespuesta('');
+    setErrorFormulario('');
+  }
+
+  // El lápiz de una tarjeta la carga en el formulario de arriba para editarla ahí.
+  function editarFlashcard(tarjeta: Flashcard) {
+    setEditandoId(tarjeta.idFlashcard);
+    setPregunta(tarjeta.pregunta);
+    setRespuesta(tarjeta.respuesta);
+    setErrorFormulario('');
+    const campo = document.getElementById('question');
+    campo?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    campo?.focus({ preventScroll: true });
+  }
+
+  function nuevaFlashcard() {
+    limpiarFormulario();
+    document.getElementById('question')?.focus();
   }
 
   return (
@@ -226,27 +265,42 @@ export function DeckFlashcardsPage() {
               <div><p className={styles.eyebrow}>MAZO DE ESTUDIO</p><h2 className={styles.heading}>{mazo.nombre}</h2><p className={styles.description}>{tarjetas.length} {tarjetas.length === 1 ? 'flashcard' : 'flashcards'}</p></div>
               <div className={styles.actions}>
                 <Button variant="secondary" onClick={() => navigate(`/flashcards/${deckId}/estudiar`)} disabled={!tarjetas.length}><RotateCcw size={17} /> Reproducir mazo</Button>
-                <Button onClick={() => document.getElementById('question')?.focus()}>＋ Crear Flashcard</Button>
+                <Button onClick={nuevaFlashcard}>＋ Crear Flashcard</Button>
               </div>
             </header>
-            <form className={styles.createForm} onSubmit={crearFlashcard}>
-              <h3>Nueva flashcard</h3>
+            <form className={`${styles.createForm} ${editandoId !== null ? styles.createFormEditing : ''}`} onSubmit={guardarFlashcard}>
+              <h3>{editandoId !== null ? 'Editar flashcard' : 'Nueva flashcard'}</h3>
               <label htmlFor="question">Pregunta</label>
               <input id="question" placeholder="Escribí una pregunta breve" value={pregunta} onChange={(evento) => {
                 setPregunta(evento.target.value);
                 setErrorFormulario('');
-              }} aria-invalid={Boolean(errorFormulario)} aria-describedby={errorFormulario ? 'flashcard-error' : undefined} />
+              }} onPaste={(evento) => pegarConFormulas(evento, pregunta, (nuevo) => { setPregunta(nuevo); setErrorFormulario(''); })} aria-invalid={Boolean(errorFormulario)} aria-describedby={errorFormulario ? 'flashcard-error' : undefined} />
               <label htmlFor="answer">Respuesta</label>
               <textarea id="answer" rows={5} placeholder="Escribí la respuesta" value={respuesta} onChange={(evento) => {
                 setRespuesta(evento.target.value);
                 setErrorFormulario('');
-              }} aria-invalid={Boolean(errorFormulario)} aria-describedby={errorFormulario ? 'flashcard-error' : undefined} />
+              }} onPaste={(evento) => pegarConFormulas(evento, respuesta, (nuevo) => { setRespuesta(nuevo); setErrorFormulario(''); })} aria-invalid={Boolean(errorFormulario)} aria-describedby={errorFormulario ? 'flashcard-error' : 'flashcard-formulas'} />
+              <p id="flashcard-formulas" className={styles.formulaHint}>
+                Fórmulas: escribilas entre $ y $ (por ejemplo $x^2 + 1$) o pegalas desde ChatGPT, Wikipedia o Word.
+              </p>
+              {(tieneFormulas(pregunta) || tieneFormulas(respuesta)) && (
+                <div className={styles.formulaPreview} aria-live="polite">
+                  <small>Vista previa</small>
+                  {pregunta.trim() && <strong><TextoConFormulas texto={pregunta} /></strong>}
+                  {respuesta.trim() && <p><TextoConFormulas texto={respuesta} /></p>}
+                </div>
+              )}
               {errorFormulario && <p id="flashcard-error" className={styles.formError} role="alert">{errorFormulario}</p>}
-              <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar Flashcard'}</Button>
+              <div className={styles.formActions}>
+                <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar Flashcard'}</Button>
+                {editandoId !== null && (
+                  <Button variant="secondary" onClick={limpiarFormulario} disabled={guardando}>Cancelar edición</Button>
+                )}
+              </div>
             </form>
             {tarjetas.length ? (
               <div className={styles.cardList}>
-                {tarjetas.map((tarjeta) => <article className={styles.questionCard} key={tarjeta.idFlashcard}><span className={styles.questionIcon}><Sparkles size={18} /></span><div><strong>{tarjeta.pregunta}</strong><p>{tarjeta.respuesta}</p></div></article>)}
+                {tarjetas.map((tarjeta) => <TarjetaFlashcard key={tarjeta.idFlashcard} tarjeta={tarjeta} editando={tarjeta.idFlashcard === editandoId} onEditar={() => editarFlashcard(tarjeta)} />)}
               </div>
             ) : <p className={styles.notice}>Aún no hay tarjetas. Creá la primera con el formulario.</p>}
           </>
@@ -348,7 +402,7 @@ export function EstudiarFlashcardsPage() {
       </div>
       {error && <CartelError mensaje={error} onCerrar={() => setError('')} />}
       <button type="button" className={`${styles.studyCard} ${CLASE_ESTILO[estilo]} ${volteada ? styles.studyCardFlipped : ''}`} onClick={() => setVolteada((valor) => !valor)} aria-label={volteada ? 'Mostrar la pregunta' : 'Voltear para ver la respuesta'}>
-        <span className={styles.cardSide}><small>{volteada ? 'RESPUESTA' : 'PREGUNTA'}</small><span>{volteada ? actual.respuesta : actual.pregunta}</span>{!volteada && <small className={styles.flipHint}>Voltear para visualizar la respuesta</small>}</span>
+        <span className={styles.cardSide}><small>{volteada ? 'RESPUESTA' : 'PREGUNTA'}</small><span><TextoConFormulas texto={volteada ? actual.respuesta : actual.pregunta} /></span>{!volteada && <small className={styles.flipHint}>Voltear para visualizar la respuesta</small>}</span>
       </button>
       {volteada && <section className={styles.rating}><p>¿Cómo te resultó?</p><div className={styles.ratingButtons}>
         <button type="button" className={styles.difficult} disabled={guardando} onClick={() => void evaluar('dificil')}>Difícil <small>1 día</small></button>

@@ -27,8 +27,8 @@ export class CrearTarea {
             const orden = await siguienteOrden(tx, idProyecto, idAsignado, dto.idUsuario);
             const filas = await consultar(
                 tx,
-                `INSERT INTO tareas (id_proyecto, titulo, descripcion, prioridad, fecha_limite, id_asignado, orden, creada_por)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                `INSERT INTO tareas (id_proyecto, titulo, descripcion, prioridad, fecha_limite, id_asignado, orden, creada_por, fecha_inicio)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                  RETURNING ${COLUMNAS_TAREA}`,
                 [
                     idProyecto,
@@ -39,6 +39,7 @@ export class CrearTarea {
                     idAsignado,
                     orden,
                     dto.idUsuario,
+                    dto.fechaInicio ?? null,
                 ],
             );
             const tarea = materializarTarea(filas[0]);
@@ -47,4 +48,4 @@ export class CrearTarea {
             return tarea;
         });
     }
-}
+}

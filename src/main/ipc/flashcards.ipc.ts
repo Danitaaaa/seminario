@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { Flashcards } from "../administracionDePersistencia/flashcards";
-import { crearDeckSchema, crearFlashcardSchema, listarFlashcardsSchema } from "../logicaPersistente/gestionDeFlashcards/dto";
+import { crearDeckSchema, crearFlashcardSchema, listarFlashcardsSchema, modificarFlashcardSchema } from "../logicaPersistente/gestionDeFlashcards/dto";
 
 export function registerFlashcardsIpc(
     flashcards: Flashcards
@@ -44,5 +44,11 @@ export function registerFlashcardsIpc(
             const validado = listarFlashcardsSchema.parse(datos);
             return flashcards.listarFlashcards(validado.usuarioId, validado.deckId);
         }
+    );
+
+    ipcMain.handle(
+        "flashcards:modificarFlashcard",
+        async (_event, datos: unknown) =>
+            flashcards.modificarFlashcard(modificarFlashcardSchema.parse(datos))
     );
 }

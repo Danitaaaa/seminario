@@ -82,6 +82,8 @@ export interface SesionEstudio {
   contenido: string;
   // Archivo .docx de la sesión en Material; null si todavía no se pudo generar.
   idArchivo: number | null;
+  // Mazo de flashcards que se repasa en la sesión; null si no tiene.
+  idDeck: number | null;
 }
 
 // Opciones para armar el formulario de creación.

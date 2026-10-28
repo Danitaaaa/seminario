@@ -33,7 +33,7 @@ export const PALETAS: Paleta[] = [
     { lateral: "#0F4C5C", lateralTexto: "#FFFFFF", activo: "#0A3540", fondo: "#F3F8F9", superficie: "#FFFFFF", suave: "#D3E9EE", borde: "#D2E2E6", primario: "#1A7A8C", primarioClaro: "#6FB3C1", acento: "#F2A65A", texto: "#0B2A33", textoSecundario: "#4F6D75" },
     { lateral: "#06171C", lateralTexto: "#D3E9EE", activo: "#124A57", fondo: "#081C22", superficie: "#0E2830", suave: "#13343D", borde: "#1F4A55", primario: "#1F8A9E", primarioClaro: "#5CC8DB", acento: "#F2A65A", texto: "#E2F1F4", textoSecundario: "#9FBFC6" }),
 
-  paleta("menta", "Menta",
+  paleta("menta", "Caro",
     { lateral: "#1E3A4C", lateralTexto: "#FFFFFF", activo: "#12283A", fondo: "#F4FAF8", superficie: "#FFFFFF", suave: "#D6F0E8", borde: "#D3E6E0", primario: "#2A8C7A", primarioClaro: "#7CC4B5", acento: "#F28C8C", texto: "#10232C", textoSecundario: "#4E6670" },
     { lateral: "#08141B", lateralTexto: "#D6F0E8", activo: "#1A4A42", fondo: "#0B1A20", superficie: "#12252D", suave: "#173038", borde: "#24434D", primario: "#2E9C87", primarioClaro: "#6FD6C0", acento: "#F28C8C", texto: "#E3F4EF", textoSecundario: "#A3C2BB" }),
 

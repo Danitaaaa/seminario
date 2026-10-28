@@ -38,6 +38,8 @@ export function ModalTarea({
   const [descripcion, setDescripcion] = useState(tarea?.descripcion ?? '');
   const [prioridad, setPrioridad] = useState<Prioridad>(tarea?.prioridad ?? 'media');
   const [fechaLimite, setFechaLimite] = useState(tarea?.fechaLimite ?? '');
+  const [fechaInicio, setFechaInicio] = useState(tarea?.fechaInicio ?? '');
+  const [errorFechas, setErrorFechas] = useState<string | null>(null);
   const [idAsignado, setIdAsignado] = useState(idAsignadoInicial == null ? '' : String(idAsignadoInicial));
   const [errorTitulo, setErrorTitulo] = useState<string | null>(null);
   const [errorAsignado, setErrorAsignado] = useState<string | null>(null);
@@ -65,6 +67,11 @@ export function ModalTarea({
       return;
     }
 
+    if (fechaInicio && fechaLimite && fechaInicio > fechaLimite) {
+      setErrorFechas('El inicio no puede ser después de la fecha límite.');
+      return;
+    }
+
     const asignado = leerIdAsignado(idAsignado);
     if (asignado === undefined) {
       setErrorAsignado('No se pudo leer el integrante asignado. Elegí otro e intentá de nuevo.');
@@ -77,6 +84,7 @@ export function ModalTarea({
       descripcion: descripcion.trim() === '' ? null : descripcion.trim(),
       prioridad,
       fechaLimite: fechaLimite === '' ? null : fechaLimite,
+      fechaInicio: fechaInicio === '' ? null : fechaInicio,
       idAsignado: asignado,
     });
     setOcupado(false);
@@ -137,10 +145,16 @@ export function ModalTarea({
           </label>
 
           <label className="tarea-campo">
+            <span>Empieza</span>
+            <input type="date" value={fechaInicio} max={fechaLimite || undefined} disabled={soloLectura} onChange={(e) => { setFechaInicio(e.target.value); setErrorFechas(null); }} />
+          </label>
+
+          <label className="tarea-campo">
             <span>Fecha límite</span>
-            <input type="date" value={fechaLimite} disabled={soloLectura} onChange={(e) => setFechaLimite(e.target.value)} />
+            <input type="date" value={fechaLimite} min={fechaInicio || undefined} disabled={soloLectura} onChange={(e) => { setFechaLimite(e.target.value); setErrorFechas(null); }} />
           </label>
         </div>
+        {errorFechas && <p className="tarea-campo__error" role="alert">{errorFechas}</p>}
 
         <label className="tarea-campo">
           <span>Asignada a</span>
@@ -187,4 +201,4 @@ export function ModalTarea({
       </form>
     </div>
   );
-}
+}

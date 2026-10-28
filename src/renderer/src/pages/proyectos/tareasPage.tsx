@@ -185,6 +185,7 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
       descripcion: datos.descripcion,
       prioridad: datos.prioridad,
       fechaLimite: datos.fechaLimite,
+      fechaInicio: datos.fechaInicio,
     });
     if (ok && datos.idAsignado !== columnaDe(edicion, idsColumnas)) {
       ok = await asignar(edicion, datos.idAsignado);
@@ -325,4 +326,4 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
       )}
     </PlantillaLayout>
   );
-}
+}

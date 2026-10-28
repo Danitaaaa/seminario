@@ -66,6 +66,7 @@ export interface SesionEstudio {
   metas: ObjetivoSesion[];
   contenido: string;
   idArchivo: number | null;
+  idDeck: number | null;
 }
 
 export interface OpcionesSesionEstudio {
@@ -107,6 +108,7 @@ export interface CrearSesionEstudioEntrada {
   fechaProgramada: string;
   recibirNotificacion: boolean;
   metas: string[];
+  idDeck?: number | null;
 }
 
 export interface ModificarSesionEstudioEntrada {
@@ -120,6 +122,8 @@ export interface ModificarSesionEstudioEntrada {
   pomodoroMin?: number;
   descansoCortoMin?: number;
   descansoLargoMin?: number;
+  idDeck?: number | null;
+  idsMetodosEstudio?: number[];
 }
 
 // Funciones que expone el preload para este módulo (se suman al tipo Window.api en window.d.ts).

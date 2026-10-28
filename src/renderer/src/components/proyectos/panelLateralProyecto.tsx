@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MiniCalendario } from './miniCalendario';
+import { MiniCalendario } from '../comunes/miniCalendario';
 import { MetasMensuales } from '../comunes/metasMensuales';
 
 interface PanelLateralProyectoProps {

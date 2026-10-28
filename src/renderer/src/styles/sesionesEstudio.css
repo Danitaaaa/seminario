@@ -1702,3 +1702,252 @@ button.proxima:hover {
     padding: var(--espacio-md);
   }
 }
+
+/* ---------- Métodos de estudio dentro de la sesión ---------- */
+.metodos-sesion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Mini lista para elegir qué método se ve cuando la sesión tiene más de uno */
+.metodos-sesion__lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--radio-sm);
+  background: var(--color-crema);
+}
+
+.metodos-sesion__opcion {
+  flex: 1 1 auto;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: calc(var(--radio-sm) - 2px);
+  background: transparent;
+  color: var(--color-steel);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  font-weight: var(--peso-medium);
+  cursor: pointer;
+}
+
+.metodos-sesion__opcion:hover {
+  color: var(--color-text);
+}
+
+.metodos-sesion__opcion--activa {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgba(11, 26, 51, 0.12);
+}
+
+.metodos-sesion__opcion:focus-visible {
+  outline: 2px solid var(--color-frost-blue);
+  outline-offset: 1px;
+}
+
+.metodos-sesion__nombre,
+.metodos-sesion__subtitulo {
+  margin: 0;
+  color: var(--color-steel);
+  font-size: var(--tamano-xs);
+  font-weight: var(--peso-medium);
+}
+
+.metodos-sesion__repasos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metodos-sesion__repasos ul,
+.metodos-sesion__guia {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: var(--color-text);
+  font-size: var(--tamano-sm);
+}
+
+.metodos-sesion__repasos small {
+  color: var(--color-steel);
+}
+
+.metodos-sesion__enlace {
+  color: var(--color-primary);
+  font-size: var(--tamano-xs);
+  font-weight: var(--peso-medium);
+}
+
+/* ---------- Repaso del mazo dentro de la sesión ---------- */
+.flash-sesion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.flash-sesion__mazo {
+  margin: 0;
+  color: var(--color-steel);
+  font-size: var(--tamano-xs);
+}
+
+.flash-sesion__barra {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-crema);
+}
+
+.flash-sesion__barra span {
+  display: block;
+  height: 100%;
+  background: var(--color-frost-blue);
+  transition: width 0.3s ease;
+}
+
+.flash-sesion__tarjeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  min-height: 96px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-frost-suave);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.flash-sesion__tarjeta:hover {
+  border-color: var(--color-frost-blue);
+}
+
+.flash-sesion__tarjeta:focus-visible {
+  outline: 2px solid var(--color-frost-blue);
+  outline-offset: 2px;
+}
+
+.flash-sesion__tarjeta--respuesta {
+  background: var(--color-surface);
+}
+
+.flash-sesion__texto {
+  max-width: 100%;
+  overflow-x: auto;
+  font-size: var(--tamano-sm);
+  overflow-wrap: anywhere;
+}
+
+.flash-sesion__pista {
+  margin-top: auto;
+  color: var(--color-steel);
+  font-size: var(--tamano-xs);
+}
+
+.flash-sesion__tarjeta small {
+  color: var(--color-steel);
+  font-size: var(--tamano-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.flash-sesion__accion,
+.flash-sesion__dificultades button {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.flash-sesion__accion {
+  border-color: var(--color-primary-dark);
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+}
+
+.flash-sesion__accion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flash-sesion__dificultades {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.flash-sesion__dificultades button:hover:not(:disabled) {
+  background: var(--color-crema);
+}
+
+.flash-sesion__dificultades button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flash-sesion__fin {
+  margin: 0;
+  color: var(--color-success);
+  font-size: var(--tamano-sm);
+}
+
+.flash-sesion__error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--tamano-xs);
+}
+
+.flash-sesion__pie {
+  display: flex;
+  justify-content: space-between;
+}
+
+.flash-sesion__saltar {
+  align-self: center;
+  padding: 2px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--color-steel);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.flash-sesion__saltar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flash-sesion__elegir {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--color-steel);
+  font-size: var(--tamano-xs);
+  font-weight: var(--peso-medium);
+}
+
+.flash-sesion__elegir select {
+  padding: 6px 8px;
+  border: 1px solid var(--color-frost-blue);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+}

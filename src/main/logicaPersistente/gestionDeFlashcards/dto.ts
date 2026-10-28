@@ -17,21 +17,36 @@ export const crearDeckSchema = z.object({
 export type CrearDeckDTO =
     z.infer<typeof crearDeckSchema>;
 
+// Pregunta y respuesta de una flashcard: las mismas reglas al crearla y al editarla.
+const preguntaSchema = z.string({ error: 'La pregunta es obligatoria.' })
+    .trim()
+    .min(1, { error: 'La pregunta es obligatoria.' })
+    .max(250, { error: 'La pregunta no puede superar los 250 caracteres.' });
+
+const respuestaSchema = z.string({ error: 'La respuesta es obligatoria.' })
+    .trim()
+    .min(1, { error: 'La respuesta es obligatoria.' })
+    .max(2000, { error: 'La respuesta no puede superar los 2000 caracteres.' });
+
 // Valida las preguntas y respuestas antes de guardar una flashcard.
 export const crearFlashcardSchema = z.object({
     usuarioId: z.number().int().positive(),
     deckId: z.number().int().positive(),
-    pregunta: z.string({ error: 'La pregunta es obligatoria.' })
-        .trim()
-        .min(1, { error: 'La pregunta es obligatoria.' })
-        .max(100, { error: 'La pregunta no puede superar los 100 caracteres.' }),
-    respuesta: z.string({ error: 'La respuesta es obligatoria.' })
-        .trim()
-        .min(1, { error: 'La respuesta es obligatoria.' })
-        .max(1000, { error: 'La respuesta no puede superar los 1000 caracteres.' }),
+    pregunta: preguntaSchema,
+    respuesta: respuestaSchema,
 });
 
 export type CrearFlashcardDTO = z.infer<typeof crearFlashcardSchema>;
+
+// Valida la edición de una flashcard: se reemplazan la pregunta y la respuesta.
+export const modificarFlashcardSchema = z.object({
+    usuarioId: z.number().int().positive(),
+    idFlashcard: z.number().int().positive(),
+    pregunta: preguntaSchema,
+    respuesta: respuestaSchema,
+});
+
+export type ModificarFlashcardDTO = z.infer<typeof modificarFlashcardSchema>;
 
 // Valida los identificadores al consultar las tarjetas de un mazo.
 export const listarFlashcardsSchema = z.object({

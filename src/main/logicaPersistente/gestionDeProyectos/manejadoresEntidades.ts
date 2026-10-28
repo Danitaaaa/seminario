@@ -143,14 +143,15 @@ export class ManejadorTarea implements ManejadorEntidad {
     const completadaPor = await usuarioPorMail(this.p, d.completada_por_mail);
     await this.p.ejecutar(
       `INSERT INTO tareas (id_global, id_proyecto, titulo, descripcion, prioridad, fecha_limite,
-                           id_asignado, orden, completada, fecha_completada, completada_por, creada_por)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+                           id_asignado, orden, completada, fecha_completada, completada_por, creada_por, fecha_inicio)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        ON CONFLICT (id_global) DO UPDATE SET
          titulo = EXCLUDED.titulo, descripcion = EXCLUDED.descripcion, prioridad = EXCLUDED.prioridad,
-         fecha_limite = EXCLUDED.fecha_limite, id_asignado = EXCLUDED.id_asignado,
+         fecha_limite = EXCLUDED.fecha_limite, fecha_inicio = EXCLUDED.fecha_inicio, id_asignado = EXCLUDED.id_asignado,
          orden = EXCLUDED.orden, completada = EXCLUDED.completada,
          fecha_completada = EXCLUDED.fecha_completada, completada_por = EXCLUDED.completada_por`,
       [idGlobal, idProyecto, d.titulo, d.descripcion ?? null, d.prioridad ?? 'media', d.fecha_limite ?? null,
-       asignado, d.orden ?? 0, d.completada ?? false, d.fecha_completada ?? null, completadaPor, creadaPor]);
+       asignado, d.orden ?? 0, d.completada ?? false, d.fecha_completada ?? null, completadaPor, creadaPor,
+       d.fecha_inicio ?? null]);
   }
-}
+}

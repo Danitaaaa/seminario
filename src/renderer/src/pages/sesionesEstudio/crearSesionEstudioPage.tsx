@@ -9,6 +9,8 @@ import { ModalSuperposicion } from '../../components/sesionEstudio/modalSuperpos
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import type { OpcionesSesionEstudio, SesionEstudio } from '../../types/sesionesEstudio';
+import type { Deck } from '../../types/flashcards';
+import { claseDeMetodo } from '../../utils/metodosEstudio';
 import { aInputFechaHora, desdeInputFechaHora, extraerMensajeError } from './utilidades';
 import '../../styles/sesionesEstudio.css';
 
@@ -57,6 +59,8 @@ export function CrearSesionEstudioPage() {
   const [fecha, setFecha] = useState(aInputFechaHora(new Date().toISOString()));
   const [recibirNotificacion, setRecibirNotificacion] = useState(false);
   const [metas, setObjetivos] = useState<ObjetivoNuevo[]>([]);
+  const [mazos, setMazos] = useState<Deck[]>([]);
+  const [idDeck, setIdDeck] = useState<number | ''>('');
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -65,7 +69,13 @@ export function CrearSesionEstudioPage() {
       .listarOpcionesSesionEstudio()
       .then(setOpciones)
       .catch((e) => setError(extraerMensajeError(e, 'No se pudieron cargar las opciones.')));
+    window.api.listarDecks(usuarioId).then(setMazos).catch(() => setMazos([]));
   }, []);
+
+  // Si entre los métodos elegidos está Flashcards, se puede elegir el mazo que se repasa en la sesión.
+  const conFlashcards = opciones.metodosEstudio.some(
+    (m) => idsMetodos.includes(m.idTipoMetodoEstudio) && claseDeMetodo(m.nombre) === 'flashcards'
+  );
 
   // Agrega o quita un método de estudio de la selección.
   function alternarMetodo(id: number) {
@@ -118,6 +128,7 @@ export function CrearSesionEstudioPage() {
         fechaProgramada: desdeInputFechaHora(fecha),
         recibirNotificacion,
         metas: metas.map((o) => o.descripcion),
+        idDeck: conFlashcards && idDeck !== '' ? idDeck : null,
       });
       avisos.exito(`Se creó correctamente la sesión "${creada.nombre}".`);
       navigate(`/sesiones/${creada.idSesion}`);
@@ -172,6 +183,26 @@ export function CrearSesionEstudioPage() {
             })}
           </div>
         </div>
+
+        {conFlashcards && (
+          <label className="sesiones__campo">
+            Mazo de flashcards para repasar
+            {mazos.length === 0 ? (
+              <span className="sesion__nota">
+                Todavía no tenés mazos. Crealos en Métodos → Flashcards; también podés elegirlo después, desde la sesión.
+              </span>
+            ) : (
+              <select value={idDeck} onChange={(e) => setIdDeck(e.target.value === '' ? '' : Number(e.target.value))}>
+                <option value="">Elegirlo después</option>
+                {mazos.map((m) => (
+                  <option key={m.idDeck} value={m.idDeck}>
+                    {m.nombre}{m.cantidadFlashcards !== undefined ? ` (${m.cantidadFlashcards})` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
+        )}
 
         <div className="sesiones__fila-campos">
           <Paso etiqueta="Pomodoro" valor={pomodoroMin} min={1} max={180} onCambio={setPomodoroMin} />

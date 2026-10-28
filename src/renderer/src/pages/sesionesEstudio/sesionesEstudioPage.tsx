@@ -7,7 +7,7 @@ import { CartelError } from '../../components/comunes/cartelError';
 import { BannerBienvenida } from '../../components/sesionEstudio/bannerBienvenida';
 import { BarraFiltrosSesiones } from '../../components/sesionEstudio/barraFiltrosSesiones';
 import { ListadoSesiones } from '../../components/sesionEstudio/listadoSesiones';
-import { ModalConfiguracionSesion } from '../../components/sesionEstudio/modalConfiguracionSesion';
+import { ModalConfiguracionSesion, type CambiosSesion } from '../../components/sesionEstudio/modalConfiguracionSesion';
 import { ModalEliminarSesion } from '../../components/sesionEstudio/modalEliminarSesion';
 import { ModalMaterias } from '../../components/sesionEstudio/modalMaterias';
 import { usarAvisos } from '../../hooks/usarAvisos';
@@ -120,7 +120,7 @@ export function SesionesEstudioPage() {
   }
 
   // Guarda los cambios del modal y refresca la lista.
-  async function guardarConfiguracion(cambios: { nombre: string; idMateria: number; fechaProgramada: string }) {
+  async function guardarConfiguracion(cambios: CambiosSesion) {
     if (!enConfiguracion) return;
     await window.api.modificarSesionEstudio({ usuarioId, idSesion: enConfiguracion.idSesion, ...cambios });
     setEnConfiguracion(null);

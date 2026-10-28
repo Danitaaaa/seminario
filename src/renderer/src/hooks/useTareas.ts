@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DatosTarea, Tarea } from '../types/tareas';
 
-type CamposEditables = Partial<Pick<DatosTarea, 'titulo' | 'descripcion' | 'prioridad' | 'fechaLimite'>>;
+type CamposEditables = Partial<Pick<DatosTarea, 'titulo' | 'descripcion' | 'prioridad' | 'fechaLimite' | 'fechaInicio'>>;
 
 export function useTareas(idProyecto: number, idUsuario: number) {
   const [tareas, setTareas] = useState<Tarea[]>([]);
@@ -195,4 +195,4 @@ export function useTareas(idProyecto: number, idUsuario: number) {
     repartir,
     eliminar,
   };
-}
+}

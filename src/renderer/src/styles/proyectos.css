@@ -746,3 +746,10 @@
 .miembros-item--pendiente { opacity: 0.85; }
 .miembros-insignia--pendiente { background: color-mix(in srgb, var(--color-warning) 22%, var(--color-surface)); color: var(--color-text); }
 .miembros-aviso { margin: 8px 0 0; font-size: 0.85rem; color: var(--color-success); }
+
+/* El calendario ya está dentro de una tarjeta: sin un segundo borde */
+.panel-proyecto__tarjeta .calendario {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}

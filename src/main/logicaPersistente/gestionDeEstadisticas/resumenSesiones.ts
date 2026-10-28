@@ -6,15 +6,18 @@ import { materializarResumenSesiones } from './materializador';
 // Tiempo realmente estudiado en una sesión terminada: de inicio a fin, menos lo que estuvo en pausa.
 const MINUTOS_ESTUDIADOS = `GREATEST(0, EXTRACT(EPOCH FROM (s.fecha_fin - s.fecha_inicio)) - s.segundos_pausados) / 60`;
 
+// Pasa una fecha (timestamptz) a la hora local de la compu, usando el desfase que manda la pantalla.
+const local = (columna: string) => `((${columna} AT TIME ZONE 'UTC') + make_interval(mins => $3::int))`;
+
 // Cuánto estudió el usuario y si cumplió lo que planificó, a partir de sus sesiones de estudio.
-// Las fechas se agrupan en la zona horaria de la compu, no en la de Postgres (UTC).
+// Las fechas se agrupan en la hora de la compu, no en la de Postgres (UTC).
 export class ResumenSesionesEstudio {
   constructor(private readonly persistencia: Persistencia) {}
 
   async ejecutar(datos: ResumenSesionesDTO): Promise<ResumenSesiones> {
-    const valores = [datos.idUsuario, datos.desde, datos.zonaHoraria];
+    const valores = [datos.idUsuario, datos.desde, datos.desfaseMinutos];
     // Sesiones del período según su fecha programada, en hora local.
-    const delPeriodo = `s.id_usuario = $1 AND (s.fecha_programada AT TIME ZONE $3)::date >= $2::date`;
+    const delPeriodo = `s.id_usuario = $1 AND ${local('s.fecha_programada')}::date >= $2::date`;
 
     const [totales, objetivos, porMes, porMateria] = await Promise.all([
       this.persistencia.ejecutar(
@@ -35,7 +38,7 @@ export class ResumenSesionesEstudio {
         valores
       ),
       this.persistencia.ejecutar(
-        `SELECT to_char(s.fecha_inicio AT TIME ZONE $3, 'YYYY-MM') AS mes,
+        `SELECT to_char(${local('s.fecha_inicio')}, 'YYYY-MM') AS mes,
                 ROUND(SUM(${MINUTOS_ESTUDIADOS}))::int AS minutos
            FROM sesion_estudio s
           WHERE ${delPeriodo} AND s.fecha_fin IS NOT NULL

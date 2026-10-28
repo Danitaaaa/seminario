@@ -1,28 +1,56 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Boton } from '../comunes/boton';
 import { ModalSuperposicion } from './modalSuperposicion';
-import type { Materia, SesionEstudio } from '../../types/sesionesEstudio';
+import type { Materia, SesionEstudio, TipoMetodoEstudio } from '../../types/sesionesEstudio';
+import type { Deck } from '../../types/flashcards';
+import { claseDeMetodo } from '../../utils/metodosEstudio';
 import { aInputFechaHora, desdeInputFechaHora, extraerMensajeError } from '../../pages/sesionesEstudio/utilidades';
 
 interface ModalConfiguracionSesionProps {
   sesion: SesionEstudio;
   onCancelar: () => void;
-  onGuardar: (cambios: { nombre: string; idMateria: number; fechaProgramada: string }) => Promise<void>;
+  onGuardar: (cambios: CambiosSesion) => Promise<void>;
 }
 
-// Modal "Configuraciones de sesión": permite cambiar el nombre, la materia y la fecha de programación.
+export interface CambiosSesion {
+  nombre: string;
+  idMateria: number;
+  fechaProgramada: string;
+  idsMetodosEstudio: number[];
+  idDeck?: number | null;
+}
+
+// Modal "Configuraciones de sesión": nombre, materia, fecha de programación, métodos de estudio
+// y, si entre los métodos está Flashcards, el mazo que se repasa.
 export function ModalConfiguracionSesion({ sesion, onCancelar, onGuardar }: ModalConfiguracionSesionProps) {
   const [nombre, setNombre] = useState(sesion.nombre);
   const [idMateria, setIdMateria] = useState(sesion.materiaAsociada.idMateria);
   const [materias, setMaterias] = useState<Materia[]>([sesion.materiaAsociada]);
   const [fecha, setFecha] = useState(aInputFechaHora(sesion.fechaProgramada));
+  const [metodos, setMetodos] = useState<TipoMetodoEstudio[]>(sesion.metodosEstudio);
+  const [idsMetodos, setIdsMetodos] = useState<number[]>(sesion.metodosEstudio.map((m) => m.idTipoMetodoEstudio));
+  const [mazos, setMazos] = useState<Deck[]>([]);
+  const [idDeck, setIdDeck] = useState<number | ''>(sesion.idDeck ?? '');
 
   useEffect(() => {
     window.api
       .listarOpcionesSesionEstudio()
-      .then((o) => setMaterias(o.materias))
+      .then((o) => {
+        setMaterias(o.materias);
+        setMetodos(o.metodosEstudio);
+      })
       .catch(() => undefined);
+    window.api.listarDecks(sesion.idUsuario).then(setMazos).catch(() => setMazos([]));
   }, []);
+
+  // Agrega o quita un método de la selección.
+  function alternarMetodo(id: number) {
+    setIdsMetodos((actuales) => (actuales.includes(id) ? actuales.filter((x) => x !== id) : [...actuales, id]));
+  }
+
+  const conFlashcards = metodos.some(
+    (m) => idsMetodos.includes(m.idTipoMetodoEstudio) && claseDeMetodo(m.nombre) === 'flashcards'
+  );
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [superpuestas, setSuperpuestas] = useState<SesionEstudio[] | null>(null);
@@ -62,7 +90,14 @@ export function ModalConfiguracionSesion({ sesion, onCancelar, onGuardar }: Moda
     setSuperpuestas(null);
     setGuardando(true);
     try {
-      await onGuardar({ nombre: nombre.trim(), idMateria, fechaProgramada: desdeInputFechaHora(fecha) });
+      await onGuardar({
+        nombre: nombre.trim(),
+        idMateria,
+        fechaProgramada: desdeInputFechaHora(fecha),
+        idsMetodosEstudio: idsMetodos,
+        // El mazo solo se toca si la sesión tiene Flashcards.
+        ...(conFlashcards ? { idDeck: idDeck === '' ? null : idDeck } : {}),
+      });
     } catch (e) {
       setError(extraerMensajeError(e, 'No se pudo guardar.'));
       setGuardando(false);
@@ -92,6 +127,44 @@ export function ModalConfiguracionSesion({ sesion, onCancelar, onGuardar }: Moda
           Fecha de programación
           <input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
         </label>
+
+        <div className="sesiones__campo">
+          Métodos de estudio
+          <div className="sesiones__chips">
+            {metodos.map((metodo) => {
+              const elegido = idsMetodos.includes(metodo.idTipoMetodoEstudio);
+              return (
+                <button
+                  key={metodo.idTipoMetodoEstudio}
+                  type="button"
+                  aria-pressed={elegido}
+                  className={`sesiones__chip ${elegido ? 'sesiones__chip--activo' : ''}`}
+                  onClick={() => alternarMetodo(metodo.idTipoMetodoEstudio)}
+                >
+                  {metodo.nombre}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {conFlashcards && (
+          <label className="sesiones__campo">
+            Mazo de flashcards para repasar
+            {mazos.length === 0 ? (
+              <span className="sesion__nota">Todavía no tenés mazos. Crealos en Métodos → Flashcards.</span>
+            ) : (
+              <select value={idDeck} onChange={(e) => setIdDeck(e.target.value === '' ? '' : Number(e.target.value))}>
+                <option value="">Elegirlo después</option>
+                {mazos.map((m) => (
+                  <option key={m.idDeck} value={m.idDeck}>
+                    {m.nombre}{m.cantidadFlashcards !== undefined ? ` (${m.cantidadFlashcards})` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
+        )}
 
         {error && <div className="sesiones__error">{error}</div>}
 

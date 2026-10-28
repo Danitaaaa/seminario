@@ -1,4 +1,4 @@
-import { AporteIntegrante, ResumenProyecto, ResumenSesiones } from './entidades';
+import { AporteIntegrante, ResumenMaterial, ResumenProyecto, ResumenSesiones, TareasMes } from './entidades';
 
 export function materializarAporte(fila: any): AporteIntegrante {
   return {
@@ -9,7 +9,11 @@ export function materializarAporte(fila: any): AporteIntegrante {
   };
 }
 
-export function materializarResumenProyecto(fila: any, integrantes: AporteIntegrante[]): ResumenProyecto {
+export function materializarTareasMes(fila: any): TareasMes {
+  return { mes: fila.mes, hechas: fila.hechas };
+}
+
+export function materializarResumenProyecto(fila: any, integrantes: AporteIntegrante[], porMes: TareasMes[]): ResumenProyecto {
   return {
     idProyecto: fila.id_proyecto,
     nombre: fila.nombre,
@@ -22,6 +26,7 @@ export function materializarResumenProyecto(fila: any, integrantes: AporteIntegr
     },
     metasMes: { total: fila.metas_total, completadas: fila.metas_completadas },
     integrantes,
+    porMes,
   };
 }
 
@@ -37,5 +42,14 @@ export function materializarResumenSesiones(
     objetivos: { total: objetivos.total, completados: objetivos.completados },
     porMes: porMes.map((f) => ({ mes: f.mes, minutos: f.minutos })),
     porMateria: porMateria.map((f) => ({ materia: f.materia, minutos: f.minutos })),
+  };
+}
+
+export function materializarResumenMaterial(fila: any): ResumenMaterial {
+  return {
+    archivos: fila.archivos,
+    // SUM de un BIGINT llega como texto desde pg.
+    bytes: Number(fila.bytes),
+    carpetas: fila.carpetas,
   };
 }

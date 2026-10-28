@@ -9,6 +9,7 @@ export interface Tarea {
   descripcion: string | null;
   prioridad: Prioridad;
   fechaLimite: string | null; // AAAA-MM-DD
+  fechaInicio: string | null; // AAAA-MM-DD
   idAsignado: number | null;
   completada: boolean;
   fechaCompletada: string | null;
@@ -24,6 +25,7 @@ export interface DatosTarea {
   descripcion: string | null;
   prioridad: Prioridad;
   fechaLimite: string | null;
+  fechaInicio: string | null;
   idAsignado: number | null;
 }
 

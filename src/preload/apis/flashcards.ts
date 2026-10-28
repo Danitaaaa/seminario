@@ -25,4 +25,10 @@ export const flashcardsApi = {
       "flashcards:listarFlashcards",
       datos
     ),
+
+  modificarFlashcard: (datos: unknown) =>
+    ipcRenderer.invoke(
+      "flashcards:modificarFlashcard",
+      datos
+    ),
 };

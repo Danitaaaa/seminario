@@ -305,6 +305,9 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
       setEditandoId(null);
       setModalAbierto(false);
       await cargarEventos();
+      // Si el recordatorio ya tendría que haber sonado (por ejemplo, un evento dentro de 5 minutos
+      // con aviso 10 minutos antes), sale ahora y no recién en la próxima revisión del minuto.
+      if (formNotificacionesActivas) window.api.vigilarNotificaciones({ usuarioId }).catch(console.error);
     } catch (err) {
       console.error('Error al guardar evento:', err);
       setErrorForm('No se pudo guardar el evento. Revisá la consola para más detalles.');

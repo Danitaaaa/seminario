@@ -20,6 +20,14 @@ export interface ResumenProyecto {
   // Metas del proyecto en el mes pedido.
   metasMes: { total: number; completadas: number };
   integrantes: AporteIntegrante[];
+  // Tareas completadas en cada mes del período pedido (solo los meses con alguna).
+  porMes: TareasMes[];
+}
+
+// Tareas completadas en un mes (AAAA-MM).
+export interface TareasMes {
+  mes: string;
+  hechas: number;
 }
 
 // Minutos estudiados en un mes (AAAA-MM).
@@ -43,4 +51,11 @@ export interface ResumenSesiones {
   objetivos: { total: number; completados: number };
   porMes: MinutosMes[];
   porMateria: MinutosMateria[];
+}
+
+// Resumen de Material (solo lo personal: no cuenta las carpetas de los proyectos).
+export interface ResumenMaterial {
+  archivos: number;
+  bytes: number;
+  carpetas: number;
 }

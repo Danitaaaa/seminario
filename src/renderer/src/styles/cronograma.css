@@ -316,3 +316,225 @@
   outline: 2px solid var(--color-secondary);
   outline-offset: 2px;
 }
+/* ---------- Cronograma de proyectos (tareas como barras) ---------- */
+.gantt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+}
+
+.gantt__barra-superior {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-sm);
+}
+
+.gantt__proyectos,
+.gantt__integrantes,
+.gantt__navegacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-xs);
+}
+
+.gantt__chip,
+.gantt__integrante {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.gantt__chip--activo {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.gantt__integrante--activo {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+.gantt__chip:focus-visible,
+.gantt__integrante:focus-visible,
+.gantt__tarea:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+.gantt__integrantes-texto {
+  color: var(--color-text-light);
+  font-size: var(--tamano-sm);
+}
+
+.gantt__avatar {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.gantt__avatar--hito {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.gantt__tabla {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+}
+
+.gantt__fila {
+  display: grid;
+  grid-template-columns: 240px repeat(var(--gantt-dias), minmax(22px, 1fr));
+  align-items: center;
+  min-height: 36px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.gantt__fila:last-of-type {
+  border-bottom: 0;
+}
+
+.gantt__fila--apagada {
+  opacity: 0.35;
+}
+
+.gantt__fila--semanas {
+  min-height: 28px;
+  border-bottom: 0;
+}
+
+.gantt__titulo-columna {
+  padding: 0 var(--espacio-md);
+  color: var(--color-text-light);
+  font-size: var(--tamano-sm);
+}
+
+.gantt__semana {
+  color: var(--color-text);
+  font-size: var(--tamano-xs);
+  font-weight: 700;
+}
+
+.gantt__dia {
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+  text-align: center;
+}
+
+.gantt__dia--hoy {
+  color: var(--color-error);
+  font-weight: 700;
+}
+
+.gantt__tarea {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  min-width: 0;
+  padding: 4px var(--espacio-md);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gantt__tarea--hito {
+  cursor: default;
+}
+
+.gantt__tarea-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gantt__tarea-titulo {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--tamano-sm);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt__tarea-detalle {
+  overflow: hidden;
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt__bloque {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  margin: 0 2px;
+  padding: 0 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  font-size: var(--tamano-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.gantt__bloque--hecha {
+  opacity: 0.55;
+}
+
+.gantt__hito {
+  justify-self: center;
+  width: 14px;
+  height: 14px;
+  background: var(--color-error);
+  transform: rotate(45deg);
+}
+
+/* La línea de hoy cruza toda la tabla, en el medio de la columna del día */
+.gantt__hoy {
+  position: absolute;
+  top: 28px;
+  bottom: 0;
+  left: calc(240px + (100% - 240px) / var(--gantt-dias) * (var(--gantt-columna-hoy) + 0.5));
+  width: 2px;
+  background: var(--color-error);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.gantt__vacio {
+  margin: 0;
+  padding: var(--espacio-lg);
+  color: var(--color-text-light);
+  font-size: var(--tamano-sm);
+  text-align: center;
+}
+
+.gantt__nota {
+  margin: 0;
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+}

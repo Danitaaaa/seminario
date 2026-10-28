@@ -3,6 +3,7 @@ import { SesionEstudio } from './entidades';
 import { CrearSesionEstudioDTO } from './dto';
 import { SELECT_SESION_ESTUDIO } from './consultas';
 import { materializarSesionEstudio } from './materializador';
+import { exigirMazoPropio } from './mazoDeSesion';
 import { DocumentoSesionEstudio } from '../../logicaNoPersistente/procesoSesionEstudio/documentoSesionEstudio';
 
 // Crea una sesión de estudio (CU11) junto con sus métodos, metas y su primera pestaña
@@ -16,13 +17,14 @@ export class CrearSesionEstudio {
   async ejecutar(idUsuario: number, datos: CrearSesionEstudioDTO): Promise<SesionEstudio> {
     // Se eliminan métodos repetidos para no violar la clave primaria de la tabla intermedia.
     const idsMetodos = [...new Set(datos.idsMetodosEstudio)];
+    await exigirMazoPropio(this.persistencia, idUsuario, datos.idDeck);
 
     const creada = await this.persistencia.ejecutar(
       `WITH nueva AS (
          INSERT INTO sesion_estudio
            (id_usuario, id_materia, nombre, duracion, fecha_programada,
-            pomodoro_min, descanso_corto_min, descanso_largo_min, recibir_notificacion)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            pomodoro_min, descanso_corto_min, descanso_largo_min, recibir_notificacion, id_deck)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $12)
          RETURNING id_sesion_estudio
        ), metodos AS (
          INSERT INTO sesion_estudio_metodo_estudio (id_sesion_estudio, id_tipo_metodo_estudio)
@@ -48,6 +50,7 @@ export class CrearSesionEstudio {
         datos.recibirNotificacion,
         idsMetodos,
         datos.metas,
+        datos.idDeck ?? null,
       ]
     );
 

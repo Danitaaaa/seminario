@@ -8,7 +8,7 @@ import { exigirAcceso, registrarCambioSiProyecto } from '../gestionDeProyectos/a
 export class ModificarTarea {
     constructor(private persistencia: IPersistenciaProyectos) {}
 
-    // Edita título, descripción, prioridad y fecha límite. Para cambiar de columna se usa AsignarTarea.
+    // Edita título, descripción, prioridad y fechas. Para cambiar de columna se usa AsignarTarea.
     async ejecutar(entrada: ModificarTareaDTO): Promise<Tarea> {
         const dto = ModificarTareaDTOSchema.parse(entrada);
         const actual = await buscarTarea(this.persistencia, dto.idTarea);
@@ -28,6 +28,14 @@ export class ModificarTarea {
         if (dto.descripcion !== undefined) agregar('descripcion', 'descripcion', dto.descripcion);
         if (dto.prioridad !== undefined) agregar('prioridad', 'prioridad', dto.prioridad);
         if (dto.fechaLimite !== undefined) agregar('fecha_limite', 'fechaLimite', dto.fechaLimite);
+        if (dto.fechaInicio !== undefined) agregar('fecha_inicio', 'fechaInicio', dto.fechaInicio);
+
+        // Con lo que queda guardado después del cambio, el inicio no puede quedar después del límite.
+        const inicio = dto.fechaInicio !== undefined ? dto.fechaInicio : actual.fechaInicio;
+        const limite = dto.fechaLimite !== undefined ? dto.fechaLimite : actual.fechaLimite;
+        if (inicio && limite && inicio > limite) {
+            throw new Error('La fecha de inicio no puede ser posterior a la fecha límite');
+        }
 
         if (columnas.length === 0) return actual;
 
@@ -46,4 +54,4 @@ export class ModificarTarea {
             return tarea;
         });
     }
-}
+}

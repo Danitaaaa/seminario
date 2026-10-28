@@ -101,6 +101,7 @@ import { CrearDeck } from './logicaPersistente/gestionDeFlashcards/crearDeck';
 import { ListarDecks } from './logicaPersistente/gestionDeFlashcards/listarDecks';
 import { CrearFlashcard } from './logicaPersistente/gestionDeFlashcards/crearFlashcard';
 import { ListarFlashcards } from './logicaPersistente/gestionDeFlashcards/listarFlashcards';
+import { ModificarFlashcard } from './logicaPersistente/gestionDeFlashcards/modificarFlashcard';
 import { Flashcards } from './administracionDePersistencia/flashcards';
 import { registerFlashcardsIpc } from './ipc/flashcards.ipc';
 import { RegistrarRevision } from './logicaPersistente/gestionDeRepeticionEspaciada/registrarRevision';
@@ -148,6 +149,7 @@ import { registerPortadasProyectosIpc } from './ipc/portadasProyectos.ipc';
 // Estadísticas
 import { ResumenProyectos } from './logicaPersistente/gestionDeEstadisticas/resumenProyectos';
 import { ResumenSesionesEstudio } from './logicaPersistente/gestionDeEstadisticas/resumenSesiones';
+import { ResumenDeMaterial } from './logicaPersistente/gestionDeEstadisticas/resumenMaterial';
 import { Estadisticas } from './administracionDePersistencia/estadisticas';
 import { registerEstadisticasIpc } from './ipc/estadisticas.ipc';
 // Gestion de edicion compartida y sincronizacion
@@ -399,7 +401,8 @@ function wireDependencies(): ProcesoSesionEstudio {
     new CrearDeck(persistencia),
     new ListarDecks(persistencia),
     new CrearFlashcard(persistencia),
-    new ListarFlashcards(persistencia)
+    new ListarFlashcards(persistencia),
+    new ModificarFlashcard(persistencia)
   );
   registerFlashcardsIpc(flashcards);
 
@@ -501,7 +504,9 @@ function wireDependencies(): ProcesoSesionEstudio {
   registerPortadasProyectosIpc(portadas);
 
   // Estadísticas
-  registerEstadisticasIpc(new Estadisticas(new ResumenProyectos(persistencia), new ResumenSesionesEstudio(persistencia)));
+  registerEstadisticasIpc(new Estadisticas(
+    new ResumenProyectos(persistencia), new ResumenSesionesEstudio(persistencia), new ResumenDeMaterial(persistencia)
+  ));
 
   // Gestion de edicion y conflictos
   edicion = new Edicion(sync.edicion, sync.coordinador, sync.unirseAProyecto);
