@@ -2,6 +2,7 @@ import { ModificarNodoDTO } from "./dto";
 import { materializarNodo } from "./materializador";
 import { Persistencia } from "../../persistencia/persistencia";
 import { Nodo } from "./entidades"
+import { registrarCambioContenido } from "../gestionDeProyectos/alcanceContenido";
 
 // Renombra un nodo existente
 export class ModificarNodo {
@@ -24,6 +25,11 @@ export class ModificarNodo {
         if (filas.length === 0) {
             throw new Error("El nodo no existe");
         }
-        return materializarNodo(filas[0]);
+        const f = filas[0];
+        if (f.id_padre !== null) {
+            await registrarCambioContenido(this.persistencia, 'nodo', f.id_nodo, 'modificar',
+                f.id_global, f.id_padre, { nombre: f.nombre });
+        }
+        return materializarNodo(f);
     }
 }

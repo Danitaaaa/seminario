@@ -27,13 +27,6 @@ export function TarjetaProyecto({ proyecto, onAbrir, onEliminar }: TarjetaProyec
 
             <div className="tarjeta-proyecto__imagen" aria-hidden="true" />
 
-            <div>
-                <p className="tarjeta-proyecto__nombre">{proyecto.nombre}</p>
-                <p className="tarjeta-proyecto__materia">
-                    {proyecto.materiaAsociada ?? 'Sin materia asociada'}
-                </p>
-            </div>
-
             <footer className="tarjeta-proyecto__acciones">
                 {puedeEliminar && (
                     <button

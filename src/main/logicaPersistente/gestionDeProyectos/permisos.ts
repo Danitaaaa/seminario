@@ -1,5 +1,7 @@
 import { IPersistenciaProyectos } from './interfacesSincronizacion';
 import { RolMiembro } from './entidades';
+import { EntidadSincronizable } from './entidades';
+import { OperacionSincronizable } from './entidades';
 
 // Devuelve el rol activo del usuario en el proyecto, o null si no es miembro. 
 export async function obtenerRolActivo(
@@ -25,8 +27,8 @@ export async function exigirRol(
 // Registra un cambio local en la cola de sincronización y sube la versión del proyecto. 
 export async function registrarCambio(
     p: IPersistenciaProyectos, idProyecto: number,
-    entidad: 'proyecto' | 'miembro' | 'nodo' | 'archivo', idEntidad: number,
-    operacion: 'crear' | 'modificar' | 'eliminar' | 'mover', payload?: unknown,
+    entidad: EntidadSincronizable, idEntidad: number,
+    operacion: OperacionSincronizable, payload?: unknown,
 ): Promise<void> {
     await p.ejecutar(
         `INSERT INTO cola_sincronizacion (id_proyecto, entidad, id_entidad, operacion, payload)

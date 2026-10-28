@@ -7,15 +7,19 @@ export interface Proyecto {
     fechaCreacion: string;
     fechaFin: string | null;
     rol?: RolMiembro; // rol del usuario que consulta, si el backend lo devuelve
-    id_nodo_raiz: number;
+    idNodoRaiz: number;
 }
 
 export interface Miembro {
-    idUsuario: number;
-    nombre?: string;
-    mail?: string;
+    idUsuario: number | null;
+    idProyectoMiembro: number | null;
+    nombre: string;
+    mail: string;
     rol: RolMiembro;
     activo: boolean;
+    pendiente: boolean;
+    fechaUnion: string | Date | null;
+    fechaBaja: string | Date | null;
 }
 
 export const claveProyecto = (p: Proyecto) => `proyecto-${p.idProyecto}`;
@@ -60,10 +64,19 @@ export interface AgregarMiembroDatos {
     rol?: 'editor' | 'lector';
 }
 
+export interface CambiarRolMiembroDatos {
+    idProyecto: number;
+    idUsuarioSolicitante: number;
+    idUsuarioMiembro?: number;
+    mailMiembro?: string;
+    rol: 'editor' | 'lector';
+}
+
 export interface QuitarMiembroDatos {
     idProyecto: number;
     idUsuarioSolicitante: number;
-    idUsuarioMiembro: number; // igual al solicitante = abandonar proyecto
+    idUsuarioMiembro?: number; // igual al solicitante = abandonar proyecto
+    mailMiembro?: string;
 }
 
 export interface ListarMiembrosCriterios {
@@ -80,4 +93,11 @@ export interface SincronizarProyectoDatos {
 export interface UnirseAProyectoDatos {
     idUsuario: number;
     enlace: string;
+}
+
+export interface InvitacionPendiente {
+    idInvitacion: number;
+    mail: string;
+    rol: 'editor' | 'lector';
+    fechaVencimiento: string | Date;
 }

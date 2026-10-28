@@ -7,10 +7,13 @@ import {
     ObtenerProyectoDTOSchema,
     ListarProyectosDTOSchema,
     AgregarMiembroDTOSchema,
+    AgregarMiembroPorMailDTOSchema,
+    CambiarRolMiembroDTOSchema,
     QuitarMiembroDTOSchema,
     ListarMiembrosDTOSchema,
     SincronizarProyectoDTOSchema,
-    UnirseAProyectoDTOSchema,
+    ListarInvitacionesDTOSchema,
+    CancelarInvitacionDTOSchema,
 } from '../logicaPersistente/gestionDeProyectos/dto';
 
 export function registrarProyectosIpc(proyectos: Proyectos): void {
@@ -48,6 +51,16 @@ export function registrarProyectosIpc(proyectos: Proyectos): void {
         return proyectos.agregarMiembro(validado);
     });
 
+    ipcMain.handle('proyectos:agregarMiembroPorMail', async (_event, datos: unknown) => {
+        const validado = AgregarMiembroPorMailDTOSchema.parse(datos);
+        return proyectos.agregarMiembroPorMail(validado);
+    });
+
+    ipcMain.handle('proyectos:cambiarRolMiembro', async (_event, datos: unknown) => {
+        const validado = CambiarRolMiembroDTOSchema.parse(datos);
+        return proyectos.cambiarRolMiembro(validado);
+    });
+
     ipcMain.handle('proyectos:quitarMiembro', async (_event, datos: unknown) => {
         const validado = QuitarMiembroDTOSchema.parse(datos);
         return proyectos.quitarMiembro(validado);
@@ -58,15 +71,22 @@ export function registrarProyectosIpc(proyectos: Proyectos): void {
         return proyectos.listarMiembros(validado);
     });
 
+    /* ---------- Invitaciones ---------- */
+
+    ipcMain.handle('listarInvitaciones', async (_event, datos: unknown) => {
+        const validado = ListarInvitacionesDTOSchema.parse(datos);
+        return proyectos.listarInvitaciones(validado);
+    });
+
+    ipcMain.handle('cancelarInvitacion', async (_event, datos: unknown) => {
+        const validado = CancelarInvitacionDTOSchema.parse(datos);
+        return proyectos.cancelarInvitacion(validado);
+    });
+    
     /* ---------- Sincronización ---------- */
 
     ipcMain.handle('proyectos:sincronizar', async (_event, datos: unknown) => {
         const validado = SincronizarProyectoDTOSchema.parse(datos);
         return proyectos.sincronizar(validado);
-    });
-
-    ipcMain.handle('proyectos:unirse', async (_event, datos: unknown) => {
-        const validado = UnirseAProyectoDTOSchema.parse(datos);
-        return proyectos.unirse(validado);
     });
 }

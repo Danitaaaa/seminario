@@ -53,10 +53,32 @@ export const AgregarMiembroDTOSchema = z.object({
 });
 export type AgregarMiembroDTO = z.infer<typeof AgregarMiembroDTOSchema>;
 
+export const AgregarMiembroPorMailDTOSchema = z.object({
+    idProyecto: z.number().int(),
+    idUsuarioSolicitante: z.number().int(),
+    mail: z.string().trim().email().max(254),
+    rol: z.enum(['editor', 'lector']).default('editor'),
+});
+export type AgregarMiembroPorMailDTO = z.infer<typeof AgregarMiembroPorMailDTOSchema>;
+
+export const CambiarRolMiembroDTOSchema = z.object({
+    idProyecto: z.number().int(),
+    idUsuarioSolicitante: z.number().int(),
+    idUsuarioMiembro: z.number().int().optional(),
+    mailMiembro: z.string().trim().email().max(254).optional(),
+    rol: z.enum(['editor', 'lector']),
+}).refine(d => d.idUsuarioMiembro != null || d.mailMiembro, {
+    message: 'Indicá el miembro (mail o id de usuario)',
+});
+export type CambiarRolMiembroDTO = z.infer<typeof CambiarRolMiembroDTOSchema>;
+
 export const QuitarMiembroDTOSchema = z.object({
     idProyecto: z.number().int(),
     idUsuarioSolicitante: z.number().int(),
-    idUsuarioMiembro: z.number().int(), // si coincide con el solicitante, es "abandonar proyecto"
+    idUsuarioMiembro: z.number().int().optional(),
+    mailMiembro: z.string().trim().email().max(254).optional(),
+}).refine(d => d.idUsuarioMiembro != null || d.mailMiembro, {
+    message: 'Indicá el miembro (mail o id de usuario)',
 });
 export type QuitarMiembroDTO = z.infer<typeof QuitarMiembroDTOSchema>;
 
@@ -66,6 +88,29 @@ export const ListarMiembrosDTOSchema = z.object({
     soloActivos: z.boolean().default(true),
 });
 export type ListarMiembrosDTO = z.infer<typeof ListarMiembrosDTOSchema>;
+
+/* ---------- Invitaciones ---------- */
+
+export const InvitarMiembroDTOSchema = z.object({
+    idProyecto: z.number().int(),
+    idUsuarioSolicitante: z.number().int(),
+    mail: z.string().trim().email().max(255),
+    rol: z.enum(['editor', 'lector']),
+});
+export type InvitarMiembroDTO = z.infer<typeof InvitarMiembroDTOSchema>;
+
+export const ListarInvitacionesDTOSchema = z.object({
+    idProyecto: z.number().int(),
+    idUsuarioSolicitante: z.number().int(),
+});
+export type ListarInvitacionesDTO = z.infer<typeof ListarInvitacionesDTOSchema>;
+
+export const CancelarInvitacionDTOSchema = z.object({
+    idProyecto: z.number().int(),
+    idUsuarioSolicitante: z.number().int(),
+    idInvitacion: z.number().int(),
+});
+export type CancelarInvitacionDTO = z.infer<typeof CancelarInvitacionDTOSchema>;
 
 /* ---------- Sincronización ---------- */
 

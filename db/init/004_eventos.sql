@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS eventos (
   id SERIAL PRIMARY KEY,
-usuario_id INTEGER NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+  id_proyecto INTEGER REFERENCES proyectos(id_proyecto) ON DELETE CASCADE,
   titulo TEXT NOT NULL,
   descripcion TEXT,
   lugar TEXT,
@@ -12,3 +13,6 @@ usuario_id INTEGER NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
   notificaciones_activas BOOLEAN NOT NULL DEFAULT FALSE,
   recordatorios JSONB NOT NULL DEFAULT '[]'::jsonb
 );
+
+CREATE INDEX IF NOT EXISTS idx_eventos_proyecto
+ON eventos (id_proyecto) WHERE id_proyecto IS NOT NULL;

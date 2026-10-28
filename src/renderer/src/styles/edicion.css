@@ -1,0 +1,78 @@
+/* Banner de estado de edición compartida y modal de conflictos. Solo usa variables de issue.ts. */
+.edicion-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-md);
+  padding: var(--espacio-sm) var(--espacio-md);
+  border: 1px solid var(--color-border);
+  border-left-width: 4px;
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--tamano-sm);
+}
+.edicion-banner--info  { border-left-color: var(--color-primary-light); }
+.edicion-banner--aviso { border-left-color: var(--color-warning); background: color-mix(in srgb, var(--color-warning) 12%, var(--color-surface)); }
+.edicion-banner--error { border-left-color: var(--color-error); background: color-mix(in srgb, var(--color-error) 10%, var(--color-surface)); }
+
+.edicion-banner__accion {
+  flex-shrink: 0;
+  padding: var(--espacio-xs) var(--espacio-md);
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: var(--peso-medium);
+  cursor: pointer;
+}
+
+.conflicto-campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  padding: var(--espacio-sm) 0;
+  border-top: 1px solid var(--color-border);
+}
+.conflicto-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--espacio-sm);
+}
+.conflicto-opcion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+  min-width: 0;
+  padding: var(--espacio-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  cursor: pointer;
+}
+.conflicto-opcion--activa {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+}
+.conflicto-opcion pre {
+  margin: 0;
+  max-height: 140px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+}
+.conflicto-propio { display: flex; flex-direction: column; gap: var(--espacio-xs); font-size: var(--tamano-sm); }
+.conflicto-propio textarea {
+  padding: var(--espacio-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  font: inherit;
+  resize: vertical;
+}
+
+@media (max-width: 720px) {
+  .conflicto-columnas { grid-template-columns: 1fr; }
+}

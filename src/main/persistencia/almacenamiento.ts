@@ -19,6 +19,11 @@ export class Almacenamiento {
     return completa;
   }
 
+  // Lee el contenido de un archivo guardado a partir de su ruta RELATIVA (la de la base de datos).
+  async leer(rutaRelativa: string): Promise<Uint8Array> {
+    return fs.promises.readFile(this.rutaCompleta(rutaRelativa));
+  }
+
   // Copia el archivo al almacenamiento con nombre único.
   // Devuelve la ruta RELATIVA (para guardar en la base) y el tamaño real.
   async guardar(rutaOrigen: string, extension: string): Promise<{ rutaFisica: string; tamanio: number }> {

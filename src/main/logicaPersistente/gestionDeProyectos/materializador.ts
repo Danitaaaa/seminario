@@ -5,7 +5,6 @@ export function materializarProyecto(fila: any): Proyecto {
     return {
         idProyecto: fila.id_proyecto,
         nombre: fila.nombre,
-        materiaAsociada: fila.materia_asociada ?? null,
         fechaCreacion: fila.fecha_creacion,
         fechaFin: fila.fecha_fin ?? null,
         enlace: fila.enlace ?? null,
@@ -17,44 +16,19 @@ export function materializarProyecto(fila: any): Proyecto {
     };
 }
 
-// Convierte un objeto Proyecto a un registro de la BD
-export function desmaterializarProyecto(p: Proyecto): Record<string, unknown> {
-    return {
-        id_proyecto: p.idProyecto,
-        nombre: p.nombre,
-        materia_asociada: p.materiaAsociada,
-        fecha_creacion: p.fechaCreacion,
-        fecha_fin: p.fechaFin,
-        enlace: p.enlace,
-        id_nodo_raiz: p.idNodoRaiz,
-        id_remoto: p.idRemoto,
-        version: p.version,
-        version_servidor: p.versionServidor,
-        ultima_sincronizacion: p.ultimaSincronizacion,
-    };
-}
-
-// Convierte el registro de un miembro de la BD a un objeto ProyectoMiembro
+// Convierte el registro de un miembro (proyecto_miembros + JOIN con usuarios) a ProyectoMiembro.
+// Espera las columnas: id_proyecto_miembro, rol, fecha_baja, nombre_usuario, email
 export function materializarMiembro(fila: any): ProyectoMiembro {
     return {
-        idProyectoMiembro: fila.id_proyecto_miembro,
-        idProyecto: fila.id_proyecto,
-        idUsuario: fila.id_usuario,
+        idProyectoMiembro: fila.id_proyecto_miembro ?? null,
+        idUsuario: fila.id_usuario ?? null,
+        nombre: fila.nombre_usuario,
+        mail: String(fila.email).toLowerCase(),
         rol: fila.rol,
-        fechaUnion: fila.fecha_union,
+        activo: fila.fecha_baja == null,
+        pendiente: false,
+        fechaUnion: fila.fecha_union ?? null,
         fechaBaja: fila.fecha_baja ?? null,
-    };
-}
-
-// Convierte un objeto ProyectoMiembro a un registro de la BD
-export function desmaterializarMiembro(m: ProyectoMiembro): Record<string, unknown> {
-    return {
-        id_proyecto_miembro: m.idProyectoMiembro,
-        id_proyecto: m.idProyecto,
-        id_usuario: m.idUsuario,
-        rol: m.rol,
-        fecha_union: m.fechaUnion,
-        fecha_baja: m.fechaBaja,
     };
 }
 

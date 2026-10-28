@@ -3,7 +3,6 @@ export type RolMiembro = 'propietario' | 'editor' | 'lector';
 export interface Proyecto {
     idProyecto: number;
     nombre: string;
-    materiaAsociada: string | null;
     fechaCreacion: Date;
     fechaFin: Date | null;
     enlace: string | null;
@@ -15,15 +14,18 @@ export interface Proyecto {
 }
 
 export interface ProyectoMiembro {
-    idProyectoMiembro: number;
-    idProyecto: number;
-    idUsuario: number;
+    mail: string;
+    nombre: string;
+    idUsuario: number | null;           // null si el usuario no existe en esta base
+    idProyectoMiembro: number | null;
     rol: RolMiembro;
-    fechaUnion: Date;
-    fechaBaja: Date | null;
+    activo: boolean;
+    pendiente: boolean;
+    fechaUnion: Date | null;            // alta; null si solo existe en el servidor
+    fechaBaja: Date | null;             // baja; null mientras esté activo
 }
 
-export type EntidadSincronizable = 'proyecto' | 'miembro' | 'nodo' | 'archivo';
+export type EntidadSincronizable = 'proyecto' | 'miembro' | 'nodo' | 'archivo' | 'evento' | 'meta' | 'tarea';
 export type OperacionSincronizable = 'crear' | 'modificar' | 'eliminar' | 'mover';
 
 export interface CambioPendiente {

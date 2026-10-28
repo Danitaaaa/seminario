@@ -15,6 +15,7 @@ import { EventosPage } from "./pages/eventos/eventosPage";
 import { HorariosPage } from "./pages/horarios/horariosPage";
 import { ProyectosPage } from "./pages/proyectos/proyectosPage";
 import { ProyectoDetallePage } from "./pages/proyectos/proyectoPage";
+import { TareasPage } from "./pages/proyectos/tareasPage";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -42,6 +43,8 @@ export default function App() {
       <Route path="/proximamente/:id" element={<Proximamente />} />
       <Route path="/proyectos" element={<ProyectosPage />} />
       <Route path="/proyectos/:id" element={<ProyectoDetallePage />} />
+      <Route path="/proyectos/:id/eventos" element={<EventosPage />} />
+      <Route path="/proyectos/:id/tareas" element={<TareasPage />} />
     </Routes>
   );
 }

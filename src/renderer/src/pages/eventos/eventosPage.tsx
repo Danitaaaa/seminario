@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Evento, CrearEventoInput, ModificarEventoInput, Prioridad, Recordatorio, UnidadTiempo } from '../../types/eventos';
 import { Categoria as CategoriaRegistro } from '../../types/categorias';
+import { obtenerUsuarioId } from '../../../lib/sesion';
 import '../../styles/eventos.css';
-
-const USUARIO_ID_ACTUAL = 1;
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
   { valor: 'minutos', etiqueta: 'minutos' },
@@ -42,8 +42,17 @@ const NOMBRES_MES = [
   'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-export function EventosPage(): JSX.Element {
+function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   const hoy = new Date();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Modo proyecto: la ruta /proyectos/:id/eventos trae el id del proyecto.
+  // En /eventos no hay id: se muestran los eventos personales + los de todos mis proyectos.
+  const { id: idParametro } = useParams();
+  const idProyecto = idParametro ? Number(idParametro) : undefined;
+  const [nombreProyecto, setNombreProyecto] = useState<string | null>(null);
+
   const [busqueda, setBusqueda] = useState('');
   const usuarioLogueado = 'Usuario';
 
@@ -72,13 +81,36 @@ export function EventosPage(): JSX.Element {
 
   const { inicio, dias } = useMemo(() => primerDiaYCantidad(anio, mesIndex), [anio, mesIndex]);
 
+  // Nombre del proyecto (solo en modo proyecto)
+  useEffect(() => {
+    if (idProyecto === undefined) {
+      setNombreProyecto(null);
+      return;
+    }
+    window.api
+      .obtenerProyecto({ idProyecto, idUsuario: usuarioId })
+      .then((p: { nombre: string }) => setNombreProyecto(p.nombre))
+      .catch(console.error);
+  }, [idProyecto, usuarioId]);
+
+  // Si se llega desde el MiniCalendario con una fecha, se selecciona ese día
+  useEffect(() => {
+    const fecha = (location.state as { fecha?: string } | null)?.fecha;
+    if (!fecha) return;
+    const [a, m, d] = fecha.split('-').map(Number);
+    if (!a || !m || !d) return;
+    setAnio(a);
+    setMesIndex(m - 1);
+    setDiaSeleccionado(d);
+  }, [location.state]);
+
   useEffect(() => {
     cargarEventos();
-  }, [anio, mesIndex]);
+  }, [anio, mesIndex, idProyecto, usuarioId]);
 
   useEffect(() => {
     cargarCategorias();
-  }, []);
+  }, [usuarioId]);
 
   async function cargarEventos(): Promise<void> {
     setCargando(true);
@@ -86,7 +118,8 @@ export function EventosPage(): JSX.Element {
       const desde = fechaLocalISO(anio, mesIndex, 1, '00:00');
       const hasta = `${formatoFechaISO(anio, mesIndex, dias)}T23:59:59`;
       const resultado = await window.api.listarEventos({
-        usuarioId: USUARIO_ID_ACTUAL,
+        usuarioId,
+        idProyecto, // undefined en /eventos
         desde,
         hasta,
       });
@@ -98,7 +131,7 @@ export function EventosPage(): JSX.Element {
 
   async function cargarCategorias(): Promise<void> {
     const resultado: CategoriaRegistro[] = await window.api.listarCategorias({
-      usuarioId: USUARIO_ID_ACTUAL,
+      usuarioId,
     });
     setCategorias(resultado);
     // Todas tildadas por defecto la primera vez que se cargan.
@@ -114,7 +147,7 @@ export function EventosPage(): JSX.Element {
   async function agregarCategoria(): Promise<void> {
     const nombre = nuevaCategoriaNombre.trim();
     if (!nombre) return;
-    await window.api.crearCategoria({ usuarioId: USUARIO_ID_ACTUAL, nombre });
+    await window.api.crearCategoria({ usuarioId, nombre });
     setNuevaCategoriaNombre('');
     await cargarCategorias();
     setCategoriasVisibles((prev) => new Set(prev).add(nombre));
@@ -141,8 +174,10 @@ export function EventosPage(): JSX.Element {
     await cargarCategorias();
   }
 
+  // Los eventos de proyecto se muestran siempre: su categoría puede ser de otro miembro
+  // y no existir entre mis categorías, así que el filtro no debe ocultarlos.
   const eventosVisibles = useMemo(
-    () => eventos.filter((e) => categoriasVisibles.has(e.categoria)),
+    () => eventos.filter((e) => e.idProyecto != null || categoriasVisibles.has(e.categoria)),
     [eventos, categoriasVisibles]
   );
 
@@ -241,6 +276,7 @@ export function EventosPage(): JSX.Element {
       if (editandoId !== null) {
         const cambios: ModificarEventoInput = {
           id: editandoId,
+          usuarioId,
           titulo: formTitulo.trim(),
           descripcion: formDescripcion.trim() || null,
           categoria: formCategoria,
@@ -252,7 +288,8 @@ export function EventosPage(): JSX.Element {
         await window.api.modificarEvento(cambios);
       } else {
         const nuevoEvento: CrearEventoInput = {
-          usuarioId: USUARIO_ID_ACTUAL,
+          usuarioId,
+          idProyecto, // undefined → evento personal; con valor → evento del proyecto
           titulo: formTitulo.trim(),
           descripcion: formDescripcion.trim() || null,
           lugar: null,
@@ -276,8 +313,13 @@ export function EventosPage(): JSX.Element {
 
   async function eliminarEvento(id: number): Promise<void> {
     if (id < 0) return;
-    await window.api.eliminarEvento({ id });
-    await cargarEventos();
+    try {
+      await window.api.eliminarEvento({ id, usuarioId });
+      await cargarEventos();
+    } catch (err) {
+      console.error('Error al eliminar evento:', err);
+      window.alert('No se pudo eliminar el evento.');
+    }
   }
 
   const celdas: (number | null)[] = [
@@ -287,13 +329,27 @@ export function EventosPage(): JSX.Element {
 
   return (
     <PlantillaLayout
-      titulo="Calendario"
-      idActivo="calendario"
+      titulo={idProyecto ? `Calendario · ${nombreProyecto ?? ''}` : 'Calendario'}
+      idActivo={idProyecto ? 'proyectos' : 'calendario'}
       usuario={{ nombre: usuarioLogueado }}
       onBuscar={setBusqueda}
     >
       <div className="eventos-page">
-        <p className="eventos-instructivo">Seleccione la fecha e ingrese la actividad a registrar</p>
+        {idProyecto && (
+          <button
+            type="button"
+            className="eventos-boton-nav"
+            onClick={() => navigate(`/proyectos/${idProyecto}`)}
+          >
+            ← Volver al proyecto
+          </button>
+        )}
+
+        <p className="eventos-instructivo">
+          {idProyecto
+            ? 'Eventos del proyecto. Seleccione la fecha e ingrese la actividad a registrar'
+            : 'Seleccione la fecha e ingrese la actividad a registrar'}
+        </p>
 
         <div className="eventos-columnas">
           <div className="eventos-col-calendario">
@@ -336,9 +392,18 @@ export function EventosPage(): JSX.Element {
                           e.stopPropagation();
                           abrirModalEditarEvento(evento);
                         }}
-                        title={evento.id < 0 ? `${evento.titulo} (clase recurrente)` : evento.titulo}
+                        title={
+                          evento.id < 0
+                            ? `${evento.titulo} (clase recurrente)`
+                            : evento.nombreProyecto
+                              ? `${evento.titulo} · ${evento.nombreProyecto}`
+                              : evento.titulo
+                        }
                       >
                         {evento.titulo}
+                        {!idProyecto && evento.nombreProyecto && (
+                          <span className="eventos-chip-proyecto"> · {evento.nombreProyecto}</span>
+                        )}
                       </div>
                     ))}
 
@@ -412,6 +477,9 @@ export function EventosPage(): JSX.Element {
                   <div className="eventos-tarjeta-titulo">{evento.titulo}</div>
                   <span className="eventos-badge">{evento.categoria}</span>
                 </div>
+                {!idProyecto && evento.nombreProyecto && (
+                  <div className="eventos-tarjeta-meta">Proyecto: {evento.nombreProyecto}</div>
+                )}
                 <div className="eventos-tarjeta-meta">
                   {new Date(evento.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
@@ -443,6 +511,9 @@ export function EventosPage(): JSX.Element {
             <div className="eventos-overlay">
               <div className="eventos-modal">
                 <h3 className="eventos-modal-titulo">{editandoId !== null ? 'Editar Evento' : 'Nuevo Evento'}</h3>
+                {idProyecto && nombreProyecto && editandoId === null && (
+                  <p className="eventos-texto-secundario">Se registrará en el proyecto «{nombreProyecto}».</p>
+                )}
 
                 <input
                   className="eventos-input"
@@ -549,4 +620,11 @@ export function EventosPage(): JSX.Element {
       </div>
     </PlantillaLayout>
   );
+}
+
+// Lee la sesión; si no hay usuario logueado, vuelve al login.
+export function EventosPage(): JSX.Element {
+  const usuarioId = obtenerUsuarioId();
+  if (usuarioId === null) return <Navigate to="/login" replace />;
+  return <EventosContenido usuarioId={usuarioId} />;
 }

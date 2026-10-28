@@ -14,21 +14,35 @@ import type { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios
 import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/loginFacial";
 import { RegistrarRostro } from "../logicaPersistente/gestionDeUsuarios/registrarRostro";
 
+export interface HooksSesion {
+    alIniciarSesion: (idUsuario: number, password: string | null) => void;
+    alCerrarSesion: () => Promise<void>;
+}
+
 export function registerUsuariosIpc(
-    usuarios: Usuarios
+    usuarios: Usuarios,
+    hooks: HooksSesion
 ): void {
 
     ipcMain.handle(
         "usuarios:iniciarSesion",
         async (_event, datos: unknown) => {
-
-            return usuarios.iniciarSesion(validarDatos(iniciarSesionSchema, datos));
+            const validado = validarDatos(iniciarSesionSchema, datos);
+            const usuario = await usuarios.iniciarSesion(validado);
+            hooks.alIniciarSesion(usuario.id, validado.password);
+            // El renderer solo necesita el id (ver index.d.ts): passwordHash y embedding no cruzan el IPC.
+            return usuario;
         }
     );
 
-    ipcMain.handle('usuarios:loginFacial', (_evento, embedding: number[]) =>
-        new LoginFacial().ejecutar(embedding)
-    );
+    ipcMain.handle('usuarios:loginFacial', async (_evento, embedding: number[]) => {
+        const r = await new LoginFacial().ejecutar(embedding);
+        // Sin contraseña: la sincronización solo funciona si esta PC ya tiene la clave cifrada con safeStorage.
+        if (r.exito) hooks.alIniciarSesion(r.usuarioId, null);
+        return r;
+    });
+
+    ipcMain.handle('usuarios:cerrarSesion', () => hooks.alCerrarSesion());
 
     ipcMain.handle(
         "usuarios:registrarUsuario",

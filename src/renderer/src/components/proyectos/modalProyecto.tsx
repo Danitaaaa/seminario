@@ -3,8 +3,6 @@ import type { FormEvent } from 'react';
 
 export interface DatosProyecto {
     nombre: string;
-    numeroProyecto: string;
-    materiaAsociada?: string;
     fechaFin?: string; // YYYY-MM-DD
 }
 
@@ -15,9 +13,6 @@ interface ModalProyectoProps {
 
 export function ModalProyecto({ onCancelar, onGuardar }: ModalProyectoProps) {
     const [nombre, setNombre] = useState('');
-    const [numeroProyecto, setNumeroProyecto] = useState('');
-    const [materiaAsociada, setMateriaAsociada] = useState('');
-    const [fechaFin, setFechaFin] = useState('');
     const [guardando, setGuardando] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -28,8 +23,6 @@ export function ModalProyecto({ onCancelar, onGuardar }: ModalProyectoProps) {
         try {
             await onGuardar({
                 nombre: nombre.trim(),
-                numeroProyecto: numeroProyecto.trim(),
-                materiaAsociada: materiaAsociada.trim() || undefined,
             });
         } catch (e) {
             console.error('No se pudo crear el proyecto', e);
@@ -57,26 +50,6 @@ export function ModalProyecto({ onCancelar, onGuardar }: ModalProyectoProps) {
                         autoFocus
                     />
                 </label>
-
-                <label>
-                    Número de proyecto
-                    <input
-                        value={numeroProyecto}
-                        onChange={(e) => setNumeroProyecto(e.target.value)}
-                        maxLength={100}
-                        required
-                    />
-                </label>
-
-                <label>
-                    Materia asociada (opcional)
-                    <input
-                        value={materiaAsociada}
-                        onChange={(e) => setMateriaAsociada(e.target.value)}
-                        maxLength={100}
-                    />
-                </label>
-
 
                 {error && <p className="cartel-error__mensaje">{error}</p>}
 

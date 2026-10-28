@@ -1,5 +1,3 @@
-import { string } from "zod";
-
 export type UnidadTiempo = 'minutos' | 'horas' | 'dias' | 'semanas';
 
 export interface Recordatorio {
@@ -18,7 +16,9 @@ export interface Evento {
   titulo: string;
   descripcion: string | null;
   lugar: string | null;
-  fecha: Date; 
+  fecha: Date;
+  idProyecto: number | null;
+  nombreProyecto: string | null;
   categoria: Categoria;
   prioridad: Prioridad;
   notificacionesActivas: boolean;
@@ -32,6 +32,7 @@ export interface CrearEventoInput {
   lugar?: string | null;
   fecha: string;
   categoria: Categoria;
+  idProyecto?: number;
   prioridad: Prioridad;
   notificacionesActivas: boolean;
   recordatorios: Recordatorio[];
@@ -39,6 +40,7 @@ export interface CrearEventoInput {
 
 export interface ModificarEventoInput {
   id: number;
+  usuarioId: number;
   titulo?: string;
   descripcion?: string | null;
   lugar?: string | null;
@@ -51,7 +53,7 @@ export interface ModificarEventoInput {
 
 export interface ListarEventosInput {
   usuarioId: number;
+  idProyecto?: number;
   desde?: string;
   hasta?: string;
 }
-
