@@ -11,16 +11,18 @@ import { GestionarObjetivos } from '../logicaPersistente/gestionDeSesionEstudio/
 import { GestionarPestanas } from '../logicaPersistente/gestionDeSesionEstudio/gestionarPestanas';
 import { GestionarPomodoro } from '../logicaPersistente/gestionDeSesionEstudio/gestionarPomodoro';
 import { ListarOpcionesSesionEstudio } from '../logicaPersistente/gestionDeSesionEstudio/listarOpcionesSesionEstudio';
-import { RegistrarMateria } from '../logicaPersistente/gestionDeSesionEstudio/registrarMateria';
+import { GestionarMaterias } from '../logicaPersistente/gestionDeSesionEstudio/gestionarMaterias';
+import { BuscarSesionesSuperpuestas } from '../logicaPersistente/gestionDeSesionEstudio/buscarSesionesSuperpuestas';
 import { ObtenerResumenSesiones } from '../logicaPersistente/gestionDeSesionEstudio/obtenerResumenSesiones';
 import { VerificarSesionesEstudioAtrasadas } from '../logicaPersistente/gestionDeSesionEstudio/verificarSesionesEstudioAtrasadas';
 import { RecuperarSesionInterrumpida } from '../logicaPersistente/gestionDeSesionEstudio/recuperarSesionInterrumpida';
 import { GuardarContenidoSesion } from '../logicaPersistente/gestionDeSesionEstudio/guardarContenidoSesion';
+import { ImportarContenidoDesdeMaterial } from '../logicaPersistente/gestionDeSesionEstudio/importarContenidoDesdeMaterial';
 import { ObtenerSesionEnCurso } from '../logicaPersistente/gestionDeSesionEstudio/obtenerSesionEnCurso';
 import { RegistrarLatidoSesion } from '../logicaPersistente/gestionDeSesionEstudio/registrarLatidoSesion';
 import {
   FasePomodoro,
-  Materia,
+  MateriaConUso,
   OpcionesSesionEstudio,
   ObjetivoSesion,
   PestanaSesion,
@@ -30,10 +32,12 @@ import {
 import {
   ActualizarObjetivoDTO,
   AgregarObjetivoDTO,
+  BuscarSuperpuestasDTO,
   CrearPestanaDTO,
   CrearSesionEstudioDTO,
   GuardarContenidoSesionDTO,
   ListarSesionesEstudioDTO,
+  ModificarMateriaDTO,
   ModificarSesionEstudioDTO,
   RegistrarMateriaDTO,
   RenombrarPestanaDTO,
@@ -51,20 +55,22 @@ export interface CasosDeUsoSesionEstudio {
   reanudar: ReanudarSesionEstudio;
   finalizar: FinalizarSesionEstudio;
   eliminar: EliminarSesionEstudio;
-  objetivos: GestionarObjetivos;
+  metas: GestionarObjetivos;
   pestanas: GestionarPestanas;
   pomodoro: GestionarPomodoro;
   opciones: ListarOpcionesSesionEstudio;
-  registrarMateria: RegistrarMateria;
+  materias: GestionarMaterias;
+  superpuestas: BuscarSesionesSuperpuestas;
   resumen: ObtenerResumenSesiones;
   verificarAtrasadas: VerificarSesionesEstudioAtrasadas;
   recuperarInterrumpida: RecuperarSesionInterrumpida;
   enCurso: ObtenerSesionEnCurso;
   latido: RegistrarLatidoSesion;
   guardarContenido: GuardarContenidoSesion;
+  importarDesdeMaterial: ImportarContenidoDesdeMaterial;
 }
 
-// Fachada "Lógica SesiónEstudio": único punto de entrada al módulo para IPC y los procesos.
+// portada lógica SesiónEstudio
 export class SesionesEstudio {
   constructor(private readonly cu: CasosDeUsoSesionEstudio) {}
 
@@ -74,6 +80,10 @@ export class SesionesEstudio {
 
   async listar(idUsuario: number, filtros: ListarSesionesEstudioDTO): Promise<SesionEstudio[]> {
     return this.cu.listar.ejecutar(idUsuario, filtros);
+  }
+
+  async buscarSuperpuestas(idUsuario: number, datos: BuscarSuperpuestasDTO): Promise<SesionEstudio[]> {
+    return this.cu.superpuestas.ejecutar(idUsuario, datos);
   }
 
   async abrir(idUsuario: number, idSesion: number): Promise<SesionEstudio> {
@@ -104,7 +114,7 @@ export class SesionesEstudio {
     return this.cu.eliminar.ejecutar(idUsuario, idSesion);
   }
 
-  // ---- Pestañas del editor (cada cambio se refleja en el Word de Material) ----
+  // Pestañas del editor
 
   async listarPestanas(idUsuario: number, idSesion: number): Promise<PestanaSesion[]> {
     return this.cu.pestanas.listar(idUsuario, idSesion);
@@ -132,21 +142,25 @@ export class SesionesEstudio {
     return this.cu.guardarContenido.ejecutar(idUsuario, datos);
   }
 
-  // ---- Objetivos ----
+  // Se llama cuando se edita un Word desde Material: si es el de una sesión, la actualiza.
+  async importarDesdeMaterial(idArchivo: number, html: string): Promise<boolean> {
+    return this.cu.importarDesdeMaterial.ejecutar(idArchivo, html);
+  }
+  // Metas 
 
   async agregarObjetivo(idUsuario: number, datos: AgregarObjetivoDTO): Promise<ObjetivoSesion> {
-    return this.cu.objetivos.agregar(idUsuario, datos);
+    return this.cu.metas.agregar(idUsuario, datos);
   }
 
   async actualizarObjetivo(idUsuario: number, datos: ActualizarObjetivoDTO): Promise<ObjetivoSesion> {
-    return this.cu.objetivos.actualizar(idUsuario, datos);
+    return this.cu.metas.actualizar(idUsuario, datos);
   }
 
   async eliminarObjetivo(idUsuario: number, idObjetivo: number): Promise<void> {
-    return this.cu.objetivos.eliminar(idUsuario, idObjetivo);
+    return this.cu.metas.eliminar(idUsuario, idObjetivo);
   }
 
-  // ---- Pomodoro ----
+  // Pomodoro
 
   async iniciarPomodoro(idUsuario: number, idSesion: number): Promise<SesionEstudio> {
     return this.cu.pomodoro.iniciar(idUsuario, idSesion);
@@ -174,8 +188,20 @@ export class SesionesEstudio {
     return this.cu.opciones.ejecutar();
   }
 
-  async registrarMateria(datos: RegistrarMateriaDTO): Promise<Materia> {
-    return this.cu.registrarMateria.ejecutar(datos);
+  async listarMaterias(idUsuario: number): Promise<MateriaConUso[]> {
+    return this.cu.materias.listar(idUsuario);
+  }
+
+  async registrarMateria(datos: RegistrarMateriaDTO): Promise<MateriaConUso> {
+    return this.cu.materias.registrar(datos);
+  }
+
+  async modificarMateria(idUsuario: number, datos: ModificarMateriaDTO): Promise<MateriaConUso> {
+    return this.cu.materias.modificar(idUsuario, datos);
+  }
+
+  async eliminarMateria(idMateria: number): Promise<void> {
+    return this.cu.materias.eliminar(idMateria);
   }
 
   async obtenerResumen(idUsuario: number, datos: ResumenSesionesDTO): Promise<ResumenSesionesEstudio> {

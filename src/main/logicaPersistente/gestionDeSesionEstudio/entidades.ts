@@ -11,13 +11,18 @@ export interface Materia {
   nombre: string;
 }
 
+// Materia con la cantidad de sesiones del usuario que la usan (modal "Materias").
+export interface MateriaConUso extends Materia {
+  cantidadSesiones: number;
+}
+
 // Tipo de método de estudio elegible en una sesión (Repeticiones, Flashcards, etc.).
 export interface TipoMetodoEstudio {
   idTipoMetodoEstudio: number;
   nombre: string;
 }
 
-// Objetivo que el usuario se propone cumplir durante la sesión.
+// Meta que el usuario se propone cumplir durante la sesión.
 export interface ObjetivoSesion {
   idObjetivo: number;
   idSesion: number;
@@ -46,7 +51,7 @@ export interface EstadoPomodoroGuardado {
   completados: number;
 }
 
-// Sesión de estudio completa, con su materia, métodos y objetivos.
+// Sesión de estudio completa, con su materia, métodos y metas.
 export interface SesionEstudio {
   idSesion: number;
   idUsuario: number;
@@ -72,7 +77,7 @@ export interface SesionEstudio {
   descansoLargoMin: number;
   pomodoro: EstadoPomodoroGuardado;
   recibirNotificacion: boolean;
-  objetivos: ObjetivoSesion[];
+  metas: ObjetivoSesion[];
   // Documento completo (todas las pestañas en HTML), el mismo que se guarda como .docx en Material.
   contenido: string;
   // Archivo .docx de la sesión en Material; null si todavía no se pudo generar.

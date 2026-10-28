@@ -1,11 +1,8 @@
 import { createServer, Server } from 'node:http';
 import { createHash, randomBytes } from 'node:crypto';
 
-// Permisos que pide la app. Los tres primeros los exige el Web Playback SDK para reproducir dentro de la app.
+// Permisos que pide la app: ver qué suena, controlarlo y saber si una pista está guardada.
 export const ALCANCES_SPOTIFY = [
-  'streaming',
-  'user-read-email',
-  'user-read-private',
   'user-read-playback-state',
   'user-modify-playback-state',
   'user-read-currently-playing',

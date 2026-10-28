@@ -1,4 +1,4 @@
-// Consulta base que arma la sesión completa (materia, métodos y objetivos) en una sola pasada.
+// Consulta base que arma la sesión completa (materia, métodos y metas) en una sola pasada.
 // Quien la use agrega su propio WHERE y ORDER BY al final.
 // El contenido de las pestañas no viaja acá (puede ser pesado): se pide aparte con GestionarPestanas.
 export const SELECT_SESION_ESTUDIO = `
@@ -25,7 +25,7 @@ export const SELECT_SESION_ESTUDIO = `
                     ) ORDER BY o.orden, o.id_objetivo)
              FROM objetivo_sesion o
             WHERE o.id_sesion_estudio = s.id_sesion_estudio
-         ), '[]'::json) AS objetivos
+         ), '[]'::json) AS metas
     FROM sesion_estudio s
     JOIN materia m ON m.id_materia = s.id_materia
 `;

@@ -33,7 +33,11 @@ function escribirSeguro(ruta: string, contenido: Uint8Array): number {
 }
 
 // Handlers IPC del módulo Archivos: validan con Zod antes de tocar la fachada.
-export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacenamiento): void {
+  // Se llama después de guardar un Word desde el visor (lo usa Sesión de estudio para traer los cambios).
+  type AlGuardarDocx = (idArchivo: number, html: string) => Promise<unknown>;
+
+  export function registerArchivosIpc(
+  archivos: Archivos, almacenamiento: Almacenamiento, alGuardarDocx?: AlGuardarDocx): void {
   ipcMain.handle('archivos:crear', async (_event, datos: unknown) => {
     const validado = CrearArchivoDTOSchema.parse(datos);
 
@@ -122,7 +126,13 @@ export function registerArchivosIpc(archivos: Archivos, almacenamiento: Almacena
   ipcMain.handle('archivos:guardarDocx', async (_event, datos: unknown) => {
     const { id, html } = GuardarDocxDTOSchema.parse(datos);
     const docx = (await HTMLtoDOCX(html, null, {})) as Buffer;
-    return guardarBytes(id, docx);
+    const archivo = await guardarBytes(id, docx);
+    try {
+      await alGuardarDocx?.(id, html);
+    } catch (error) {
+      console.error('[Archivos] No se pudo actualizar la sesión de estudio del Word:', error);
+    }
+    return archivo;
   });
 
   // Abre el archivo con la aplicación predeterminada del sistema operativo.

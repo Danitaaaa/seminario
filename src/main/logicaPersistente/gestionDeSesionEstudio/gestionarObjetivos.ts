@@ -2,7 +2,7 @@ import { Persistencia } from '../../persistencia/persistencia';
 import { ObjetivoSesion } from './entidades';
 import { ActualizarObjetivoDTO, AgregarObjetivoDTO } from './dto';
 
-// Agrega, edita, tilda y elimina los objetivos de una sesión.
+// Agrega, edita, tilda y elimina los metas de una sesión.
 // Todas las operaciones verifican que la sesión pertenezca al usuario.
 export class GestionarObjetivos {
   constructor(private readonly persistencia: Persistencia) {}
@@ -38,7 +38,7 @@ export class GestionarObjetivos {
       [datos.idObjetivo, idUsuario, datos.descripcion ?? null, datos.completado ?? null]
     );
     if (filas.length === 0) {
-      throw new Error('El objetivo no existe.');
+      throw new Error('El meta no existe.');
     }
     return this.materializar(filas[0]);
   }
@@ -54,7 +54,7 @@ export class GestionarObjetivos {
       [idObjetivo, idUsuario]
     );
     if (filas.length === 0) {
-      throw new Error('El objetivo no existe.');
+      throw new Error('El meta no existe.');
     }
   }
 

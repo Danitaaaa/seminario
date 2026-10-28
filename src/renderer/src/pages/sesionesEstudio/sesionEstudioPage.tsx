@@ -19,7 +19,7 @@ import { useSesionEnCurso } from './useSesionEnCurso';
 import '../../styles/sesionesEstudio.css';
 
 // Pantalla de una sesión: cabecera (tema, materia, estado, Iniciar / Pausar / Reanudar y Finalizar),
-// editor con pestañas y panel derecho con Pomodoro, Spotify, Objetivos, Métodos y Próxima sesión.
+// editor con pestañas y panel derecho con Pomodoro, Spotify, Metas, Métodos y Próxima sesión.
 // El tiempo lo calcula el main; acá solo se muestra el snapshot que llega por el tick.
 export function SesionEstudioPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
@@ -117,34 +117,34 @@ export function SesionEstudioPage() {
     );
   }
 
-  // Tilda o destilda un objetivo y actualiza el estado local.
+  // Tilda o destilda un meta y actualiza el estado local.
   async function alternarObjetivo(idObjetivo: number, completado: boolean) {
     try {
       const actualizado = await window.api.actualizarObjetivoSesion({ usuarioId, idObjetivo, completado });
-      setSesion((s) => s && { ...s, objetivos: s.objetivos.map((o) => (o.idObjetivo === idObjetivo ? actualizado : o)) });
-      if (completado) avisos.exito('¡Objetivo cumplido!');
+      setSesion((s) => s && { ...s, metas: s.metas.map((o) => (o.idObjetivo === idObjetivo ? actualizado : o)) });
+      if (completado) avisos.exito('¡Meta cumplido!');
     } catch (e) {
-      avisos.error(extraerMensajeError(e, 'No se pudo actualizar el objetivo.'));
+      avisos.error(extraerMensajeError(e, 'No se pudo actualizar el meta.'));
     }
   }
 
   async function agregarObjetivo(descripcion: string) {
     try {
       const nuevo = await window.api.agregarObjetivoSesion({ usuarioId, idSesion, descripcion });
-      setSesion((s) => s && { ...s, objetivos: [...s.objetivos, nuevo] });
-      avisos.exito('Se agregó el objetivo.');
+      setSesion((s) => s && { ...s, metas: [...s.metas, nuevo] });
+      avisos.exito('Se agregó el meta.');
     } catch (e) {
-      avisos.error(extraerMensajeError(e, 'No se pudo agregar el objetivo.'));
+      avisos.error(extraerMensajeError(e, 'No se pudo agregar el meta.'));
     }
   }
 
   async function eliminarObjetivo(idObjetivo: number) {
     try {
       await window.api.eliminarObjetivoSesion(usuarioId, idObjetivo);
-      setSesion((s) => s && { ...s, objetivos: s.objetivos.filter((o) => o.idObjetivo !== idObjetivo) });
-      avisos.exito('Se quitó el objetivo.');
+      setSesion((s) => s && { ...s, metas: s.metas.filter((o) => o.idObjetivo !== idObjetivo) });
+      avisos.exito('Se quitó el meta.');
     } catch (e) {
-      avisos.error(extraerMensajeError(e, 'No se pudo eliminar el objetivo.'));
+      avisos.error(extraerMensajeError(e, 'No se pudo eliminar el meta.'));
     }
   }
 
@@ -246,10 +246,10 @@ export function SesionEstudioPage() {
                     <ReproductorSpotify />
                   </TarjetaLateral>
 
-                  <TarjetaLateral titulo="Objetivos" id="objetivos">
+                  <TarjetaLateral titulo="Metas" id="metas">
                     <ListaObjetivos
-                      titulo="Objetivos de la sesión"
-                      objetivos={sesion.objetivos.map((o) => ({ clave: o.idObjetivo, descripcion: o.descripcion, completado: o.completado }))}
+                      titulo="Metas de la sesión"
+                      metas={sesion.metas.map((o) => ({ clave: o.idObjetivo, descripcion: o.descripcion, completado: o.completado }))}
                       onAgregar={(d) => void agregarObjetivo(d)}
                       onAlternar={(clave, completado) => void alternarObjetivo(Number(clave), completado)}
                       onEliminar={(clave) => void eliminarObjetivo(Number(clave))}
@@ -277,7 +277,7 @@ export function SesionEstudioPage() {
                   type="button"
                   className="sesion__mostrar-panel"
                   aria-label="Mostrar panel lateral"
-                  title="Mostrar Pomodoro, Spotify, objetivos y próxima sesión"
+                  title="Mostrar Pomodoro, Spotify, metas y próxima sesión"
                   onClick={() => setPanelVisible(true)}
                 >
                   <ListTree size={18} />

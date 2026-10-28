@@ -29,7 +29,7 @@ export interface EstadoCuentaSpotify {
 }
 
 // Cliente de Spotify en el main: guarda la cuenta, renueva los tokens y habla con la Web API.
-// El renderer nunca ve el refresh token; solo pide un access token para el Web Playback SDK.
+// La música suena en el Spotify del usuario; la app solo la controla. El renderer nunca ve los tokens.
 export class ClienteSpotify {
   private tokens = new Map<number, { accessToken: string; venceMs: number }>();
   private contextos = new Map<string, { nombre: string; subtitulo: string }>();
@@ -61,8 +61,8 @@ export class ClienteSpotify {
     await this.cuentas.eliminar(idUsuario);
   }
 
-  // Access token vigente (lo usa el Web Playback SDK y todas las llamadas a la API).
-  async obtenerToken(idUsuario: number): Promise<string> {
+  // Access token vigente para las llamadas a la API (se renueva solo).
+  private async obtenerToken(idUsuario: number): Promise<string> {
     const actual = this.tokens.get(idUsuario);
     if (actual && actual.venceMs - MARGEN_RENOVACION_MS > Date.now()) return actual.accessToken;
     return this.renovar(idUsuario);
@@ -107,11 +107,6 @@ export class ClienteSpotify {
 
   async anterior(idUsuario: number, idDispositivo?: string): Promise<void> {
     await this.api(idUsuario, 'POST', `/me/player/previous${this.paramDispositivo(idDispositivo)}`);
-  }
-
-  // Pasa la reproducción al reproductor de la app (el dispositivo "Syntra" del Web Playback SDK).
-  async transferir(idUsuario: number, idDispositivo: string, reproducir: boolean): Promise<void> {
-    await this.api(idUsuario, 'PUT', '/me/player', { device_ids: [idDispositivo], play: reproducir });
   }
 
   // "Guardado en Spotify": si la pista está en la biblioteca del usuario.
@@ -203,7 +198,7 @@ export class ClienteSpotify {
   }
 
   private async mensajeError(respuesta: Response): Promise<string> {
-    if (respuesta.status === 404) return 'No hay ningún dispositivo de Spotify activo. Abrí Spotify o reproducí desde la app.';
+    if (respuesta.status === 404) return 'No hay ningún Spotify activo. Abrí Spotify en tu PC o celular y reproducí algo.';
     if (respuesta.status === 403) return 'Spotify no permitió la acción (los controles requieren Spotify Premium).';
     if (respuesta.status === 429) return 'Demasiadas solicitudes a Spotify. Esperá unos segundos.';
     try {

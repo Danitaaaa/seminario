@@ -10,6 +10,7 @@ const conSesion = (canal: string) => (usuarioId: number, idSesion: number) =>
 export const sesionesEstudioApi = {
   crearSesionEstudio: (datos: unknown) => ipcRenderer.invoke('sesionesEstudio:crear', datos),
   listarSesionesEstudio: (filtros: unknown) => ipcRenderer.invoke('sesionesEstudio:listar', filtros),
+  buscarSesionesSuperpuestas: (datos: unknown) => ipcRenderer.invoke('sesionesEstudio:superpuestas', datos),
   abrirSesionEstudio: conSesion('sesionesEstudio:abrir'),
   iniciarSesionEstudio: conSesion('sesionesEstudio:iniciar'),
   pausarSesionEstudio: conSesion('sesionesEstudio:pausar'),
@@ -36,7 +37,10 @@ export const sesionesEstudioApi = {
   cambiarFasePomodoro: (datos: unknown) => ipcRenderer.invoke('sesionesEstudio:pomodoroFase', datos),
 
   listarOpcionesSesionEstudio: () => ipcRenderer.invoke('sesionesEstudio:opciones'),
+  listarMaterias: (usuarioId: number) => ipcRenderer.invoke('sesionesEstudio:materias', { usuarioId }),
   registrarMateria: (datos: unknown) => ipcRenderer.invoke('sesionesEstudio:registrarMateria', datos),
+  modificarMateria: (datos: unknown) => ipcRenderer.invoke('sesionesEstudio:modificarMateria', datos),
+  eliminarMateria: (idMateria: number) => ipcRenderer.invoke('sesionesEstudio:eliminarMateria', { idMateria }),
   obtenerResumenSesiones: (datos: unknown) => ipcRenderer.invoke('sesionesEstudio:resumen', datos),
   obtenerSesionEnCurso: (usuarioId: number) => ipcRenderer.invoke('sesionesEstudio:enCurso', { usuarioId }),
 

@@ -9,7 +9,7 @@ import { BarraFiltrosSesiones } from '../../components/sesionEstudio/barraFiltro
 import { ListadoSesiones } from '../../components/sesionEstudio/listadoSesiones';
 import { ModalConfiguracionSesion } from '../../components/sesionEstudio/modalConfiguracionSesion';
 import { ModalEliminarSesion } from '../../components/sesionEstudio/modalEliminarSesion';
-import { ModalRegistrarMateria } from '../../components/sesionEstudio/modalRegistrarMateria';
+import { ModalMaterias } from '../../components/sesionEstudio/modalMaterias';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { obtenerUsuarioId } from '../../../lib/sesion';
@@ -120,7 +120,7 @@ export function SesionesEstudioPage() {
   }
 
   // Guarda los cambios del modal y refresca la lista.
-  async function guardarConfiguracion(cambios: { nombre: string; fechaProgramada: string }) {
+  async function guardarConfiguracion(cambios: { nombre: string; idMateria: number; fechaProgramada: string }) {
     if (!enConfiguracion) return;
     await window.api.modificarSesionEstudio({ usuarioId, idSesion: enConfiguracion.idSesion, ...cambios });
     setEnConfiguracion(null);
@@ -196,11 +196,12 @@ export function SesionesEstudioPage() {
       )}
 
       {registrandoMateria && (
-        <ModalRegistrarMateria
-          onCancelar={() => setRegistrandoMateria(false)}
-          onRegistrada={(materia) => {
+        <ModalMaterias
+          usuarioId={usuarioId}
+          onCerrar={() => {
             setRegistrandoMateria(false);
-            avisos.exito(`Se registró la materia "${materia.nombre}" correctamente.`);
+            // Un cambio de nombre se refleja en la columna Materia de la lista.
+            void cargar();
           }}
         />
       )}

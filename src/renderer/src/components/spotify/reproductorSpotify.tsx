@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, CheckCircle2, Infinity as InfinitoIcono, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
+import { CheckCircle2, Infinity as InfinitoIcono, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
 import { usarSpotify } from '../../hooks/usarSpotify';
 import { formatearTiempo } from '../../pages/sesionesEstudio/utilidades';
 import '../../styles/spotify.css';
 
-// Tarjeta de Spotify del panel de la sesión: carátula, playlist o álbum, "Guardado en Spotify",
-// anterior / play-pausa / siguiente y la canción actual con su duración.
+// Tarjeta de Spotify del panel de la sesión: controla el Spotify abierto en la PC o el celular.
+// Muestra carátula, playlist o álbum, "Guardado en Spotify", anterior / play-pausa / siguiente
+// y la canción actual con su duración.
 export function ReproductorSpotify() {
   const spotify = usarSpotify();
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -46,24 +47,15 @@ export function ReproductorSpotify() {
   const pista = estado?.pista ?? null;
   const titulo = estado?.contexto?.nombre ?? pista?.album ?? 'Nada sonando';
   const subtitulo = estado?.contexto?.subtitulo ?? (pista ? pista.artistas : 'Spotify');
-  const otroDispositivo = estado?.dispositivo && !spotify.enEsteDispositivo ? estado.dispositivo.nombre : null;
+  const dispositivo = estado?.dispositivo?.nombre ?? null;
   const duracion = pista?.duracionMs ?? 0;
 
   return (
     <div className="spotify">
       <div className="spotify__superior">
         <span className="spotify__modo">
-          <span
-            className={`spotify__punto${estado?.reproduciendo ? ' spotify__punto--activo' : ''}`}
-            title={spotify.enEsteDispositivo ? 'Sonando en la app' : otroDispositivo ? `Sonando en ${otroDispositivo}` : 'Sin reproducir'}
-          />
-          {spotify.enEsteDispositivo
-            ? 'Sonando en la app'
-            : otroDispositivo
-              ? `Sonando en ${otroDispositivo}`
-              : spotify.preferencia === 'control' || spotify.modo === 'remoto'
-                ? 'Controlando Spotify'
-                : 'Lista para sonar en la app'}
+          <span className={`spotify__punto${estado?.reproduciendo ? ' spotify__punto--activo' : ''}`} />
+          {dispositivo ? `Sonando en ${dispositivo}` : 'Abrí Spotify en tu PC o celular'}
         </span>
         <div className="spotify__menu-contenedor">
           <button
@@ -75,35 +67,12 @@ export function ReproductorSpotify() {
           />
           {menuAbierto && (
             <div className="spotify__menu" role="menu">
-              <span className="spotify__menu-titulo">¿Dónde suena la música?</span>
-              <button
-                type="button"
-                role="menuitemradio"
-                aria-checked={spotify.preferencia === 'app'}
-                className="spotify__menu-opcion"
-                onClick={() => { setMenuAbierto(false); spotify.cambiarPreferencia('app'); }}
-              >
-                <span className="spotify__menu-marca">{spotify.preferencia === 'app' && <Check size={14} />}</span>
-                Reproducir en la app
-              </button>
-              <button
-                type="button"
-                role="menuitemradio"
-                aria-checked={spotify.preferencia === 'control'}
-                className="spotify__menu-opcion"
-                onClick={() => { setMenuAbierto(false); spotify.cambiarPreferencia('control'); }}
-              >
-                <span className="spotify__menu-marca">{spotify.preferencia === 'control' && <Check size={14} />}</span>
-                Solo controlar Spotify
-              </button>
-              <span className="spotify__menu-separador" />
               <button
                 type="button"
                 role="menuitem"
                 className="spotify__menu-opcion spotify__menu-opcion--peligro"
                 onClick={() => { setMenuAbierto(false); void spotify.desvincular(); }}
               >
-                <span className="spotify__menu-marca" />
                 Desconectar Spotify
               </button>
             </div>
@@ -159,12 +128,6 @@ export function ReproductorSpotify() {
         {pista && <span className="spotify__duracion">{formatearTiempo(duracion / 1000)}</span>}
       </div>
 
-      {otroDispositivo && spotify.modo === 'sdk' && (
-        <button type="button" className="spotify__escuchar-aca" onClick={() => void spotify.escucharAca()}>
-          Sonando en {otroDispositivo} · Escuchar acá
-        </button>
-      )}
-      {spotify.aviso && <p className="spotify__aviso">{spotify.aviso}</p>}
     </div>
   );
 }

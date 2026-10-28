@@ -9,6 +9,10 @@ export interface Materia {
   nombre: string;
 }
 
+export interface MateriaConUso extends Materia {
+  cantidadSesiones: number;
+}
+
 export interface TipoMetodoEstudio {
   idTipoMetodoEstudio: number;
   nombre: string;
@@ -59,7 +63,7 @@ export interface SesionEstudio {
   descansoLargoMin: number;
   pomodoro: EstadoPomodoroGuardado;
   recibirNotificacion: boolean;
-  objetivos: ObjetivoSesion[];
+  metas: ObjetivoSesion[];
   contenido: string;
   idArchivo: number | null;
 }
@@ -102,13 +106,14 @@ export interface CrearSesionEstudioEntrada {
   descansoLargoMin: number;
   fechaProgramada: string;
   recibirNotificacion: boolean;
-  objetivos: string[];
+  metas: string[];
 }
 
 export interface ModificarSesionEstudioEntrada {
   usuarioId: number;
   idSesion: number;
   nombre?: string;
+  idMateria?: number;
   duracion?: number;
   fechaProgramada?: string;
   recibirNotificacion?: boolean;
@@ -121,6 +126,7 @@ export interface ModificarSesionEstudioEntrada {
 export interface SesionesEstudioApi {
   crearSesionEstudio(datos: CrearSesionEstudioEntrada): Promise<SesionEstudio>;
   listarSesionesEstudio(filtros: { usuarioId: number; desde?: string; hasta?: string }): Promise<SesionEstudio[]>;
+  buscarSesionesSuperpuestas(datos: { usuarioId: number; fechaProgramada: string; duracion: number; excluirIdSesion?: number; }): Promise<SesionEstudio[]>;
   abrirSesionEstudio(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
   iniciarSesionEstudio(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
   pausarSesionEstudio(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
@@ -155,7 +161,10 @@ export interface SesionesEstudioApi {
   cambiarFasePomodoro(datos: { usuarioId: number; idSesion: number; fase: FasePomodoro }): Promise<SesionEstudio>;
 
   listarOpcionesSesionEstudio(): Promise<OpcionesSesionEstudio>;
-  registrarMateria(datos: { nombre: string }): Promise<Materia>;
+  listarMaterias(usuarioId: number): Promise<MateriaConUso[]>;
+  registrarMateria(datos: { nombre: string }): Promise<MateriaConUso>;
+  modificarMateria(datos: { usuarioId: number; idMateria: number; nombre: string }): Promise<MateriaConUso>;
+  eliminarMateria(idMateria: number): Promise<void>;
   obtenerResumenSesiones(datos: { usuarioId: number; excluirIdSesion?: number }): Promise<ResumenSesionesEstudio>;
   obtenerSesionEnCurso(usuarioId: number): Promise<{
     sesion: SesionEstudio | null;

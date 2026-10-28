@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS sesion_estudio_metodo_estudio (
   PRIMARY KEY (id_sesion_estudio, id_tipo_metodo_estudio)
 );
 
--- Objetivos que se escriben al crear la sesión y se tildan durante la misma.
+-- Metas que se escriben al crear la sesión y se tildan durante la misma.
 CREATE TABLE IF NOT EXISTS objetivo_sesion (
   id_objetivo SERIAL PRIMARY KEY,
   id_sesion_estudio INT NOT NULL REFERENCES sesion_estudio(id_sesion_estudio) ON DELETE CASCADE,

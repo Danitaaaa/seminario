@@ -8,7 +8,7 @@ interface TarjetaLateralProps {
   children: ReactNode;
 }
 
-// Tarjeta del panel derecho de la sesión (Pomodoro, Spotify, Objetivos, Próxima sesión...).
+// Tarjeta del panel derecho de la sesión (Pomodoro, Spotify, Metas, Próxima sesión...).
 // El triángulo de la derecha la colapsa o expande, y la app recuerda la elección.
 export function TarjetaLateral({ titulo, id, children }: TarjetaLateralProps) {
   const [colapsada, setColapsada] = usarPreferencia(`sesion-tarjeta-${id}`, false);

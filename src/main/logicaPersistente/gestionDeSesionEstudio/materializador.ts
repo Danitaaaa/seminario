@@ -37,11 +37,11 @@ export function materializarSesionEstudio(fila: any): SesionEstudio {
     recibirNotificacion: fila.recibir_notificacion,
     contenido: fila.contenido ?? '',
     idArchivo: fila.id_archivo ?? null,
-    objetivos: (fila.objetivos as any[]).map((o) => materializarObjetivo(o, idSesion)),
+    metas: (fila.metas as any[]).map((o) => materializarObjetivo(o, idSesion)),
   };
 }
 
-// Convierte un objetivo armado por json_build_object en un ObjetivoSesion.
+// Convierte un meta armado por json_build_object en un ObjetivoSesion.
 export function materializarObjetivo(fila: any, idSesion: number): ObjetivoSesion {
   return {
     idObjetivo: fila.idObjetivo,

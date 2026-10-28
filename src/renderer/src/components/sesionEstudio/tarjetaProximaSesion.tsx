@@ -25,14 +25,14 @@ export function TarjetaProximaSesion({ sesion, cargando }: TarjetaProximaSesionP
     );
   }
 
-  const objetivos = sesion.objetivos.map((o) => o.descripcion).join(', ');
+  const metas = sesion.metas.map((o) => o.descripcion).join(', ');
   return (
     <button type="button" className="proxima" onClick={() => navigate(`/sesiones/${sesion.idSesion}`)}>
       <span className="proxima__titulo">Próxima sesión de {sesion.materiaAsociada.nombre}</span>
       <span className="proxima__fecha">{formatearDiaHora(sesion.fechaProgramada)}</span>
       <span className="proxima__texto">
         {sesion.nombre}
-        {objetivos ? `: ${objetivos}.` : ` · ${sesion.duracion} min.`}
+        {metas ? `: ${metas}.` : ` · ${sesion.duracion} min.`}
       </span>
     </button>
   );

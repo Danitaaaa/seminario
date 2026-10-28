@@ -34,7 +34,4 @@ cremaOscuro: "#E2DDCD",
 frostSuave: "#E8EDF5",   
 noche: "#0B1A33",       
 nocheClaro: "#1C2C4C",
-
-// Hover y botones oscuros (lo usan .app-boton--primario:hover y la barra lateral; antes no existía y el hover quedaba blanco)
-primaryDark: '#1E2A4A',
 };

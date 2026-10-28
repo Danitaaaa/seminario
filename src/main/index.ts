@@ -76,7 +76,8 @@ import { GestionarObjetivos } from './logicaPersistente/gestionDeSesionEstudio/g
 import { GestionarPestanas } from './logicaPersistente/gestionDeSesionEstudio/gestionarPestanas';
 import { GestionarPomodoro } from './logicaPersistente/gestionDeSesionEstudio/gestionarPomodoro';
 import { ListarOpcionesSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/listarOpcionesSesionEstudio';
-import { RegistrarMateria } from './logicaPersistente/gestionDeSesionEstudio/registrarMateria';
+import { GestionarMaterias } from './logicaPersistente/gestionDeSesionEstudio/gestionarMaterias';
+import { BuscarSesionesSuperpuestas } from './logicaPersistente/gestionDeSesionEstudio/buscarSesionesSuperpuestas';
 import { ObtenerResumenSesiones } from './logicaPersistente/gestionDeSesionEstudio/obtenerResumenSesiones';
 import { VerificarSesionesEstudioAtrasadas } from './logicaPersistente/gestionDeSesionEstudio/verificarSesionesEstudioAtrasadas';
 import { RecuperarSesionInterrumpida } from './logicaPersistente/gestionDeSesionEstudio/recuperarSesionInterrumpida';
@@ -87,6 +88,7 @@ import { SesionesEstudio } from './administracionDePersistencia/sesionesEstudio'
 import { ProcesoSesionEstudio } from './logicaNoPersistente/procesoSesionEstudio/procesoSesionEstudio';
 import { DocumentoSesionEstudio } from './logicaNoPersistente/procesoSesionEstudio/documentoSesionEstudio';
 import { registerSesionesEstudioIpc } from './ipc/sesionesEstudio.ipc';
+import { ImportarContenidoDesdeMaterial } from './logicaPersistente/gestionDeSesionEstudio/importarContenidoDesdeMaterial';
 
 // Spotify
 import { GuardarCuentaSpotify } from './logicaPersistente/gestionDeSpotify/guardarCuentaSpotify';
@@ -96,7 +98,6 @@ import { CuentasSpotify } from './administracionDePersistencia/spotify';
 import { AutenticacionSpotify } from './logicaNoPersistente/spotify/autenticacionSpotify';
 import { ClienteSpotify } from './logicaNoPersistente/spotify/clienteSpotify';
 import { registerSpotifyIpc } from './ipc/spotify.ipc';
-
 
 let mainWindow: BrowserWindow | null = null;
 let procesoSesion: ProcesoSesionEstudio | null = null;
@@ -159,7 +160,7 @@ function wireDependencies(): ProcesoSesionEstudio {
   const actualizarContenidoArchivo = new ActualizarContenidoArchivo(persistencia, almacenamiento);
   const archivos = new Archivos(crearArchivo, buscarArchivos, modificarArchivo, eliminarArchivo, moverArchivos,
     obtenerArchivo, actualizarContenidoArchivo);
-  registerArchivosIpc(archivos, almacenamiento);
+ 
 
   // Gestion de usuarios
   const iniciarSesion = new IniciarSesion(persistencia);
@@ -193,7 +194,7 @@ function wireDependencies(): ProcesoSesionEstudio {
   );
   registerHorariosIpc(horarios);
 
-  // Gestion de sesion de estudio (el contenido se guarda en la base y en su Word de Material)
+  // Gestion de sesion de estudio (el contenido se guarda en la base y en material)
   const documentoSesion = new DocumentoSesionEstudio(archivos, nodos, persistencia);
   const sesionesEstudio = new SesionesEstudio({
     crear: new CrearSesionEstudio(persistencia, documentoSesion),
@@ -205,24 +206,30 @@ function wireDependencies(): ProcesoSesionEstudio {
     reanudar: new ReanudarSesionEstudio(persistencia),
     finalizar: new FinalizarSesionEstudio(persistencia),
     eliminar: new EliminarSesionEstudio(persistencia),
-    objetivos: new GestionarObjetivos(persistencia),
+    metas: new GestionarObjetivos(persistencia),
     pestanas: new GestionarPestanas(persistencia),
     pomodoro: new GestionarPomodoro(persistencia),
     opciones: new ListarOpcionesSesionEstudio(persistencia),
-    registrarMateria: new RegistrarMateria(persistencia),
+    materias: new GestionarMaterias(persistencia),
+    superpuestas: new BuscarSesionesSuperpuestas(persistencia),
     resumen: new ObtenerResumenSesiones(persistencia),
     verificarAtrasadas: new VerificarSesionesEstudioAtrasadas(persistencia),
     recuperarInterrumpida: new RecuperarSesionInterrumpida(persistencia),
     enCurso: new ObtenerSesionEnCurso(persistencia),
     latido: new RegistrarLatidoSesion(persistencia),
     guardarContenido: new GuardarContenidoSesion(persistencia, documentoSesion),
+    importarDesdeMaterial: new ImportarContenidoDesdeMaterial(persistencia),
   });
+  // Se registra acá porque al guardar un Word desde Material avisa a Sesión de estudio.
+  registerArchivosIpc(archivos, almacenamiento, (idArchivo, html) =>
+    sesionesEstudio.importarDesdeMaterial(idArchivo, html)
+  );
   const proceso = new ProcesoSesionEstudio(sesionesEstudio, (canal, datos) =>
     mainWindow?.webContents.send(canal, datos)
   );
   registerSesionesEstudioIpc(sesionesEstudio, proceso);
 
-  // Aviso del sistema cuando termina una fase del pomodoro.
+  // notificacion del sistema cuando termina una fase del pomodoro
   proceso.on('faseCambio', (_terminada: string, nueva: string) => {
     if (!Notification.isSupported()) return;
     const cuerpo = nueva === 'pomodoro'
@@ -251,7 +258,6 @@ function wireDependencies(): ProcesoSesionEstudio {
   registerSpotifyIpc(clienteSpotify);
 
   return proceso;
-
 }
 
 app.whenReady().then(async () => {
@@ -282,21 +288,10 @@ app.whenReady().then(async () => {
     console.error('[startup] No se pudo conectar a Postgres:', err);
   }
 
-  // Con Electron de castLabs (Widevine) hay que esperar al CDM para que Spotify pueda reproducir
-  // dentro de la app. Con el Electron estándar este paso no existe y se omite.
-  const componentes = (require('electron') as { components?: { whenReady(): Promise<unknown> } }).components;
-  if (componentes?.whenReady) {
-    try {
-      await componentes.whenReady();
-    } catch (err) {
-      console.error('[startup] Widevine no disponible:', err);
-    }
-  }
-  
   procesoSesion = wireDependencies();
   createWindow();
   await procesoSesion.arrancar();
-  
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

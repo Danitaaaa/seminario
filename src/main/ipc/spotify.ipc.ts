@@ -2,7 +2,6 @@ import { ipcMain } from 'electron';
 import { ClienteSpotify } from '../logicaNoPersistente/spotify/clienteSpotify';
 import {
   controlSpotifySchema,
-  transferirSpotifySchema,
   uriSpotifySchema,
   usuarioIdSpotifySchema,
 } from '../logicaPersistente/gestionDeSpotify/dto';
@@ -22,12 +21,6 @@ export function registerSpotifyIpc(cliente: ClienteSpotify): void {
   ipcMain.handle('spotify:desvincular', async (_event, datos: unknown) => {
     const { usuarioId } = usuarioIdSpotifySchema.parse(datos);
     await cliente.desvincular(usuarioId);
-  });
-
-  // Token para el Web Playback SDK del renderer.
-  ipcMain.handle('spotify:token', async (_event, datos: unknown) => {
-    const { usuarioId } = usuarioIdSpotifySchema.parse(datos);
-    return cliente.obtenerToken(usuarioId);
   });
 
   ipcMain.handle('spotify:estado', async (_event, datos: unknown) => {
@@ -53,11 +46,6 @@ export function registerSpotifyIpc(cliente: ClienteSpotify): void {
   ipcMain.handle('spotify:anterior', async (_event, datos: unknown) => {
     const { usuarioId, idDispositivo } = controlSpotifySchema.parse(datos);
     await cliente.anterior(usuarioId, idDispositivo);
-  });
-
-  ipcMain.handle('spotify:transferir', async (_event, datos: unknown) => {
-    const { usuarioId, idDispositivo, reproducir } = transferirSpotifySchema.parse(datos);
-    await cliente.transferir(usuarioId, idDispositivo, reproducir);
   });
 
   ipcMain.handle('spotify:estaGuardada', async (_event, datos: unknown) => {

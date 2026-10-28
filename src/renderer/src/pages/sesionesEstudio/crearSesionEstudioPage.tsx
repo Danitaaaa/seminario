@@ -4,10 +4,11 @@ import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
 import { ListaObjetivos } from '../../components/sesionEstudio/listaObjetivos';
-import { ModalRegistrarMateria } from '../../components/sesionEstudio/modalRegistrarMateria';
+import { ModalMaterias } from '../../components/sesionEstudio/modalMaterias';
+import { ModalSuperposicion } from '../../components/sesionEstudio/modalSuperposicion';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
-import type { OpcionesSesionEstudio } from '../../types/sesionesEstudio';
+import type { OpcionesSesionEstudio, SesionEstudio } from '../../types/sesionesEstudio';
 import { aInputFechaHora, desdeInputFechaHora, extraerMensajeError } from './utilidades';
 import '../../styles/sesionesEstudio.css';
 
@@ -38,12 +39,13 @@ function Paso({ etiqueta, valor, min, max, onCambio }: PasoProps) {
   );
 }
 
-// Formulario de creación de sesión: nombre, materia, métodos, Pomodoro, fecha, duración y objetivos.
+// Formulario de creación de sesión: nombre, materia, métodos, Pomodoro, fecha, duración y metas.
 export function CrearSesionEstudioPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
   const navigate = useNavigate();
   const avisos = usarAvisos();
   const [registrandoMateria, setRegistrandoMateria] = useState(false);
+  const [superpuestas, setSuperpuestas] = useState<SesionEstudio[] | null>(null);
   const [opciones, setOpciones] = useState<OpcionesSesionEstudio>({ materias: [], metodosEstudio: [] });
   const [nombre, setNombre] = useState('');
   const [idMateria, setIdMateria] = useState<number | ''>('');
@@ -54,7 +56,7 @@ export function CrearSesionEstudioPage() {
   const [duracion, setDuracion] = useState(60);
   const [fecha, setFecha] = useState(aInputFechaHora(new Date().toISOString()));
   const [recibirNotificacion, setRecibirNotificacion] = useState(false);
-  const [objetivos, setObjetivos] = useState<ObjetivoNuevo[]>([]);
+  const [metas, setObjetivos] = useState<ObjetivoNuevo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -80,6 +82,30 @@ export function CrearSesionEstudioPage() {
     setEnviando(true);
     setError(null);
     try {
+      const cruces = await window.api.buscarSesionesSuperpuestas({
+        usuarioId,
+        fechaProgramada: desdeInputFechaHora(fecha),
+        duracion,
+      });
+      if (cruces.length > 0) {
+        setSuperpuestas(cruces);
+        setEnviando(false);
+        return;
+      }
+    } catch {
+      // Si no se pudo revisar, se crea igual: la advertencia no debe impedir crear la sesión.
+    }
+    await crear();
+  }
+
+  // Crea la sesión; al terminar abre la pantalla de la sesión.
+  async function crear() {
+    if (idMateria === '') return;
+    setSuperpuestas(null);
+
+    setEnviando(true);
+    setError(null);
+    try {
       const creada = await window.api.crearSesionEstudio({
         usuarioId,
         nombre: nombre.trim(),
@@ -91,7 +117,7 @@ export function CrearSesionEstudioPage() {
         descansoLargoMin,
         fechaProgramada: desdeInputFechaHora(fecha),
         recibirNotificacion,
-        objetivos: objetivos.map((o) => o.descripcion),
+        metas: metas.map((o) => o.descripcion),
       });
       avisos.exito(`Se creó correctamente la sesión "${creada.nombre}".`);
       navigate(`/sesiones/${creada.idSesion}`);
@@ -180,9 +206,9 @@ export function CrearSesionEstudioPage() {
         </label>
 
         <div className="sesiones__campo">
-          Objetivos
+          Metas
           <ListaObjetivos
-            objetivos={objetivos.map((o) => ({ clave: o.clave, descripcion: o.descripcion, completado: false }))}
+            metas={metas.map((o) => ({ clave: o.clave, descripcion: o.descripcion, completado: false }))}
             onAgregar={(descripcion) => setObjetivos((a) => [...a, { clave: Date.now() + a.length, descripcion }])}
             onEliminar={(clave) => setObjetivos((a) => a.filter((o) => o.clave !== clave))}
           />
@@ -196,18 +222,25 @@ export function CrearSesionEstudioPage() {
         </div>
       </form>
 
+        {superpuestas && (
+          <ModalSuperposicion
+            superpuestas={superpuestas}
+            textoContinuar="Crear igual"
+            onContinuar={() => void crear()}
+            onCambiar={() => setSuperpuestas(null)}
+          />
+        )}
+
       {registrandoMateria && (
-        <ModalRegistrarMateria
-          onCancelar={() => setRegistrandoMateria(false)}
-          onRegistrada={(materia) => {
-            setRegistrandoMateria(false);
-            setOpciones((o) => ({
-              ...o,
-              materias: [...o.materias, materia].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
-            }));
-            setIdMateria(materia.idMateria);
-            avisos.exito(`Se registró la materia "${materia.nombre}" correctamente.`);
+        <ModalMaterias
+          usuarioId={usuarioId}
+          onCerrar={() => setRegistrandoMateria(false)}
+          onCambio={(materias) => {
+            // El selector muestra los nombres nuevos; si se eliminó la elegida, queda sin elegir.
+            setOpciones((o) => ({ ...o, materias: materias.map(({ idMateria, nombre }) => ({ idMateria, nombre })) }));
+            setIdMateria((actual) => (actual !== '' && materias.some((m) => m.idMateria === actual) ? actual : ''));
           }}
+          onRegistrada={(materia) => setIdMateria(materia.idMateria)}
         />
       )}
     </PlantillaLayout>

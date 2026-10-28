@@ -14,13 +14,6 @@ export const guardarCuentaSpotifySchema = z.object({
 });
 export type GuardarCuentaSpotifyDTO = z.infer<typeof guardarCuentaSpotifySchema>;
 
-// Transferir la reproducción a un dispositivo (el reproductor de la app).
-export const transferirSpotifySchema = z.object({
-  usuarioId: idPositivo,
-  idDispositivo: z.string().min(1).max(100),
-  reproducir: z.boolean().default(true),
-});
-
 // Acciones de reproducción sobre un dispositivo opcional.
 export const controlSpotifySchema = z.object({
   usuarioId: idPositivo,

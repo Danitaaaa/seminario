@@ -6,14 +6,17 @@ import { SesionEstudio } from '../logicaPersistente/gestionDeSesionEstudio/entid
 import {
   actualizarObjetivoSchema,
   agregarObjetivoSchema,
+  buscarSuperpuestasSchema,
   cambiarFasePomodoroSchema,
   crearPestanaSchema,
   crearSesionEstudioSchema,
   guardarContenidoSesionSchema,
+  idMateriaSchema,
   idObjetivoSchema,
   idPestanaSchema,
   idSesionSchema,
   listarSesionesEstudioSchema,
+  modificarMateriaSchema,
   modificarSesionEstudioSchema,
   registrarMateriaSchema,
   renombrarPestanaSchema,
@@ -62,6 +65,11 @@ export function registerSesionesEstudioIpc(
   ipcMain.handle('sesionesEstudio:listar', async (_event, filtros: unknown) => {
     const { usuarioId, datos: validado } = validar(listarSesionesEstudioSchema, filtros);
     return aTransportable(await sesiones.listar(usuarioId, validado));
+  });
+
+  ipcMain.handle('sesionesEstudio:superpuestas', async (_event, datos: unknown) => {
+  const { usuarioId, datos: validado } = validar(buscarSuperpuestasSchema, datos);
+  return aTransportable(await sesiones.buscarSuperpuestas(usuarioId, validado));
   });
 
   ipcMain.handle('sesionesEstudio:abrir', async (_event, datos: unknown) => {
@@ -118,7 +126,7 @@ export function registerSesionesEstudioIpc(
     return aTransportable(await sesiones.guardarContenido(usuarioId, validado));
   });
 
-  // ---- Objetivos ----
+  // ---- Metas ----
 
   ipcMain.handle('sesionesEstudio:objetivoAgregar', async (_event, datos: unknown) => {
     const { usuarioId, datos: validado } = validar(agregarObjetivoSchema, datos);
@@ -152,9 +160,24 @@ export function registerSesionesEstudioIpc(
     return aTransportable(await sesiones.listarOpciones());
   });
 
+  ipcMain.handle('sesionesEstudio:materias', async (_event, datos: unknown) => {
+    const { usuarioId } = usuarioIdSchema.parse(datos);
+    return aTransportable(await sesiones.listarMaterias(usuarioId));
+  });
+
   ipcMain.handle('sesionesEstudio:registrarMateria', async (_event, datos: unknown) => {
     const validado = registrarMateriaSchema.parse(datos);
     return aTransportable(await sesiones.registrarMateria(validado));
+  });
+
+  ipcMain.handle('sesionesEstudio:modificarMateria', async (_event, datos: unknown) => {
+    const { usuarioId, datos: validado } = validar(modificarMateriaSchema, datos);
+    return aTransportable(await sesiones.modificarMateria(usuarioId, validado));
+  });
+
+  ipcMain.handle('sesionesEstudio:eliminarMateria', async (_event, datos: unknown) => {
+    const { idMateria } = idMateriaSchema.parse(datos);
+    await sesiones.eliminarMateria(idMateria);
   });
 
   ipcMain.handle('sesionesEstudio:resumen', async (_event, datos: unknown) => {

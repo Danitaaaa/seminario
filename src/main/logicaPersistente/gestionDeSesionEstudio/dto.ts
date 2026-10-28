@@ -16,7 +16,7 @@ export const crearSesionEstudioSchema = z.object({
   descansoLargoMin: z.number().int().min(1).max(120).default(15),
   fechaProgramada: z.coerce.date(),
   recibirNotificacion: z.boolean().default(false),
-  objetivos: z.array(z.string().trim().min(1).max(300)).max(50).default([]),
+  metas: z.array(z.string().trim().min(1).max(300)).max(50).default([]),
 });
 export type CrearSesionEstudioDTO = z.infer<typeof crearSesionEstudioSchema>;
 
@@ -25,6 +25,7 @@ export type CrearSesionEstudioDTO = z.infer<typeof crearSesionEstudioSchema>;
 export const modificarSesionEstudioSchema = z.object({
   idSesion: idPositivo,
   nombre: z.string().trim().min(1).max(100).optional(),
+  idMateria: idPositivo.optional(),
   duracion: z.number().int().min(1).max(720).optional(),
   fechaProgramada: z.coerce.date().optional(),
   recibirNotificacion: z.boolean().optional(),
@@ -47,14 +48,14 @@ export const listarSesionesEstudioSchema = z
   .default({});
 export type ListarSesionesEstudioDTO = z.infer<typeof listarSesionesEstudioSchema>;
 
-// Esquema para agregar un objetivo a una sesión.
+// Esquema para agregar un meta a una sesión.
 export const agregarObjetivoSchema = z.object({
   idSesion: idPositivo,
   descripcion: z.string().trim().min(1).max(300),
 });
 export type AgregarObjetivoDTO = z.infer<typeof agregarObjetivoSchema>;
 
-// Esquema para editar o tildar un objetivo.
+// Esquema para editar o tildar un meta.
 export const actualizarObjetivoSchema = z.object({
   idObjetivo: idPositivo,
   descripcion: z.string().trim().min(1).max(300).optional(),
@@ -62,7 +63,7 @@ export const actualizarObjetivoSchema = z.object({
 });
 export type ActualizarObjetivoDTO = z.infer<typeof actualizarObjetivoSchema>;
 
-// Esquema para eliminar un objetivo.
+// Esquema para eliminar un meta.
 export const idObjetivoSchema = z.object({ idObjetivo: idPositivo });
 export type IdObjetivoDTO = z.infer<typeof idObjetivoSchema>;
 
@@ -99,11 +100,29 @@ export const cambiarFasePomodoroSchema = z.object({
 });
 export type CambiarFasePomodoroDTO = z.infer<typeof cambiarFasePomodoroSchema>;
 
+// Esquema para buscar sesiones que se cruzan con un horario (advertencia al crear o reprogramar).
+export const buscarSuperpuestasSchema = z.object({
+  fechaProgramada: z.coerce.date(),
+  duracion: z.number().int().min(1).max(720),
+  excluirIdSesion: idPositivo.optional(),
+});
+export type BuscarSuperpuestasDTO = z.infer<typeof buscarSuperpuestasSchema>;
+
 // Esquema para registrar una materia desde la pestaña de sesiones.
 export const registrarMateriaSchema = z.object({
   nombre: z.string().trim().min(1, 'Escribí el nombre de la materia.').max(100),
 });
 export type RegistrarMateriaDTO = z.infer<typeof registrarMateriaSchema>;
+
+// Esquema para cambiar el nombre de una materia.
+export const modificarMateriaSchema = z.object({
+  idMateria: idPositivo,
+  nombre: z.string().trim().min(1, 'Escribí el nombre de la materia.').max(100),
+});
+export type ModificarMateriaDTO = z.infer<typeof modificarMateriaSchema>;
+
+// Esquema para eliminar una materia.
+export const idMateriaSchema = z.object({ idMateria: idPositivo });
 
 // Esquema para el resumen (bienvenida y próxima sesión). Se puede excluir la sesión abierta.
 export const resumenSesionesSchema = z.object({

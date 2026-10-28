@@ -5,7 +5,7 @@ import { SELECT_SESION_ESTUDIO } from './consultas';
 import { materializarSesionEstudio } from './materializador';
 import { DocumentoSesionEstudio } from '../../logicaNoPersistente/procesoSesionEstudio/documentoSesionEstudio';
 
-// Crea una sesión de estudio (CU11) junto con sus métodos, objetivos y su primera pestaña
+// Crea una sesión de estudio (CU11) junto con sus métodos, metas y su primera pestaña
 // en una sola sentencia atómica. La sesión nace "sin_empezar" y se le genera su documento Word en Material.
 export class CrearSesionEstudio {
   constructor(
@@ -27,7 +27,7 @@ export class CrearSesionEstudio {
        ), metodos AS (
          INSERT INTO sesion_estudio_metodo_estudio (id_sesion_estudio, id_tipo_metodo_estudio)
          SELECT nueva.id_sesion_estudio, m FROM nueva, unnest($10::int[]) AS m
-       ), objetivos AS (
+       ), metas AS (
          INSERT INTO objetivo_sesion (id_sesion_estudio, descripcion, orden)
          SELECT nueva.id_sesion_estudio, o.descripcion, (o.orden - 1)::int
            FROM nueva, unnest($11::text[]) WITH ORDINALITY AS o(descripcion, orden)
@@ -47,7 +47,7 @@ export class CrearSesionEstudio {
         datos.descansoLargoMin,
         datos.recibirNotificacion,
         idsMetodos,
-        datos.objetivos,
+        datos.metas,
       ]
     );
 
