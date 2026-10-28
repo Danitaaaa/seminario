@@ -258,6 +258,8 @@ function mostrarEnSistema(notificacion: Notificacion): void {
 
 // Se guarda para poder liberar los bloqueos de edición al cerrar la app.
 let edicion: Edicion | null = null;
+// Se guarda para frenar el barrido de la sincronización antes de cerrar la base al salir.
+let detenerSincronizacion: (() => Promise<void>) | null = null;
 let cerrando = false;
 
 // Raíz global bajo la que cuelgan los proyectos (según el comentario de DepsSincronizacion: hoy 2).
@@ -510,6 +512,7 @@ function wireDependencies(): ProcesoSesionEstudio {
 
   // Gestion de edicion y conflictos
   edicion = new Edicion(sync.edicion, sync.coordinador, sync.unirseAProyecto);
+  detenerSincronizacion = () => sync.coordinador.detener();
   registerEdicionIpc(edicion);
 
   // Gestion de tareas
@@ -701,6 +704,12 @@ app.on('before-quit', (event) => {
   cerrando = true;
 
   void (async () => {
+    // Primero se frena el barrido de la sincronización: si no, sigue consultando la base ya cerrada.
+    try {
+      await detenerSincronizacion?.();
+    } catch (err) {
+      console.error('[shutdown] No se pudo frenar la sincronización:', err);
+    }
     try {
       await edicion?.cerrarTodas();
     } catch (err) {
