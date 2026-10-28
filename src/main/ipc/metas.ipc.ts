@@ -1,31 +1,26 @@
 import { ipcMain } from 'electron';
-import type { ZodType } from 'zod';
+import { ZodError } from 'zod';
 import { Metas } from '../administracionDePersistencia/metas';
-import {
-  crearMetaSchema,
-  listarMetasSchema,
-  completarMetaSchema,
-  eliminarMetaSchema,
-} from '../logicaPersistente/gestionDeMetas/dto';
 
-// Valida con Zod y, si falla, devuelve el primer mensaje legible (ej. "Escribí la meta.").
-function validar<T>(schema: ZodType<T>, datos: unknown): T {
-  const resultado = schema.safeParse(datos);
-  if (!resultado.success) throw new Error(resultado.error.issues[0]?.message ?? 'Datos inválidos.');
-  return resultado.data;
+// Los casos de uso validan con Zod: acá se deja solo el primer mensaje legible (ej. "Escribí la meta.").
+async function conMensaje<T>(accion: () => Promise<T>): Promise<T> {
+    try {
+        return await accion();
+    } catch (error) {
+        if (error instanceof ZodError) throw new Error(error.issues[0]?.message ?? 'Datos inválidos.');
+        throw error;
+    }
 }
 
 export function registerMetasIpc(metas: Metas): void {
-  ipcMain.handle('metas:listar', async (_e, datos: unknown) =>
-    metas.listar(validar(listarMetasSchema, datos))
-  );
-  ipcMain.handle('metas:crear', async (_e, datos: unknown) =>
-    metas.crear(validar(crearMetaSchema, datos))
-  );
-  ipcMain.handle('metas:completar', async (_e, datos: unknown) =>
-    metas.completar(validar(completarMetaSchema, datos))
-  );
-  ipcMain.handle('metas:eliminar', async (_e, datos: unknown) => {
-    await metas.eliminar(validar(eliminarMetaSchema, datos));
-  });
+    ipcMain.handle('metas:listar', (_e, datos: unknown) => conMensaje(() => metas.listar(datos as any)));
+    ipcMain.handle('metas:crear', (_e, datos: unknown) => conMensaje(() => metas.crear(datos as any)));
+    ipcMain.handle('metas:modificar', (_e, datos: unknown) => conMensaje(() => metas.modificar(datos as any)));
+    ipcMain.handle('metas:alternar', (_e, datos: unknown) => conMensaje(() => metas.alternar(datos as any)));
+    ipcMain.handle('metas:eliminar', (_e, datos: unknown) => conMensaje(async () => {
+        await metas.eliminar(datos as any);
+        return { ok: true };
+    }));
+    ipcMain.handle('metas:copiar', (_e, datos: unknown) => conMensaje(() => metas.copiar(datos as any)));
+    ipcMain.handle('metas:estadisticas', (_e, datos: unknown) => conMensaje(() => metas.estadisticas(datos as any)));
 }

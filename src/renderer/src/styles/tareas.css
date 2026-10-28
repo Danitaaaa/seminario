@@ -1,0 +1,655 @@
+/* División de tareas — tablero por integrante */
+
+.tareas-pagina {
+  --tareas-borde: #e2e1dc;
+  --tareas-superficie: #ffffff;
+  --tareas-columna: #f4f3ef;
+  --tareas-ambar: #e0a530;
+  --tareas-ambar-fondo: #fffaee;
+  --tareas-chip: #eef0f7;
+  --tareas-chip-texto: #495b7d;
+  --tareas-suave: #5c5c58;
+  --tareas-soltar: #c4cbda;
+  --tareas-soltar-fondo: #e6eaf5;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #1e1e1e;
+}
+
+/* ---------- Ruta ---------- */
+
+.tareas-ruta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--tareas-chip-texto);
+}
+
+.tareas-ruta button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tareas-ruta button:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* ---------- Botones ---------- */
+
+.tareas-boton {
+  padding: 9px 18px;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 999px;
+  background: var(--tareas-superficie);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tareas-boton:hover:not(:disabled) {
+  background: var(--tareas-soltar-fondo);
+}
+
+.tareas-boton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tareas-boton--primario {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.tareas-boton--primario:hover:not(:disabled) {
+  background: #1f2b4f;
+}
+
+.tareas-boton--peligro {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.tareas-boton--peligro:hover:not(:disabled) {
+  background: var(--color-error-bg);
+}
+
+.tareas-boton:focus-visible,
+.tareas-filtro:focus-visible,
+.tarea-tarjeta__titulo:focus-visible,
+.tarea-columna__hechas button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Resumen ---------- */
+
+.tareas-resumen {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 1fr) auto;
+  align-items: center;
+  gap: 28px;
+  padding: 20px 24px;
+  border: 1px solid var(--tareas-borde);
+  border-radius: 16px;
+  background: var(--tareas-superficie);
+}
+
+.tareas-resumen__cifra p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.tareas-resumen__cifra strong {
+  font-family: var(--font-display, 'Fraunces', serif);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.tareas-resumen__cifra span {
+  font-size: 0.8rem;
+  color: var(--tareas-chip-texto);
+}
+
+.tareas-resumen__barra-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tareas-resumen__barra {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8eaf0;
+}
+
+.tareas-resumen__segmento {
+  height: 100%;
+  transition: width 0.25s ease;
+}
+
+.tareas-resumen__leyenda {
+  font-size: 0.8rem;
+  color: var(--tareas-chip-texto);
+}
+
+.tareas-resumen__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ---------- Filtros ---------- */
+
+.tareas-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tareas-filtro {
+  padding: 7px 16px;
+  border: 1px solid var(--tareas-borde);
+  border-radius: 999px;
+  background: var(--tareas-superficie);
+  color: #1e1e1e;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.tareas-filtro:hover {
+  border-color: var(--color-primary);
+}
+
+.tareas-filtro--activo {
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* ---------- Tablero y columnas ---------- */
+
+.tareas-tablero {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  align-items: start;
+  gap: 20px;
+}
+
+.tarea-columna {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--tareas-columna);
+}
+
+.tarea-columna--sin-asignar {
+  border: 2px dashed var(--tareas-ambar);
+  background: var(--tareas-ambar-fondo);
+}
+
+.tarea-columna__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tarea-columna__cabecera--vertical {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.tarea-columna__titulo-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tarea-columna__ayuda {
+  font-size: 0.8rem;
+  color: var(--tareas-suave);
+}
+
+.tarea-insignia {
+  min-width: 24px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #fbe38a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.tarea-avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.tarea-columna__quien {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tarea-columna__quien strong {
+  overflow: hidden;
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tarea-columna__quien span {
+  font-size: 0.75rem;
+  color: var(--tareas-suave);
+}
+
+.tarea-columna__cuenta {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.tarea-progreso {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e3e5ec;
+}
+
+.tarea-progreso__relleno {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.tarea-columna__vacia {
+  margin: 4px 0;
+  font-size: 0.8rem;
+  color: var(--tareas-suave);
+  text-align: center;
+}
+
+.tarea-columna__hechas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--tareas-borde);
+  font-size: 0.8rem;
+  color: var(--tareas-suave);
+}
+
+.tarea-columna__hechas button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tareas-chip-texto);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tarea-columna__hechas button:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* ---------- Zona para soltar ---------- */
+
+.tarea-zona-soltar {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  padding: 10px;
+  border: 2px dashed var(--tareas-soltar);
+  border-radius: 12px;
+  color: var(--tareas-suave);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.tarea-zona-soltar--activa {
+  border-color: var(--color-primary);
+  background: var(--tareas-soltar-fondo);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* ---------- Tarjeta ---------- */
+
+.tarea-tarjeta {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--tareas-borde);
+  border-radius: 12px;
+  background: var(--tareas-superficie);
+}
+
+.tarea-tarjeta[draggable='true'] {
+  cursor: grab;
+}
+
+.tarea-tarjeta[draggable='true']:active {
+  cursor: grabbing;
+}
+
+.tarea-tarjeta__agarre {
+  align-self: center;
+  color: #b4bac8;
+  font-size: 0.8rem;
+  letter-spacing: -2px;
+  user-select: none;
+}
+
+.tarea-tarjeta__check {
+  flex-shrink: 0;
+  appearance: none;
+  display: grid;
+  place-content: center;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  border: 1.5px solid #8ba3c5;
+  border-radius: 5px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.tarea-tarjeta__check::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  clip-path: polygon(14% 44%, 0 62%, 40% 100%, 100% 20%, 84% 6%, 40% 66%);
+  transform: scale(0);
+  transition: transform 0.12s ease;
+}
+
+.tarea-tarjeta__check:checked {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.tarea-tarjeta__check:checked::before {
+  transform: scale(1);
+}
+
+.tarea-tarjeta__check:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.tarea-tarjeta__check:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.tarea-tarjeta__cuerpo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tarea-tarjeta__titulo {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #1e1e1e;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+button.tarea-tarjeta__titulo {
+  cursor: pointer;
+}
+
+button.tarea-tarjeta__titulo:hover {
+  color: var(--color-primary);
+}
+
+.tarea-tarjeta__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--tareas-suave);
+}
+
+.tarea-tarjeta__fecha--vencida {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+.tarea-chip {
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: var(--tareas-chip);
+  color: var(--tareas-chip-texto);
+  font-size: 0.72rem;
+}
+
+.tarea-tarjeta--hecha .tarea-tarjeta__titulo {
+  color: #3b4660;
+  text-decoration: line-through;
+}
+
+/* Selector para asignar sin arrastrar (teclado y pantallas táctiles) */
+.tarea-tarjeta__mover {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  max-width: 110px;
+  padding: 2px 4px;
+  border: 1px solid var(--tareas-borde);
+  border-radius: 6px;
+  background: var(--tareas-superficie);
+  color: var(--tareas-chip-texto);
+  font: inherit;
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.tarea-tarjeta:hover .tarea-tarjeta__mover,
+.tarea-tarjeta:focus-within .tarea-tarjeta__mover {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .tarea-tarjeta__mover {
+    position: static;
+    align-self: center;
+    opacity: 1;
+  }
+}
+
+/* Lugar que deja la tarjeta mientras se arrastra */
+.tarea-tarjeta--fantasma {
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  border: 2px dashed var(--tareas-ambar);
+  background: var(--tareas-ambar-fondo);
+}
+
+.tarea-tarjeta--fantasma > * {
+  visibility: hidden;
+}
+
+.tarea-tarjeta--fantasma::after {
+  content: attr(data-titulo) ' (moviéndose…)';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  color: var(--tareas-suave);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+/* Copia que acompaña al cursor (se crea fuera de pantalla para setDragImage) */
+.tarea-tarjeta--en-vuelo {
+  position: fixed;
+  top: -1000px;
+  left: -1000px;
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 12px 28px rgba(43, 58, 103, 0.28);
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+.tarea-tarjeta--en-vuelo .tarea-tarjeta__mover {
+  display: none;
+}
+
+/* ---------- Modal ---------- */
+
+.tarea-modal-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(30, 30, 30, 0.4);
+}
+
+.tarea-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(480px, 100%);
+  max-height: 100%;
+  padding: 24px;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
+}
+
+.tarea-modal h2 {
+  margin: 0;
+  font-family: var(--font-display, 'Fraunces', serif);
+  font-size: 1.3rem;
+}
+
+.tarea-modal__fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tarea-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tareas-suave);
+}
+
+.tarea-campo input,
+.tarea-campo textarea,
+.tarea-campo select {
+  padding: 9px 11px;
+  border: 1px solid #c9ccd6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1e1e1e;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.tarea-campo textarea {
+  resize: vertical;
+}
+
+.tarea-campo input:focus-visible,
+.tarea-campo textarea:focus-visible,
+.tarea-campo select:focus-visible {
+  border-color: var(--color-primary);
+  outline: 2px solid rgba(43, 58, 103, 0.25);
+}
+
+.tarea-campo input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.tarea-campo__error {
+  color: var(--color-error-texto);
+  font-weight: 400;
+}
+
+.tarea-modal__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.tarea-modal__espacio {
+  flex: 1;
+}
+
+.tarea-tarjeta__acciones { display: flex; gap: 4px; align-items: center; }
+.tarea-tarjeta__accion {
+  display: inline-flex; padding: 4px; border: 0; border-radius: 6px;
+  background: transparent; color: inherit; opacity: .6; cursor: pointer;
+}
+.tarea-tarjeta__accion:hover { opacity: 1; background: rgba(0, 0, 0, .06); }
+.tarea-tarjeta__accion--peligro:hover { color: #b3261e; }
+
+/* ---------- Pantallas chicas ---------- */
+
+@media (max-width: 900px) {
+  .tareas-resumen {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 720px) {
+  .tareas-tablero {
+    grid-template-columns: 1fr;
+  }
+
+  .tarea-modal__fila {
+    grid-template-columns: 1fr;
+  }
+}

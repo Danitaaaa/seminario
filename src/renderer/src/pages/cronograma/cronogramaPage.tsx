@@ -50,15 +50,21 @@ export function CronogramaPage() {
     Promise.all([
       window.api.listarHorarios({ usuarioId }),
       window.api.listarEventos({ usuarioId }),
-      window.api.listarMetas({ usuarioId }),
     ])
-      .then(([h, e, m]) => {
+      .then(([h, e]) => {
         setHorarios(h);
         setEventos(e);
-        setMetas(m);
       })
       .catch((e) => setError(mensajeDe(e)));
   }, []);
+
+  // Las metas personales se piden por semana: las que vencen entre el lunes y el domingo que se ven.
+  useEffect(() => {
+    if (!usuarioId) return;
+    window.api.listarMetas({ idUsuario: usuarioId, desde: fechaISO(inicio), hasta: fechaISO(sumarDias(inicio, 6)) })
+      .then(setMetas)
+      .catch((e) => setError(mensajeDe(e)));
+  }, [inicio]);
 
   // La línea de "ahora" se mueve sola.
   useEffect(() => {
@@ -171,7 +177,7 @@ export function CronogramaPage() {
                         </button>
                       ))}
                       {dia.metas.map((meta) => (
-                        <span key={`m${meta.id}`} className={`cronograma__chip cronograma__chip--meta${meta.completada ? " cronograma__chip--hecha" : ""}`}>
+                        <span key={`m${meta.idMeta}`} className={`cronograma__chip cronograma__chip--meta${meta.completada ? " cronograma__chip--hecha" : ""}`}>
                           {meta.titulo}
                         </span>
                       ))}

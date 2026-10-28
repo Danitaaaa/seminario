@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Check, Plus, X } from "lucide-react";
 import { obtenerUsuarioId } from "../../../lib/sesion";
-import { EVENTO_METAS_ACTUALIZADAS, type Meta } from "../../types/metas";
+import { EVENTO_METAS_ACTUALIZADAS, mesDe, type Meta } from "../../types/metas";
 import { usarPreferenciaMetas } from "../../hooks/usarPreferenciaMetas";
 import "../../styles/metas.css";
 
@@ -35,7 +35,8 @@ function etiquetaFecha(meta: Meta): { texto: string; alerta: boolean } | null {
   return { texto: `${dia} ${MESES[mes - 1]}`, alerta: false };
 }
 
-// "Mis metas" del dashboard, en el estilo que el usuario eligió en Ajustes.
+// "Mis metas" del dashboard: las metas personales del mes, en el estilo que el usuario eligió en Ajustes.
+// Son las mismas metas que usan los proyectos, pero sin proyecto.
 export function MetasDashboard() {
   const usuarioId = obtenerUsuarioId();
   const { visible, estilo, mostrar } = usarPreferenciaMetas();
@@ -46,7 +47,7 @@ export function MetasDashboard() {
 
   useEffect(() => {
     if (!usuarioId || !visible) return;
-    window.api.listarMetas({ usuarioId })
+    window.api.listarMetas({ idUsuario: usuarioId, mes: mesDe(new Date()) })
       .then(setMetas)
       .catch((e) => setError(mensajeDe(e)));
   }, [usuarioId, visible]);
@@ -65,8 +66,9 @@ export function MetasDashboard() {
     if (!titulo.trim()) return;
     try {
       const nueva = await window.api.crearMeta({
-        usuarioId,
+        idUsuario: usuarioId,
         titulo,
+        mes: mesDe(new Date()),
         fechaLimite: conFechas && fecha ? fecha : null,
       });
       setMetas((actuales) => [...actuales, nueva]);
@@ -81,8 +83,8 @@ export function MetasDashboard() {
 
   const alternar = async (meta: Meta) => {
     try {
-      const actualizada = await window.api.completarMeta({ id: meta.id, usuarioId, completada: !meta.completada });
-      setMetas((actuales) => actuales.map((m) => (m.id === meta.id ? actualizada : m)));
+      const actualizada = await window.api.alternarMeta({ idMeta: meta.idMeta, idUsuario: usuarioId, completada: !meta.completada });
+      setMetas((actuales) => actuales.map((m) => (m.idMeta === meta.idMeta ? actualizada : m)));
       avisarCambio();
     } catch (err) {
       setError(mensajeDe(err));
@@ -91,8 +93,8 @@ export function MetasDashboard() {
 
   const eliminar = async (meta: Meta) => {
     try {
-      await window.api.eliminarMeta({ id: meta.id, usuarioId });
-      setMetas((actuales) => actuales.filter((m) => m.id !== meta.id));
+      await window.api.eliminarMeta({ idMeta: meta.idMeta, idUsuario: usuarioId });
+      setMetas((actuales) => actuales.filter((m) => m.idMeta !== meta.idMeta));
       avisarCambio();
     } catch (err) {
       setError(mensajeDe(err));
@@ -126,7 +128,7 @@ export function MetasDashboard() {
         {metas.map((meta) => {
           const etiqueta = conFechas ? etiquetaFecha(meta) : null;
           return (
-            <li key={meta.id} className={`metas__item${meta.completada ? " metas__item--hecha" : ""}`}>
+            <li key={meta.idMeta} className={`metas__item${meta.completada ? " metas__item--hecha" : ""}`}>
               <button
                 type="button"
                 className="metas__alternar"
@@ -166,7 +168,7 @@ export function MetasDashboard() {
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           placeholder={completa ? "Nueva meta…" : estilo === "minimalista" ? "+ Escribí una meta…" : "Escribí una meta…"}
-          maxLength={120}
+          maxLength={200}
           aria-label="Nueva meta"
         />
         {completa && (

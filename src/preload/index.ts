@@ -12,6 +12,9 @@ import { inicioApi } from './apis/inicio';
 import { flashcardsApi } from './apis/flashcards';
 import { repeticionEspaciadaApi } from './apis/repeticionEspaciada';
 import { notificacionesApi } from './apis/notificaciones';
+import { proyectosApi } from './apis/proyectos';
+import { tareasApi } from './apis/tareas';
+import { edicionApi } from './apis/edicion';
 
 contextBridge.exposeInMainWorld('api', {
   ...nodosApi,
@@ -27,4 +30,7 @@ contextBridge.exposeInMainWorld('api', {
   ...flashcardsApi,
   ...repeticionEspaciadaApi,
   ...notificacionesApi,
+  ...proyectosApi,
+  ...tareasApi,
+  ...edicionApi,
 });

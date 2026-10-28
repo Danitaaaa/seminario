@@ -1,17 +1,34 @@
-import { Persistencia } from '../../persistencia/persistencia';
+import { CrearMetaDTOSchema, CrearMetaDTO } from './dto';
 import { Meta } from './entidades';
-import { materializarMeta } from './materializador';
-import { CrearMetaDTO } from './dto';
+import { COLUMNAS_META, materializarMeta, mesAFecha } from './materializador';
+import { IPersistenciaProyectos } from '../gestionDeProyectos/interfacesSincronizacion';
+import { exigirAcceso, registrarCambioSiProyecto } from '../gestionDeProyectos/alcance';
 
-// Crea una meta nueva sin completar
 export class CrearMeta {
-  constructor(private readonly persistencia: Persistencia) {}
+    constructor(private persistencia: IPersistenciaProyectos) {}
 
-  async ejecutar(datos: CrearMetaDTO): Promise<Meta> {
-    const filas = await this.persistencia.ejecutar(
-      `INSERT INTO metas (usuario_id, titulo, fecha_limite) VALUES ($1, $2, $3) RETURNING *`,
-      [datos.usuarioId, datos.titulo, datos.fechaLimite]
-    );
-    return materializarMeta(filas[0]);
-  }
+    // Crea una meta personal (sin idProyecto) o de un proyecto.
+    async ejecutar(entrada: CrearMetaDTO): Promise<Meta> {
+        const dto = CrearMetaDTOSchema.parse(entrada);
+        const idProyecto = dto.idProyecto ?? null;
+        await exigirAcceso(this.persistencia, idProyecto, dto.idUsuario, dto.idUsuario, ['propietario', 'editor']);
+
+        return this.persistencia.transaccion(async tx => {
+            const filas = await tx.ejecutar(
+                `INSERT INTO metas (id_proyecto, titulo, descripcion, mes, orden, creada_por, fecha_limite)
+                 VALUES ($1::int, $2, $3, $4::date,
+                         (SELECT COALESCE(MAX(m.orden), 0) + 1 FROM metas m
+                           WHERE m.id_proyecto IS NOT DISTINCT FROM $1::int
+                             AND m.mes = $4::date
+                             AND ($1::int IS NOT NULL OR m.creada_por = $5::int)),
+                         $5::int, $6::date)
+                 RETURNING ${COLUMNAS_META}`,
+                [idProyecto, dto.titulo, dto.descripcion ?? null, mesAFecha(dto.mes), dto.idUsuario, dto.fechaLimite ?? null],
+            );
+            const meta = materializarMeta(filas[0]);
+            await registrarCambioSiProyecto(tx, meta.idProyecto, 'meta', meta.idMeta, 'crear',
+                { titulo: meta.titulo, mes: meta.mes });
+            return meta;
+        });
+    }
 }

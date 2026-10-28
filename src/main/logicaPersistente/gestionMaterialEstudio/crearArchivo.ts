@@ -3,6 +3,7 @@ import { Almacenamiento } from '../../persistencia/almacenamiento';
 import { Archivo } from './entidades';
 import { materializarArchivo } from './materializador';
 import { CrearArchivoDTO } from './dto';
+import { registrarCambioContenido } from '../gestionDeProyectos/alcanceContenido';
 
 const MAX_INTENTOS = 100;
 const UNIQUE_VIOLATION = '23505';
@@ -24,9 +25,10 @@ export class CrearArchivo {
 
     const { rutaFisica, tamanio } = await this.almacenamiento.guardar(datos.rutaFisica, datos.extension);
 
+    let fila: any;
     try {
       // Si el nombre está ocupado en la carpeta, se agrega un número: "nombre (1)"
-      for (let intento = 0; intento < MAX_INTENTOS; intento++) {
+      for (let intento = 0; intento < MAX_INTENTOS && !fila; intento++) {
         const nombre = intento === 0 ? datos.nombre : `${datos.nombre} (${intento})`;
         try {
           const filas = await this.persistencia.ejecutar(
@@ -34,16 +36,22 @@ export class CrearArchivo {
              VALUES ($1, $2, $3, $4, $5) RETURNING *`,
             [nombre, datos.extension, rutaFisica, tamanio, datos.idPadre]
           );
-          return materializarArchivo(filas[0]);
+          fila = filas[0];
         } catch (error: any) {
           if (error.code !== UNIQUE_VIOLATION) throw error;
         }
       }
-      throw new Error('No se pudo generar un nombre único para el archivo');
+      if (!fila) throw new Error('No se pudo generar un nombre único para el archivo');
     } catch (error) {
       // No dejar el archivo físico huérfano si no se pudo registrar
       await this.almacenamiento.eliminar(rutaFisica);
       throw error;
     }
+
+    // Fuera del try: si falla el encolado, el registro ya existe y no hay que borrar el archivo físico.
+    // No va en transacción: un 23505 dentro de una transacción la aborta y rompería el loop de nombres.
+    await registrarCambioContenido(this.persistencia, 'archivo', fila.id_archivo, 'crear',
+      fila.id_global, fila.id_padre, { nombre: fila.nombre, extension: fila.extension });
+    return materializarArchivo(fila);
   }
 }

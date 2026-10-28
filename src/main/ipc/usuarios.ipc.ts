@@ -20,6 +20,11 @@ import type { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios
 import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/loginFacial";
 import { RegistrarRostro } from "../logicaPersistente/gestionDeUsuarios/registrarRostro";
 
+export interface HooksSesion {
+    alIniciarSesion: (idUsuario: number, password: string | null) => void;
+    alCerrarSesion: () => Promise<void>;
+}
+
 function validarDatos<T extends z.ZodType>(schema: T, datos: unknown): z.output<T> {
     const resultado = schema.safeParse(datos);
     if (!resultado.success) {
@@ -28,11 +33,17 @@ function validarDatos<T extends z.ZodType>(schema: T, datos: unknown): z.output<
     return resultado.data;
 }
 
-export function registerUsuariosIpc(usuarios: Usuarios): void {
+// Los hooks arrancan y detienen la sincronización de proyectos al entrar y salir.
+export function registerUsuariosIpc(usuarios: Usuarios, hooks: HooksSesion): void {
 
-    ipcMain.handle("usuarios:iniciarSesion", async (_event, datos: unknown) =>
-        usuarios.iniciarSesion(validarDatos(iniciarSesionSchema, datos))
-    );
+    ipcMain.handle("usuarios:iniciarSesion", async (_event, datos: unknown) => {
+        const validado = validarDatos(iniciarSesionSchema, datos);
+        const usuario = await usuarios.iniciarSesion(validado);
+        hooks.alIniciarSesion(usuario.id, validado.password);
+        return usuario;
+    });
+
+    ipcMain.handle("usuarios:cerrarSesion", () => hooks.alCerrarSesion());
 
     ipcMain.handle("usuarios:registrarUsuario", async (_event, datos: unknown) => {
         const validado = validarDatos(registrarUsuarioSchema, datos) as RegistrarUsuarioDto;
@@ -61,9 +72,12 @@ export function registerUsuariosIpc(usuarios: Usuarios): void {
         new RegistrarRostro().ejecutar(usuarioId, embedding)
     );
 
-    ipcMain.handle("usuarios:loginFacial", (_evento, embedding: number[]) =>
-        new LoginFacial().ejecutar(embedding)
-    );
+    ipcMain.handle("usuarios:loginFacial", async (_evento, embedding: number[]) => {
+        const r = await new LoginFacial().ejecutar(embedding);
+        // Sin contraseña: la sincronización solo funciona si esta PC ya tiene la clave guardada.
+        if (r.exito) hooks.alIniciarSesion(r.usuarioId, null);
+        return r;
+    });
 
     // Gestion de perfil
     ipcMain.handle("usuarios:obtenerPerfil", async (_event, datos: unknown) =>

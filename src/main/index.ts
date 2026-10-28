@@ -5,7 +5,19 @@ import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
 
 import { pool, verifyDbConnection } from './persistencia/baseDeDatos';
-import { Persistencia } from './persistencia/Persistencia';
+import { Persistencia } from './persistencia/persistencia';
+
+// ---------------------------------------------------------------------------
+// userData por instancia: DEBE hacerse antes de cualquier otra cosa que use
+// app.getPath('userData') (id-cliente-sync.txt, sync-secretos.json, etc.).
+// ---------------------------------------------------------------------------
+const dirDatos = process.env.ELECTRON_USER_DATA_DIR;
+if (dirDatos) {
+  app.setPath('userData', resolve(dirDatos));
+} else if (process.env.INSTANCIA) {
+  app.setPath('userData', join(app.getPath('appData'), `${app.getName()}-${process.env.INSTANCIA}`));
+}
+console.log('[startup] userData =', app.getPath('userData'));
 
 // Gestion de material de estudio
 import { CrearNodo } from './logicaPersistente/gestionMaterialEstudio/crearNodo';
@@ -79,14 +91,6 @@ import { registerEnlacesIpc } from './ipc/enlaces.ipc';
 import { VerificarPassword } from './logicaPersistente/gestionDeUsuarios/verificarPassword';
 import { ActualizarRostro } from './logicaPersistente/gestionDeUsuarios/actualizarRostro';
 
-// Gestion de metas
-import { CrearMeta } from './logicaPersistente/gestionDeMetas/crearMeta';
-import { ListarMetas } from './logicaPersistente/gestionDeMetas/listarMetas';
-import { CompletarMeta } from './logicaPersistente/gestionDeMetas/completarMeta';
-import { EliminarMeta } from './logicaPersistente/gestionDeMetas/eliminarMeta';
-import { Metas } from './administracionDePersistencia/metas';
-import { registerMetasIpc } from './ipc/metas.ipc';
-
 // Pantalla de inicio
 import { ObtenerFondoInicio, ActualizarFondoInicio } from './logicaPersistente/gestionDeInicio/fondoInicio';
 import { Inicio } from './administracionDePersistencia/inicio';
@@ -119,6 +123,62 @@ import { Notificador } from './logicaNoPersistente/notificaciones/notificador';
 import { VigiaNotificaciones } from './logicaNoPersistente/notificaciones/vigiaNotificaciones';
 import { registerNotificacionesIpc } from './ipc/notificaciones.ipc';
 
+// Gestion de proyectos
+import { CrearProyecto } from './logicaPersistente/gestionDeProyectos/crearProyecto';
+import { ModificarProyecto } from './logicaPersistente/gestionDeProyectos/modificarProyecto';
+import { EliminarProyecto } from './logicaPersistente/gestionDeProyectos/eliminarProyecto';
+import { ObtenerProyecto } from './logicaPersistente/gestionDeProyectos/obtenerProyecto';
+import { ListarProyectos } from './logicaPersistente/gestionDeProyectos/listarProyectos';
+import { ListarMiembros } from './logicaPersistente/gestionDeProyectos/listarMiembros';
+import { AgregarMiembroPorMail } from './logicaPersistente/gestionDeProyectos/agregarMiembroPorMail';
+import { AgregarMiembro } from './logicaPersistente/gestionDeProyectos/agregarMiembro';
+import { CambiarRolMiembro } from './logicaPersistente/gestionDeProyectos/cambiarRolMiembro';
+import { Proyectos } from './administracionDePersistencia/proyectos';
+import { registrarProyectosIpc } from './ipc/proyectos.ipc';
+import { ListarInvitaciones } from './logicaPersistente/gestionDeProyectos/listarInvitaciones';
+import { CancelarInvitacion } from './logicaPersistente/gestionDeProyectos/cancelarInvitacion';
+// Gestion de edicion compartida y sincronizacion
+import {
+  componerSincronizacion,
+  crearProveedorIdentidad,
+} from './logicaPersistente/gestionDeProyectos/componerSincronizacion';
+import type { RegistroManejadores } from './logicaPersistente/gestionDeProyectos/edicionCompartida';
+import {
+  ManejadorEvento,
+  ManejadorMeta,
+  ManejadorTarea,
+} from './logicaPersistente/gestionDeProyectos/manejadoresEntidades';
+import { ManejadorNodo, ManejadorArchivo } from './logicaPersistente/gestionDeProyectos/manejadoresContenido';
+import { Edicion } from './administracionDePersistencia/edicion';
+import { registerEdicionIpc } from './ipc/edicion.ipc'; // ajustá si tu archivo se llama distinto
+import {
+  fijarSesionSync,
+  limpiarSesionSync,
+  usuarioSesionSync,
+} from './sesionSync';
+
+// Gestion de metas
+import { Metas } from './administracionDePersistencia/metas';
+import { CrearMeta } from './logicaPersistente/gestionDeMetas/crearMeta';
+import { registerMetasIpc } from './ipc/metas.ipc';
+import { AlternarMeta } from './logicaPersistente/gestionDeMetas/alternarMeta';
+import { CopiarMetas } from './logicaPersistente/gestionDeMetas/copiarMetas';
+import { EliminarMeta } from './logicaPersistente/gestionDeMetas/eliminarMeta';
+import { EstadisticasMetasProyecto } from './logicaPersistente/gestionDeMetas/estadisticasMetas';
+import { ListarMetas } from './logicaPersistente/gestionDeMetas/listarMetas';
+import { ModificarMeta } from './logicaPersistente/gestionDeMetas/modificarMeta';
+
+// Gestion de tareas
+import { Tareas } from './administracionDePersistencia/tareas';
+import { CrearTarea } from './logicaPersistente/gestionDeTareas/crearTarea';
+import { ListarTareas } from './logicaPersistente/gestionDeTareas/listarTareas';
+import { ModificarTarea } from './logicaPersistente/gestionDeTareas/modificarTarea';
+import { AlternarTarea } from './logicaPersistente/gestionDeTareas/alternarTarea';
+import { AsignarTarea } from './logicaPersistente/gestionDeTareas/asignarTarea';
+import { RepartirTareas } from './logicaPersistente/gestionDeTareas/repartirTareas';
+import { EliminarTarea } from './logicaPersistente/gestionDeTareas/eliminarTarea';
+import { registerTareasIpc } from './ipc/tareas.ipc';
+
 let mainWindow: BrowserWindow | null = null;
 
 // Se guardan mientras están en pantalla: si no, Windows puede perder el clic.
@@ -142,6 +202,13 @@ function mostrarEnSistema(notificacion: Notificacion): void {
   aviso.show();
   mainWindow?.webContents.send('notificaciones:sonar');
 }
+
+// Se guarda para poder liberar los bloqueos de edición al cerrar la app.
+let edicion: Edicion | null = null;
+let cerrando = false;
+
+// Raíz global bajo la que cuelgan los proyectos (según el comentario de DepsSincronizacion: hoy 2).
+const ID_NODO_PADRE_PROYECTOS = 2;
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -196,7 +263,7 @@ function wireDependencies(): void {
   );
   registerDriveIpc(driveServicio);
 
-  // Gestion de usuarios
+  // Gestion de usuarios (el IPC se registra más abajo, cuando existe la sincronización)
   const iniciarSesion = new IniciarSesion(persistencia);
   const registrarUsuario = new RegistrarUsuario(persistencia);
   const verificarMail = new VerificarMail(persistencia);
@@ -212,7 +279,6 @@ function wireDependencies(): void {
     new ActualizarFotoPerfil(persistencia, path.join(app.getPath('userData'), 'fotosPerfil')),
     verificarPassword, new ActualizarRostro(verificarPassword)
   );
-  registerUsuariosIpc(usuarios);
 
   // Gestion de eventos
   const crearEvento = new CrearEvento(persistencia);
@@ -238,8 +304,13 @@ function wireDependencies(): void {
 
   // Gestion de metas
   const metas = new Metas(
-    new CrearMeta(persistencia), new ListarMetas(persistencia),
-    new CompletarMeta(persistencia), new EliminarMeta(persistencia)
+    new CrearMeta(persistencia),
+    new ListarMetas(persistencia),
+    new ModificarMeta(persistencia),
+    new AlternarMeta(persistencia),
+    new EliminarMeta(persistencia),
+    new CopiarMetas(persistencia),
+    new EstadisticasMetasProyecto(persistencia),
   );
   registerMetasIpc(metas);
 
@@ -262,7 +333,7 @@ function wireDependencies(): void {
   const vigia = new VigiaNotificaciones(
     {
       eventos: (usuarioId, desde) => eventos.listar({ usuarioId, desde }),
-      metas: (usuarioId) => metas.listar({ usuarioId }),
+      metas: (usuarioId, dia) => metas.listar({ idUsuario: usuarioId, desde: dia, hasta: dia }),
     },
     notificador
   );
@@ -287,6 +358,103 @@ function wireDependencies(): void {
     new GuardarRepeticionMaterial(persistencia)
   );
   registerRepeticionEspaciadaIpc(repeticionEspaciada);
+
+  // Sincronizacion y edicion compartida
+  const identidad = crearProveedorIdentidad(
+    async () => {
+      const idUsuario = usuarioSesionSync();
+      if (idUsuario === null) throw new Error('No hay sesión iniciada para sincronizar.');
+
+      const f = await persistencia.ejecutar<{ email: string; nombre: string; apodo: string | null }>(
+        `SELECT email, nombre, apodo FROM usuarios WHERE id_usuario = $1`,
+        [idUsuario],
+      );
+      if (!f[0]) throw new Error(`Usuario ${idUsuario} inexistente`);
+      return { mail: f[0].email, nombre: f[0].apodo?.trim() || f[0].nombre };
+    },
+  );
+
+  // Un manejador por entidad: aplican en la BD local los cambios que llegan de otros miembros.
+  // Sin manejador, un cambio remoto se descarta y la versión igual avanza (se pierde para siempre).
+  const manejadores: RegistroManejadores = {
+    nodo: new ManejadorNodo(persistencia),
+    archivo: new ManejadorArchivo(persistencia, almacenamiento),
+    evento: new ManejadorEvento(persistencia, usuarioSesionSync),
+    meta: new ManejadorMeta(persistencia, usuarioSesionSync),
+    tarea: new ManejadorTarea(persistencia, usuarioSesionSync),
+  };
+
+  const sync = componerSincronizacion({
+    persistencia,
+    crearNodo,
+    manejadores,
+    identidad,
+    mailDe: async (idUsuario: number) => {
+      const f = await persistencia.ejecutar<{ email: string }>(
+        `SELECT email FROM usuarios WHERE id_usuario = $1`,
+        [idUsuario],
+      );
+      if (!f[0]) throw new Error(`Usuario ${idUsuario} inexistente`);
+      return f[0].email;
+    },
+    emitir: (e) => mainWindow?.webContents.send('sincronizacion:evento', e),
+    idNodoPadreProyectos: ID_NODO_PADRE_PROYECTOS,
+  });
+
+  // IPC de usuarios: ahora que existe la sincronización, el login la arranca y el logout la detiene.
+  registerUsuariosIpc(usuarios, {
+    alIniciarSesion: (idUsuario, password) => {
+      console.log('[sync] hook de login, usuario:', idUsuario);
+      fijarSesionSync(idUsuario, password);
+      void sync.coordinador.iniciar(idUsuario)
+        .then(() => console.log('[sync] coordinador iniciado'))
+        .catch((e) => console.warn('[sync] no pudo iniciar:', e));
+    },
+    alCerrarSesion: async () => {
+      await sync.coordinador.detener();
+      limpiarSesionSync();
+    },
+  });
+
+  // Gestion de proyectos (usa las piezas reales de la sincronización, sin mock)
+  const agregarMiembro = new AgregarMiembro(persistencia, sync.sync);
+  const listarInvitaciones = new ListarInvitaciones(persistencia);
+  const agregarMiembroPorMail = new AgregarMiembroPorMail(persistencia, sync.sync);
+  const cancelarInvitacion = new CancelarInvitacion(persistencia, sync.sync);
+  void agregarMiembro;
+
+  const proyectos = new Proyectos(
+    new CrearProyecto(persistencia, crearNodo),
+    new ModificarProyecto(persistencia, modificarNodo),
+    new EliminarProyecto(persistencia, sync.sync, (id) => sync.coordinador.dejarDeVigilar(id)),
+    new ObtenerProyecto(persistencia),
+    new ListarProyectos(persistencia),
+    sync.agregarMiembro,
+    sync.quitarMiembro,
+    new ListarMiembros(persistencia, sync.sync),
+    sync.sincronizarProyecto,
+    agregarMiembroPorMail,
+    new CambiarRolMiembro(persistencia, sync.sync),
+    listarInvitaciones,
+    cancelarInvitacion,
+  );
+  registrarProyectosIpc(proyectos);
+
+  // Gestion de edicion y conflictos
+  edicion = new Edicion(sync.edicion, sync.coordinador, sync.unirseAProyecto);
+  registerEdicionIpc(edicion);
+
+  // Gestion de tareas
+  const tareas = new Tareas(
+    new CrearTarea(persistencia),
+    new ListarTareas(persistencia),
+    new ModificarTarea(persistencia),
+    new AlternarTarea(persistencia),
+    new AsignarTarea(persistencia),
+    new RepartirTareas(persistencia),
+    new EliminarTarea(persistencia),
+  );
+  registerTareasIpc(tareas);
 }
 
 function createWindow(): void {
@@ -351,6 +519,7 @@ app.whenReady().then(async () => {
     return;
   }
 
+  // Los handlers IPC se registran antes de crear la ventana.
   wireDependencies();
   const recordatorios = new EnviarRecordatoriosPendientes(new Persistencia(pool));
   let recordatoriosEnCurso = false;
@@ -372,9 +541,32 @@ app.whenReady().then(async () => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+}).catch((err) => {
+  console.error('[startup] Falló el arranque:', err);
+  app.quit();
 });
 
-app.on('window-all-closed', async () => {
-  await pool.end();
+app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// Cierre ordenado: libera los bloqueos de edición y recién después cierra el pool.
+app.on('before-quit', (event) => {
+  if (cerrando) return;
+  event.preventDefault();
+  cerrando = true;
+
+  void (async () => {
+    try {
+      await edicion?.cerrarTodas();
+    } catch (err) {
+      console.error('[shutdown] No se pudieron liberar los bloqueos:', err);
+    }
+    try {
+      await pool.end();
+    } catch (err) {
+      console.error('[shutdown] Error al cerrar el pool:', err);
+    }
+    app.quit();
+  })();
 });

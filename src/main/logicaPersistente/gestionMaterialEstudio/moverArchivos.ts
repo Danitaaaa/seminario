@@ -2,6 +2,7 @@ import { Persistencia } from '../../persistencia/persistencia';
 import { Archivo } from './entidades';
 import { materializarArchivo } from './materializador';
 import { MoverArchivosDTO } from './dto';
+import { registrarCambioContenido } from '../gestionDeProyectos/alcanceContenido';
 
 // Reasigna la carpeta padre de uno o más archivos.
 export class MoverArchivos {
@@ -32,6 +33,11 @@ export class MoverArchivos {
        WHERE id_archivo = ANY($2::int[]) RETURNING *`,
       [datos.idPadre, datos.ids]
     );
+    // Una entrada por archivo, contra el proyecto de destino.
+    for (const f of filas) {
+      await registrarCambioContenido(this.persistencia, 'archivo', f.id_archivo, 'mover',
+        f.id_global, f.id_padre, { nombre: f.nombre, extension: f.extension });
+    }
     return filas.map(materializarArchivo);
   }
 }

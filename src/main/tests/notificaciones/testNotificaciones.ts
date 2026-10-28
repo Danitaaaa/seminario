@@ -46,12 +46,14 @@ const AHORA = new Date(2026, 9, 24, 12, 0);
 
 const evento = (cambios: Partial<Evento> = {}): Evento => ({
     id: 7, usuarioId: 12, titulo: 'Parcial de Análisis', descripcion: null, lugar: 'Aula 3',
-    fecha: new Date(2026, 9, 24, 12, 30), categoria: 'Parciales', prioridad: 'importante',
+    fecha: new Date(2026, 9, 24, 12, 30), idProyecto: null, nombreProyecto: null, categoria: 'Parciales', prioridad: 'importante',
     notificacionesActivas: true, recordatorios: [{ cantidad: 30, unidad: 'minutos' }], ...cambios,
 });
 
 const meta = (cambios: Partial<Meta> = {}): Meta => ({
-    id: 3, usuarioId: 12, titulo: 'Preparar exposición', fechaLimite: '2026-10-24',
+    idMeta: 3, idProyecto: null, descripcion: null, mes: '2026-10', fechaCompletada: null, completadaPor: null,
+    orden: 1, creadaPor: 12, trasladadaA: null, idMetaOrigen: null,
+    titulo: 'Preparar exposición', fechaLimite: '2026-10-24',
     completada: false, fechaCreacion: new Date(), ...cambios,
 });
 
@@ -123,7 +125,7 @@ async function main(): Promise<void> {
 
     await caso(5, 'Meta que vence hoy avisa; completada o de otro día no', '1 aviso: Tu meta vence hoy', () => {
         const avisos = avisosPendientes(12, [], [
-            meta(), meta({ id: 4, completada: true }), meta({ id: 5, fechaLimite: '2026-10-25' }), meta({ id: 6, fechaLimite: null }),
+            meta(), meta({ idMeta: 4, completada: true }), meta({ idMeta: 5, fechaLimite: '2026-10-25' }), meta({ idMeta: 6, fechaLimite: null }),
         ], AHORA);
         return `${avisos.length} aviso: ${avisos[0].titulo}`;
     });

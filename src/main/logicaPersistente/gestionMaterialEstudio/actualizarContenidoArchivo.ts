@@ -2,6 +2,7 @@ import { Persistencia } from '../../persistencia/persistencia';
 import { Almacenamiento } from '../../persistencia/almacenamiento';
 import { Archivo } from './entidades';
 import { materializarArchivo } from './materializador';
+import { registrarCambioContenido } from '../gestionDeProyectos/alcanceContenido';
 
 // Reemplaza el contenido físico del archivo y registra el nuevo tamaño y fecha
 export class ActualizarContenidoArchivo {
@@ -24,6 +25,10 @@ export class ActualizarContenidoArchivo {
        WHERE id_archivo = $2 RETURNING *`,
       [tamanio, id]
     );
-    return materializarArchivo(filas[0]);
+    const f = filas[0];
+    // El contenido sube por el camino de versiones (leer + bloqueo); esto solo lo marca como pendiente.
+    await registrarCambioContenido(this.persistencia, 'archivo', f.id_archivo, 'modificar',
+      f.id_global, f.id_padre, { nombre: f.nombre, extension: f.extension });
+    return materializarArchivo(f);
   }
 }

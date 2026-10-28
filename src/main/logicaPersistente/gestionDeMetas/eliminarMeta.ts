@@ -1,15 +1,22 @@
-import { Persistencia } from '../../persistencia/persistencia';
-import { EliminarMetaDTO } from './dto';
+import { EliminarMetaDTOSchema, EliminarMetaDTO } from './dto';
+import { obtenerFilaMeta } from './buscarMeta';
+import { IPersistenciaProyectos } from '../gestionDeProyectos/interfacesSincronizacion';
+import { exigirAcceso, registrarCambioSiProyecto } from '../gestionDeProyectos/alcance';
 
-// Elimina una meta. Solo borra metas del propio usuario.
+// En un proyecto solo el propietario puede borrar metas (editores crean y marcan).
+// Una meta personal la puede borrar su creador.
 export class EliminarMeta {
-  constructor(private readonly persistencia: Persistencia) {}
+    constructor(private persistencia: IPersistenciaProyectos) {}
 
-  async ejecutar(datos: EliminarMetaDTO): Promise<void> {
-    const filas = await this.persistencia.ejecutar(
-      `DELETE FROM metas WHERE id = $1 AND usuario_id = $2 RETURNING id`,
-      [datos.id, datos.usuarioId]
-    );
-    if (filas.length === 0) throw new Error('La meta no existe.');
-  }
+    async ejecutar(entrada: EliminarMetaDTO): Promise<void> {
+        const dto = EliminarMetaDTOSchema.parse(entrada);
+        const actual = await obtenerFilaMeta(this.persistencia, dto.idMeta);
+        await exigirAcceso(this.persistencia, actual.id_proyecto, actual.creada_por, dto.idUsuario, ['propietario']);
+
+        await this.persistencia.transaccion(async tx => {
+            const r = await tx.ejecutar(`DELETE FROM metas WHERE id_meta = $1 RETURNING id_global`, [dto.idMeta]);
+            await registrarCambioSiProyecto(tx, actual.id_proyecto, 'meta', dto.idMeta, 'eliminar',
+                { titulo: actual.titulo, idGlobal: r[0]?.id_global });
+        });
+    }
 }

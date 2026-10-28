@@ -1,10 +1,33 @@
-// Una meta corta del dashboard ("Leer capítulo 3", "Preparar exposición").
 export interface Meta {
-  id: number;
-  usuarioId: number;
-  titulo: string;
-  // Fecha en formato AAAA-MM-DD, o null si la meta no tiene fecha.
-  fechaLimite: string | null;
-  completada: boolean;
-  fechaCreacion: Date;
+    idMeta: number;
+    idProyecto: number | null; // null = meta personal
+    titulo: string;
+    descripcion: string | null;
+    mes: string; // AAAA-MM
+    fechaLimite: string | null; // AAAA-MM-DD
+    completada: boolean;
+    fechaCompletada: Date | null;
+    completadaPor: number | null;
+    orden: number;
+    creadaPor: number;
+    trasladadaA: string | null;
+    idMetaOrigen: number | null;
+    fechaCreacion: Date;
+}
+
+export interface EstadisticaMes {
+    mes: string; // AAAA-MM
+    total: number;
+    completadas: number;
+    trasladadas: number;
+}
+
+export interface EstadisticaMiembro {
+    idUsuario: number;
+    completadas: number;
+}
+
+export interface EstadisticasMetas {
+    porMes: EstadisticaMes[];
+    porMiembro: EstadisticaMiembro[];
 }

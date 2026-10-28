@@ -4,9 +4,35 @@ import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
 import type { Perfil } from './perfil';
-import type { Meta, CrearMetaInput, CompletarMetaInput, EliminarMetaInput } from './metas';
+import type {
+  Meta, EstadisticasMetas, ListarMetasInput, CrearMetaInput, ModificarMetaInput, AlternarMetaInput,
+  EliminarMetaInput, CopiarMetasInput, EstadisticasMetasInput,
+} from './metas';
 import type { Deck, Flashcard, FlashcardPendiente, RepeticionMaterial } from './flashcards';
 import type { Notificacion } from './notificaciones';
+import type { 
+  Proyecto,
+  Miembro,
+  CrearProyectoDatos,
+  ModificarProyectoDatos,
+  EliminarProyectoDatos,
+  ObtenerProyectoDatos,
+  ListarProyectosCriterios,
+  AgregarMiembroDatos,
+  QuitarMiembroDatos,
+  ListarMiembrosCriterios,
+  SincronizarProyectoDatos,
+  UnirseAProyectoDatos,
+  CambiarRolMiembroDatos,
+  InvitacionPendiente,
+} from './proyectos';
+import { Tarea } from './tareas';
+
+// Los canales de edición compartida devuelven { ok, datos } o { ok: false, codigo, mensaje }
+// (los errores personalizados pierden sus campos al cruzar IPC).
+type Resultado<T> =
+  | { ok: true; datos: T }
+  | { ok: false; codigo: string; mensaje: string; detalle?: Record<string, unknown> };
 
 declare global {
   interface Window {
@@ -78,7 +104,7 @@ declare global {
       crearEvento: (datos: CrearEventoInput) => Promise<Evento>;
       listarEventos: (datos: ListarEventosInput) => Promise<Evento[]>;
       modificarEvento: (datos: ModificarEventoInput) => Promise<Evento>;
-      eliminarEvento: (datos: { id: number }) => Promise<{ ok: boolean }>;
+      eliminarEvento: (datos: { id: number; usuarioId: number }) => Promise<{ ok: boolean }>;
 
       // Gestion de categorias
       crearCategoria: (datos: CrearCategoriaInput) => Promise<Categoria>;
@@ -91,12 +117,6 @@ declare global {
       listarHorarios: (datos: ListarHorariosInput) => Promise<HorarioCursado[]>;
       modificarHorario: (datos: ModificarHorarioInput) => Promise<HorarioCursado>;
       eliminarHorario: (datos: { id: number }) => Promise<{ ok: boolean }>;
-
-      // Gestion de metas
-      listarMetas: (datos: { usuarioId: number }) => Promise<Meta[]>;
-      crearMeta: (datos: CrearMetaInput) => Promise<Meta>;
-      completarMeta: (datos: CompletarMetaInput) => Promise<Meta>;
-      eliminarMeta: (datos: EliminarMetaInput) => Promise<void>;
 
       // Pantalla de inicio
       obtenerFondoInicio: (datos: { id: number }) => Promise<string | null>;
@@ -126,6 +146,53 @@ declare global {
       registrarRevision: (datos: { usuarioId: number; flashcardId: number; dificultad: 'dificil' | 'intermedio' | 'facil' }) => Promise<FlashcardPendiente>;
       listarRepeticionesMaterial: (usuarioId: number) => Promise<RepeticionMaterial[]>;
       guardarRepeticionMaterial: (datos: { usuarioId: number; nodoId: number; intervaloDias: 1 | 3 | 7 | 14 }) => Promise<RepeticionMaterial>;
+
+      // Gestion de proyectos
+      crearProyecto: (datos: CrearProyectoDatos) => Promise<Proyecto>;
+      modificarProyecto: (datos: ModificarProyectoDatos) => Promise<Proyecto>;
+      eliminarProyecto: (datos: EliminarProyectoDatos) => Promise<void>;
+      obtenerProyecto: (datos: ObtenerProyectoDatos) => Promise<Proyecto>;
+      listarProyectos: (criterios: ListarProyectosCriterios) => Promise<Proyecto[]>;
+      agregarMiembro: (datos: AgregarMiembroDatos) => Promise<Miembro>;
+      quitarMiembro: (datos: QuitarMiembroDatos) => Promise<void>;
+      listarMiembros: (criterios: ListarMiembrosCriterios) => Promise<Miembro[]>;
+      sincronizarProyecto: (datos: SincronizarProyectoDatos) => Promise<void>;
+      unirseAProyecto: (datos: UnirseAProyectoDatos) => Promise<Proyecto>;
+      agregarMiembroPorMail: (datos: {
+        idProyecto: number; idUsuarioSolicitante: number; mail: string; rol: 'editor' | 'lector';
+      }) => Promise<{ pendiente: true; mail: string }>;
+      cambiarRolMiembro: (datos: CambiarRolMiembroDatos) => Promise<Miembro>;
+
+      listarInvitaciones: (datos: { idProyecto: number; idUsuarioSolicitante: number }) => Promise<InvitacionPendiente[]>;
+      cancelarInvitacion: (datos: { idProyecto: number; idUsuarioSolicitante: number; idInvitacion: number }) => Promise<void>;
+      // Gestion de tareas
+      listarTareas: (datos: unknown) => Promise<Tarea[]>;
+      crearTarea: (datos: unknown) => Promise<Tarea>;
+      modificarTarea: (datos: unknown) => Promise<Tarea>;
+      alternarTarea: (datos: unknown) => Promise<Tarea>;
+      asignarTarea: (datos: unknown) => Promise<Tarea>;
+      repartirTareas: (datos: unknown) => Promise<Tarea[]>;
+      eliminarTarea: (datos: unknown) => Promise<{ ok: boolean }>;
+
+      // Gestion de metas (personales y de proyectos)
+      listarMetas: (datos: ListarMetasInput) => Promise<Meta[]>;
+      crearMeta: (datos: CrearMetaInput) => Promise<Meta>;
+      modificarMeta: (datos: ModificarMetaInput) => Promise<Meta>;
+      alternarMeta: (datos: AlternarMetaInput) => Promise<Meta>;
+      eliminarMeta: (datos: EliminarMetaInput) => Promise<{ ok: boolean }>;
+      copiarMetas: (datos: CopiarMetasInput) => Promise<Meta[]>;
+      estadisticasMetas: (datos: EstadisticasMetasInput) => Promise<EstadisticasMetas>;
+
+      // Edicion compartida y sincronizacion
+      iniciarEdicion: (clave: unknown) => Promise<Resultado<unknown>>;
+      guardarEdicion: (clave: unknown) => Promise<Resultado<unknown>>;
+      finalizarEdicion: (clave: unknown) => Promise<Resultado<void>>;
+      consultarEdicion: (clave: unknown) => Promise<Resultado<unknown>>;
+      listarConflictos: (datos: unknown) => Promise<Resultado<unknown>>;
+      obtenerConflicto: (clave: unknown) => Promise<Resultado<unknown>>;
+      resolverConflicto: (datos: unknown) => Promise<Resultado<{ version: number }>>;
+      iniciarSincronizacion: (datos: { idUsuario: number; password?: string }) => Promise<Resultado<void>>;
+      alEventoSincronizacion: (cb: (evento: unknown) => void) => () => void;
     };
   }
 }

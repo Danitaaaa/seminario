@@ -2,6 +2,7 @@ import { MoverNodoDTO } from "./dto";
 import { materializarNodo } from "./materializador";
 import { Persistencia } from "../../persistencia/persistencia";
 import { Nodo } from "./entidades"
+import { registrarCambioContenido } from "../gestionDeProyectos/alcanceContenido";
 
 // Cambia el nodoPadre de uno o más nodos
 export class MoverNodo {
@@ -63,6 +64,10 @@ export class MoverNodo {
             WHERE id_nodo = $2 RETURNING *`,
             [idNuevoPadre, id]
         );
-        return materializarNodo(filas[0]);
+        const f = filas[0];
+        // Se encola contra el proyecto de DESTINO (si el destino es personal, no se encola nada).
+        await registrarCambioContenido(this.persistencia, 'nodo', f.id_nodo, 'mover',
+            f.id_global, f.id_padre, { nombre: f.nombre });
+        return materializarNodo(f);
     }
 }

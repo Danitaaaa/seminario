@@ -2,6 +2,7 @@ import { Persistencia } from '../../persistencia/persistencia';
 import { Nodo } from './entidades';
 import { materializarNodo } from './materializador';
 import { CrearNodoDTO } from './dto';
+import { registrarCambioContenido } from '../gestionDeProyectos/alcanceContenido';
 
 
 export class CrearNodo {
@@ -12,6 +13,7 @@ export class CrearNodo {
         if (!datos.nombre.trim()) {
             throw new Error('El nombre de la carpeta no puede estar vacío.');
         }
+        let fila: any;
         try {
             const filas = await this.persistencia.ejecutar(
                 `INSERT INTO nodos (nombre, fecha_carga, ultima_fecha_acceso,
@@ -19,12 +21,18 @@ export class CrearNodo {
                 VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
                 [datos.nombre, new Date(), new Date(), new Date(), 0, datos.idPadre]
             );
-            return materializarNodo(filas[0]);
+            fila = filas[0];
         } catch (error: any) {
             if (error.code === '23505') {
                 throw new Error(`Ya existe una carpeta llamada "${datos.nombre}" en esta ubicación.`);
             }
             throw error;
         }
+        // Encola solo si cuelga de un proyecto (la raíz de un proyecto nuevo cuelga del nodo global: no se encola).
+        if (fila.id_padre !== null) {
+            await registrarCambioContenido(this.persistencia, 'nodo', fila.id_nodo, 'crear',
+                fila.id_global, fila.id_padre, { nombre: fila.nombre });
+        }
+        return materializarNodo(fila);
     }
 }

@@ -20,6 +20,9 @@ import { MetodosPage } from "./pages/metodos/metodosPage";
 import { RepeticionEspaciadaPage } from "./pages/metodos/repeticionEspaciadaPage";
 import { DeckFlashcardsPage, EstudiarFlashcardsPage, FlashcardsPage } from "./pages/flashcards/flashcardsPage";
 import { CronogramaPage } from "./pages/cronograma/cronogramaPage";
+import { ProyectosPage } from "./pages/proyectos/proyectosPage";
+import { ProyectoDetallePage } from "./pages/proyectos/proyectoPage";
+import { TareasPage } from "./pages/proyectos/tareasPage";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -53,6 +56,10 @@ export default function App() {
         <Route path="/flashcards/:deckId" element={<DeckFlashcardsPage />} />
         <Route path="/flashcards/:deckId/estudiar" element={<EstudiarFlashcardsPage />} />
         <Route path="/repeticion-espaciada" element={<RepeticionEspaciadaPage />} />
+        <Route path="/proyectos" element={<ProyectosPage />} />
+        <Route path="/proyectos/:id" element={<ProyectoDetallePage />} />
+        <Route path="/proyectos/:id/eventos" element={<EventosPage />} />
+        <Route path="/proyectos/:id/tareas" element={<TareasPage />} />
         <Route path="/proximamente/:id" element={<Proximamente />} />
       </Routes>
       <PanelPerfil />

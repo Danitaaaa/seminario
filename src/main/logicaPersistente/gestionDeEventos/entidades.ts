@@ -16,8 +16,10 @@ export interface Evento {
   descripcion: string | null;
   lugar: string | null;
   fecha: Date;
+  idProyecto: number | null;
+  nombreProyecto: string | null;
   categoria: Categoria;
   prioridad: Prioridad;
   notificacionesActivas: boolean;
-  recordatorios: Recordatorio[]; 
+  recordatorios: Recordatorio[];
 }

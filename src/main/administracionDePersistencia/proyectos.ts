@@ -6,21 +6,28 @@ import {
     ObtenerProyectoDTO,
     ListarProyectosDTO,
     AgregarMiembroDTO,
+    AgregarMiembroPorMailDTO,
+    CambiarRolMiembroDTO,
     QuitarMiembroDTO,
     ListarMiembrosDTO,
     SincronizarProyectoDTO,
-    UnirseAProyectoDTO,
+    ListarInvitacionesDTO,
+    CancelarInvitacionDTO,
 } from '../logicaPersistente/gestionDeProyectos/dto';
 
 import { CrearProyecto } from '../logicaPersistente/gestionDeProyectos/crearProyecto';
 import { ModificarProyecto } from '../logicaPersistente/gestionDeProyectos/modificarProyecto';
-import { EliminarProyecto } from '../logicaPersistente/gestionDeProyectos/eliminarProyectp';
+import { EliminarProyecto } from '../logicaPersistente/gestionDeProyectos/eliminarProyecto';
 import { ObtenerProyecto } from '../logicaPersistente/gestionDeProyectos/obtenerProyecto';
 import { ListarProyectos } from '../logicaPersistente/gestionDeProyectos/listarProyectos';
 import { AgregarMiembro } from '../logicaPersistente/gestionDeProyectos/agregarMiembro';
+import { AgregarMiembroPorMail } from '../logicaPersistente/gestionDeProyectos/agregarMiembroPorMail';
+import { CambiarRolMiembro } from '../logicaPersistente/gestionDeProyectos/cambiarRolMiembro';
 import { QuitarMiembro } from '../logicaPersistente/gestionDeProyectos/quitarMiembro';
-import { ListarMiembros } from '../logicaPersistente/gestionDeProyectos/listarMienbros';
+import { ListarMiembros } from '../logicaPersistente/gestionDeProyectos/listarMiembros';
 import { SincronizarProyecto } from '../logicaPersistente/gestionDeProyectos/sincronizarProyecto';
+import { ListarInvitaciones } from '../logicaPersistente/gestionDeProyectos/listarInvitaciones';
+import { CancelarInvitacion } from '../logicaPersistente/gestionDeProyectos/cancelarInvitacion';
 
 export class Proyectos {
     constructor(
@@ -33,62 +40,69 @@ export class Proyectos {
         private readonly quitarMiembro_: QuitarMiembro,
         private readonly listarMiembros_: ListarMiembros,
         private readonly sincronizarProyecto: SincronizarProyecto,
+        private readonly agregarMiembroPorMail_: AgregarMiembroPorMail,
+        private readonly cambiarRolMiembro_: CambiarRolMiembro,
+        private readonly listarInvitaciones_: ListarInvitaciones,
+        private readonly cancelarInvitacion_: CancelarInvitacion,
     ) {}
 
     /* ---------- Proyectos ---------- */
 
-    // Listar los proyectos de un usuario, con búsqueda y orden opcionales
-    async listar(criterios: ListarProyectosDTO): Promise<Proyecto[]> {
-        return this.listarProyectos.ejecutar(criterios);
-    }
-
-    // Obtener un proyecto por id
-    async obtener(datos: ObtenerProyectoDTO): Promise<Proyecto> {
-        return this.obtenerProyecto.ejecutar(datos);
-    }
-
-    // Crear un nuevo proyecto (el usuario creador queda como propietario)
     async crear(datos: CrearProyectoDTO): Promise<Proyecto> {
         return this.crearProyecto.ejecutar(datos);
     }
 
-    // Modificar los datos de un proyecto (según permisos del solicitante)
     async modificar(datos: ModificarProyectoDTO): Promise<Proyecto> {
         return this.modificarProyecto.ejecutar(datos);
     }
 
-    // Eliminar un proyecto
     async eliminar(datos: EliminarProyectoDTO): Promise<void> {
         await this.eliminarProyecto.ejecutar(datos);
     }
 
-    /* ---------- Miembros ---------- */
-
-    // Listar los miembros de un proyecto
-    async listarMiembros(criterios: ListarMiembrosDTO): Promise<ProyectoMiembro[]> {
-        return this.listarMiembros_.ejecutar(criterios);
+    async obtener(datos: ObtenerProyectoDTO): Promise<Proyecto> {
+        return this.obtenerProyecto.ejecutar(datos);
     }
 
-    // Agregar un miembro a un proyecto
+    async listar(criterios: ListarProyectosDTO): Promise<Proyecto[]> {
+        return this.listarProyectos.ejecutar(criterios);
+    }
+
+    /* ---------- Miembros ---------- */
+
     async agregarMiembro(datos: AgregarMiembroDTO): Promise<ProyectoMiembro> {
         return this.agregarMiembro_.ejecutar(datos);
     }
 
-    // Quitar un miembro (o abandonar el proyecto si coincide con el solicitante)
+    async agregarMiembroPorMail(datos: AgregarMiembroPorMailDTO): Promise<{ pendiente: true; mail: string }> {
+        return this.agregarMiembroPorMail_.ejecutar(datos);
+    }
+
+    async cambiarRolMiembro(datos: CambiarRolMiembroDTO): Promise<ProyectoMiembro> {
+        return this.cambiarRolMiembro_.ejecutar(datos);
+    }
+
     async quitarMiembro(datos: QuitarMiembroDTO): Promise<void> {
         await this.quitarMiembro_.ejecutar(datos);
     }
 
-    /* ---------- Sincronización ---------- */
-
-    // Sincronizar un proyecto con el servidor
-    async sincronizar(datos: SincronizarProyectoDTO): Promise<void> {
-        await this.sincronizarProyecto.ejecutar(datos);
+    async listarMiembros(criterios: ListarMiembrosDTO): Promise<ProyectoMiembro[]> {
+        return this.listarMiembros_.ejecutar(criterios);
     }
 
-    // Unirse a un proyecto mediante un enlace
-    async unirse(datos: UnirseAProyectoDTO): Promise<Proyecto> {
-        // TODO: implementar el caso de uso UnirseAProyecto y delegar acá
-        throw new Error('unirse todavía no está implementado');
+    /* ---------- Invitaciones ---------- */
+
+    async listarInvitaciones(criterios: ListarInvitacionesDTO): Promise<unknown[]> {
+        return this.listarInvitaciones_.ejecutar(criterios);
+    }
+
+    async cancelarInvitacion(datos: CancelarInvitacionDTO): Promise<void> {
+        await this.cancelarInvitacion_.ejecutar(datos);
+    }
+
+    /* ---------- Sincronización ---------- */
+
+    async sincronizar(datos: SincronizarProyectoDTO): Promise<void> {
+        await this.sincronizarProyecto.ejecutar(datos);
     }
 }

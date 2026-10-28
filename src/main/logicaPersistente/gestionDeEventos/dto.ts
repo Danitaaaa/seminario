@@ -23,6 +23,8 @@ export const crearEventoSchema = z
   .object({
     usuarioId: z.number().int().positive(),
     fecha: z.coerce.date(),
+    // Sin idProyecto (o null) el evento es personal
+    idProyecto: z.number().int().positive().nullable().optional(),
     ...baseEventoSchema,
   })
   .refine((datos) => !datos.notificacionesActivas || datos.recordatorios.length > 0, {
@@ -34,6 +36,7 @@ export type CrearEventoDTO = z.infer<typeof crearEventoSchema>;
 export const modificarEventoSchema = z
   .object({
     id: z.number().int().positive(),
+    usuarioId: z.number().int().positive(), // quien solicita (control de permisos)
     fecha: z.coerce.date().optional(),
     titulo: baseEventoSchema.titulo.optional(),
     descripcion: baseEventoSchema.descripcion,
@@ -56,11 +59,13 @@ export type ModificarEventoDTO = z.infer<typeof modificarEventoSchema>;
 
 export const eliminarEventoSchema = z.object({
   id: z.number().int().positive(),
+  usuarioId: z.number().int().positive(), // quien solicita (control de permisos)
 });
 export type EliminarEventoDTO = z.infer<typeof eliminarEventoSchema>;
 
 export const listarEventosSchema = z.object({
   usuarioId: z.number().int().positive(),
+  idProyecto: z.number().int().positive().optional(),
   desde: z.coerce.date().optional(),
   hasta: z.coerce.date().optional(),
 });

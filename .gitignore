@@ -2,3 +2,5 @@ node_modules/
 .nvmrc
 .env
 out
+# Datos de Electron de las instancias de prueba de sincronización
+electron-data-*/

@@ -55,7 +55,7 @@ export function avisosPendientes(usuarioId: number, eventos: Evento[], metas: Me
       tipo: 'meta',
       titulo: 'Tu meta vence hoy',
       mensaje: meta.titulo,
-      clave: `meta:${meta.id}:${hoy}`,
+      clave: `meta:${meta.idMeta}:${hoy}`,
     });
   }
 

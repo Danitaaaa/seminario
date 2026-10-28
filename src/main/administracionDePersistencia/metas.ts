@@ -1,34 +1,31 @@
 import { CrearMeta } from '../logicaPersistente/gestionDeMetas/crearMeta';
 import { ListarMetas } from '../logicaPersistente/gestionDeMetas/listarMetas';
-import { CompletarMeta } from '../logicaPersistente/gestionDeMetas/completarMeta';
+import { ModificarMeta } from '../logicaPersistente/gestionDeMetas/modificarMeta';
+import { AlternarMeta } from '../logicaPersistente/gestionDeMetas/alternarMeta';
 import { EliminarMeta } from '../logicaPersistente/gestionDeMetas/eliminarMeta';
-import { Meta } from '../logicaPersistente/gestionDeMetas/entidades';
-import {
-  CrearMetaDTO,
-  ListarMetasDTO,
-  CompletarMetaDTO,
-  EliminarMetaDTO,
+import { CopiarMetas } from '../logicaPersistente/gestionDeMetas/copiarMetas';
+import { EstadisticasMetasProyecto } from '../logicaPersistente/gestionDeMetas/estadisticasMetas';
+import type {
+    CrearMetaDTO, ListarMetasDTO, ModificarMetaDTO, AlternarMetaDTO,
+    EliminarMetaDTO, CopiarMetasDTO, EstadisticasMetasDTO,
 } from '../logicaPersistente/gestionDeMetas/dto';
 
-// Punto de entrada único al módulo de metas — IPC nunca llama a las clases de lógica directo.
 export class Metas {
-  constructor(
-    private readonly crearMeta: CrearMeta,
-    private readonly listarMetas: ListarMetas,
-    private readonly completarMeta: CompletarMeta,
-    private readonly eliminarMeta: EliminarMeta
-  ) {}
+    constructor(
+        private readonly crearMeta: CrearMeta,
+        private readonly listarMetas: ListarMetas,
+        private readonly modificarMeta: ModificarMeta,
+        private readonly alternarMeta: AlternarMeta,
+        private readonly eliminarMeta: EliminarMeta,
+        private readonly copiarMetas: CopiarMetas,
+        private readonly estadisticasMetas: EstadisticasMetasProyecto,
+    ) {}
 
-  async listar(datos: ListarMetasDTO): Promise<Meta[]> {
-    return this.listarMetas.ejecutar(datos);
-  }
-  async crear(datos: CrearMetaDTO): Promise<Meta> {
-    return this.crearMeta.ejecutar(datos);
-  }
-  async completar(datos: CompletarMetaDTO): Promise<Meta> {
-    return this.completarMeta.ejecutar(datos);
-  }
-  async eliminar(datos: EliminarMetaDTO): Promise<void> {
-    return this.eliminarMeta.ejecutar(datos);
-  }
+    crear(datos: CrearMetaDTO) { return this.crearMeta.ejecutar(datos); }
+    listar(datos: ListarMetasDTO) { return this.listarMetas.ejecutar(datos); }
+    modificar(datos: ModificarMetaDTO) { return this.modificarMeta.ejecutar(datos); }
+    alternar(datos: AlternarMetaDTO) { return this.alternarMeta.ejecutar(datos); }
+    eliminar(datos: EliminarMetaDTO) { return this.eliminarMeta.ejecutar(datos); }
+    copiar(datos: CopiarMetasDTO) { return this.copiarMetas.ejecutar(datos); }
+    estadisticas(datos: EstadisticasMetasDTO) { return this.estadisticasMetas.ejecutar(datos); }
 }

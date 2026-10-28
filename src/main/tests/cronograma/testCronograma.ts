@@ -19,11 +19,13 @@ const horario = (diaSemana: number, horaInicio: string, horaFin: string, titulo:
 
 const evento = (titulo: string, fecha: Date, lugar: string | null = null): Evento => ({
     id: 1, usuarioId: 12, titulo, descripcion: null, lugar, fecha,
+    idProyecto: null, nombreProyecto: null,
     categoria: 'Parciales', prioridad: 'media', notificacionesActivas: false, recordatorios: [],
 });
 
 const meta = (titulo: string, fechaLimite: string | null): Meta =>
-    ({ id: 1, usuarioId: 12, titulo, fechaLimite, completada: false, fechaCreacion: '' });
+    ({ idMeta: 1, idProyecto: null, descripcion: null, mes: '2026-10', fechaCompletada: null, completadaPor: null,
+      orden: 1, creadaPor: 12, trasladadaA: null, idMetaOrigen: null, titulo, fechaLimite, completada: false, fechaCreacion: '' });
 
 
 async function main(): Promise<void> {

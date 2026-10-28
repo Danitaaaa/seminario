@@ -3,7 +3,7 @@ import { CalendarDays, Clock, Flag, type LucideIcon } from "lucide-react";
 import { obtenerUsuarioId } from "../../../lib/sesion";
 import type { HorarioCursado } from "../../types/horarios";
 import type { Evento } from "../../types/eventos";
-import { EVENTO_METAS_ACTUALIZADAS, type Meta } from "../../types/metas";
+import { EVENTO_METAS_ACTUALIZADAS, mesDe, type Meta } from "../../types/metas";
 import { usarPreferenciaBanner } from "../../hooks/usarPreferenciaBanner";
 import {
   fechaLarga, saludoSegunHora, proximaClase, proximoEvento, resumenMetas,
@@ -34,7 +34,7 @@ export function BannerInicio() {
     window.api.listarEventos({ usuarioId }).then(setEventos).catch(() => {});
 
     const cargarMetas = () => {
-      window.api.listarMetas({ usuarioId }).then(setMetas).catch(() => {});
+      window.api.listarMetas({ idUsuario: usuarioId, mes: mesDe(new Date()) }).then(setMetas).catch(() => {});
     };
     cargarMetas();
     window.addEventListener(EVENTO_METAS_ACTUALIZADAS, cargarMetas);

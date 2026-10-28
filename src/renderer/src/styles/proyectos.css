@@ -1,0 +1,542 @@
+/* ---------- Layout de NodoPage con panel lateral ---------- */
+.nodos-pagina {
+  display: contents; /* sin lateral, no altera el layout actual */
+}
+
+.nodos-pagina--con-lateral {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+.nodos-ruta-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.proyecto-ruta-volver {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #495b7d;
+  font: inherit;
+  cursor: pointer;
+}
+
+.proyecto-ruta-volver:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Listado de proyectos ---------- */
+.proyectos-grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.tarjeta-proyecto {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #c4d1e3;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.tarjeta-proyecto__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-proyecto {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #23354d;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.tarjeta-proyecto__titulo {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #02122f;
+}
+
+.tarjeta-proyecto__fecha {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #495b7d;
+}
+
+.tarjeta-proyecto__imagen {
+  height: 140px;
+  border-radius: 6px;
+  background: #d9dce1;
+}
+
+.tarjeta-proyecto__nombre {
+  margin: 0;
+  font-weight: 700;
+  color: #02122f;
+}
+
+.tarjeta-proyecto__materia {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #495b7d;
+}
+
+.tarjeta-proyecto__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.btn-proyecto {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid #23354d;
+  background: #23354d;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-proyecto--peligro {
+  border-color: #c96a6a;
+  background: transparent;
+  color: #b84c4c;
+}
+
+.btn-proyecto--secundario {
+  border-color: #8ba3c5;
+  background: transparent;
+  color: #495b7d;
+}
+
+.tarjeta-crear-proyecto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 300px;
+  border: 2px dashed #c4d1e3;
+  border-radius: 14px;
+  background: transparent;
+  color: #495b7d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tarjeta-crear-proyecto__mas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e6e9ee;
+  font-size: 1.5rem;
+}
+
+/* ---------- Modal de proyecto ---------- */
+.modal-proyecto__fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 18, 47, 0.45);
+}
+
+.modal-proyecto {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(460px, 92vw);
+  padding: 24px;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.modal-proyecto h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #02122f;
+}
+
+.modal-proyecto label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #495b7d;
+}
+
+.modal-proyecto input {
+  padding: 9px 11px;
+  border: 1px solid #8ba3c5;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.modal-proyecto__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ---------- Colaboradores ---------- */
+.avatares-miembros {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #495b7d;
+}
+
+.avatares-miembros__pila {
+  display: flex;
+}
+
+.avatares-miembros__pila .avatar-proyecto {
+  width: 24px;
+  height: 24px;
+  margin-left: -6px;
+  border: 2px solid #ffffff;
+  font-size: 0.65rem;
+}
+
+.avatares-miembros__pila .avatar-proyecto:first-child {
+  margin-left: 0;
+}
+
+/* ---------- Panel lateral ---------- */
+.panel-proyecto {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-proyecto__tarjeta {
+  padding: 14px;
+  border: 1px solid #c4d1e3;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.panel-proyecto__titulo {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #02122f;
+}
+
+.panel-proyecto__vacio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  border-radius: 8px;
+  background: #f4f6f9;
+  color: #8ba3c5;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 1100px) {
+  .nodos-pagina--con-lateral {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Gestión de miembros ---------- */
+
+.miembros {
+  position: relative;
+  display: inline-block;
+}
+
+/* Botón */
+.miembros-abrir {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--color-primario, #2b3a67);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-primario, #2b3a67);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.miembros-abrir:hover,
+.miembros-abrir--activo {
+  background: var(--color-primario, #2b3a67);
+  color: #fff;
+}
+
+.miembros-abrir:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(43, 58, 103, 0.25);
+}
+
+.miembros-abrir__contador {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(43, 58, 103, 0.12);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.miembros-abrir:hover .miembros-abrir__contador,
+.miembros-abrir--activo .miembros-abrir__contador {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Panel desplegable */
+.miembros-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  width: min(420px, 90vw);
+  padding: 16px;
+  border: 1px solid rgba(43, 58, 103, 0.14);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(20, 30, 60, 0.16);
+}
+
+.miembros-panel__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.miembros-panel__cabecera h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.miembros-panel__cerrar {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.miembros-panel__cerrar:hover {
+  background: #f1f2f6;
+  color: #111;
+}
+
+/* Lista */
+.miembros-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.miembros-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #f0f1f5;
+}
+
+.miembros-item:last-child {
+  border-bottom: none;
+}
+
+.miembros-item__avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.miembros-item__nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.miembros-item__nombre small {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Insignias de rol */
+.miembros-insignia {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.miembros-insignia--propietario {
+  background: #fde9c9;
+  color: #8a5a12;
+}
+
+.miembros-insignia--editor {
+  background: #e3e8f7;
+  color: #2b3a67;
+}
+
+.miembros-insignia--lector {
+  background: #eef0f3;
+  color: #4b5563;
+}
+
+/* Selects (rol) */
+.miembros-item__rol-select,
+.miembros-agregar select {
+  padding: 5px 8px;
+  border: 1px solid #d5d9e4;
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.miembros-item__rol-select:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Quitar / salir */
+.miembros-item__quitar {
+  flex: none;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #9b2c2c;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.miembros-item__quitar:hover:not(:disabled) {
+  background: #fbe9e9;
+}
+
+.miembros-item__quitar:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* Invitar */
+.miembros-agregar {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f1f5;
+}
+
+.miembros-agregar__titulo {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.miembros-agregar__fila {
+  display: flex;
+  gap: 8px;
+}
+
+.miembros-agregar__fila input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 12px;
+  border: 1px solid #d5d9e4;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.miembros-agregar__fila input:focus {
+  outline: none;
+  border-color: var(--color-primario, #2b3a67);
+  box-shadow: 0 0 0 3px rgba(43, 58, 103, 0.15);
+}
+
+.miembros-agregar__boton {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-primario, #2b3a67);
+  color: #fff;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.miembros-agregar__boton:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.miembros-agregar__boton:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Error */
+.miembros-error {
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border: 1px solid #f0c4c4;
+  border-radius: 10px;
+  background: #fdf0f0;
+  color: #9b2c2c;
+  font-size: 0.85rem;
+}
+
+.miembros-item--pendiente { opacity: 0.85; }
+.miembros-insignia--pendiente { background: #fff3cd; color: #7a5b00; }
+.miembros-aviso { margin: 8px 0 0; font-size: 0.85rem; color: #2f6b45; }
