@@ -137,6 +137,13 @@ import { Proyectos } from './administracionDePersistencia/proyectos';
 import { registrarProyectosIpc } from './ipc/proyectos.ipc';
 import { ListarInvitaciones } from './logicaPersistente/gestionDeProyectos/listarInvitaciones';
 import { CancelarInvitacion } from './logicaPersistente/gestionDeProyectos/cancelarInvitacion';
+import {
+  ObtenerPortadaProyecto,
+  ActualizarPortadaProyecto,
+  QuitarPortadaProyecto,
+} from './logicaPersistente/gestionDeProyectos/portadaProyecto';
+import { PortadasProyectos } from './administracionDePersistencia/portadasProyectos';
+import { registerPortadasProyectosIpc } from './ipc/portadasProyectos.ipc';
 // Gestion de edicion compartida y sincronizacion
 import {
   componerSincronizacion,
@@ -439,6 +446,14 @@ function wireDependencies(): void {
     cancelarInvitacion,
   );
   registrarProyectosIpc(proyectos);
+
+  // Portadas de los proyectos (locales de cada compu)
+  const portadas = new PortadasProyectos(
+    new ObtenerPortadaProyecto(persistencia),
+    new ActualizarPortadaProyecto(persistencia, path.join(app.getPath('userData'), 'portadasProyectos')),
+    new QuitarPortadaProyecto(persistencia)
+  );
+  registerPortadasProyectosIpc(portadas);
 
   // Gestion de edicion y conflictos
   edicion = new Edicion(sync.edicion, sync.coordinador, sync.unirseAProyecto);

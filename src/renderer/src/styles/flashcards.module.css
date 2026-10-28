@@ -541,6 +541,36 @@
   animation: card-flip 280ms ease both;
 }
 
+.skipButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.skipButton:hover:not(:disabled) {
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.skipButton:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.skipButton:focus-visible {
+  outline: 3px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
 .rating {
   width: min(100%, 720px);
 }

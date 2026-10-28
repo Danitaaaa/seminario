@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { colors } from '../../styles/colors';
+import { cssVar as colors } from '../../styles/variables';
 import { typography } from '../../styles/typography';
 import { spacing } from '../../styles/spacing';
 import type { Evento } from '../../types/eventos';
@@ -146,6 +146,8 @@ const estiloSelect: React.CSSProperties = {
   padding: '2px 6px',
   borderRadius: 6,
   border: `1px solid ${colors.border}`,
+  background: colors.surface,
+  color: colors.textPrimary,
   fontFamily: typography.fontFamily.body,
   fontSize: typography.fontSize.sm,
 };

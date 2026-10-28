@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Check, X, ArrowRight } from 'lucide-react';
-import { colors } from '../../styles/colors';
+import { cssVar as colors } from '../../styles/variables';
 import { typography } from '../../styles/typography';
 import { spacing } from '../../styles/spacing';
 import type { Meta } from '../../types/metas';
@@ -193,7 +193,7 @@ export function MetasMensuales({ idProyecto, puedeEditar = true, puedeEliminar =
                     cursor: puedeEditar ? 'pointer' : 'default',
                   }}
                 >
-                  {meta.completada && <Check size={12} color={colors.white} strokeWidth={3} />}
+                  {meta.completada && <Check size={12} style={{ color: colors.white }} strokeWidth={3} />}
                 </button>
               )}
 
@@ -319,7 +319,7 @@ const estiloBarraRelleno: React.CSSProperties = {
 const estiloError: React.CSSProperties = {
   padding: '6px 8px',
   borderRadius: 6,
-  background: '#FBEAEA',
+  background: colors.errorBg,
   color: colors.error,
   fontSize: typography.fontSize.xs,
 };
@@ -378,6 +378,8 @@ const estiloInputInline: React.CSSProperties = {
   padding: '2px 6px',
   borderRadius: 6,
   border: `1px solid ${colors.border}`,
+  background: colors.surface,
+  color: colors.textPrimary,
   fontFamily: typography.fontFamily.body,
   fontSize: typography.fontSize.sm,
 };
@@ -397,6 +399,7 @@ const estiloInputNuevo: React.CSSProperties = {
   borderRadius: 6,
   border: `1px dashed ${colors.border}`,
   background: 'transparent',
+  color: colors.textPrimary,
   fontFamily: typography.fontFamily.body,
   fontSize: typography.fontSize.sm,
 };

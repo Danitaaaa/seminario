@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, BookOpen, Check, ChevronRight, RotateCcw, Search, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, ChevronRight, RotateCcw, Search, SkipForward, Sparkles } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Button } from '../../components/ui/button/button';
@@ -311,7 +311,14 @@ export function EstudiarFlashcardsPage() {
     }
   }
 
+  // Saltar no registra el repaso: la tarjeta pasa al final y vuelve a aparecer después de las demás.
+  function saltar() {
+    setVolteada(false);
+    setTarjetas((lista) => [...lista.slice(0, indice), ...lista.slice(indice + 1), lista[indice]]);
+  }
+
   const actual = tarjetas[indice];
+  const quedanOtras = indice < tarjetas.length - 1;
   if (cargando) return <main className={styles.studyShell}><p role="status">Preparando tus tarjetas…</p></main>;
   if (error && !actual) return <main className={styles.studyShell}><CartelError mensaje={error} /><Button onClick={() => navigate(`/flashcards/${deckId}`)}>Volver al mazo</Button></main>;
   if (!actual) return (
@@ -348,6 +355,11 @@ export function EstudiarFlashcardsPage() {
         <button type="button" className={styles.medium} disabled={guardando} onClick={() => void evaluar('intermedio')}>Intermedio <small>3 días</small></button>
         <button type="button" className={styles.easy} disabled={guardando} onClick={() => void evaluar('facil')}>Fácil <small>6 días</small></button>
       </div></section>}
+      {quedanOtras && (
+        <button type="button" className={styles.skipButton} disabled={guardando} onClick={saltar}>
+          <SkipForward size={16} aria-hidden="true" /> Saltar por ahora
+        </button>
+      )}
     </main>
   );
 }

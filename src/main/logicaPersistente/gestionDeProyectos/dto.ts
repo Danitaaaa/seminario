@@ -125,3 +125,10 @@ export const UnirseAProyectoDTOSchema = z.object({
     enlace: z.string().url().max(2048),
 });
 export type UnirseAProyectoDTO = z.infer<typeof UnirseAProyectoDTOSchema>;
+
+// Portada del proyecto en el listado (imagen local de cada compu).
+export const PortadaProyectoDTOSchema = z.object({
+    idProyecto: z.number().int().positive(),
+    idUsuario: z.number().int().positive(),
+});
+export type PortadaProyectoDTO = z.infer<typeof PortadaProyectoDTOSchema>;

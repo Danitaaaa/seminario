@@ -15,6 +15,7 @@ import { notificacionesApi } from './apis/notificaciones';
 import { proyectosApi } from './apis/proyectos';
 import { tareasApi } from './apis/tareas';
 import { edicionApi } from './apis/edicion';
+import { portadasProyectosApi } from './apis/portadasProyectos';
 
 contextBridge.exposeInMainWorld('api', {
   ...nodosApi,
@@ -33,4 +34,5 @@ contextBridge.exposeInMainWorld('api', {
   ...proyectosApi,
   ...tareasApi,
   ...edicionApi,
+  ...portadasProyectosApi,
 });

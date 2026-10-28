@@ -1,21 +1,22 @@
 /* División de tareas — tablero por integrante */
 
 .tareas-pagina {
-  --tareas-borde: #e2e1dc;
-  --tareas-superficie: #ffffff;
-  --tareas-columna: #f4f3ef;
-  --tareas-ambar: #e0a530;
-  --tareas-ambar-fondo: #fffaee;
-  --tareas-chip: #eef0f7;
-  --tareas-chip-texto: #495b7d;
-  --tareas-suave: #5c5c58;
-  --tareas-soltar: #c4cbda;
-  --tareas-soltar-fondo: #e6eaf5;
+  /* Todo sale de la paleta (issue.ts), así cambia con el modo oscuro y con la paleta elegida */
+  --tareas-borde: var(--color-border);
+  --tareas-superficie: var(--color-surface);
+  --tareas-columna: color-mix(in srgb, var(--color-frost-claro) 55%, var(--color-background));
+  --tareas-ambar: var(--color-accent);
+  --tareas-ambar-fondo: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+  --tareas-chip: var(--color-frost-claro);
+  --tareas-chip-texto: var(--color-text-light);
+  --tareas-suave: var(--color-text-secondary);
+  --tareas-soltar: var(--color-frost-blue);
+  --tareas-soltar-fondo: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 
   display: flex;
   flex-direction: column;
   gap: 20px;
-  color: #1e1e1e;
+  color: var(--color-text-primary);
 }
 
 /* ---------- Ruta ---------- */
@@ -69,11 +70,11 @@
 
 .tareas-boton--primario {
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .tareas-boton--primario:hover:not(:disabled) {
-  background: #1f2b4f;
+  background: var(--color-primary-dark);
 }
 
 .tareas-boton--peligro {
@@ -133,7 +134,7 @@
   height: 12px;
   overflow: hidden;
   border-radius: 999px;
-  background: #e8eaf0;
+  background: var(--color-frost-claro);
 }
 
 .tareas-resumen__segmento {
@@ -165,7 +166,7 @@
   border: 1px solid var(--tareas-borde);
   border-radius: 999px;
   background: var(--tareas-superficie);
-  color: #1e1e1e;
+  color: var(--color-text-primary);
   font: inherit;
   font-size: 0.8rem;
   cursor: pointer;
@@ -195,6 +196,7 @@
   flex-direction: column;
   gap: 12px;
   padding: 16px;
+  border: 1px solid var(--tareas-borde);
   border-radius: 20px;
   background: var(--tareas-columna);
 }
@@ -231,7 +233,7 @@
   min-width: 24px;
   padding: 1px 8px;
   border-radius: 999px;
-  background: #fbe38a;
+  background: color-mix(in srgb, var(--color-accent) 45%, var(--color-surface));
   font-size: 0.75rem;
   font-weight: 700;
   text-align: center;
@@ -243,7 +245,7 @@
   place-items: center;
   width: 40px;
   height: 40px;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--color-surface);
   border-radius: 50%;
   font-size: 0.8rem;
   font-weight: 700;
@@ -277,7 +279,7 @@
   height: 6px;
   overflow: hidden;
   border-radius: 999px;
-  background: #e3e5ec;
+  background: var(--color-frost-claro);
 }
 
 .tarea-progreso__relleno {
@@ -361,7 +363,7 @@
 
 .tarea-tarjeta__agarre {
   align-self: center;
-  color: #b4bac8;
+  color: var(--color-frost-blue);
   font-size: 0.8rem;
   letter-spacing: -2px;
   user-select: none;
@@ -375,9 +377,9 @@
   width: 20px;
   height: 20px;
   margin: 1px 0 0;
-  border: 1.5px solid #8ba3c5;
+  border: 1.5px solid var(--color-frost-blue);
   border-radius: 5px;
-  background: #ffffff;
+  background: var(--color-surface);
   cursor: pointer;
 }
 
@@ -385,7 +387,7 @@
   content: '';
   width: 10px;
   height: 10px;
-  background: #ffffff;
+  background: var(--color-white);
   clip-path: polygon(14% 44%, 0 62%, 40% 100%, 100% 20%, 84% 6%, 40% 66%);
   transform: scale(0);
   transition: transform 0.12s ease;
@@ -422,7 +424,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #1e1e1e;
+  color: var(--color-text-primary);
   font: inherit;
   font-size: 0.88rem;
   font-weight: 700;
@@ -462,7 +464,7 @@ button.tarea-tarjeta__titulo:hover {
 }
 
 .tarea-tarjeta--hecha .tarea-tarjeta__titulo {
-  color: #3b4660;
+  color: var(--color-text-light);
   text-decoration: line-through;
 }
 
@@ -527,7 +529,7 @@ button.tarea-tarjeta__titulo:hover {
   top: -1000px;
   left: -1000px;
   border: 2px solid var(--color-primary);
-  box-shadow: 0 12px 28px rgba(43, 58, 103, 0.28);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary) 28%, transparent);
   transform: rotate(-3deg);
   pointer-events: none;
 }
@@ -545,7 +547,7 @@ button.tarea-tarjeta__titulo:hover {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(30, 30, 30, 0.4);
+  background: color-mix(in srgb, var(--color-text) 40%, transparent);
 }
 
 .tarea-modal {
@@ -557,8 +559,8 @@ button.tarea-tarjeta__titulo:hover {
   padding: 24px;
   overflow-y: auto;
   border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
+  background: var(--color-surface);
+  box-shadow: 0 20px 48px color-mix(in srgb, var(--color-text) 20%, transparent);
 }
 
 .tarea-modal h2 {
@@ -586,10 +588,10 @@ button.tarea-tarjeta__titulo:hover {
 .tarea-campo textarea,
 .tarea-campo select {
   padding: 9px 11px;
-  border: 1px solid #c9ccd6;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: #ffffff;
-  color: #1e1e1e;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 400;
@@ -603,7 +605,7 @@ button.tarea-tarjeta__titulo:hover {
 .tarea-campo textarea:focus-visible,
 .tarea-campo select:focus-visible {
   border-color: var(--color-primary);
-  outline: 2px solid rgba(43, 58, 103, 0.25);
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 .tarea-campo input[aria-invalid='true'] {
@@ -632,8 +634,8 @@ button.tarea-tarjeta__titulo:hover {
   display: inline-flex; padding: 4px; border: 0; border-radius: 6px;
   background: transparent; color: inherit; opacity: .6; cursor: pointer;
 }
-.tarea-tarjeta__accion:hover { opacity: 1; background: rgba(0, 0, 0, .06); }
-.tarea-tarjeta__accion--peligro:hover { color: #b3261e; }
+.tarea-tarjeta__accion:hover { opacity: 1; background: color-mix(in srgb, var(--color-text) 6%, transparent); }
+.tarea-tarjeta__accion--peligro:hover { color: var(--color-error); }
 
 /* ---------- Pantallas chicas ---------- */
 

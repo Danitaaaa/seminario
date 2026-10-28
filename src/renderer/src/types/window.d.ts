@@ -165,6 +165,10 @@ declare global {
 
       listarInvitaciones: (datos: { idProyecto: number; idUsuarioSolicitante: number }) => Promise<InvitacionPendiente[]>;
       cancelarInvitacion: (datos: { idProyecto: number; idUsuarioSolicitante: number; idInvitacion: number }) => Promise<void>;
+      // Portada del proyecto (imagen local; null = colores de la paleta)
+      obtenerPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;
+      elegirPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;
+      quitarPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<void>;
       // Gestion de tareas
       listarTareas: (datos: unknown) => Promise<Tarea[]>;
       crearTarea: (datos: unknown) => Promise<Tarea>;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { Link2, Plus } from 'lucide-react';
 import type { Proyecto } from '../../types/proyectos';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { CartelError } from '../../components/comunes/cartelError';
@@ -74,15 +75,16 @@ export function ProyectosPage() {
                     />
                 ))}
 
-                <button type="button" className="tarjeta-crear-proyecto" onClick={() => setMostrarCrear(true)}>
-                    <span className="tarjeta-crear-proyecto__mas">+</span>
-                    Crear proyecto
-                </button>
-
-                <button type="button" className="tarjeta-crear-proyecto" onClick={() => setMostrarUnirse(true)}>
-                    <span className="tarjeta-crear-proyecto__mas">✉</span>
-                    Unirme con enlace
-                </button>
+                <div className="tarjeta-crear-proyecto">
+                    <button type="button" className="tarjeta-crear-proyecto__opcion" onClick={() => setMostrarCrear(true)}>
+                        <span className="tarjeta-crear-proyecto__mas"><Plus size={22} /></span>
+                        Crear proyecto
+                    </button>
+                    <button type="button" className="tarjeta-crear-proyecto__opcion" onClick={() => setMostrarUnirse(true)}>
+                        <span className="tarjeta-crear-proyecto__mas"><Link2 size={20} /></span>
+                        Unirme con enlace
+                    </button>
+                </div>
             </div>
 
             {mostrarCrear && (
