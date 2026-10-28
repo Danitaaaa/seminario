@@ -3,6 +3,7 @@ import { ipcRenderer, type IpcRendererEvent } from 'electron';
 export const notificacionesApi = {
   listarNotificaciones: (datos: unknown) => ipcRenderer.invoke('notificaciones:listar', datos),
   marcarNotificacionesLeidas: (datos: unknown) => ipcRenderer.invoke('notificaciones:marcarLeidas', datos),
+  borrarNotificacionesLeidas: (datos: unknown) => ipcRenderer.invoke('notificaciones:borrarLeidas', datos),
   obtenerSilencioNotificaciones: (datos: unknown) => ipcRenderer.invoke('notificaciones:obtenerSilencio', datos),
   silenciarNotificaciones: (datos: unknown) => ipcRenderer.invoke('notificaciones:silenciar', datos),
   vigilarNotificaciones: (datos: unknown) => ipcRenderer.invoke('notificaciones:vigilar', datos),

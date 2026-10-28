@@ -5,6 +5,7 @@ import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Button } from '../../components/ui/button/button';
 import { CartelError } from '../../components/comunes/cartelError';
 import type { Deck, Flashcard } from '../../types/flashcards';
+import { ESTILOS_TARJETA, usarEstiloFlashcards, type EstiloTarjeta } from '../../hooks/usarEstiloFlashcards';
 import styles from '../../styles/flashcards.module.css';
 
 function usuarioIdActual(): number {
@@ -66,6 +67,7 @@ export function FlashcardsPage() {
   return (
     <PlantillaLayout titulo="Flashcards" idActivo="metodos" usuario={{ nombre: 'Usuario' }}>
       <div className={styles.page}>
+        <Link className={styles.backLink} to="/metodos"><ArrowLeft size={17} /> Métodos de estudio</Link>
         <header className={styles.toolbar}>
           <div>
             <p className={styles.eyebrow}>MÉTODOS DE ESTUDIO</p>
@@ -204,7 +206,17 @@ export function DeckFlashcardsPage() {
   );
 }
 
+// Clase de CSS de cada estilo de tarjeta (los dibujos usan los colores de la paleta).
+const CLASE_ESTILO: Record<EstiloTarjeta, string> = {
+  simple: '',
+  ondas: styles.styleWaves,
+  esquinas: styles.styleCorners,
+  diagonales: styles.styleDiagonals,
+  puntos: styles.styleDots,
+};
+
 export function EstudiarFlashcardsPage() {
+  const { estilo, cambiarEstilo } = usarEstiloFlashcards();
   const { deckId: deckIdParam } = useParams();
   const deckId = Number(deckIdParam);
   const navigate = useNavigate();
@@ -270,8 +282,17 @@ export function EstudiarFlashcardsPage() {
         <span>{mazo?.nombre ?? 'Estudiar'} · {indice + 1} de {tarjetas.length}</span>
         <span className={styles.progressTrack}><span style={{ width: `${((indice + 1) / tarjetas.length) * 100}%` }} /></span>
       </header>
+      <div className={styles.styleSelector} role="radiogroup" aria-label="Estilo de la tarjeta">
+        <span>Estilo</span>
+        {ESTILOS_TARJETA.map(({ valor, etiqueta }) => (
+          <button key={valor} type="button" role="radio" aria-checked={estilo === valor} className={`${styles.styleOption} ${estilo === valor ? styles.styleOptionActive : ''}`} onClick={() => cambiarEstilo(valor)}>
+            <span className={`${styles.styleSwatch} ${CLASE_ESTILO[valor]}`} aria-hidden="true" />
+            {etiqueta}
+          </button>
+        ))}
+      </div>
       {error && <CartelError mensaje={error} onCerrar={() => setError('')} />}
-      <button type="button" className={`${styles.studyCard} ${volteada ? styles.studyCardFlipped : ''}`} onClick={() => setVolteada((valor) => !valor)} aria-label={volteada ? 'Mostrar la pregunta' : 'Voltear para ver la respuesta'}>
+      <button type="button" className={`${styles.studyCard} ${CLASE_ESTILO[estilo]} ${volteada ? styles.studyCardFlipped : ''}`} onClick={() => setVolteada((valor) => !valor)} aria-label={volteada ? 'Mostrar la pregunta' : 'Voltear para ver la respuesta'}>
         <span className={styles.cardSide}><small>{volteada ? 'RESPUESTA' : 'PREGUNTA'}</small><span>{volteada ? actual.respuesta : actual.pregunta}</span>{!volteada && <small className={styles.flipHint}>Voltear para visualizar la respuesta</small>}</span>
       </button>
       {volteada && <section className={styles.rating}><p>¿Cómo te resultó?</p><div className={styles.ratingButtons}>

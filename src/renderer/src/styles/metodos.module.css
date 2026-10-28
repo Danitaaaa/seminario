@@ -11,10 +11,78 @@
   line-height: 1.6;
 }
 
+.introRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+/* Botones para elegir cómo se ven los métodos */
+.viewToggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--color-frost-claro);
+}
+
+.viewToggle button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.viewToggle button:hover {
+  color: var(--color-primary);
+}
+
+.viewToggle .viewActive {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: 0 2px 6px rgb(44 62 96 / 10%);
+}
+
+.viewToggle button:focus-visible {
+  outline: 3px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
+/* Ajustar a la pantalla: entran todas las que quepan por fila y ocupan todo el ancho */
 .methodGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 20px;
+}
+
+/* Cuadrícula: siempre de a dos */
+.methodGridTwo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Lista: una debajo de la otra, más compactas */
+.methodList {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.methodList .methodCard {
+  align-items: center;
+  min-height: 0;
+  padding: 16px 22px;
+}
+
+@media (max-width: 620px) {
+  .methodGridTwo {
+    grid-template-columns: 1fr;
+  }
 }
 
 .methodCard {

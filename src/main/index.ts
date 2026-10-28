@@ -111,6 +111,7 @@ import { EnviarRecordatoriosPendientes } from './logicaPersistente/gestionDeRepe
 import { CrearNotificacion } from './logicaPersistente/gestionDeNotificaciones/crearNotificacion';
 import { ListarNotificaciones } from './logicaPersistente/gestionDeNotificaciones/listarNotificaciones';
 import { MarcarLeidas } from './logicaPersistente/gestionDeNotificaciones/marcarLeidas';
+import { BorrarLeidas } from './logicaPersistente/gestionDeNotificaciones/borrarLeidas';
 import { ObtenerSilencio, CambiarSilencio } from './logicaPersistente/gestionDeNotificaciones/silencio';
 import type { Notificacion } from './logicaPersistente/gestionDeNotificaciones/entidades';
 import { Notificaciones } from './administracionDePersistencia/notificaciones';
@@ -252,7 +253,8 @@ function wireDependencies(): void {
   // Notificaciones
   const notificaciones = new Notificaciones(
     new CrearNotificacion(persistencia), new ListarNotificaciones(persistencia),
-    new MarcarLeidas(persistencia), new ObtenerSilencio(persistencia), new CambiarSilencio(persistencia)
+    new MarcarLeidas(persistencia), new ObtenerSilencio(persistencia), new CambiarSilencio(persistencia),
+    new BorrarLeidas(persistencia)
   );
   const notificador = new Notificador(
     notificaciones, mostrarEnSistema, () => mainWindow?.webContents.send('notificaciones:nuevas')

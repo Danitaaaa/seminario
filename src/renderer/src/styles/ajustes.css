@@ -157,12 +157,68 @@
   gap: var(--espacio-md);
 }
 
-.ajustes__miniatura {
-  width: 160px;
-  height: 64px;
-  border-radius: var(--radio-sm);
-  object-fit: cover;
-  box-shadow: 0 0 0 1px var(--color-border);
+/* Vista previa del banner: misma forma alargada que el de inicio, se arrastra para acomodar la foto */
+.vista-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espacio-sm);
+  width: 100%;
+}
+
+.vista-banner__caja {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--espacio-xs);
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 5 / 1;
+  min-height: 96px;
+  padding: 0 var(--espacio-lg);
+  border-radius: var(--radio-lg);
+  background-color: var(--color-primary);
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: var(--color-white);
+  cursor: grab;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+/* El mismo velo que el banner real, para ver cómo se va a leer el texto */
+.vista-banner__caja::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgb(0 0 0 / 45%);
+}
+
+.vista-banner__caja--arrastrando {
+  cursor: grabbing;
+}
+
+.vista-banner__caja:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+.vista-banner__saludo {
+  font-family: var(--fuente-titulo, inherit);
+  font-size: var(--tamano-lg);
+  font-weight: var(--peso-bold);
+}
+
+.vista-banner__pista {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  font-size: var(--tamano-xs);
+  opacity: 0.85;
 }
 
 .ajustes__ayuda {

@@ -1,6 +1,7 @@
 import { CrearNotificacion } from '../logicaPersistente/gestionDeNotificaciones/crearNotificacion';
 import { ListarNotificaciones } from '../logicaPersistente/gestionDeNotificaciones/listarNotificaciones';
 import { MarcarLeidas } from '../logicaPersistente/gestionDeNotificaciones/marcarLeidas';
+import { BorrarLeidas } from '../logicaPersistente/gestionDeNotificaciones/borrarLeidas';
 import { ObtenerSilencio, CambiarSilencio } from '../logicaPersistente/gestionDeNotificaciones/silencio';
 import { Notificacion } from '../logicaPersistente/gestionDeNotificaciones/entidades';
 import {
@@ -17,7 +18,8 @@ export class Notificaciones {
     private readonly listarNotificaciones: ListarNotificaciones,
     private readonly marcarLeidasNotificaciones: MarcarLeidas,
     private readonly obtenerSilencio: ObtenerSilencio,
-    private readonly cambiarSilencio: CambiarSilencio
+    private readonly cambiarSilencio: CambiarSilencio,
+    private readonly borrarLeidasNotificaciones: BorrarLeidas
   ) {}
 
   async crear(datos: CrearNotificacionDTO): Promise<Notificacion | null> {
@@ -28,6 +30,9 @@ export class Notificaciones {
   }
   async marcarLeidas(datos: MarcarLeidasDTO): Promise<void> {
     return this.marcarLeidasNotificaciones.ejecutar(datos);
+  }
+  async borrarLeidas(datos: UsuarioDTO): Promise<void> {
+    return this.borrarLeidasNotificaciones.ejecutar(datos);
   }
   async estaSilenciado(usuarioId: number): Promise<boolean> {
     return this.obtenerSilencio.ejecutar({ usuarioId });

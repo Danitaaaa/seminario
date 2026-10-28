@@ -360,6 +360,9 @@
 }
 
 .studyCard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
   width: min(100%, 720px);
   min-height: min(56vh, 470px);
@@ -400,6 +403,159 @@
   color: var(--color-text-light);
   font-size: 0.91rem;
   letter-spacing: 0;
+}
+
+/* ---------- Estilos de tarjeta (se eligen al estudiar) ---------- */
+
+.styleSelector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.styleOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.styleOption:hover {
+  border-color: var(--color-primary-light);
+}
+
+.styleOptionActive {
+  border-color: var(--color-primary);
+  background: var(--color-frost-claro);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.styleOption:focus-visible {
+  outline: 3px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
+/* Muestrita del estilo dentro del botón */
+.styleSwatch {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 22px;
+  height: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-surface);
+}
+
+.styleWaves::before,
+.styleWaves::after,
+.styleCorners::before,
+.styleCorners::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Ondas: dos olas de la paleta, abajo y arriba */
+.styleWaves::before {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 28%;
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'%3E%3Cpath d='M0 30 C 70 0 130 60 200 30 S 330 0 400 30 V60 H0 Z'/%3E%3C/svg%3E") bottom / 100% 100% no-repeat;
+}
+
+.styleWaves::after {
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 18%;
+  background: color-mix(in srgb, var(--color-primary-light) 30%, transparent);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'%3E%3Cpath d='M0 30 C 70 0 130 60 200 30 S 330 0 400 30 V60 H0 Z'/%3E%3C/svg%3E") bottom / 100% 100% no-repeat;
+  transform: scale(-1, -1);
+}
+
+/* Esquinas: corchetes en dos puntas */
+.styleCorners::before,
+.styleCorners::after {
+  width: 12%;
+  aspect-ratio: 1;
+  border: 3px solid var(--color-primary);
+  opacity: 0.7;
+}
+
+.styleCorners::before {
+  top: 7%;
+  left: 5%;
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 10px;
+}
+
+.styleCorners::after {
+  right: 5%;
+  bottom: 7%;
+  border-top: 0;
+  border-left: 0;
+  border-bottom-right-radius: 10px;
+}
+
+/* Diagonales: rayado suave */
+.styleDiagonals {
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 16px,
+    color-mix(in srgb, var(--color-primary) 9%, transparent) 16px 18px
+  );
+}
+
+/* Puntos: grilla de puntitos como hoja punteada */
+.styleDots {
+  background-image: radial-gradient(color-mix(in srgb, var(--color-primary) 22%, transparent) 1.5px, transparent 1.6px);
+  background-size: 20px 20px;
+}
+
+/* En la muestrita los dibujos van más chicos */
+.styleSwatch.styleCorners::before,
+.styleSwatch.styleCorners::after {
+  width: 35%;
+  border-width: 1.5px;
+  border-radius: 0;
+}
+
+.styleSwatch.styleDiagonals {
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 3px,
+    color-mix(in srgb, var(--color-primary) 35%, transparent) 3px 4px
+  );
+}
+
+.styleSwatch.styleDots {
+  background-size: 5px 5px;
+  background-image: radial-gradient(color-mix(in srgb, var(--color-primary) 45%, transparent) 1px, transparent 1.1px);
+}
+
+.styleSwatch.styleWaves::before {
+  height: 50%;
+  background: color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
+.styleSwatch.styleWaves::after {
+  height: 30%;
 }
 
 .studyCardFlipped {

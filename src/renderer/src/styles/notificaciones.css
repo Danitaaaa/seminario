@@ -106,8 +106,13 @@
   color: var(--color-error-texto);
 }
 
+.notificaciones__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espacio-md);
+}
+
 .notificaciones__marcar {
-  align-self: flex-end;
   padding: 0;
   border: 0;
   background: transparent;

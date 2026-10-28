@@ -105,6 +105,7 @@ declare global {
       // Notificaciones
       listarNotificaciones: (datos: { usuarioId: number }) => Promise<Notificacion[]>;
       marcarNotificacionesLeidas: (datos: { usuarioId: number; ids?: number[] }) => Promise<void>;
+      borrarNotificacionesLeidas: (datos: { usuarioId: number }) => Promise<void>;
       obtenerSilencioNotificaciones: (datos: { usuarioId: number }) => Promise<boolean>;
       silenciarNotificaciones: (datos: { usuarioId: number; silenciadas: boolean }) => Promise<boolean>;
       vigilarNotificaciones: (datos: { usuarioId: number }) => Promise<void>;

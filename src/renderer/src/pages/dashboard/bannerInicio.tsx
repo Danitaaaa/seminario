@@ -17,7 +17,7 @@ const ICONOS: Record<TipoTarjeta, LucideIcon> = { clase: CalendarDays, evento: C
 // Banner de bienvenida del dashboard: saludo y un carrusel con lo próximo.
 export function BannerInicio() {
   const usuarioId = obtenerUsuarioId();
-  const { tarjetas: elegidas, auto, fondo } = usarPreferenciaBanner();
+  const { tarjetas: elegidas, auto, fondo, posicion } = usarPreferenciaBanner();
   const [nombre, setNombre] = useState("");
   const [horarios, setHorarios] = useState<HorarioCursado[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
@@ -78,7 +78,11 @@ export function BannerInicio() {
   return (
     <section
       className={`banner${conImagen ? " banner--imagen" : ""}`}
-      style={conImagen ? { backgroundImage: `url("${imagen}")` } : undefined}
+      style={
+        conImagen
+          ? { backgroundImage: `url("${imagen}")`, backgroundPosition: `${posicion.x}% ${posicion.y}%` }
+          : undefined
+      }
       aria-label="Bienvenida"
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}

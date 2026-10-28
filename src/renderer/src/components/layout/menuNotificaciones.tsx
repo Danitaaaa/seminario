@@ -81,6 +81,17 @@ export function MenuNotificaciones() {
     setLista((l) => l.map((n) => ({ ...n, leida: true })));
   }
 
+  async function borrarLeidas(): Promise<void> {
+    if (!usuarioId) return;
+    setError("");
+    try {
+      await window.api.borrarNotificacionesLeidas({ usuarioId });
+      setLista((l) => l.filter((n) => !n.leida));
+    } catch {
+      setError("No se pudieron borrar. Probá de nuevo.");
+    }
+  }
+
   function abrirAviso(n: Notificacion): void {
     if (usuarioId && !n.leida) window.api.marcarNotificacionesLeidas({ usuarioId, ids: [n.id] }).catch(() => {});
     setAbierto(false);
@@ -129,11 +140,18 @@ export function MenuNotificaciones() {
               <p className="notificaciones__vacio">No tenés notificaciones.</p>
             ) : (
               <>
-                {sinLeer > 0 && (
-                  <button type="button" className="notificaciones__marcar" onClick={marcarTodas}>
-                    Marcar todo como leído
-                  </button>
-                )}
+                <div className="notificaciones__acciones">
+                  {lista.length > sinLeer && (
+                    <button type="button" className="notificaciones__marcar" onClick={borrarLeidas}>
+                      Borrar leídas
+                    </button>
+                  )}
+                  {sinLeer > 0 && (
+                    <button type="button" className="notificaciones__marcar" onClick={marcarTodas}>
+                      Marcar todo como leído
+                    </button>
+                  )}
+                </div>
                 <ul className="notificaciones__lista">
                   {secciones.flatMap((s) => [
                     <li key={s.titulo} className="notificaciones__seccion">{s.titulo}</li>,

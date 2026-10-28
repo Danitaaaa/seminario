@@ -21,6 +21,9 @@ export function registerNotificacionesIpc(notificaciones: Notificaciones, vigia:
   ipcMain.handle('notificaciones:marcarLeidas', async (_e, datos: unknown) => {
     await notificaciones.marcarLeidas(validar(marcarLeidasSchema, datos));
   });
+  ipcMain.handle('notificaciones:borrarLeidas', async (_e, datos: unknown) => {
+    await notificaciones.borrarLeidas(validar(usuarioSchema, datos));
+  });
   ipcMain.handle('notificaciones:obtenerSilencio', async (_e, datos: unknown) =>
     notificaciones.estaSilenciado(validar(usuarioSchema, datos).usuarioId)
   );

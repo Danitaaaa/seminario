@@ -10,6 +10,7 @@ import { usarModo, type PreferenciaModo } from "../../hooks/usarModo";
 import { usarPreferenciaMetas, type EstiloMetas, type MostrarMetas } from "../../hooks/usarPreferenciaMetas";
 import { usarPreferenciaBanner, type FondoBanner, type TarjetasBanner } from "../../hooks/usarPreferenciaBanner";
 import { PALETAS } from "../../styles/temas/paletas";
+import { VistaPreviaBanner } from "./vistaPreviaBanner";
 import "../../styles/ajustes.css";
 
 const opcionesModo: { valor: PreferenciaModo; etiqueta: string; icono: LucideIcon }[] = [
@@ -184,7 +185,12 @@ export function AjustesPage() {
           {banner.fondo === "imagen" && (
             <div className="ajustes__fondo">
               {fondoImagen ? (
-                <img className="ajustes__miniatura" src={fondoImagen} alt="Imagen de fondo actual" />
+                <VistaPreviaBanner
+                  imagen={fondoImagen}
+                  nombre={nombre}
+                  posicion={banner.posicion}
+                  alCambiar={banner.cambiarPosicion}
+                />
               ) : (
                 <span className="ajustes__ayuda">
                   Todavía no subiste una imagen: mientras tanto se usan los colores de la paleta.
