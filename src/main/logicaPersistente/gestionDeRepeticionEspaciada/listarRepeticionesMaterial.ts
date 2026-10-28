@@ -5,6 +5,7 @@ export class ListarRepeticionesMaterial {
     constructor(private readonly persistencia: Persistencia) {}
 
     async ejecutar(usuarioId: number): Promise<RepeticionMaterial[]> {
+        // La unión recupera el nombre del nodo sin exponer otros usuarios.
         const filas = await this.persistencia.ejecutar(
             `
             SELECT r.id_nodo, n.nombre, r.intervalo_dias, r.proxima_revision

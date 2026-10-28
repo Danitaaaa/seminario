@@ -1,10 +1,12 @@
 import { Persistencia } from '../../persistencia/Persistencia';
 import { FlashcardPendiente } from './entidades';
 
+// Caso de uso para obtener tarjetas vencidas de un usuario.
 export class ListarFlashcardsPendientes {
     constructor(private readonly persistencia: Persistencia) {}
 
     async ejecutar(usuarioId: number): Promise<FlashcardPendiente[]> {
+        // CURRENT_DATE incluye también las tarjetas que vencen hoy.
         const filas = await this.persistencia.ejecutar(
             `
             SELECT f.id_flashcard, f.id_deck, d.nombre AS nombre_deck,

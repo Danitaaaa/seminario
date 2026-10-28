@@ -20,5 +20,6 @@ CREATE TABLE IF NOT EXISTS repeticiones_material (
 CREATE TABLE IF NOT EXISTS notificaciones_repaso_enviadas (
     id_usuario INTEGER NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
     fecha_envio DATE NOT NULL DEFAULT CURRENT_DATE,
+    enviado_en TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_usuario, fecha_envio)
 );
