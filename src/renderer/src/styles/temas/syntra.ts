@@ -32,5 +32,10 @@ export const syntra: Record<Modo, typeof colors> = {
     splashFondo: "#0B1028",
     splashCentro: "#25206B",
     splashBrillo: "#8B7BFF",
+    crema: "#1A2142",
+    cremaOscuro: "#232B55",
+    frostSuave: "#161D40",
+    noche: "#070B1E",
+    nocheClaro: "#1C2350",
   },
 };

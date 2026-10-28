@@ -16,6 +16,9 @@ import { proyectosApi } from './apis/proyectos';
 import { tareasApi } from './apis/tareas';
 import { edicionApi } from './apis/edicion';
 import { portadasProyectosApi } from './apis/portadasProyectos';
+import { estadisticasApi } from './apis/estadisticas';
+import { sesionesEstudioApi } from './apis/sesionesEstudio';
+import { spotifyApi } from './apis/spotify';
 
 contextBridge.exposeInMainWorld('api', {
   ...nodosApi,
@@ -35,4 +38,7 @@ contextBridge.exposeInMainWorld('api', {
   ...tareasApi,
   ...edicionApi,
   ...portadasProyectosApi,
+  ...estadisticasApi,
+  ...sesionesEstudioApi,
+  ...spotifyApi,
 });

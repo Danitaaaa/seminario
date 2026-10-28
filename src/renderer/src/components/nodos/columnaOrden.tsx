@@ -3,14 +3,13 @@ import iconoArrowDown from '../../assets/icons/arrow-down.svg';
 import { Icono } from '../comunes/icono';
 import type { Direccion, OrdenarPor } from '../../types/vistaNodos';
 
-interface ColumnaOrdenProps {
+// Genérico en el campo para poder reutilizarlo en otras listas (ej. sesiones de estudio).
+interface ColumnaOrdenProps<T extends string = OrdenarPor> {
     etiqueta: string;
-    // Si no se pasa campo (ej. "tipo", que no existe como columna ordenable en el
-    // backend todavía), la pill se muestra pero no dispara ordenamiento.
-    campo?: OrdenarPor;
-    ordenActivo: OrdenarPor;
+    campo?: T;
+    ordenActivo: T;
     direccion: Direccion;
-    onOrdenar?: (campo: OrdenarPor) => void;
+    onOrdenar?: (campo: T) => void;
 }
 
 export function ColumnaOrden({ etiqueta, campo, ordenActivo, direccion, onOrdenar }: ColumnaOrdenProps) {

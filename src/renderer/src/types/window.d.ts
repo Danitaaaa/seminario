@@ -8,6 +8,7 @@ import type {
   Meta, EstadisticasMetas, ListarMetasInput, CrearMetaInput, ModificarMetaInput, AlternarMetaInput,
   EliminarMetaInput, CopiarMetasInput, EstadisticasMetasInput,
 } from './metas';
+import type { ResumenProyecto, ResumenSesiones } from './estadisticas';
 import type { Deck, Flashcard, FlashcardPendiente, RepeticionMaterial } from './flashcards';
 import type { Notificacion } from './notificaciones';
 import type { 
@@ -33,10 +34,12 @@ import { Tarea } from './tareas';
 type Resultado<T> =
   | { ok: true; datos: T }
   | { ok: false; codigo: string; mensaje: string; detalle?: Record<string, unknown> };
+import type { SesionesEstudioApi } from './sesionesEstudio';
+import type { SpotifyApi } from './spotify';
 
 declare global {
   interface Window {
-    api: {
+    api: SesionesEstudioApi & SpotifyApi & {
       // Gestion de material de estudio
       crearNodo: (datos: { nombre: string; idPadre: number | null }) => Promise<Nodo>;
       modificarNodo: (datos: { id: number; nombre: string }) => Promise<Nodo>;
@@ -89,6 +92,7 @@ declare global {
         | { exito: true; usuarioId: number }
         | { exito: false; mensaje: string }
       >;
+      cerrarSesion: () => Promise<void>;
 
       // Gestion de perfil
       obtenerPerfil: (datos: { id: number }) => Promise<Perfil>;
@@ -165,6 +169,10 @@ declare global {
 
       listarInvitaciones: (datos: { idProyecto: number; idUsuarioSolicitante: number }) => Promise<InvitacionPendiente[]>;
       cancelarInvitacion: (datos: { idProyecto: number; idUsuarioSolicitante: number; idInvitacion: number }) => Promise<void>;
+      // Estadísticas
+      resumenProyectos: (datos: { idUsuario: number; mes: string; hoy: string }) => Promise<ResumenProyecto[]>;
+      resumenSesionesEstudio: (datos: { idUsuario: number; desde: string; zonaHoraria: string }) => Promise<ResumenSesiones>;
+
       // Portada del proyecto (imagen local; null = colores de la paleta)
       obtenerPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;
       elegirPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;

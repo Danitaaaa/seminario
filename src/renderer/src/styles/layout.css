@@ -274,6 +274,13 @@
   background: color-mix(in srgb, var(--color-secondary) 20%, var(--color-surface));
 }
 
+/* Botón deshabilitado: se ve apagado y no reacciona al pasar el mouse. */
+.app-boton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ---------- Accesibilidad ---------- */
 .app-nav:focus-visible,
 .app-boton-icono:focus-visible,

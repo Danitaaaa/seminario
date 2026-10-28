@@ -144,6 +144,12 @@ import {
 } from './logicaPersistente/gestionDeProyectos/portadaProyecto';
 import { PortadasProyectos } from './administracionDePersistencia/portadasProyectos';
 import { registerPortadasProyectosIpc } from './ipc/portadasProyectos.ipc';
+
+// Estadísticas
+import { ResumenProyectos } from './logicaPersistente/gestionDeEstadisticas/resumenProyectos';
+import { ResumenSesionesEstudio } from './logicaPersistente/gestionDeEstadisticas/resumenSesiones';
+import { Estadisticas } from './administracionDePersistencia/estadisticas';
+import { registerEstadisticasIpc } from './ipc/estadisticas.ipc';
 // Gestion de edicion compartida y sincronizacion
 import {
   componerSincronizacion,
@@ -186,7 +192,45 @@ import { RepartirTareas } from './logicaPersistente/gestionDeTareas/repartirTare
 import { EliminarTarea } from './logicaPersistente/gestionDeTareas/eliminarTarea';
 import { registerTareasIpc } from './ipc/tareas.ipc';
 
+// Gestion de sesion de estudio
+import { CrearSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/crearSesionEstudio';
+import { ListarSesionesEstudio } from './logicaPersistente/gestionDeSesionEstudio/listarSesionesEstudio';
+import { ObtenerSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/obtenerSesionEstudio';
+import { ModificarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/modificarSesionEstudio';
+import { IniciarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/iniciarSesionEstudio';
+import { PausarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/pausarSesionEstudio';
+import { ReanudarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/reanudarSesionEstudio';
+import { FinalizarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/finalizarSesionEstudio';
+import { EliminarSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/eliminarSesionEstudio';
+import { GestionarObjetivos } from './logicaPersistente/gestionDeSesionEstudio/gestionarObjetivos';
+import { GestionarPestanas } from './logicaPersistente/gestionDeSesionEstudio/gestionarPestanas';
+import { GestionarPomodoro } from './logicaPersistente/gestionDeSesionEstudio/gestionarPomodoro';
+import { ListarOpcionesSesionEstudio } from './logicaPersistente/gestionDeSesionEstudio/listarOpcionesSesionEstudio';
+import { GestionarMaterias } from './logicaPersistente/gestionDeSesionEstudio/gestionarMaterias';
+import { BuscarSesionesSuperpuestas } from './logicaPersistente/gestionDeSesionEstudio/buscarSesionesSuperpuestas';
+import { ObtenerResumenSesiones } from './logicaPersistente/gestionDeSesionEstudio/obtenerResumenSesiones';
+import { VerificarSesionesEstudioAtrasadas } from './logicaPersistente/gestionDeSesionEstudio/verificarSesionesEstudioAtrasadas';
+import { RecuperarSesionInterrumpida } from './logicaPersistente/gestionDeSesionEstudio/recuperarSesionInterrumpida';
+import { ObtenerSesionEnCurso } from './logicaPersistente/gestionDeSesionEstudio/obtenerSesionEnCurso';
+import { RegistrarLatidoSesion } from './logicaPersistente/gestionDeSesionEstudio/registrarLatidoSesion';
+import { GuardarContenidoSesion } from './logicaPersistente/gestionDeSesionEstudio/guardarContenidoSesion';
+import { ImportarContenidoDesdeMaterial } from './logicaPersistente/gestionDeSesionEstudio/importarContenidoDesdeMaterial';
+import { SesionesEstudio } from './administracionDePersistencia/sesionesEstudio';
+import { ProcesoSesionEstudio } from './logicaNoPersistente/procesoSesionEstudio/procesoSesionEstudio';
+import { DocumentoSesionEstudio } from './logicaNoPersistente/procesoSesionEstudio/documentoSesionEstudio';
+import { registerSesionesEstudioIpc } from './ipc/sesionesEstudio.ipc';
+
+// Spotify
+import { GuardarCuentaSpotify } from './logicaPersistente/gestionDeSpotify/guardarCuentaSpotify';
+import { ObtenerCuentaSpotify } from './logicaPersistente/gestionDeSpotify/obtenerCuentaSpotify';
+import { EliminarCuentaSpotify } from './logicaPersistente/gestionDeSpotify/eliminarCuentaSpotify';
+import { CuentasSpotify } from './administracionDePersistencia/spotify';
+import { AutenticacionSpotify } from './logicaNoPersistente/spotify/autenticacionSpotify';
+import { ClienteSpotify } from './logicaNoPersistente/spotify/clienteSpotify';
+import { registerSpotifyIpc } from './ipc/spotify.ipc';
+
 let mainWindow: BrowserWindow | null = null;
+let procesoSesion: ProcesoSesionEstudio | null = null;
 
 // Se guardan mientras están en pantalla: si no, Windows puede perder el clic.
 const avisosVisibles = new Set<Notification>();
@@ -229,7 +273,8 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-function wireDependencies(): void {
+
+function wireDependencies(): ProcesoSesionEstudio {
   const persistencia = new Persistencia(pool);
 
   // Gestion de material de estudio
@@ -253,7 +298,7 @@ function wireDependencies(): void {
   const guardarDriveId = new GuardarDriveId(persistencia);
   const archivos = new Archivos(crearArchivo, buscarArchivos, modificarArchivo, eliminarArchivo, moverArchivos,
     obtenerArchivo, actualizarContenidoArchivo, guardarDriveId);
-  registerArchivosIpc(archivos, almacenamiento);
+
 
   // Google Drive
   const almacenTokens = new AlmacenTokensDrive(path.join(app.getPath('userData'), 'drive-token.bin'), cifradorElectron);
@@ -268,7 +313,7 @@ function wireDependencies(): void {
     almacenamiento,
     (url) => shell.openExternal(url),
   );
-  registerDriveIpc(driveServicio);
+  
 
   // Gestion de usuarios (el IPC se registra más abajo, cuando existe la sincronización)
   const iniciarSesion = new IniciarSesion(persistencia);
@@ -455,6 +500,9 @@ function wireDependencies(): void {
   );
   registerPortadasProyectosIpc(portadas);
 
+  // Estadísticas
+  registerEstadisticasIpc(new Estadisticas(new ResumenProyectos(persistencia), new ResumenSesionesEstudio(persistencia)));
+
   // Gestion de edicion y conflictos
   edicion = new Edicion(sync.edicion, sync.coordinador, sync.unirseAProyecto);
   registerEdicionIpc(edicion);
@@ -470,6 +518,78 @@ function wireDependencies(): void {
     new EliminarTarea(persistencia),
   );
   registerTareasIpc(tareas);
+
+  // Gestion de sesion de estudio (el contenido se guarda en la base y en su Word de Material)
+  const documentoSesion = new DocumentoSesionEstudio(archivos, nodos, persistencia);
+  const sesionesEstudio = new SesionesEstudio({
+    crear: new CrearSesionEstudio(persistencia, documentoSesion),
+    listar: new ListarSesionesEstudio(persistencia),
+    obtener: new ObtenerSesionEstudio(persistencia),
+    modificar: new ModificarSesionEstudio(persistencia),
+    iniciar: new IniciarSesionEstudio(persistencia),
+    pausar: new PausarSesionEstudio(persistencia),
+    reanudar: new ReanudarSesionEstudio(persistencia),
+    finalizar: new FinalizarSesionEstudio(persistencia),
+    eliminar: new EliminarSesionEstudio(persistencia),
+    metas: new GestionarObjetivos(persistencia),
+    pestanas: new GestionarPestanas(persistencia),
+    pomodoro: new GestionarPomodoro(persistencia),
+    opciones: new ListarOpcionesSesionEstudio(persistencia),
+    materias: new GestionarMaterias(persistencia),
+    superpuestas: new BuscarSesionesSuperpuestas(persistencia),
+    resumen: new ObtenerResumenSesiones(persistencia),
+    verificarAtrasadas: new VerificarSesionesEstudioAtrasadas(persistencia),
+    recuperarInterrumpida: new RecuperarSesionInterrumpida(persistencia),
+    enCurso: new ObtenerSesionEnCurso(persistencia),
+    latido: new RegistrarLatidoSesion(persistencia),
+    guardarContenido: new GuardarContenidoSesion(persistencia, documentoSesion),
+    importarDesdeMaterial: new ImportarContenidoDesdeMaterial(persistencia),
+  });
+  // Se registra acá porque al guardar un Word desde Material avisa a Sesión de estudio.
+  registerArchivosIpc(archivos, almacenamiento, (idArchivo, html) =>
+    sesionesEstudio.importarDesdeMaterial(idArchivo, html)
+  );
+  // Lo mismo al traer la versión de Google Drive: si es el Word de una sesión, la sesión se actualiza.
+  registerDriveIpc(driveServicio, async (idArchivo) => {
+    const archivo = await archivos.obtener({ id: idArchivo });
+    if (archivo.extension.toLowerCase() !== 'docx') return;
+    const html = await documentoSesion.leerHtml(almacenamiento.rutaCompleta(archivo.rutaFisica));
+    await sesionesEstudio.importarDesdeMaterial(idArchivo, html);
+  });
+  const proceso = new ProcesoSesionEstudio(sesionesEstudio, (canal, datos) =>
+    mainWindow?.webContents.send(canal, datos)
+  );
+  registerSesionesEstudioIpc(sesionesEstudio, proceso);
+
+  // Aviso del sistema cuando termina una fase del Pomodoro (aunque la app esté minimizada).
+  proceso.on('faseCambio', (_terminada: string, nueva: string) => {
+    if (!Notification.isSupported()) return;
+    const cuerpo = nueva === 'pomodoro'
+      ? 'Terminó el descanso. ¡A enfocarse de nuevo!'
+      : nueva === 'descanso_largo'
+        ? '¡Bien! Completaste 4 pomodoros: tomate un descanso largo.'
+        : 'Terminó el pomodoro: tomate un descanso corto.';
+    new Notification({ title: 'Pomodoro', body: cuerpo }).show();
+  });
+
+  // Spotify (solo control remoto de la reproducción)
+  const configSpotify = {
+    clientId: process.env.SPOTIFY_CLIENT_ID ?? '',
+    puerto: Number(process.env.SPOTIFY_PUERTO_REDIRECCION) || 8888,
+  };
+  const cuentasSpotify = new CuentasSpotify(
+    new GuardarCuentaSpotify(persistencia),
+    new ObtenerCuentaSpotify(persistencia),
+    new EliminarCuentaSpotify(persistencia)
+  );
+  const clienteSpotify = new ClienteSpotify(
+    cuentasSpotify,
+    configSpotify,
+    new AutenticacionSpotify(configSpotify, (url) => shell.openExternal(url))
+  );
+  registerSpotifyIpc(clienteSpotify);
+
+  return proceso;
 }
 
 function createWindow(): void {
@@ -495,6 +615,7 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
+
 }
 
 app.whenReady().then(async () => {
@@ -535,7 +656,7 @@ app.whenReady().then(async () => {
   }
 
   // Los handlers IPC se registran antes de crear la ventana.
-  wireDependencies();
+  procesoSesion = wireDependencies();
   const recordatorios = new EnviarRecordatoriosPendientes(new Persistencia(pool));
   let recordatoriosEnCurso = false;
   const enviarRecordatorios = async () => {
@@ -552,6 +673,7 @@ app.whenReady().then(async () => {
   void enviarRecordatorios();
   setInterval(() => void enviarRecordatorios(), 15 * 60 * 1000);
   createWindow();
+  await procesoSesion.arrancar();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -562,6 +684,8 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+  // El pool se cierra en before-quit, después de liberar los bloqueos de edición.
+  procesoSesion?.detener();
   if (process.platform !== 'darwin') app.quit();
 });
 

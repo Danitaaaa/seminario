@@ -8,11 +8,10 @@ import {
 describe('Validaciones DTO (dto.ts)', () => {
   it('1. Validar crearEventoSchema con datos válidos', () => {
     const datosValidos = {
-      usuarioId: '123e4567-e89b-12d3-a456-426614174000',
+      usuarioId: 1,
       titulo: 'Examen Final',
-      fechaInicio: new Date('2026-10-10T10:00:00Z'),
-      fechaFin: new Date('2026-10-10T12:00:00Z'),
-      prioridad: 'alta',
+      fecha: new Date('2026-10-10T10:00:00Z'),
+      prioridad: 'importante',
       categoria: 'Estudio',
       notificacionesActivas: true,
       recordatorios: [{ cantidad: 30, unidad: 'minutos' }]

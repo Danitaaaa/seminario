@@ -32,12 +32,14 @@ export const accionesSuperiores: AccionSuperior[] = [
 const rutasPorItem: Record<string, string> = {
   inicio: '/dashboard',
   material: '/material',
+  sesiones: '/sesiones',
   horarios: '/horarios',
   cronograma: '/cronograma',
   calendario: '/eventos',
   perfil: '/perfil',
   metodos: '/metodos',
   proyectos: '/proyectos',
+  estadisticas: '/estadisticas',
   'cerrar-sesion': '/',
   ajustes: '/ajustes',
 };

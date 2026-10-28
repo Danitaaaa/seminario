@@ -23,6 +23,12 @@ import { CronogramaPage } from "./pages/cronograma/cronogramaPage";
 import { ProyectosPage } from "./pages/proyectos/proyectosPage";
 import { ProyectoDetallePage } from "./pages/proyectos/proyectoPage";
 import { TareasPage } from "./pages/proyectos/tareasPage";
+import { EstadisticasPage } from "./pages/estadisticas/estadisticasPage";
+import { SesionesEstudioPage } from "./pages/sesionesEstudio/sesionesEstudioPage";
+import { CrearSesionEstudioPage } from "./pages/sesionesEstudio/crearSesionEstudioPage";
+import { SesionEstudioPage } from "./pages/sesionesEstudio/sesionEstudioPage";
+import { ProveedorAvisos } from "./hooks/usarAvisos";
+import { ProveedorSpotify } from "./hooks/usarSpotify";
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -36,7 +42,8 @@ export default function App() {
   }
 
   return (
-    <>
+    <ProveedorAvisos>
+    <ProveedorSpotify>
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/registro" element={<RegistrarUsuarioPage />} />
@@ -60,9 +67,14 @@ export default function App() {
         <Route path="/proyectos/:id" element={<ProyectoDetallePage />} />
         <Route path="/proyectos/:id/eventos" element={<EventosPage />} />
         <Route path="/proyectos/:id/tareas" element={<TareasPage />} />
+        <Route path="/sesiones" element={<SesionesEstudioPage />} />
+        <Route path="/sesiones/nueva" element={<CrearSesionEstudioPage />} />
+        <Route path="/sesiones/:idSesion" element={<SesionEstudioPage />} />
+        <Route path="/estadisticas" element={<EstadisticasPage />} />
         <Route path="/proximamente/:id" element={<Proximamente />} />
       </Routes>
       <PanelPerfil />
-    </>
+    </ProveedorSpotify>
+    </ProveedorAvisos>
   );
 }

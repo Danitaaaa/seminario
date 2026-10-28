@@ -35,13 +35,40 @@ export class Almacenamiento {
     return { rutaFisica, tamanio: size };
   }
 
-  // Sobrescribe el archivo de forma segura (temporal + rename) y devuelve el nuevo tamaño.
-  async reemplazar(rutaRelativa: string, rutaOrigen: string): Promise<number> {
+ async reemplazar(rutaRelativa: string, rutaOrigen: string): Promise<number> {
     const destino = this.rutaCompleta(rutaRelativa);
     const temporal = `${destino}.tmp`;
     await fs.promises.copyFile(rutaOrigen, temporal);
-    await fs.promises.rename(temporal, destino);
+    try {
+      await this.renombrarConReintentos(temporal, destino);
+    } catch (error) {
+      await fs.promises.rm(temporal, { force: true });
+      if (this.estaBloqueado(error)) {
+        throw new Error('No se pudo guardar: el archivo está abierto en otra aplicación (por ejemplo, Word). Cerralo y volvé a intentar.');
+      }
+      throw error;
+    }
     return (await fs.promises.stat(destino)).size;
+  }
+
+  // Reintenta el rename si el archivo está bloqueado por un momento (antivirus, indexador de Windows).
+  private async renombrarConReintentos(origen: string, destino: string): Promise<void> {
+    const esperasMs = [100, 250, 500, 1000];
+    for (let intento = 0; ; intento++) {
+      try {
+        await fs.promises.rename(origen, destino);
+        return;
+      } catch (error) {
+        if (!this.estaBloqueado(error) || intento >= esperasMs.length) throw error;
+        await new Promise((resolver) => setTimeout(resolver, esperasMs[intento]));
+      }
+    }
+  }
+
+  // Errores que da Windows cuando otro programa tiene el archivo abierto.
+  private estaBloqueado(error: unknown): boolean {
+    const codigo = (error as NodeJS.ErrnoException)?.code;
+    return codigo === 'EPERM' || codigo === 'EBUSY' || codigo === 'EACCES';
   }
 
   // Borra el archivo físico; no falla si ya no existe.

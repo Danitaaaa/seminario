@@ -14,7 +14,21 @@ export function materializarEvento(fila: any): Evento {
     categoria: fila.categoria ?? 'Otro',
     prioridad: fila.prioridad ?? 'media',
     notificacionesActivas: fila.notificaciones_activas ?? false,
-    recordatorios: fila.recordatorios ?? [],
+    recordatorios: leerRecordatorios(fila.recordatorios),
   };
+
+  
+  // Los recordatorios llegan como arreglo (columna jsonb). Si llegan como texto se interpreta el JSON;
+  // si están vacíos o mal formados, se devuelve una lista vacía para no romper la pantalla.
+  function leerRecordatorios(valor: unknown): Evento['recordatorios'] {
+    if (Array.isArray(valor)) return valor;
+    if (typeof valor !== 'string') return [];
+    try {
+      const leido = JSON.parse(valor);
+      return Array.isArray(leido) ? leido : [];
+    } catch {
+      return [];
+    }
+  }
 }
 

@@ -1,0 +1,374 @@
+/* Pantalla de Estadísticas. Solo consume variables de issue.ts. */
+
+.estadisticas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-lg);
+  color: var(--color-text);
+  font-family: var(--fuente-body);
+}
+
+.estadisticas__seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  padding: var(--espacio-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  box-shadow: var(--sombra-card);
+}
+
+.estadisticas__cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  color: var(--color-primary);
+}
+
+.estadisticas__titulo {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--fuente-display, inherit);
+  font-size: var(--tamano-lg);
+  font-weight: var(--peso-bold, 700);
+}
+
+.estadisticas__nota {
+  margin-left: auto;
+  color: var(--color-text-light);
+  font-size: var(--tamano-sm);
+}
+
+.estadisticas__vacio {
+  margin: 0;
+  padding: var(--espacio-md);
+  border-radius: var(--radio-sm);
+  background: var(--color-background);
+  color: var(--color-text-light);
+  font-size: var(--tamano-sm);
+}
+
+/* ---------- Números destacados ---------- */
+.estadisticas__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--espacio-md);
+}
+
+.estadisticas__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--espacio-md);
+  border-radius: var(--radio-sm);
+  background: var(--color-frost-claro);
+}
+
+.estadisticas__tile-etiqueta {
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.estadisticas__tile-valor {
+  color: var(--color-text);
+  font-size: var(--tamano-xl);
+  line-height: 1.2;
+}
+
+.estadisticas__tile-detalle {
+  color: var(--color-text-light);
+  font-size: var(--tamano-sm);
+}
+
+/* ---------- Gráfico de barras por mes ---------- */
+.grafico {
+  margin: 0;
+}
+
+.grafico__titulo {
+  margin-bottom: var(--espacio-sm);
+  color: var(--color-text-light);
+  font-size: var(--tamano-sm);
+  font-weight: 600;
+}
+
+.grafico__area {
+  position: relative;
+  height: 200px;
+  margin: var(--espacio-lg) 0 0 40px;
+}
+
+/* Líneas de referencia: suaves para no competir con las barras */
+.grafico__guia {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--color-border);
+}
+
+.grafico__guia-texto {
+  position: absolute;
+  left: -40px;
+  top: -0.6em;
+  width: 34px;
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+  text-align: right;
+}
+
+.grafico__barras,
+.grafico__ejes {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--espacio-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grafico__barras {
+  position: absolute;
+  inset: 0;
+}
+
+.grafico__columna {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  outline: none;
+  cursor: default;
+}
+
+.grafico__columna:focus-visible {
+  border-radius: var(--radio-sm);
+  box-shadow: 0 0 0 2px var(--color-secondary);
+}
+
+.grafico__barra {
+  width: min(100%, 40px);
+  border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--color-primary) 55%, var(--color-surface));
+  transition: background 0.15s;
+}
+
+.grafico__barra--actual,
+.grafico__columna:hover .grafico__barra,
+.grafico__columna:focus-visible .grafico__barra {
+  background: var(--color-primary);
+}
+
+.grafico__sin-dato {
+  color: var(--color-text-light);
+}
+
+.grafico__valor {
+  position: absolute;
+  z-index: 1;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-text);
+  color: var(--color-surface);
+  font-size: var(--tamano-xs);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.grafico__ejes {
+  margin: var(--espacio-sm) 0 0 40px;
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+  text-align: center;
+}
+
+/* ---------- Proyectos ---------- */
+.estadisticas__proyectos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--espacio-md);
+}
+
+.estadisticas__proyecto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  padding: var(--espacio-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-background);
+}
+
+.estadisticas__proyecto-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espacio-sm);
+}
+
+.estadisticas__proyecto-nombre {
+  margin: 0;
+  font-size: var(--tamano-base);
+  color: var(--color-text);
+}
+
+.estadisticas__proyecto-avance {
+  color: var(--color-primary);
+  font-size: var(--tamano-lg);
+  font-weight: 700;
+}
+
+.estadisticas__progreso {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-frost-claro);
+}
+
+.estadisticas__progreso span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+
+.estadisticas__proyecto-texto {
+  margin: 0;
+  color: var(--color-text-light);
+  font-size: var(--tamano-sm);
+}
+
+.estadisticas__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.estadisticas__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+}
+
+/* Vencidas: color de error, pero siempre con ícono y texto */
+.estadisticas__chip--alerta {
+  border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+  background: var(--color-error-bg);
+  color: var(--color-error-texto);
+}
+
+/* Aporte por integrante: barras horizontales hechas + pendientes */
+.aporte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+  margin-top: var(--espacio-xs);
+}
+
+.aporte__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-sm);
+}
+
+.aporte__titulo {
+  color: var(--color-text);
+  font-size: var(--tamano-sm);
+  font-weight: 600;
+}
+
+.aporte__leyenda {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+}
+
+.aporte__muestra {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.aporte__muestra + .aporte__muestra,
+.aporte__leyenda .aporte__muestra:not(:first-child) {
+  margin-left: 6px;
+}
+
+.aporte__muestra--hechas,
+.aporte__hechas {
+  background: var(--color-primary);
+}
+
+.aporte__muestra--pendientes,
+.aporte__pendientes {
+  background: color-mix(in srgb, var(--color-primary) 25%, var(--color-surface));
+}
+
+.aporte__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aporte__fila {
+  display: grid;
+  grid-template-columns: 90px 1fr 40px;
+  align-items: center;
+  gap: var(--espacio-sm);
+  font-size: var(--tamano-sm);
+}
+
+.aporte__nombre {
+  overflow: hidden;
+  color: var(--color-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aporte__pista {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+}
+
+.aporte__hechas,
+.aporte__pendientes {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.aporte__numero {
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+  text-align: right;
+}
+
+/* Tiempo por materia: nombres y horas más largos */
+.aporte__fila--ancha {
+  grid-template-columns: 140px 1fr 80px;
+}
+
+.estadisticas__vacio a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
