@@ -513,40 +513,12 @@
   border-bottom-right-radius: 10px;
 }
 
-/* Diagonales: rayado suave */
-.styleDiagonals {
-  background-image: repeating-linear-gradient(
-    135deg,
-    transparent 0 16px,
-    color-mix(in srgb, var(--color-primary) 9%, transparent) 16px 18px
-  );
-}
-
-/* Puntos: grilla de puntitos como hoja punteada */
-.styleDots {
-  background-image: radial-gradient(color-mix(in srgb, var(--color-primary) 22%, transparent) 1.5px, transparent 1.6px);
-  background-size: 20px 20px;
-}
-
 /* En la muestrita los dibujos van más chicos */
 .styleSwatch.styleCorners::before,
 .styleSwatch.styleCorners::after {
   width: 35%;
   border-width: 1.5px;
   border-radius: 0;
-}
-
-.styleSwatch.styleDiagonals {
-  background-image: repeating-linear-gradient(
-    135deg,
-    transparent 0 3px,
-    color-mix(in srgb, var(--color-primary) 35%, transparent) 3px 4px
-  );
-}
-
-.styleSwatch.styleDots {
-  background-size: 5px 5px;
-  background-image: radial-gradient(color-mix(in srgb, var(--color-primary) 45%, transparent) 1px, transparent 1.1px);
 }
 
 .styleSwatch.styleWaves::before {

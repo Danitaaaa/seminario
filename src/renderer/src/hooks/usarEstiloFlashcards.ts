@@ -1,13 +1,11 @@
 import { useState } from "react";
 
-export type EstiloTarjeta = "simple" | "ondas" | "esquinas" | "diagonales" | "puntos";
+export type EstiloTarjeta = "simple" | "ondas" | "esquinas";
 
 export const ESTILOS_TARJETA: { valor: EstiloTarjeta; etiqueta: string }[] = [
   { valor: "simple", etiqueta: "Simple" },
   { valor: "ondas", etiqueta: "Ondas" },
   { valor: "esquinas", etiqueta: "Esquinas" },
-  { valor: "diagonales", etiqueta: "Diagonales" },
-  { valor: "puntos", etiqueta: "Puntos" },
 ];
 
 const CLAVE = "syntra:flashcards-estilo";

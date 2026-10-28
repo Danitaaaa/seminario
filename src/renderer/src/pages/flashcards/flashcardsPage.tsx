@@ -211,8 +211,6 @@ const CLASE_ESTILO: Record<EstiloTarjeta, string> = {
   simple: '',
   ondas: styles.styleWaves,
   esquinas: styles.styleCorners,
-  diagonales: styles.styleDiagonals,
-  puntos: styles.styleDots,
 };
 
 export function EstudiarFlashcardsPage() {
