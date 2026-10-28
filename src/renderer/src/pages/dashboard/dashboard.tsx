@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Timer, CalendarClock, Lightbulb, FolderKanban, CalendarDays, type LucideIcon,
+  ChartColumn,
 } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { MiniCalendario } from './miniCalendario';
@@ -25,6 +26,7 @@ const MODULOS: Modulo[] = [
   { titulo: 'Métodos', descripcion: 'Creá tus métodos para tus sesiones de estudio.', ruta: rutaDe('metodos'), icono: Lightbulb, tono: 'metodos' },
   { titulo: 'Proyectos', descripcion: 'Visualizá tus proyectos creados.', ruta: rutaDe('proyectos'), icono: FolderKanban, tono: 'proyectos' },
   { titulo: 'Cronograma', descripcion: 'Visualización del calendario y listado de actividad.', ruta: rutaDe('cronograma'), icono: CalendarDays, tono: 'cronograma' },
+  {titulo: 'Estadísticas', descripcion: 'Mirá tu rendimiento en las sesiones.', ruta: rutaDe('estadisticas'), icono: ChartColumn, tono: 'estadisticas'},
 ];
 
 export function Dashboard() {

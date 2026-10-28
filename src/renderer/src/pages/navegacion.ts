@@ -1,6 +1,6 @@
 import {
   Home, Library, BookOpen, CalendarClock, List, Briefcase, CalendarRange,
-  CalendarDays, MessageCircle, Settings, LogOut,
+  CalendarDays, MessageCircle, Settings, LogOut, ChartColumn,
   CircleHelp,
 } from "lucide-react";
 import type { AccionSuperior, ItemNavegacion } from '../types/layout';
@@ -15,6 +15,7 @@ export const itemsPrincipales: ItemNavegacion[] = [
   { id: "proyectos", etiqueta: "Proyectos", icono: Briefcase },
   { id: "cronograma", etiqueta: "Cronograma", icono: CalendarRange },
   { id: "calendario", etiqueta: "Calendario", icono: CalendarDays },
+  { id: "estadisticas", etiqueta: "Estadísticas", icono: ChartColumn},
   { id: "chat", etiqueta: "Chat", icono: MessageCircle },
 ];
 

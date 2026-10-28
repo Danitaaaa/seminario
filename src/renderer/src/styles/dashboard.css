@@ -53,6 +53,7 @@
 .dashboard__portada--metodos    { background: color-mix(in srgb, var(--color-frost-blue) 60%, var(--color-surface)); color: var(--color-text); }
 .dashboard__portada--proyectos  { background: color-mix(in srgb, var(--color-steel) 20%, var(--color-surface)); color: var(--color-steel); }
 .dashboard__portada--cronograma { background: color-mix(in srgb, var(--color-frost-blue) 75%, var(--color-surface)); color: var(--color-text); }
+.dashboard__portada--estadisticas { background: color-mix(in srgb, var(--color-steel) 35%, var(--color-surface)); color: var(--color-storm); }
 
 /* En oscuro todas las portadas van iguales: bloque azul noche con ícono violeta */
 :root[data-modo="oscuro"] .dashboard__portada {
@@ -191,4 +192,9 @@
   font-size: var(--tamano-xs);
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* Si la última tarjeta queda sola en su fila, ocupa todo el ancho */
+.dashboard__tarjeta:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
