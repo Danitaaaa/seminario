@@ -18,6 +18,7 @@ export class CrearFlashcard {
             [datos.usuarioId, datos.deckId, datos.pregunta, datos.respuesta]
         );
 
+        // La consulta no devuelve filas si el mazo no existe o pertenece a otro usuario.
         if (!filas[0]) {
             throw new Error('No se encontró el mazo para crear la flashcard.');
         }

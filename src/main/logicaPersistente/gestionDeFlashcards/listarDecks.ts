@@ -12,6 +12,7 @@ export class ListarDecks {
         usuarioId: number
     ): Promise<Deck[]> {
 
+        // El filtro por usuario evita mezclar mazos de distintas cuentas.
         const filas =
             await this.persistencia.ejecutar(
                 `

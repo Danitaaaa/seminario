@@ -9,6 +9,7 @@ interface ContenidoPendiente {
     detalle: string;
 }
 
+// Agrupa contenido vencido y limita los recordatorios a uno cada 24 horas por usuario.
 export class EnviarRecordatoriosPendientes {
 
     constructor(
@@ -17,6 +18,7 @@ export class EnviarRecordatoriosPendientes {
 
     async ejecutar(): Promise<void> {
 
+        // Busca contenido vencido solo de usuarios verificados sin envío en las últimas 24 horas.
         const filas =
             await this.persistencia.ejecutar(
                 `
@@ -39,7 +41,7 @@ export class EnviarRecordatoriosPendientes {
                         FROM notificaciones_repaso_enviadas n
                         WHERE
                             n.id_usuario = u.id_usuario
-                            AND n.fecha_envio = CURRENT_DATE
+                            AND n.enviado_en > CURRENT_TIMESTAMP - INTERVAL '24 hours'
                     )
 
                 UNION ALL
@@ -63,7 +65,7 @@ export class EnviarRecordatoriosPendientes {
                         FROM notificaciones_repaso_enviadas n
                         WHERE
                             n.id_usuario = u.id_usuario
-                            AND n.fecha_envio = CURRENT_DATE
+                            AND n.enviado_en > CURRENT_TIMESTAMP - INTERVAL '24 hours'
                     )
 
                 ORDER BY
@@ -76,6 +78,7 @@ export class EnviarRecordatoriosPendientes {
         const porUsuario =
             new Map<number,{email: string; contenidos: string[];}>();
 
+        // Prepara un único correo con todos los repasos pendientes de cada cuenta.
         for (const fila of filas as ContenidoPendiente[]) {
             const grupo = porUsuario.get(fila.id_usuario) ??
                 {email: fila.email,contenidos: []};
@@ -87,7 +90,10 @@ export class EnviarRecordatoriosPendientes {
             );
 
             porUsuario.set(fila.id_usuario,grupo);
-        }for (const [usuarioId,grupo] of porUsuario) {
+        }
+
+        // Registra el momento de envío únicamente después de que SMTP lo acepta.
+        for (const [usuarioId,grupo] of porUsuario) {
 
             try {
                 await enviarRecordatorioRepaso(
@@ -101,12 +107,14 @@ export class EnviarRecordatoriosPendientes {
                         notificaciones_repaso_enviadas
                     (
                         id_usuario,
-                        fecha_envio
+                        fecha_envio,
+                        enviado_en
                     )
                     VALUES
                     (
                         $1,
-                        CURRENT_DATE
+                        CURRENT_DATE,
+                        CURRENT_TIMESTAMP
                     )
                     ON CONFLICT
                     (

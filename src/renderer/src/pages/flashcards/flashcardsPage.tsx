@@ -31,6 +31,7 @@ export function FlashcardsPage() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
+  const [errorFormulario, setErrorFormulario] = useState('');
 
   const cargarMazos = useCallback(async () => {
     try {
@@ -47,16 +48,25 @@ export function FlashcardsPage() {
 
   async function crearMazo(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    if (!nombre.trim()) return;
+    const nombreMazo = nombre.trim();
+    if (!nombreMazo) {
+      setErrorFormulario('El nombre del mazo es obligatorio.');
+      return;
+    }
+    if (nombreMazo.length > 50) {
+      setErrorFormulario('El nombre del mazo no puede superar los 50 caracteres.');
+      return;
+    }
     try {
       setGuardando(true);
       setError('');
-      await window.api.crearDeck({ usuarioId: usuarioIdActual(), nombre: nombre.trim() });
+      setErrorFormulario('');
+      await window.api.crearDeck({ usuarioId: usuarioIdActual(), nombre: nombreMazo });
       setNombre('');
       setModalAbierto(false);
       await cargarMazos();
     } catch (fallo) {
-      setError(fallo instanceof Error ? fallo.message : 'No se pudo crear el mazo.');
+      setErrorFormulario(fallo instanceof Error ? fallo.message : 'No se pudo crear el mazo.');
     } finally {
       setGuardando(false);
     }
@@ -74,7 +84,10 @@ export function FlashcardsPage() {
             <h2 className={styles.heading}>Tus mazos</h2>
             <p className={styles.description}>Organizá tus tarjetas y repasá a tu ritmo.</p>
           </div>
-          <Button onClick={() => setModalAbierto(true)}>＋ Crear nuevo mazo</Button>
+          <Button onClick={() => {
+            setErrorFormulario('');
+            setModalAbierto(true);
+          }}>＋ Crear nuevo mazo</Button>
         </header>
         <label className={styles.search}>
           <Search size={19} aria-hidden="true" />
@@ -106,15 +119,25 @@ export function FlashcardsPage() {
       </div>
       {modalAbierto && (
         <div className={styles.modalBackdrop} onMouseDown={(evento) => {
-          if (evento.target === evento.currentTarget) setModalAbierto(false);
+          if (evento.target === evento.currentTarget) {
+            setErrorFormulario('');
+            setModalAbierto(false);
+          }
         }}>
           <form className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="new-deck-title" onSubmit={crearMazo}>
             <h2 id="new-deck-title">Nuevo mazo</h2>
             <label htmlFor="deck-name">Nombre del mazo</label>
-            <input autoFocus id="deck-name" maxLength={100} placeholder="Ej. Base de Datos" value={nombre} onChange={(evento) => setNombre(evento.target.value)} required />
+            <input autoFocus id="deck-name" placeholder="Ej. Base de Datos" value={nombre} onChange={(evento) => {
+              setNombre(evento.target.value);
+              setErrorFormulario('');
+            }} aria-invalid={Boolean(errorFormulario)} aria-describedby={errorFormulario ? 'deck-name-error' : undefined} />
+            {errorFormulario && <p id="deck-name-error" className={styles.formError} role="alert">{errorFormulario}</p>}
             <div className={styles.modalActions}>
-              <Button variant="secondary" onClick={() => setModalAbierto(false)}>Cancelar</Button>
-              <Button type="submit" disabled={guardando || !nombre.trim()}>{guardando ? 'Creando…' : 'Crear'}</Button>
+              <Button variant="secondary" onClick={() => {
+                setErrorFormulario('');
+                setModalAbierto(false);
+              }}>Cancelar</Button>
+              <Button type="submit" disabled={guardando}>{guardando ? 'Creando…' : 'Crear'}</Button>
             </div>
           </form>
         </div>
@@ -134,6 +157,7 @@ export function DeckFlashcardsPage() {
   const [pregunta, setPregunta] = useState('');
   const [respuesta, setRespuesta] = useState('');
   const [error, setError] = useState('');
+  const [errorFormulario, setErrorFormulario] = useState('');
 
   const cargarMazo = useCallback(async () => {
     try {
@@ -158,15 +182,34 @@ export function DeckFlashcardsPage() {
 
   async function crearFlashcard(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
+    const preguntaLimpia = pregunta.trim();
+    const respuestaLimpia = respuesta.trim();
+    if (!preguntaLimpia) {
+      setErrorFormulario('La pregunta es obligatoria.');
+      return;
+    }
+    if (preguntaLimpia.length > 100) {
+      setErrorFormulario('La pregunta no puede superar los 100 caracteres.');
+      return;
+    }
+    if (!respuestaLimpia) {
+      setErrorFormulario('La respuesta es obligatoria.');
+      return;
+    }
+    if (respuestaLimpia.length > 1000) {
+      setErrorFormulario('La respuesta no puede superar los 1000 caracteres.');
+      return;
+    }
     try {
       setGuardando(true);
       setError('');
-      await window.api.crearFlashcard({ usuarioId: usuarioIdActual(), deckId, pregunta: pregunta.trim(), respuesta: respuesta.trim() });
+      setErrorFormulario('');
+      await window.api.crearFlashcard({ usuarioId: usuarioIdActual(), deckId, pregunta: preguntaLimpia, respuesta: respuestaLimpia });
       setPregunta('');
       setRespuesta('');
       await cargarMazo();
     } catch (fallo) {
-      setError(fallo instanceof Error ? fallo.message : 'No se pudo guardar la flashcard.');
+      setErrorFormulario(fallo instanceof Error ? fallo.message : 'No se pudo guardar la flashcard.');
     } finally {
       setGuardando(false);
     }
@@ -189,10 +232,17 @@ export function DeckFlashcardsPage() {
             <form className={styles.createForm} onSubmit={crearFlashcard}>
               <h3>Nueva flashcard</h3>
               <label htmlFor="question">Pregunta</label>
-              <input id="question" maxLength={2000} placeholder="Escribí una pregunta breve" value={pregunta} onChange={(evento) => setPregunta(evento.target.value)} required />
+              <input id="question" placeholder="Escribí una pregunta breve" value={pregunta} onChange={(evento) => {
+                setPregunta(evento.target.value);
+                setErrorFormulario('');
+              }} aria-invalid={Boolean(errorFormulario)} aria-describedby={errorFormulario ? 'flashcard-error' : undefined} />
               <label htmlFor="answer">Respuesta</label>
-              <textarea id="answer" maxLength={10000} rows={5} placeholder="Escribí la respuesta" value={respuesta} onChange={(evento) => setRespuesta(evento.target.value)} required />
-              <Button type="submit" disabled={guardando || !pregunta.trim() || !respuesta.trim()}>{guardando ? 'Guardando…' : 'Guardar Flashcard'}</Button>
+              <textarea id="answer" rows={5} placeholder="Escribí la respuesta" value={respuesta} onChange={(evento) => {
+                setRespuesta(evento.target.value);
+                setErrorFormulario('');
+              }} aria-invalid={Boolean(errorFormulario)} aria-describedby={errorFormulario ? 'flashcard-error' : undefined} />
+              {errorFormulario && <p id="flashcard-error" className={styles.formError} role="alert">{errorFormulario}</p>}
+              <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar Flashcard'}</Button>
             </form>
             {tarjetas.length ? (
               <div className={styles.cardList}>

@@ -15,6 +15,7 @@ export class Flashcards {
         );
     }
 
+    // Lista únicamente los mazos asociados al usuario.
     async listarDecks(usuarioId: number) {
         return this.listarDecksCasoUso.ejecutar(
             usuarioId

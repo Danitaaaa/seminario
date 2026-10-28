@@ -6,6 +6,7 @@ export class ListarFlashcards {
     constructor(private readonly persistencia: Persistencia) {}
 
     async ejecutar(usuarioId: number, deckId: number): Promise<Flashcard[]> {
+        // La unión al mazo aplica el aislamiento de usuario en la consulta.
         const filas = await this.persistencia.ejecutar(
             `
             SELECT f.*

@@ -2,12 +2,14 @@ import { Persistencia } from '../../persistencia/Persistencia';
 import { RegistrarRevisionDTO } from './dto';
 import { FlashcardPendiente } from './entidades';
 
+// Intervalos de repaso según la dificultad elegida por el usuario.
 const diasPorDificultad = {
     dificil: 1,
     intermedio: 3,
     facil: 6,
 } as const;
 
+// Actualiza la fecha de repaso y registra cada intento en el historial.
 export class RegistrarRevision {
     constructor(private readonly persistencia: Persistencia) {}
 
@@ -15,11 +17,13 @@ export class RegistrarRevision {
     datos: RegistrarRevisionDTO
 ): Promise<void> {
 
-    const dias =
+// Calcula el intervalo usado tanto en la tarjeta como en el historial.
+const dias =
         diasPorDificultad[
             datos.dificultad
         ];
 
+    // Actualiza el vencimiento y el resultado más reciente de la flashcard.
     await this.persistencia.ejecutar(
         `
         UPDATE flashcards
@@ -42,6 +46,7 @@ export class RegistrarRevision {
         ]
     );
 
+    // Conserva una fila histórica de esta revisión y su próxima fecha.
     await this.persistencia.ejecutar(
         `
         INSERT INTO flashcard_revisiones

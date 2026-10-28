@@ -9,6 +9,7 @@ export class CrearDeck {
         private readonly persistencia: Persistencia
     ) {}
 
+    // Persiste los datos del mazo y convierte la fila devuelta a la entidad.
     async ejecutar(
         datos: CrearDeckDTO
     ): Promise<Deck> {
