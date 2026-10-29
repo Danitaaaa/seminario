@@ -1,10 +1,19 @@
 import { CrearDeck } from "../logicaPersistente/gestionDeFlashcards/crearDeck";
 import { ListarDecks } from "../logicaPersistente/gestionDeFlashcards/listarDecks";
-import { CrearDeckDTO } from "../logicaPersistente/gestionDeFlashcards/dto";
 import { CrearFlashcard } from "../logicaPersistente/gestionDeFlashcards/crearFlashcard";
 import { ListarFlashcards } from "../logicaPersistente/gestionDeFlashcards/listarFlashcards";
-import { CrearFlashcardDTO, ModificarFlashcardDTO } from "../logicaPersistente/gestionDeFlashcards/dto";
 import { ModificarFlashcard } from "../logicaPersistente/gestionDeFlashcards/modificarFlashcard";
+import { ModificarDeck } from "../logicaPersistente/gestionDeFlashcards/modificarDeck";
+import { EliminarDecks } from "../logicaPersistente/gestionDeFlashcards/eliminarDecks";
+import { EliminarFlashcards } from "../logicaPersistente/gestionDeFlashcards/eliminarFlashcards";
+import {
+    CrearDeckDTO,
+    CrearFlashcardDTO,
+    EliminarDecksDTO,
+    EliminarFlashcardsDTO,
+    ModificarDeckDTO,
+    ModificarFlashcardDTO
+} from "../logicaPersistente/gestionDeFlashcards/dto";
 
 export class Flashcards {
 
@@ -13,7 +22,10 @@ export class Flashcards {
         private readonly listarDecksCasoUso: ListarDecks,
         private readonly crearFlashcardCasoUso: CrearFlashcard,
         private readonly listarFlashcardsCasoUso: ListarFlashcards,
-        private readonly modificarFlashcardCasoUso: ModificarFlashcard
+        private readonly modificarFlashcardCasoUso: ModificarFlashcard,
+        private readonly modificarDeckCasoUso: ModificarDeck,
+        private readonly eliminarDecksCasoUso: EliminarDecks,
+        private readonly eliminarFlashcardsCasoUso: EliminarFlashcards
     ) {}
 
     async crearDeck(
@@ -42,5 +54,17 @@ export class Flashcards {
 
     async modificarFlashcard(datos: ModificarFlashcardDTO) {
         return this.modificarFlashcardCasoUso.ejecutar(datos);
+    }
+
+    async modificarDeck(datos: ModificarDeckDTO) {
+        return this.modificarDeckCasoUso.ejecutar(datos);
+    }
+
+    async eliminarDecks(datos: EliminarDecksDTO) {
+        return this.eliminarDecksCasoUso.ejecutar(datos);
+    }
+
+    async eliminarFlashcards(datos: EliminarFlashcardsDTO) {
+        return this.eliminarFlashcardsCasoUso.ejecutar(datos);
     }
 }

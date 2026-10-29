@@ -17,6 +17,34 @@ export const crearDeckSchema = z.object({
 export type CrearDeckDTO =
     z.infer<typeof crearDeckSchema>;
 
+// Valida la edición del nombre de un mazo.
+export const modificarDeckSchema = z.object({
+    usuarioId: z.number().int().positive(),
+    deckId: z.number().int().positive(),
+    nombre: crearDeckSchema.shape.nombre,
+});
+
+export type ModificarDeckDTO = z.infer<typeof modificarDeckSchema>;
+
+const idsPositivosUnicosSchema = z.array(z.number().int().positive())
+    .min(1)
+    .refine((ids) => new Set(ids).size === ids.length, 'Los identificadores no pueden repetirse.');
+
+// Valida las selecciones enviadas para eliminar mazos o flashcards.
+export const eliminarDecksSchema = z.object({
+    usuarioId: z.number().int().positive(),
+    deckIds: idsPositivosUnicosSchema,
+});
+
+export type EliminarDecksDTO = z.infer<typeof eliminarDecksSchema>;
+
+export const eliminarFlashcardsSchema = z.object({
+    usuarioId: z.number().int().positive(),
+    flashcardIds: idsPositivosUnicosSchema,
+});
+
+export type EliminarFlashcardsDTO = z.infer<typeof eliminarFlashcardsSchema>;
+
 // Pregunta y respuesta de una flashcard: las mismas reglas al crearla y al editarla.
 const preguntaSchema = z.string({ error: 'La pregunta es obligatoria.' })
     .trim()

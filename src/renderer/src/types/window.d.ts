@@ -147,6 +147,9 @@ declare global {
       crearFlashcard: (datos: { usuarioId: number; deckId: number; pregunta: string; respuesta: string }) => Promise<Flashcard>;
       listarFlashcards: (datos: { usuarioId: number; deckId: number }) => Promise<Flashcard[]>;
       modificarFlashcard: (datos: { usuarioId: number; idFlashcard: number; pregunta: string; respuesta: string }) => Promise<Flashcard>;
+      modificarDeck: (datos: { usuarioId: number; deckId: number; nombre: string }) => Promise<void>;
+      eliminarDecks: (datos: { usuarioId: number; deckIds: number[] }) => Promise<number>;
+      eliminarFlashcards: (datos: { usuarioId: number; flashcardIds: number[] }) => Promise<number>;
       listarFlashcardsPendientes: (usuarioId: number) => Promise<FlashcardPendiente[]>;
       registrarRevision: (datos: { usuarioId: number; flashcardId: number; dificultad: 'dificil' | 'intermedio' | 'facil' }) => Promise<FlashcardPendiente>;
       listarRepeticionesMaterial: (usuarioId: number) => Promise<RepeticionMaterial[]>;

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, BookOpen, Check, ChevronRight, RotateCcw, Search, SkipForward } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, ChevronRight, Pencil, RotateCcw, Search, SkipForward, Trash2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Button } from '../../components/ui/button/button';
@@ -31,6 +31,8 @@ export function FlashcardsPage() {
   const [busqueda, setBusqueda] = useState('');
   const [nombre, setNombre] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [deckEditando, setDeckEditando] = useState<Deck | null>(null);
+  const [mazosSeleccionados, setMazosSeleccionados] = useState<number[]>([]);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
@@ -75,6 +77,95 @@ export function FlashcardsPage() {
     }
   }
 
+  function editarDeck(mazo: Deck) {
+    setDeckEditando(mazo);
+    setNombre(mazo.nombre);
+    setErrorFormulario('');
+    setModalAbierto(true);
+  }
+
+  function cerrarModalDeck() {
+    setModalAbierto(false);
+    setDeckEditando(null);
+    setNombre('');
+    setErrorFormulario('');
+  }
+
+  async function guardarDeck(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (!deckEditando) {
+      await crearMazo(evento);
+      return;
+    }
+
+    const nombreMazo = nombre.trim();
+    if (!nombreMazo) {
+      setErrorFormulario('El nombre del mazo es obligatorio.');
+      return;
+    }
+    if (nombreMazo.length > 50) {
+      setErrorFormulario('El nombre del mazo no puede superar los 50 caracteres.');
+      return;
+    }
+
+    try {
+      setGuardando(true);
+      setError('');
+      setErrorFormulario('');
+      await window.api.modificarDeck({
+        usuarioId: usuarioIdActual(),
+        deckId: deckEditando.idDeck,
+        nombre: nombreMazo,
+      });
+      cerrarModalDeck();
+      await cargarMazos();
+    } catch (fallo) {
+      setErrorFormulario(fallo instanceof Error ? fallo.message : 'No se pudo editar el mazo.');
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  function alternarSeleccionDeck(deckId: number) {
+    setMazosSeleccionados((seleccionados) => seleccionados.includes(deckId)
+      ? seleccionados.filter((id) => id !== deckId)
+      : [...seleccionados, deckId]);
+  }
+
+  function alternarSeleccionTodosLosMazos() {
+    const idsVisibles = filtrados.map((mazo) => mazo.idDeck);
+    const todosSeleccionados = idsVisibles.every((id) => mazosSeleccionados.includes(id));
+    setMazosSeleccionados((seleccionados) => todosSeleccionados
+      ? seleccionados.filter((id) => !idsVisibles.includes(id))
+      : [...new Set([...seleccionados, ...idsVisibles])]);
+  }
+
+  async function eliminarMazosSeleccionados() {
+    if (!mazosSeleccionados.length) return;
+    const cantidad = mazosSeleccionados.length;
+    const confirmacion = window.confirm(
+      `¿Eliminar ${cantidad} ${cantidad === 1 ? 'mazo' : 'mazos'} seleccionado${cantidad === 1 ? '' : 's'}? También se eliminarán sus flashcards e historial de revisiones.`,
+    );
+    if (!confirmacion) return;
+
+    try {
+      setGuardando(true);
+      const eliminados = await window.api.eliminarDecks({
+        usuarioId: usuarioIdActual(),
+        deckIds: mazosSeleccionados,
+      });
+      setMazosSeleccionados([]);
+      await cargarMazos();
+      if (eliminados !== cantidad) {
+        setError(`Se eliminaron ${eliminados} de ${cantidad} mazos seleccionados.`);
+      }
+    } catch (fallo) {
+      setError(fallo instanceof Error ? fallo.message : 'No se pudieron eliminar los mazos.');
+    } finally {
+      setGuardando(false);
+    }
+  }
+
   const filtrados = mazos.filter((mazo) => mazo.nombre.toLocaleLowerCase().includes(busqueda.trim().toLocaleLowerCase()));
 
   return (
@@ -88,6 +179,8 @@ export function FlashcardsPage() {
             <p className={styles.description}>Organizá tus tarjetas y repasá a tu ritmo.</p>
           </div>
           <Button onClick={() => {
+            setDeckEditando(null);
+            setNombre('');
             setErrorFormulario('');
             setModalAbierto(true);
           }}>＋ Crear nuevo mazo</Button>
@@ -98,49 +191,77 @@ export function FlashcardsPage() {
         </label>
         {error && <CartelError mensaje={error} onCerrar={() => setError('')} onReintentar={cargarMazos} />}
         {cargando ? <p className={styles.notice} role="status">Cargando tus mazos…</p> : filtrados.length ? (
-          <div className={styles.deckGrid}>
-            {filtrados.map((mazo) => (
-              <Link className={styles.deckCard} to={`/flashcards/${mazo.idDeck}`} key={mazo.idDeck}>
-                <span className={styles.deckIcon}><BookOpen size={22} /></span>
-                <span className={styles.deckCardText}>
-                  <strong>{mazo.nombre}</strong>
-                  <span>{mazo.cantidadFlashcards ?? 0} {(mazo.cantidadFlashcards ?? 0) === 1 ? 'tarjeta' : 'tarjetas'}</span>
-                  <small>Última revisión: {ultimaRevision(mazo.ultimaRevision)}</small>
-                </span>
-                <ChevronRight className={styles.chevron} size={20} />
-              </Link>
-            ))}
-          </div>
+          <>
+            <div className={styles.selectionBar}>
+              <label className={styles.selectionToggle}>
+                <input
+                  type="checkbox"
+                  checked={filtrados.length > 0 && filtrados.every((mazo) => mazosSeleccionados.includes(mazo.idDeck))}
+                  onChange={alternarSeleccionTodosLosMazos}
+                  aria-label="Seleccionar todos los mazos visibles"
+                />
+                Seleccionar todos
+              </label>
+              <span>{mazosSeleccionados.length} seleccionados</span>
+              <Button variant="secondary" disabled={!mazosSeleccionados.length || guardando} onClick={() => void eliminarMazosSeleccionados()}>
+                <Trash2 size={16} /> Eliminar seleccionados
+              </Button>
+            </div>
+            <div className={styles.deckGrid}>
+              {filtrados.map((mazo) => (
+                <article className={styles.deckCard} key={mazo.idDeck}>
+                  <input
+                    className={styles.itemCheckbox}
+                    type="checkbox"
+                    checked={mazosSeleccionados.includes(mazo.idDeck)}
+                    onChange={() => alternarSeleccionDeck(mazo.idDeck)}
+                    aria-label={`Seleccionar mazo ${mazo.nombre}`}
+                  />
+                  <span className={styles.deckIcon}><BookOpen size={22} /></span>
+                  <Link className={styles.deckCardText} to={`/flashcards/${mazo.idDeck}`}>
+                    <strong>{mazo.nombre}</strong>
+                    <span>{mazo.cantidadFlashcards ?? 0} {(mazo.cantidadFlashcards ?? 0) === 1 ? 'tarjeta' : 'tarjetas'}</span>
+                    <small>Última revisión: {ultimaRevision(mazo.ultimaRevision)}</small>
+                  </Link>
+                  <button type="button" className={styles.editButton} onClick={() => editarDeck(mazo)} aria-label={`Editar mazo ${mazo.nombre}`} title="Editar mazo">
+                    <Pencil size={15} aria-hidden="true" />
+                  </button>
+                  <Link className={styles.deckOpenLink} to={`/flashcards/${mazo.idDeck}`} aria-label={`Abrir mazo ${mazo.nombre}`}>
+                    <ChevronRight className={styles.chevron} size={20} />
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </>
         ) : (
           <div className={styles.empty}>
             <span className={styles.emptyIcon}><BookOpen size={25} /></span>
             <h3>{busqueda ? 'No encontramos mazos' : 'Todavía no tenés mazos'}</h3>
             <p>{busqueda ? 'Probá con otro nombre.' : 'Creá tu primer mazo para empezar a estudiar.'}</p>
-            {!busqueda && <Button onClick={() => setModalAbierto(true)}>Crear mi primer mazo</Button>}
+            {!busqueda && <Button onClick={() => {
+              setDeckEditando(null);
+              setNombre('');
+              setErrorFormulario('');
+              setModalAbierto(true);
+            }}>Crear mi primer mazo</Button>}
           </div>
         )}
       </div>
       {modalAbierto && (
         <div className={styles.modalBackdrop} onMouseDown={(evento) => {
-          if (evento.target === evento.currentTarget) {
-            setErrorFormulario('');
-            setModalAbierto(false);
-          }
+          if (evento.target === evento.currentTarget) cerrarModalDeck();
         }}>
-          <form className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="new-deck-title" onSubmit={crearMazo}>
-            <h2 id="new-deck-title">Nuevo mazo</h2>
+          <form className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="new-deck-title" onSubmit={guardarDeck}>
+            <h2 id="new-deck-title">{deckEditando ? 'Editar mazo' : 'Nuevo mazo'}</h2>
             <label htmlFor="deck-name">Nombre del mazo</label>
             <input autoFocus id="deck-name" placeholder="Ej. Base de Datos" value={nombre} onChange={(evento) => {
               setNombre(evento.target.value);
               setErrorFormulario('');
-            }} aria-invalid={Boolean(errorFormulario)} aria-describedby={errorFormulario ? 'deck-name-error' : undefined} />
+            }} maxLength={50} aria-invalid={Boolean(errorFormulario)} aria-describedby={errorFormulario ? 'deck-name-error' : undefined} />
             {errorFormulario && <p id="deck-name-error" className={styles.formError} role="alert">{errorFormulario}</p>}
             <div className={styles.modalActions}>
-              <Button variant="secondary" onClick={() => {
-                setErrorFormulario('');
-                setModalAbierto(false);
-              }}>Cancelar</Button>
-              <Button type="submit" disabled={guardando}>{guardando ? 'Creando…' : 'Crear'}</Button>
+              <Button variant="secondary" onClick={cerrarModalDeck}>Cancelar</Button>
+              <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : deckEditando ? 'Guardar cambios' : 'Crear'}</Button>
             </div>
           </form>
         </div>
@@ -163,6 +284,7 @@ export function DeckFlashcardsPage() {
   const [errorFormulario, setErrorFormulario] = useState('');
   // Flashcard que se está editando en el formulario de arriba; null = se está creando una nueva.
   const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [flashcardsSeleccionadas, setFlashcardsSeleccionadas] = useState<number[]>([]);
 
   const cargarMazo = useCallback(async () => {
     try {
@@ -184,6 +306,10 @@ export function DeckFlashcardsPage() {
   }, [deckId]);
 
   useEffect(() => { void cargarMazo(); }, [cargarMazo]);
+  useEffect(() => {
+    setFlashcardsSeleccionadas([]);
+    limpiarFormulario();
+  }, [deckId]);
 
   // Guarda el formulario: crea una flashcard nueva o, si se está editando una, le guarda los cambios.
   async function guardarFlashcard(evento: React.FormEvent<HTMLFormElement>) {
@@ -254,6 +380,44 @@ export function DeckFlashcardsPage() {
     document.getElementById('question')?.focus();
   }
 
+  function alternarSeleccionFlashcard(flashcardId: number) {
+    setFlashcardsSeleccionadas((seleccionadas) => seleccionadas.includes(flashcardId)
+      ? seleccionadas.filter((id) => id !== flashcardId)
+      : [...seleccionadas, flashcardId]);
+  }
+
+  function alternarSeleccionTodasLasFlashcards() {
+    const ids = tarjetas.map((tarjeta) => tarjeta.idFlashcard);
+    const todasSeleccionadas = ids.length > 0 && ids.every((id) => flashcardsSeleccionadas.includes(id));
+    setFlashcardsSeleccionadas((seleccionadas) => todasSeleccionadas
+      ? seleccionadas.filter((id) => !ids.includes(id))
+      : [...new Set([...seleccionadas, ...ids])]);
+  }
+
+  async function eliminarFlashcardsSeleccionadas() {
+    if (!flashcardsSeleccionadas.length) return;
+    const cantidad = flashcardsSeleccionadas.length;
+    if (!window.confirm(`¿Eliminar ${cantidad} ${cantidad === 1 ? 'flashcard' : 'flashcards'} seleccionada${cantidad === 1 ? '' : 's'}?`)) return;
+
+    try {
+      setGuardando(true);
+      const eliminadas = await window.api.eliminarFlashcards({
+        usuarioId: usuarioIdActual(),
+        flashcardIds: flashcardsSeleccionadas,
+      });
+      setFlashcardsSeleccionadas([]);
+      if (flashcardsSeleccionadas.includes(editandoId ?? -1)) limpiarFormulario();
+      await cargarMazo();
+      if (eliminadas !== cantidad) {
+        setError(`Se eliminaron ${eliminadas} de ${cantidad} flashcards seleccionadas.`);
+      }
+    } catch (fallo) {
+      setError(fallo instanceof Error ? fallo.message : 'No se pudieron eliminar las flashcards.');
+    } finally {
+      setGuardando(false);
+    }
+  }
+
   return (
     <PlantillaLayout titulo={mazo?.nombre ?? 'Mazo'} idActivo="metodos" usuario={{ nombre: 'Usuario' }}>
       <div className={styles.page}>
@@ -299,9 +463,35 @@ export function DeckFlashcardsPage() {
               </div>
             </form>
             {tarjetas.length ? (
-              <div className={styles.cardList}>
-                {tarjetas.map((tarjeta) => <TarjetaFlashcard key={tarjeta.idFlashcard} tarjeta={tarjeta} editando={tarjeta.idFlashcard === editandoId} onEditar={() => editarFlashcard(tarjeta)} />)}
-              </div>
+              <>
+                <div className={styles.selectionBar}>
+                  <label className={styles.selectionToggle}>
+                    <input
+                      type="checkbox"
+                      checked={tarjetas.length > 0 && tarjetas.every((tarjeta) => flashcardsSeleccionadas.includes(tarjeta.idFlashcard))}
+                      onChange={alternarSeleccionTodasLasFlashcards}
+                      aria-label="Seleccionar todas las flashcards"
+                    />
+                    Seleccionar todas
+                  </label>
+                  <span>{flashcardsSeleccionadas.length} seleccionadas</span>
+                  <Button variant="secondary" disabled={!flashcardsSeleccionadas.length || guardando} onClick={() => void eliminarFlashcardsSeleccionadas()}>
+                    <Trash2 size={16} /> Eliminar seleccionadas
+                  </Button>
+                </div>
+                <div className={styles.cardList}>
+                  {tarjetas.map((tarjeta) => (
+                    <TarjetaFlashcard
+                      key={tarjeta.idFlashcard}
+                      tarjeta={tarjeta}
+                      editando={tarjeta.idFlashcard === editandoId}
+                      seleccionada={flashcardsSeleccionadas.includes(tarjeta.idFlashcard)}
+                      onEditar={() => editarFlashcard(tarjeta)}
+                      onAlternarSeleccion={() => alternarSeleccionFlashcard(tarjeta.idFlashcard)}
+                    />
+                  ))}
+                </div>
+              </>
             ) : <p className={styles.notice}>Aún no hay tarjetas. Creá la primera con el formulario.</p>}
           </>
         )}
