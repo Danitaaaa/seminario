@@ -1,47 +1,90 @@
-import { describe, it, expect, vi } from 'vitest';
-import { ListarMetasDTOSchema, CrearMetaDTOSchema } from '../../logicaPersistente/gestionDeMetas/dto';
 import { ListarMetas } from '../../logicaPersistente/gestionDeMetas/listarMetas';
+import { exigirAcceso, filtroAlcance } from '../../logicaPersistente/gestionDeProyectos/alcance';
+import { COLUMNAS_META } from '../../logicaPersistente/gestionDeMetas/materializador';
+import { crearPersistenciaFalsa, filaMeta } from './utilsTest';
 
-function persistenciaFalsa(filas: any[] = []) {
-  const ejecutar = vi.fn(async () => filas);
-  const p: any = { ejecutar };
-  p.transaccion = async (trabajo: (tx: any) => Promise<unknown>) => trabajo(p);
-  return p;
-}
+jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: jest.fn(),
+    registrarCambioSiProyecto: jest.fn(),
+    filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
+        valores.push(idProyecto ?? idUsuario);
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por = $${valores.length}`;
+    }),
+}), { virtual: true });
 
-describe('Metas: DTO', () => {
-  it('pide un mes o un rango de fechas', () => {
-    expect(ListarMetasDTOSchema.safeParse({ idUsuario: 7 }).success).toBe(false);
-    expect(ListarMetasDTOSchema.safeParse({ idUsuario: 7, desde: '2026-10-01' }).success).toBe(false);
-    expect(ListarMetasDTOSchema.safeParse({ idUsuario: 7, mes: '2026-10' }).success).toBe(true);
-    expect(ListarMetasDTOSchema.safeParse({ idUsuario: 7, desde: '2026-10-01', hasta: '2026-10-31' }).success).toBe(true);
-  });
+const acceso = exigirAcceso as jest.Mock;
+const filtro = filtroAlcance as jest.Mock;
 
-  it('acepta una meta con fecha límite o sin ella', () => {
-    const base = { idUsuario: 7, titulo: 'Leer capítulo 3', mes: '2026-10' };
-    expect(CrearMetaDTOSchema.safeParse({ ...base, fechaLimite: '2026-10-15' }).success).toBe(true);
-    expect(CrearMetaDTOSchema.safeParse({ ...base, fechaLimite: null }).success).toBe(true);
-    expect(CrearMetaDTOSchema.safeParse({ ...base, fechaLimite: '15/10/2026' }).success).toBe(false);
-  });
-});
+describe('ListarMetas', () => {
+    beforeEach(() => jest.clearAllMocks());
 
-describe('Metas: ListarMetas', () => {
-  it('por mes: metas personales del usuario, en el orden que eligió', async () => {
-    const p = persistenciaFalsa();
-    await new ListarMetas(p).ejecutar({ idUsuario: 7, mes: '2026-10' });
-    const [sql, valores] = p.ejecutar.mock.calls[0];
-    expect(sql).toMatch(/id_proyecto IS NULL AND creada_por = \$1/);
-    expect(sql).toMatch(/mes = \$2::date/);
-    expect(sql).toMatch(/ORDER BY orden, id_meta/);
-    expect(valores[0]).toBe(7);
-  });
+    it('exige acceso de lectura (cualquier rol)', async () => {
+        const { persistencia } = crearPersistenciaFalsa([[]]);
+        await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10', idProyecto: 3 });
+        expect(acceso).toHaveBeenCalledWith(persistencia, 3, 7, 7, ['propietario', 'editor', 'lector']);
+    });
 
-  it('por rango: las que vencen entre dos fechas, ordenadas por fecha', async () => {
-    const p = persistenciaFalsa();
-    await new ListarMetas(p).ejecutar({ idUsuario: 7, desde: '2026-10-01', hasta: '2026-10-31' });
-    const [sql, valores] = p.ejecutar.mock.calls[0];
-    expect(sql).toMatch(/fecha_limite BETWEEN \$2::date AND \$3::date/);
-    expect(sql).toMatch(/ORDER BY fecha_limite/);
-    expect(valores).toEqual([7, '2026-10-01', '2026-10-31']);
-  });
+    it('en metas personales pasa idProyecto null', async () => {
+        const { persistencia } = crearPersistenciaFalsa([[]]);
+        await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10' });
+        expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, ['propietario', 'editor', 'lector']);
+        expect(filtro).toHaveBeenCalledWith(expect.any(Array), null, 7);
+    });
+
+    it('arma la consulta con alcance, mes y ordenamiento', async () => {
+        const { persistencia, ejecutar } = crearPersistenciaFalsa([[]]);
+        await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10', idProyecto: 3 });
+        const [sql, valores] = ejecutar.mock.calls[0];
+        expect(sql).toContain(COLUMNAS_META);
+        expect(sql).toContain('id_proyecto = $1');
+        expect(sql).toContain('mes = $2::date');
+        expect(sql).toContain('ORDER BY orden, id_meta');
+        expect(valores).toEqual([3, '2026-10-01']);
+    });
+
+    it('en metas personales filtra por el usuario', async () => {
+        const { persistencia, ejecutar } = crearPersistenciaFalsa([[]]);
+        await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10' });
+        const [sql, valores] = ejecutar.mock.calls[0];
+        expect(sql).toContain('creada_por = $1');
+        expect(valores).toEqual([7, '2026-10-01']);
+    });
+
+    it('devuelve las metas materializadas respetando el orden recibido', async () => {
+        const filas = [
+            filaMeta({ id_meta: 2, titulo: 'B', orden: 1 }),
+            filaMeta({ id_meta: 1, titulo: 'A', orden: 2, completada: true }),
+        ];
+        const { persistencia } = crearPersistenciaFalsa([filas]);
+        const metas = await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10' });
+        expect(metas.map(m => m.idMeta)).toEqual([2, 1]);
+        expect(metas[1].completada).toBe(true);
+        expect(metas[0]).toHaveProperty('trasladadaA', null);
+    });
+
+    it('devuelve lista vacía si no hay metas', async () => {
+        const { persistencia } = crearPersistenciaFalsa([[]]);
+        await expect(new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10' })).resolves.toEqual([]);
+    });
+
+    it('no consulta si el usuario no tiene acceso', async () => {
+        acceso.mockRejectedValueOnce(new Error('Sin permisos'));
+        const { persistencia, ejecutar } = crearPersistenciaFalsa();
+        await expect(new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10', idProyecto: 3 }))
+            .rejects.toThrow('Sin permisos');
+        expect(ejecutar).not.toHaveBeenCalled();
+    });
+
+    it('rechaza un mes inválido sin tocar la BD', async () => {
+        const { persistencia, ejecutar } = crearPersistenciaFalsa();
+        await expect(new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-99' })).rejects.toThrow();
+        expect(acceso).not.toHaveBeenCalled();
+        expect(ejecutar).not.toHaveBeenCalled();
+    });
+
+    it('no usa transacción (es una lectura)', async () => {
+        const { persistencia, transaccion } = crearPersistenciaFalsa([[]]);
+        await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10' });
+        expect(transaccion).not.toHaveBeenCalled();
+    });
 });
