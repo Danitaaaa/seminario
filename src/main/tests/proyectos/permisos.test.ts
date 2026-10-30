@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { BDFalsa } from './fakes';
-import { exigirRol, obtenerRolActivo, registrarCambio } from '../../logicaPersistente/gestionDeProyectos/permisos';
+import { exigirPermiso, obtenerRolActivo, registrarCambio } from '../../logicaPersistente/gestionDeProyectos/permisos';
 
 let bd: BDFalsa;
 beforeEach(() => { bd = new BDFalsa().fijarRol(1, 10, 'editor'); });
@@ -19,15 +19,18 @@ describe('obtenerRolActivo', () => {
     });
 });
 
-describe('exigirRol', () => {
+describe('exigirPermiso', () => {
     it('devuelve el rol si está permitido', async () => {
-        await expect(exigirRol(bd, 1, 10, ['editor', 'propietario'])).resolves.toBe('editor');
+        await expect(exigirPermiso(bd, 1, 10, 'tarea.crear')).resolves.toBe('editor');
     });
     it('rechaza a quien no es miembro', async () => {
-        await expect(exigirRol(bd, 1, 99, ['editor'])).rejects.toThrow('no es miembro');
+        await expect(exigirPermiso(bd, 1, 99, 'tarea.crear')).rejects.toThrow('no es miembro');
     });
     it('rechaza a un miembro con rol insuficiente', async () => {
-        await expect(exigirRol(bd, 1, 10, ['propietario'])).rejects.toThrow('No tenés permisos');
+        await expect(exigirPermiso(bd, 1, 10, 'proyecto.eliminar')).rejects.toThrow('No tenés permisos');
+    });
+    it('rechaza una acción desconocida con un mensaje claro', async () => {
+        await expect(exigirPermiso(bd, 1, 10, 'no.existe' as any)).rejects.toThrow('desconocida');
     });
 });
 

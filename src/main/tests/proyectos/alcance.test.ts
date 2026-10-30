@@ -9,13 +9,13 @@ const colaInsertada = () => bd.que(/^INSERT INTO cola_sincronizacion/);
 
 describe('exigirAcceso', () => {
     it('elemento personal: solo su creador', async () => {
-        await expect(exigirAcceso(bd, null, 10, 10, ['editor'])).resolves.toBeUndefined();
-        await expect(exigirAcceso(bd, undefined, 10, 11, ['editor'])).rejects.toThrow('personal');
+        await expect(exigirAcceso(bd, null, 10, 10, 'tarea.crear')).resolves.toBeUndefined();
+        await expect(exigirAcceso(bd, undefined, 10, 11, 'tarea.crear')).rejects.toThrow('personal');
     });
-    it('elemento de proyecto: delega en exigirRol', async () => {
-        await expect(exigirAcceso(bd, 1, 99, 10, ['editor'])).resolves.toBeUndefined();
-        await expect(exigirAcceso(bd, 1, 99, 10, ['propietario'])).rejects.toThrow('No tenés permisos');
-        await expect(exigirAcceso(bd, 1, 99, 55, ['editor'])).rejects.toThrow('no es miembro');
+    it('elemento de proyecto: delega en exigirPermiso', async () => {
+        await expect(exigirAcceso(bd, 1, 99, 10, 'tarea.crear')).resolves.toBeUndefined();
+        await expect(exigirAcceso(bd, 1, 99, 10, 'proyecto.eliminar')).rejects.toThrow('No tenés permisos');
+        await expect(exigirAcceso(bd, 1, 99, 55, 'tarea.crear')).rejects.toThrow('no es miembro');
     });
 });
 
