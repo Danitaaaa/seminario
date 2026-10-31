@@ -12,8 +12,7 @@ export class ModificarMeta {
     async ejecutar(entrada: ModificarMetaDTO): Promise<Meta> {
         const dto = ModificarMetaDTOSchema.parse(entrada);
         const actual = await obtenerFilaMeta(this.persistencia, dto.idMeta);
-        await exigirAcceso(this.persistencia, actual.id_proyecto, actual.creada_por_global, dto.idUsuario,
-            'meta.editar');
+        await exigirAcceso(this.persistencia, actual.id_proyecto, actual.id_usuario, dto.idUsuario, 'meta.editar');
 
         const sets: string[] = [];
         const valores: unknown[] = [];

@@ -7,9 +7,7 @@ export interface Meta {
     fechaLimite: string | null; // AAAA-MM-DD
     completada: boolean;
     fechaCompletada: Date | null;
-    completadaPor: number | null;
     orden: number;
-    creadaPor: number;
     trasladadaA: string | null;
     idMetaOrigen: number | null;
     fechaCreacion: Date;
@@ -29,5 +27,4 @@ export interface EstadisticaMiembro {
 
 export interface EstadisticasMetas {
     porMes: EstadisticaMes[];
-    porMiembro: EstadisticaMiembro[];
 }

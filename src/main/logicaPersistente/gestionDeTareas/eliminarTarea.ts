@@ -9,11 +9,10 @@ export class EliminarTarea {
     async ejecutar(entrada: EliminarTareaDTO): Promise<void> {
         const dto = EliminarTareaDTOSchema.parse(entrada);
         const actual = await buscarTarea(this.persistencia, dto.idTarea);
-        await exigirAcceso(this.persistencia, actual.idProyecto, actual.creadaPorGlobal, dto.idUsuario,
+        await exigirAcceso(this.persistencia, actual.idProyecto, actual.idUsuario, dto.idUsuario,
             'tarea.eliminar');
 
         await this.persistencia.transaccion(async tx => {
-            // Se asume que `consultar` devuelve las filas, igual que `ejecutar`.
             const r = await consultar(tx, `DELETE FROM tareas WHERE id_tarea = $1 RETURNING id_global`, [dto.idTarea]);
             await registrarCambioSiProyecto(tx, actual.idProyecto, 'tarea', actual.idTarea, 'eliminar',
                 { titulo: actual.titulo, idGlobal: r[0]?.id_global });

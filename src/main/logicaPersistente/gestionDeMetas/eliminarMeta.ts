@@ -11,7 +11,7 @@ export class EliminarMeta {
     async ejecutar(entrada: EliminarMetaDTO): Promise<void> {
         const dto = EliminarMetaDTOSchema.parse(entrada);
         const actual = await obtenerFilaMeta(this.persistencia, dto.idMeta);
-        await exigirAcceso(this.persistencia, actual.id_proyecto, actual.creada_por_global, dto.idUsuario, 'meta.eliminar');
+        await exigirAcceso(this.persistencia, actual.id_proyecto, actual.id_usuario, dto.idUsuario, 'meta.eliminar');
 
         await this.persistencia.transaccion(async tx => {
             const r = await tx.ejecutar(`DELETE FROM metas WHERE id_meta = $1 RETURNING id_global`, [dto.idMeta]);

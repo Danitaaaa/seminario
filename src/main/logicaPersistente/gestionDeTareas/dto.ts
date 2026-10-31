@@ -13,8 +13,10 @@ export const FechaSchema = z
 
 // Identificador global de usuario (uid de Supabase), igual en todas las PCs.
 export const IdGlobalUsuarioSchema = z.string().uuid();
+// Usuario local (proyectos personales).
+export const IdAsignadoSchema = z.number().int();
 
-// Sin idProyecto (o null) la tarea es personal.
+// Sin idProyecto (o null) la tarea es personal y pertenece al usuario que la crea.
 export const CrearTareaDTOSchema = z.object({
     idProyecto: z.number().int().nullable().optional(),
     idUsuario: z.number().int(), // quien solicita (id local, para permisos)
@@ -23,15 +25,20 @@ export const CrearTareaDTOSchema = z.object({
     prioridad: PrioridadSchema.default('media'),
     fechaLimite: FechaSchema.nullable().optional(),
     fechaInicio: FechaSchema.nullable().optional(),
-    idAsignadoGlobal: IdGlobalUsuarioSchema.nullable().optional(), // solo válido en tareas de proyecto
+    idAsignado: IdAsignadoSchema.nullable().optional(),             // solo tareas de proyecto
+    idAsignadoGlobal: IdGlobalUsuarioSchema.nullable().optional(),  // solo tareas de proyecto
 })
     .refine(d => !d.fechaInicio || !d.fechaLimite || d.fechaInicio <= d.fechaLimite, {
         message: 'La fecha de inicio no puede ser posterior a la fecha límite',
         path: ['fechaInicio'],
     })
-    .refine(d => d.idProyecto != null || d.idAsignadoGlobal == null, {
+    .refine(d => d.idProyecto != null || (d.idAsignado == null && d.idAsignadoGlobal == null), {
         message: 'Una tarea personal no se puede asignar a otro usuario',
         path: ['idAsignadoGlobal'],
+    })
+    .refine(d => d.idAsignado == null || d.idAsignadoGlobal == null, {
+        message: 'Indicá un solo tipo de asignado',
+        path: ['idAsignado'],
     });
 export type CrearTareaDTO = z.input<typeof CrearTareaDTOSchema>;
 
@@ -65,11 +72,16 @@ export const AlternarTareaDTOSchema = z.object({
 });
 export type AlternarTareaDTO = z.infer<typeof AlternarTareaDTOSchema>;
 
-// Mueve la tarea a la columna de un integrante (o a "sin asignar" con null). Solo tareas de proyecto.
+// Mueve la tarea a la columna de un integrante. Sin ninguno de los dos = "sin asignar".
+// Solo tareas de proyecto.
 export const AsignarTareaDTOSchema = z.object({
     idTarea: z.number().int(),
     idUsuario: z.number().int(),
-    idAsignadoGlobal: IdGlobalUsuarioSchema.nullable(),
+    idAsignado: IdAsignadoSchema.nullable().optional(),
+    idAsignadoGlobal: IdGlobalUsuarioSchema.nullable().optional(),
+}).refine(d => d.idAsignado == null || d.idAsignadoGlobal == null, {
+    message: 'Indicá un solo tipo de asignado',
+    path: ['idAsignado'],
 });
 export type AsignarTareaDTO = z.infer<typeof AsignarTareaDTOSchema>;
 

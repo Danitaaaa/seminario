@@ -5,20 +5,22 @@ import type { Accion } from './reglasPermisos';
 type Tx = Parameters<typeof registrarCambio>[0];
 type Entidad = Parameters<typeof registrarCambio>[2];
 type IdEntidad = Parameters<typeof registrarCambio>[3];
-type Operacion = Parameters<typeof registrarCambio>[4]; // antes se llamaba Accion
+type Operacion = Parameters<typeof registrarCambio>[4];
 type Datos = Parameters<typeof registrarCambio>[5];
 
-// Con proyecto: exige que el rol del usuario esté permitido para la acción.
-// Sin proyecto (elemento personal): solo puede operar quien lo creó.
+// Con proyecto: exige que el rol del usuario esté permitido para la acción (el dueño se ignora).
+// Sin proyecto (elemento personal): solo puede operar su dueño (columna id_usuario).
 export async function exigirAcceso(
     persistencia: IPersistenciaProyectos,
     idProyecto: number | null | undefined,
-    idCreador: string | number,
+    idDueno: string | number | null | undefined,
     idUsuario: string | number,
     accion: Accion,
 ): Promise<void> {
     if (idProyecto == null) {
-        if (idCreador !== idUsuario) throw new Error('No tenés permiso sobre este elemento personal');
+        if (idDueno == null || String(idDueno) !== String(idUsuario)) {
+            throw new Error('No tenés permiso sobre este elemento personal');
+        }
         return;
     }
     await exigirPermiso(persistencia, idProyecto, idUsuario, accion);
@@ -55,7 +57,8 @@ export async function registrarCambioSiProyecto(
     await registrarCambio(tx, idProyecto, entidad, idEntidad, operacion, payload);
 }
 
-// Condición SQL de alcance: con proyecto filtra por proyecto; sin proyecto, por elementos personales del usuario.
+// Condición SQL de alcance: con proyecto filtra por proyecto; sin proyecto, por elementos personales del usuario
+// (metas y tareas con id_proyecto NULL e id_usuario = usuario logueado).
 // Agrega los parámetros necesarios a `valores` y devuelve el fragmento.
 export function filtroAlcance(
     valores: unknown[],
@@ -64,7 +67,7 @@ export function filtroAlcance(
 ): string {
     if (idProyecto == null) {
         valores.push(idUsuario);
-        return `id_proyecto IS NULL AND creada_por_global = $${valores.length}`;
+        return `id_proyecto IS NULL AND id_usuario = $${valores.length}`;
     }
     valores.push(idProyecto);
     return `id_proyecto = $${valores.length}`;

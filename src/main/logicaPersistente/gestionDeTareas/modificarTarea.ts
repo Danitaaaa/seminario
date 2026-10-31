@@ -12,7 +12,7 @@ export class ModificarTarea {
     async ejecutar(entrada: ModificarTareaDTO): Promise<Tarea> {
         const dto = ModificarTareaDTOSchema.parse(entrada);
         const actual = await buscarTarea(this.persistencia, dto.idTarea);
-        await exigirAcceso(this.persistencia, actual.idProyecto, actual.creadaPorGlobal, dto.idUsuario,
+        await exigirAcceso(this.persistencia, actual.idProyecto, actual.idUsuario, dto.idUsuario,
             'tarea.editar');
 
         const columnas: string[] = [];
