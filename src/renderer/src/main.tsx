@@ -3,6 +3,7 @@ import { HashRouter } from 'react-router-dom';
 import App from './app';
 import './styles/globals.css';
 import './styles/layout.css';
+import './styles/tonos.css';
 import { aplicarPreferencia } from './hooks/usarModo';
 import { cargarReglas } from './permisos';
 

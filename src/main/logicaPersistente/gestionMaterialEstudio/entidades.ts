@@ -5,7 +5,7 @@ export interface Nodo {
     fechaDeCarga: Date;
     ultimaFechaAcceso: Date;
     ultimaFechaModificacion: Date;
-    tamaño: BigInt;
+    tamaño: number;
     nodoPadre: number | null;
 }
 
