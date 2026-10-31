@@ -6,12 +6,13 @@ import { BarraEditor } from './barraEditor';
 interface VisorTextoProps {
   contenido: Uint8Array;
   onGuardar: (bytes: Uint8Array) => Promise<void>;
+  soloLectura?: boolean;
 }
 
 const escaparHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // Notas en texto plano (.txt, .md) editadas con Tiptap; se guardan como texto plano.
-export function VisorTexto({ contenido, onGuardar }: VisorTextoProps) {
+export function VisorTexto({ contenido, onGuardar, soloLectura = false }: VisorTextoProps) {
   const [modificado, setModificado] = useState(false);
 
   const editor = useEditor({
@@ -21,11 +22,12 @@ export function VisorTexto({ contenido, onGuardar }: VisorTextoProps) {
       .split(/\r?\n/)
       .map((linea) => `<p>${escaparHtml(linea)}</p>`)
       .join(''),
+    editable: !soloLectura,
     onUpdate: () => setModificado(true),
   });
 
   const guardar = async () => {
-    if (!editor) return;
+    if (!editor || soloLectura) return;
     const texto = editor.getText({ blockSeparator: '\n' });
     await onGuardar(new TextEncoder().encode(texto));
     setModificado(false);
@@ -33,7 +35,7 @@ export function VisorTexto({ contenido, onGuardar }: VisorTextoProps) {
 
   return (
     <div className="visor-editor">
-      <BarraEditor editor={editor} modificado={modificado} onGuardar={guardar} conFormato={false} />
+      <BarraEditor editor={editor} modificado={modificado} onGuardar={guardar} conFormato={false} soloLectura={soloLectura} />
       <EditorContent editor={editor} className="visor-editor__hoja visor-editor__hoja--texto" />
     </div>
   );

@@ -9,6 +9,8 @@ import { IconoAccion } from '../comunes/iconoAccion';
 import { ColumnaOrden } from './columnaOrden';
 import { MenuAgregar } from './menuAgregar';
 import type { Direccion, OrdenarPor, VistaListado } from '../../types/vistaNodos';
+import type { RolMiembro } from '../../types/proyectos';
+import { puede } from '../../permisos';
 
 interface ColumnaConfig {
     etiqueta: string;
@@ -36,6 +38,7 @@ interface BarraFiltrosNodosProps {
     onCrearCarpeta: () => void;
     onEliminarSeleccion: () => void;
     haySeleccion?: boolean;
+    rol?: RolMiembro | null; // por defecto 'propietario' (material personal)
 }
 
 // Compone las columnas ordenables + las acciones de la derecha (agregar, eliminar,
@@ -45,9 +48,13 @@ export function BarraFiltrosNodos({
     ordenActivo, direccion, onOrdenar,
     vista, onCambiarVista,
     menuAgregarAbierto, onToggleMenuAgregar, onSubirArchivo, onCrearCarpeta,
-    onEliminarSeleccion, haySeleccion = false,
+    onEliminarSeleccion, haySeleccion = false, rol = 'propietario',
 }: BarraFiltrosNodosProps) {
     const contenedorMenuRef = useRef<HTMLDivElement>(null);
+    const puedeAgregar = puede(rol, 'archivo.subir') || puede(rol, 'carpeta.crear');
+    console.log(puedeAgregar, rol);
+    const puedeEliminar = puede(rol, 'archivo.eliminar') || puede(rol, 'carpeta.eliminar');
+    console.log(puedeEliminar);
 
     return (
         <div className="barra-filtros">
@@ -65,24 +72,29 @@ export function BarraFiltrosNodos({
             </div>
 
             <div className="barra-filtros__acciones">
-                <div className="barra-filtros__menu-contenedor" ref={contenedorMenuRef}>
-                    <button type="button" className="boton-agregar" onClick={onToggleMenuAgregar}>
-                        <Icono src={iconoPlus} tamaño={16} />
-                        <Icono src={iconoChevronDown} tamaño={14} />
-                    </button>
-                    <MenuAgregar
-                        abierto={menuAgregarAbierto}
-                        onSubirArchivo={onSubirArchivo}
-                        onCrearCarpeta={onCrearCarpeta}
-                    />
-                </div>
+                {puedeAgregar && (
+                    <div className="barra-filtros__menu-contenedor" ref={contenedorMenuRef}>
+                        <button type="button" className="boton-agregar" onClick={onToggleMenuAgregar}>
+                            <Icono src={iconoPlus} tamaño={16} />
+                            <Icono src={iconoChevronDown} tamaño={14} />
+                        </button>
+                        <MenuAgregar
+                            abierto={menuAgregarAbierto}
+                            onSubirArchivo={onSubirArchivo}
+                            onCrearCarpeta={onCrearCarpeta}
+                            rol={rol}
+                        />
+                    </div>
+                )}
 
-                <IconoAccion
-                    icono={iconoTrash}
-                    alt="Eliminar seleccionados"
-                    deshabilitado={!haySeleccion}
-                    onClick={onEliminarSeleccion}
-                />
+                {puedeEliminar && (
+                    <IconoAccion
+                        icono={iconoTrash}
+                        alt="Eliminar seleccionados"
+                        deshabilitado={!haySeleccion}
+                        onClick={onEliminarSeleccion}
+                    />
+                )}
                 <IconoAccion
                     icono={iconoGrid}
                     alt="Ver en cuadrícula"

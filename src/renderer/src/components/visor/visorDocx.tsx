@@ -7,16 +7,18 @@ import { BarraEditor } from './barraEditor';
 interface VisorDocxProps {
   contenido: Uint8Array;
   onGuardar: (html: string) => Promise<void>;
+  soloLectura?: boolean;
 }
 
 // Convierte el DOCX a HTML con mammoth y lo edita con Tiptap. Al guardar, el main lo vuelve a DOCX.
-export function VisorDocx({ contenido, onGuardar }: VisorDocxProps) {
+export function VisorDocx({ contenido, onGuardar, soloLectura = false }: VisorDocxProps) {
   const [cargado, setCargado] = useState(false);
   const [modificado, setModificado] = useState(false);
 
   const editor = useEditor({
     extensions: [StarterKit],
     content: '',
+    editable: !soloLectura,
     onUpdate: () => setModificado(true),
   });
 
@@ -30,17 +32,17 @@ export function VisorDocx({ contenido, onGuardar }: VisorDocxProps) {
   }, [editor, contenido]);
 
   const guardar = async () => {
-    if (!editor) return;
+    if (!editor || soloLectura) return;
     await onGuardar(editor.getHTML());
     setModificado(false);
   };
 
   return (
     <div className="visor-editor">
-      <BarraEditor editor={editor} modificado={modificado} onGuardar={guardar} />
-      <p className="visor__nota">
+      <BarraEditor editor={editor} modificado={modificado} onGuardar={guardar} soloLectura={soloLectura} />
+      {!soloLectura && <p className="visor__nota">
         Se conservan texto, títulos, listas y negritas. El diseño exacto del Word original (tablas complejas, encabezados) puede cambiar al guardar.
-      </p>
+      </p>}
       {!cargado && <p className="visor__cargando">Cargando documento…</p>}
       <EditorContent editor={editor} className="visor-editor__hoja" />
     </div>

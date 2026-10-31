@@ -30,12 +30,12 @@ async function main(): Promise<void> {
 
   // Verifica el límite permitido y los mensajes para campos requeridos.
   const maximos = crearFlashcardSchema.safeParse({
-    usuarioId: 1, deckId: 2, pregunta: `  ${'q'.repeat(100)}  `,
-    respuesta: ` ${'r'.repeat(1000)} `,
+    usuarioId: 1, deckId: 2, pregunta: `  ${'q'.repeat(250)}  `,
+    respuesta: ` ${'r'.repeat(2000)} `,
   });
   verificar('Recortar espacios y aceptar longitud máxima',
-    maximos.success && maximos.data.pregunta.length === 100 &&
-    maximos.data.respuesta.length === 1000);
+    maximos.success && maximos.data.pregunta.length === 250 &&
+    maximos.data.respuesta.length === 2000);
 
   verificar('Mostrar mensaje cuando pregunta está vacía',
     crearFlashcardSchema.safeParse({
@@ -53,14 +53,14 @@ async function main(): Promise<void> {
     crearFlashcardSchema.safeParse({
       usuarioId: 1, deckId: 2, pregunta: 'P',
     }).error?.issues[0]?.message === 'La respuesta es obligatoria.');
-  verificar('Mostrar mensaje para pregunta mayor a 100 caracteres',
+  verificar('Mostrar mensaje para pregunta mayor a 250 caracteres',
     crearFlashcardSchema.safeParse({
-      usuarioId: 1, deckId: 2, pregunta: 'P'.repeat(101), respuesta: 'R',
-    }).error?.issues[0]?.message === 'La pregunta no puede superar los 100 caracteres.');
-  verificar('Mostrar mensaje para respuesta mayor a 1000 caracteres',
+      usuarioId: 1, deckId: 2, pregunta: 'P'.repeat(251), respuesta: 'R',
+    }).error?.issues[0]?.message === 'La pregunta no puede superar los 250 caracteres.');
+  verificar('Mostrar mensaje para respuesta mayor a 2000 caracteres',
     crearFlashcardSchema.safeParse({
-      usuarioId: 1, deckId: 2, pregunta: 'P', respuesta: 'R'.repeat(1001),
-    }).error?.issues[0]?.message === 'La respuesta no puede superar los 1000 caracteres.');
+      usuarioId: 1, deckId: 2, pregunta: 'P', respuesta: 'R'.repeat(2001),
+    }).error?.issues[0]?.message === 'La respuesta no puede superar los 2000 caracteres.');
 
   // Entradas inesperadas deben ser rechazadas por el esquema.
   for (const datos of [
@@ -68,10 +68,10 @@ async function main(): Promise<void> {
     { usuarioId: 1, deckId: 0, pregunta: 'P', respuesta: 'R' },
     { usuarioId: 1, deckId: 1, pregunta: '   ', respuesta: 'R' },
     { usuarioId: 1, deckId: 1, pregunta: 'P', respuesta: '\n  ' },
-    { usuarioId: 1, deckId: 1, pregunta: 'P'.repeat(101), respuesta: 'R' },
-    { usuarioId: 1, deckId: 1, pregunta: 'P', respuesta: 'R'.repeat(1001) },
+    { usuarioId: 1, deckId: 1, pregunta: 'P'.repeat(251), respuesta: 'R' },
+    { usuarioId: 1, deckId: 1, pregunta: 'P', respuesta: 'R'.repeat(2001) },
   ]) {
-    verificar(`Rechazar entrada inválida ${JSON.stringify(datos).slice(0, 100)}`,
+    verificar(`Rechazar entrada inválida ${JSON.stringify(datos).slice(0, 250)}`,
       !crearFlashcardSchema.safeParse(datos).success);
   }
 

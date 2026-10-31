@@ -2,6 +2,7 @@ import { Persistencia } from '../../persistencia/persistencia';
 import { Almacenamiento } from '../../persistencia/almacenamiento';
 import { EliminarArchivoDTO } from './dto';
 import { registrarCambioContenido } from '../gestionDeProyectos/alcanceContenido';
+import { exigirPermisoArchivo } from './alcanceContenido';
 
 // Borra el registro de la base y el archivo físico en disco.
 export class EliminarArchivo {
@@ -11,6 +12,8 @@ export class EliminarArchivo {
   ) {}
 
   async ejecutar(datos: EliminarArchivoDTO): Promise<void> {
+    await exigirPermisoArchivo(this.persistencia, datos.id, 'archivo.eliminar');
+
     const filas = await this.persistencia.ejecutar(
       `DELETE FROM archivos WHERE id_archivo = $1 RETURNING ruta_fisica, id_global, id_padre`,
       [datos.id]

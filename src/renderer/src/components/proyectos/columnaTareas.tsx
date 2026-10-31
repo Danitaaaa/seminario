@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { RolMiembro } from '../../types/proyectos';
 import type { ColumnaMiembro, FiltroTareas, MiembroTablero, Tarea } from '../../types/tareas';
 import { coincideFiltro, iniciales, nombreCorto, primerNombre } from '../../utils/tablero';
 import { AccionesTarjeta, TarjetaTarea } from './tarjetaTarea';
@@ -11,11 +12,13 @@ interface Props {
   filtro: FiltroTareas;
   // Ya no se usa acá (se conserva para no tocar la página).
   asignables?: MiembroTablero[];
-  puedeEditar: boolean;
+  rol: RolMiembro | null;
+  // idGlobal -> nombre de quien la está editando
+  bloqueos: ReadonlyMap<string, string>;
+  onSoltar: (idAsignadoGlobal: string | null) => void;
   idArrastrada: number | null;
   puedeSoltar: boolean;
   acciones: AccionesTarjeta;
-  onSoltar: (idAsignado: number | null) => void;
 }
 
 function etiquetaRol(miembro: ColumnaMiembro): string {
@@ -27,7 +30,8 @@ export function ColumnaTareas({
   miembro,
   tareas,
   filtro,
-  puedeEditar,
+  rol,
+  bloqueos,
   idArrastrada,
   puedeSoltar,
   acciones,
@@ -37,7 +41,7 @@ export function ColumnaTareas({
   const [hechasAbiertas, setHechasAbiertas] = useState(false);
 
   const sinAsignar = miembro === null;
-  const idColumna = miembro?.idUsuario ?? null;
+  const idColumna = miembro?.idGlobal ?? null;
 
   const visibles = tareas.filter((t) => coincideFiltro(t, filtro, sinAsignar));
   const pendientes = visibles.filter((t) => !t.completada);
@@ -62,7 +66,8 @@ export function ColumnaTareas({
       <TarjetaTarea
         key={t.idTarea}
         tarea={t}
-        puedeEditar={puedeEditar}
+        rol={rol}
+        bloqueadaPor={bloqueos.get(t.idGlobal)}
         arrastrando={idArrastrada === t.idTarea}
         {...acciones}
       />

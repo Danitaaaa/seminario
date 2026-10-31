@@ -34,24 +34,24 @@ async function main(): Promise<void> {
   verificar('Insertar mazo con parámetros', consultas[0].sql.includes('INSERT INTO decks') &&
     JSON.stringify(consultas[0].valores) === JSON.stringify([9, 'Bases de datos', null, 'Sistemas']));
   // Casos de borde del nombre y mensajes que debe mostrar el formulario.
-  verificar('Aceptar 50 caracteres y rechazar 51', crearDeckSchema.safeParse({
-    usuarioId: 1, nombre: 'x'.repeat(50),
+  verificar('Aceptar nombre de 100 caracteres y rechazar 101', crearDeckSchema.safeParse({
+    usuarioId: 1, nombre: 'x'.repeat(100),
   }).success && !crearDeckSchema.safeParse({
-    usuarioId: 1, nombre: 'x'.repeat(51),
+    usuarioId: 1, nombre: 'x'.repeat(101),
   }).success);
   verificar('Mostrar mensaje cuando el nombre está vacío',
     crearDeckSchema.safeParse({ usuarioId: 1, nombre: '' }).error?.issues[0]?.message === 'El nombre del mazo es obligatorio.');
   verificar('Mostrar mensaje cuando falta el nombre',
     crearDeckSchema.safeParse({ usuarioId: 1 }).error?.issues[0]?.message === 'El nombre del mazo es obligatorio.');
-  verificar('Mostrar mensaje cuando el nombre supera 50 caracteres',
-    crearDeckSchema.safeParse({ usuarioId: 1, nombre: 'x'.repeat(51) }).error?.issues[0]?.message === 'El nombre del mazo no puede superar los 50 caracteres.');
+  verificar('Mostrar mensaje cuando el nombre supera 100 caracteres',
+    crearDeckSchema.safeParse({ usuarioId: 1, nombre: 'x'.repeat(101) }).error?.issues[0]?.message === 'El nombre del mazo no puede superar los 100 caracteres.');
 
   for (const datos of [
     { usuarioId: 0, nombre: 'Mazo' },
     { usuarioId: -1, nombre: 'Mazo' },
     { usuarioId: 1.5, nombre: 'Mazo' },
     { usuarioId: 1, nombre: '' },
-    { usuarioId: 1, nombre: 'x'.repeat(51) },
+    { usuarioId: 1, nombre: 'x'.repeat(101) },
     { usuarioId: 1, nombre: 'Mazo', materiaAsociada: 'm'.repeat(101) },
   ]) {
     verificar(`Rechazar datos inválidos ${JSON.stringify(datos)}`,

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+/* ---------- Tipos ---------- */
+
 export type EntidadEditable = 'archivo' | 'evento' | 'meta' | 'tarea';
 export interface ClaveEdicion { idProyecto: number; idUsuario: number; entidad: EntidadEditable; idGlobal: string }
 export interface InfoRemota {
@@ -29,13 +31,8 @@ interface ApiEdicion {
     alEventoSincronizacion(cb: (e: any) => void): () => void;
 }
 
-/**
- * Pide el bloqueo al abrir un elemento compartido y lo suelta al cerrarlo.
- * Uso: const { estado, puedeEditar, guardar } = useEdicionCompartida(clave);
- *  - Con clave = null (p. ej. al crear un elemento nuevo) el hook queda en 'local' y no hace nada.
- *  - Guardá primero con tu llamada de siempre (local) y después llamá a guardar() para subirlo.
- *  - Si puedeEditar es false, deshabilitá los campos y mostrá <BannerEdicion estado={estado} />.
- */
+/* ---------- Edición de UN elemento (toma y suelta el bloqueo) ---------- */
+
 export function useEdicionCompartida(clave: ClaveEdicion | null) {
     const api = window.api as unknown as ApiEdicion;
     const claveRef = useRef(clave);
@@ -58,7 +55,6 @@ export function useEdicionCompartida(clave: ClaveEdicion | null) {
         });
     }, [api]);
 
-    // Actualiza quién edita y la última versión sin tomar el bloqueo.
     const refrescarInfo = useCallback(async () => {
         const c = claveRef.current;
         if (!c) return;
@@ -101,4 +97,63 @@ export function useEdicionCompartida(clave: ClaveEdicion | null) {
     }, [api]);
 
     return { estado, puedeEditar: estado.fase === 'edicion' || estado.fase === 'local', guardar, reintentar: iniciar };
+}
+
+/* ---------- Quién está editando CADA elemento de una lista (solo consulta) ---------- */
+
+interface OpcionesBloqueos {
+    idProyecto: number | null;   // null = contenido personal: no hay bloqueos
+    idUsuario: number;
+    entidad: EntidadEditable;
+    idsGlobales: string[];
+    idPropia?: string | null;    // el que yo tengo abierto: ahí el bloqueo es mío
+    intervaloMs?: number;        // sondeo de respaldo
+}
+
+const SIN_BLOQUEOS: ReadonlyMap<string, string> = new Map();
+
+/** Devuelve idGlobal -> nombre de quien lo está editando. */
+export function useBloqueos({
+    idProyecto, idUsuario, entidad, idsGlobales, idPropia = null, intervaloMs = 15_000,
+}: OpcionesBloqueos): ReadonlyMap<string, string> {
+    const [bloqueos, setBloqueos] = useState<ReadonlyMap<string, string>>(SIN_BLOQUEOS);
+    const pedido = useRef(0);
+    const ids = idsGlobales.join('|');
+
+    const refrescar = useCallback(async () => {
+        if (idProyecto == null) return setBloqueos(SIN_BLOQUEOS);
+        const actual = ++pedido.current;
+        const nuevos = new Map<string, string>();
+
+        await Promise.all(
+            ids.split('|').filter(Boolean).map(async (idGlobal) => {
+                if (idGlobal === idPropia) return;
+                try {
+                    const r = (await window.api.consultarEdicion({
+                        idProyecto, idUsuario, entidad, idGlobal,
+                    })) as Resultado<InfoRemota>;
+                    if (r.ok && r.datos.titular) nuevos.set(idGlobal, r.datos.titular.nombre);
+                } catch {
+                    // una consulta fallida no tira abajo a las demás
+                }
+            }),
+        );
+
+        if (actual === pedido.current) setBloqueos(nuevos); // descarta respuestas viejas
+    }, [ids, idProyecto, idUsuario, entidad, idPropia]);
+
+    useEffect(() => {
+        void refrescar();
+        const t = setInterval(() => void refrescar(), intervaloMs);
+        const off = window.api.alEventoSincronizacion((ev: any) => {
+            if (ev?.idProyecto !== idProyecto) return;
+            const relevante = ev.tipo === 'bloqueo_cambio'
+                ? ev.clave?.entidad === entidad
+                : ev.tipo === 'cambios_recibidos';
+            if (relevante) void refrescar();
+        });
+        return () => { clearInterval(t); off(); pedido.current++; };
+    }, [refrescar, idProyecto, entidad, intervaloMs]);
+
+    return bloqueos;
 }

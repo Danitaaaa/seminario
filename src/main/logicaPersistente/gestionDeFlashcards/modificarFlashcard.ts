@@ -1,4 +1,4 @@
-import { Persistencia } from '../../persistencia/persistencia';
+import { Persistencia } from '../../persistencia/Persistencia';
 import { ModificarFlashcardDTO } from './dto';
 import { Flashcard } from './entidades';
 import { materializarFlashcard } from './materializador';

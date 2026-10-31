@@ -3,7 +3,7 @@ import { Nodo } from './entidades';
 import { materializarNodo } from './materializador';
 import { CrearNodoDTO } from './dto';
 import { registrarCambioContenido } from '../gestionDeProyectos/alcanceContenido';
-
+import { exigirPermisoNodo } from './alcanceContenido';
 
 export class CrearNodo {
     constructor(private readonly persistencia: Persistencia) {}
@@ -13,6 +13,10 @@ export class CrearNodo {
         if (!datos.nombre.trim()) {
             throw new Error('El nombre de la carpeta no puede estar vacío.');
         }
+
+        // La raíz de un proyecto nuevo cuelga del nodo global (sin proyecto): ahí no hay chequeo.
+        await exigirPermisoNodo(this.persistencia, datos.idPadre, 'carpeta.crear');
+
         let fila: any;
         try {
             const filas = await this.persistencia.ejecutar(

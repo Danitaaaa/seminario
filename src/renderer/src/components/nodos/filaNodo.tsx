@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { MouseEvent, DragEvent } from 'react';
 import type { Nodo } from '../../types/nodo';
+import type { RolMiembro } from '../../types/proyectos';
+import { puede } from '../../permisos';
 import { Icono } from '../comunes/icono';
 import { IconoAccion } from '../comunes/iconoAccion';
 import { MenuAccionesNodo } from './menuAccionesNodo';
@@ -21,6 +23,7 @@ interface FilaNodoProps {
     onArrastrarSobre: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onSoltar: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onSalirDestino: () => void;
+    rol?: RolMiembro | null; // por defecto 'propietario' (material personal)
 }
 
 // La selección ahora es la fila resaltada (no un checkbox): un click la
@@ -30,17 +33,19 @@ interface FilaNodoProps {
 export function FilaNodo({
     nodo, seleccionado, sobreDestino,
     onSeleccionar, onAbrir, onRenombrar, onEliminar,
-    onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino,
+    onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino, rol = 'propietario',
 }: FilaNodoProps) {
     const [menuAbierto, setMenuAbierto] = useState(false);
     const { icono, tipo } =  resolverIconoNodo(nodo);
     const esCarpeta = nodo.tipo === 'carpeta';
+    const puedeMover = puede(rol, `${nodo.tipo}.mover`);
+    const hayAcciones = puede(rol, `${nodo.tipo}.renombrar`) || puede(rol, `${nodo.tipo}.eliminar`);
 
     return (
         <div
             className={`fila-nodo${seleccionado ? ' fila-nodo--seleccionada' : ''}${sobreDestino ? ' fila-nodo--sobre-destino' : ''}`}
             role="row"
-            draggable
+            draggable={puedeMover}
             onClick={(e) => { e.stopPropagation(); onSeleccionar(nodo, e); }}
             onDoubleClick={() => onAbrir(nodo)}
             onDragStart={(e) => onArrastrarInicio(nodo, e)}
@@ -59,9 +64,13 @@ export function FilaNodo({
             <span className="fila-nodo__celda">{formatearFecha(nodo.ultimaFechaAcceso)}</span>
 
             <div className="fila-nodo__menu-contenedor" onClick={(e) => e.stopPropagation()}>
-                <IconoAccion icono={iconoMore} alt="Más acciones" onClick={() => setMenuAbierto((v) => !v)} />
+                {hayAcciones && (
+                    <IconoAccion icono={iconoMore} alt="Más acciones" onClick={() => setMenuAbierto((v) => !v)} />
+                )}
                 <MenuAccionesNodo
                     abierto={menuAbierto}
+                    rol={rol}
+                    nodoTipo={nodo.tipo}
                     onRenombrar={() => { setMenuAbierto(false); onRenombrar(nodo); }}
                     onEliminar={() => { setMenuAbierto(false); onEliminar(nodo); }}
                 />

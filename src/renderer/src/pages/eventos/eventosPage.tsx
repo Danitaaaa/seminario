@@ -3,7 +3,9 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Evento, CrearEventoInput, ModificarEventoInput, Prioridad, Recordatorio, UnidadTiempo } from '../../types/eventos';
 import { Categoria as CategoriaRegistro } from '../../types/categorias';
+import type { RolMiembro } from '../../types/proyectos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
+import { puede, rolDe } from '../../permisos';
 import '../../styles/eventos.css';
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
@@ -53,6 +55,11 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   const idProyecto = idParametro ? Number(idParametro) : undefined;
   const [nombreProyecto, setNombreProyecto] = useState<string | null>(null);
 
+  // Rol en el proyecto (solo en modo proyecto). En /eventos los eventos personales son del usuario;
+  // los de proyectos que aparecen ahí los valida el main según el rol que tenga en cada uno.
+  const [rolProyecto, setRolProyecto] = useState<RolMiembro | null>(null);
+  const rol: RolMiembro | null = idProyecto === undefined ? 'propietario' : rolProyecto;
+
   const [busqueda, setBusqueda] = useState('');
   const usuarioLogueado = 'Usuario';
 
@@ -91,6 +98,21 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
       .obtenerProyecto({ idProyecto, idUsuario: usuarioId })
       .then((p: { nombre: string }) => setNombreProyecto(p.nombre))
       .catch(console.error);
+  }, [idProyecto, usuarioId]);
+
+  // Rol del usuario en el proyecto (solo en modo proyecto)
+  useEffect(() => {
+    if (idProyecto === undefined) {
+      setRolProyecto(null);
+      return;
+    }
+    window.api
+      .listarMiembros({ idProyecto, idUsuarioSolicitante: usuarioId })
+      .then((m) => setRolProyecto(rolDe(m, usuarioId)))
+      .catch((e) => {
+        console.error(e);
+        setRolProyecto(null);
+      });
   }, [idProyecto, usuarioId]);
 
   // Si se llega desde el MiniCalendario con una fecha, se selecciona ese día
@@ -210,6 +232,7 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   }
 
   function abrirModalNuevoEvento(): void {
+    if (!puede(rol, 'evento.crear')) return;
     setEditandoId(null);
     setFormTitulo('');
     setFormDescripcion('');
@@ -223,7 +246,7 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   }
 
   function abrirModalEditarEvento(evento: Evento): void {
-    if (evento.id < 0) return;
+    if (evento.id < 0 || !puede(rol, 'evento.editar')) return;
     setEditandoId(evento.id);
     setFormTitulo(evento.titulo);
     setFormDescripcion(evento.descripcion ?? '');
@@ -261,6 +284,10 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   }
 
   async function guardarEvento(): Promise<void> {
+    if (!puede(rol, editandoId !== null ? 'evento.editar' : 'evento.crear')) {
+      setErrorForm('Tu rol en este proyecto no permite hacer esto.');
+      return;
+    }
     if (!formTitulo.trim()) {
       setErrorForm('El nombre del evento es obligatorio.');
       return;
@@ -315,7 +342,7 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   }
 
   async function eliminarEvento(id: number): Promise<void> {
-    if (id < 0) return;
+    if (id < 0 || !puede(rol, 'evento.eliminar')) return;
     try {
       await window.api.eliminarEvento({ id, usuarioId });
       await cargarEventos();
@@ -350,7 +377,9 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
 
         <p className="eventos-instructivo">
           {idProyecto
-            ? 'Eventos del proyecto. Seleccione la fecha e ingrese la actividad a registrar'
+            ? puede(rol, 'evento.crear')
+              ? 'Eventos del proyecto. Seleccione la fecha e ingrese la actividad a registrar'
+              : 'Eventos del proyecto. Tu rol es de solo lectura'
             : 'Seleccione la fecha e ingrese la actividad a registrar'}
         </p>
 
@@ -361,7 +390,9 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
               <div className="eventos-acciones">
                 <button className="eventos-boton-nav" onClick={() => cambiarMes(-1)}>‹</button>
                 <button className="eventos-boton-nav" onClick={() => cambiarMes(1)}>›</button>
-                <button className="eventos-boton-primario" onClick={abrirModalNuevoEvento}>+ Nuevo Evento</button>
+                {puede(rol, 'evento.crear') && (
+                  <button className="eventos-boton-primario" onClick={abrirModalNuevoEvento}>+ Nuevo Evento</button>
+                )}
               </div>
             </div>
 
@@ -501,10 +532,16 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
                     Clase recurrente — se edita desde "Horarios de cursado"
                   </div>
                 ) : (
-                  <div className="eventos-tarjeta-acciones">
-                    <button className="eventos-boton-nav" onClick={() => abrirModalEditarEvento(evento)}>Editar</button>
-                    <button className="eventos-boton-nav eventos-boton-nav--peligro" onClick={() => eliminarEvento(evento.id)}>Eliminar</button>
-                  </div>
+                  (puede(rol, 'evento.editar') || puede(rol, 'evento.eliminar')) && (
+                    <div className="eventos-tarjeta-acciones">
+                      {puede(rol, 'evento.editar') && (
+                        <button className="eventos-boton-nav" onClick={() => abrirModalEditarEvento(evento)}>Editar</button>
+                      )}
+                      {puede(rol, 'evento.eliminar') && (
+                        <button className="eventos-boton-nav eventos-boton-nav--peligro" onClick={() => eliminarEvento(evento.id)}>Eliminar</button>
+                      )}
+                    </div>
+                  )
                 )}
               </div>
             ))}

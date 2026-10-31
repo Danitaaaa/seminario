@@ -4,6 +4,7 @@ import { Archivo } from './entidades';
 import { materializarArchivo } from './materializador';
 import { CrearArchivoDTO } from './dto';
 import { registrarCambioContenido } from '../gestionDeProyectos/alcanceContenido';
+import { exigirPermisoNodo } from './alcanceContenido';
 
 const MAX_INTENTOS = 100;
 const UNIQUE_VIOLATION = '23505';
@@ -22,6 +23,8 @@ export class CrearArchivo {
     if (!datos.rutaFisica.trim()) {
       throw new Error('No se indicó el archivo a subir.');
     }
+
+    await exigirPermisoNodo(this.persistencia, datos.idPadre, 'archivo.subir');
 
     const { rutaFisica, tamanio } = await this.almacenamiento.guardar(datos.rutaFisica, datos.extension);
 

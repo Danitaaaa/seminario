@@ -9,11 +9,10 @@ import { FiltrosTareas } from '../../components/proyectos/filtrosTareas';
 import { ModalTarea } from '../../components/proyectos/modalTarea';
 import { ResumenTareas } from '../../components/proyectos/resumenTareas';
 import type { AccionesTarjeta } from '../../components/proyectos/tarjetaTarea';
-// Ajustá la carpeta si pusiste el banner y el modal de conflicto en otro lugar
 import { BannerEdicion } from '../../components/proyectos/bannerEdicion';
 import { ModalConflicto } from '../../components/proyectos/modalConflicto';
 import { useTareas } from '../../hooks/useTareas';
-import { useEdicionCompartida } from '../../hooks/useEdicionCompartida';
+import { useEdicionCompartida, useBloqueos } from '../../hooks/useEdicionCompartida';
 import type { ClaveEdicion, Resultado } from '../../hooks/useEdicionCompartida';
 import { conBloqueo } from '../../utils/conBloqueo';
 import {
@@ -26,7 +25,9 @@ import {
 import '../../styles/proyectos.css';
 import '../../styles/tareas.css';
 import '../../styles/edicion.css';
-import { obtenerUsuarioId } from '../../../lib/sesion';
+import { obtenerUsuarioId, asegurarUsuarioIdGlobal } from '../../../lib/sesion';
+import { puede, rolDe } from '../../permisos';
+import type { Accion } from '../../permisos';
 
 const NOMBRE_USUARIO_ACTUAL = ''; //Pendiente hasta implementación de perfil
 
@@ -35,11 +36,24 @@ interface ApiSync {
   alEventoSincronizacion(cb: (e: any) => void): () => void;
 }
 
-// Se lee dentro del componente (no al importar el módulo) para que ya exista la sesión.
-// Si no hay sesión, no se monta el tablero: así dentro el id siempre es number.
+// El id global puede ser null (proyectos personales / usuario sin cuenta sincronizada): es válido.
 export function TareasPage() {
   const idUsuario = obtenerUsuarioId();
+  const [idGlobal, setIdGlobal] = useState<string | null>(null);
+  const [resuelto, setResuelto] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let activo = true;
+    void asegurarUsuarioIdGlobal().then((g) => {
+      if (!activo) return;
+      setIdGlobal(g);
+      setResuelto(true);
+    });
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   if (idUsuario === null) {
     return (
@@ -49,10 +63,24 @@ export function TareasPage() {
     );
   }
 
-  return <TareasContenido ID_USUARIO_ACTUAL={idUsuario} />;
+  if (!resuelto) {
+    return (
+      <PlantillaLayout titulo="División de tareas" idActivo="proyectos" usuario={{ nombre: NOMBRE_USUARIO_ACTUAL }}>
+        <p>Cargando…</p>
+      </PlantillaLayout>
+    );
+  }
+
+  return <TareasContenido ID_USUARIO_ACTUAL={idUsuario} ID_GLOBAL_ACTUAL={idGlobal} />;
 }
 
-function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
+function TareasContenido({
+  ID_USUARIO_ACTUAL,
+  ID_GLOBAL_ACTUAL,
+}: {
+  ID_USUARIO_ACTUAL: number;
+  ID_GLOBAL_ACTUAL: string | null;
+}) {
   const { id } = useParams();
   const idProyecto = Number(id);
   const navigate = useNavigate();
@@ -85,6 +113,15 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
   const { estado, puedeEditar: puedeEditarTarea, guardar: subirCambios, reintentar } = useEdicionCompartida(
     edicion ? claveDe(edicion.idGlobal) : null,
   );
+
+  // Tareas que otra persona está editando ahora (idGlobal -> nombre)
+  const bloqueos = useBloqueos({
+    idProyecto,
+    idUsuario: ID_USUARIO_ACTUAL,
+    entidad: 'tarea',
+    idsGlobales: tareas.map((t) => t.idGlobal),
+    idPropia: edicion ? edicion.idGlobal : null,
+  });
 
   const cargarConflictos = useCallback(async () => {
     const api = window.api as unknown as ApiSync;
@@ -128,8 +165,8 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
     };
   }, [idProyecto, ID_USUARIO_ACTUAL]);
 
-  const columnas = useMemo(() => armarColumnas(miembros, ID_USUARIO_ACTUAL), [miembros, ID_USUARIO_ACTUAL]);
-  const idsColumnas = useMemo(() => new Set(columnas.map((c) => c.idUsuario)), [columnas]);
+  const columnas = useMemo(() => armarColumnas(miembros, ID_GLOBAL_ACTUAL), [miembros, ID_GLOBAL_ACTUAL]);
+  const idsColumnas = useMemo(() => new Set(columnas.map((c) => c.idGlobal)), [columnas]);
   const grupos = useMemo(() => agruparPorColumna(tareas, columnas), [tareas, columnas]);
   const cuentas = useMemo(() => contarFiltros(tareas, grupos), [tareas, grupos]);
   const segmentos = useMemo(
@@ -137,8 +174,8 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
     [columnas, grupos, tareas.length],
   );
 
-  const rolActual = miembros.find((m) => m.idUsuario === ID_USUARIO_ACTUAL)?.rol;
-  const puedeEditar = rolActual === 'propietario' || rolActual === 'editor';
+  // El rol se busca por id local: funciona también sin id global.
+  const rol = rolDe(miembros, ID_USUARIO_ACTUAL);
 
   const tareaArrastrada = tareas.find((t) => t.idTarea === idArrastrada) ?? null;
   const columnaOrigen = tareaArrastrada ? columnaDe(tareaArrastrada, idsColumnas) : null;
@@ -151,33 +188,44 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
     void cargarConflictos();
   }
 
+  function permitido(accion: Accion): boolean {
+    if (puede(rol, accion)) return true;
+    setAviso('Tu rol en este proyecto no permite hacer esto.');
+    return false;
+  }
+
   const acciones: AccionesTarjeta = {
-    onAlternar: (t) =>
+    onAlternar: (t) => {
+      if (!permitido('tarea.alternar')) return;
       void conLock(t, async () => {
         const r: unknown = await alternar(t);
         return r !== false;
-      }),
+      });
+    },
     onEditar: (t) => setEdicion(t),
     onEliminar: (t) => {
+      if (!permitido('tarea.eliminar')) return;
       if (!window.confirm(`¿Eliminar la tarea "${t.titulo}"?`)) return;
       void conLock(t, () => eliminar(t.idTarea));
     },
-    onAsignar: (t, idAsignado) => void conLock(t, () => asignar(t, idAsignado)),
+    onAsignar: (t, idAsignadoGlobal) => {
+      if (permitido('tarea.asignar')) void conLock(t, () => asignar(t, idAsignadoGlobal));
+    },
     onArrastrarInicio: (t) => setIdArrastrada(t.idTarea),
     onArrastrarFin: () => setIdArrastrada(null),
   };
 
-  function soltarEn(idAsignado: number | null) {
+  function soltarEn(idAsignadoGlobal: string | null) {
     const tarea = tareaArrastrada;
     setIdArrastrada(null);
-    if (tarea) void conLock(tarea, () => asignar(tarea, idAsignado));
+    if (tarea && permitido('tarea.asignar')) void conLock(tarea, () => asignar(tarea, idAsignadoGlobal));
   }
 
   /* ---------- Guardar desde el modal ---------- */
 
   async function guardar(datos: DatosTarea): Promise<boolean> {
-    if (!edicion) return crear(datos);
-    if (!puedeEditarTarea) return false;
+    if (!edicion) return puede(rol, 'tarea.crear') ? crear(datos) : false;
+    if (!puede(rol, 'tarea.editar') || !puedeEditarTarea) return false;
 
     // 1) Cambios locales
     let ok = await modificar(edicion.idTarea, {
@@ -187,8 +235,8 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
       fechaLimite: datos.fechaLimite,
       fechaInicio: datos.fechaInicio,
     });
-    if (ok && datos.idAsignado !== columnaDe(edicion, idsColumnas)) {
-      ok = await asignar(edicion, datos.idAsignado);
+    if (ok && datos.idAsignadoGlobal !== columnaDe(edicion, idsColumnas)) {
+      ok = await asignar(edicion, datos.idAsignadoGlobal);
     }
     if (!ok) return false;
 
@@ -254,10 +302,11 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
           total={tareas.length}
           hechas={cuentas.hechas}
           segmentos={segmentos}
-          puedeEditar={puedeEditar}
+          puedeCrear={puede(rol, 'tarea.crear')}
+          puedeRepartir={puede(rol, 'tarea.repartir')}
           hayPorRepartir={hayPorRepartir}
-          onRepartir={() => void repartir()}
-          onNueva={() => setEdicion(null)}
+          onRepartir={() => { if (permitido('tarea.repartir')) void repartir(); }}
+          onNueva={() => { if (permitido('tarea.crear')) setEdicion(null); }}
         />
 
         <FiltrosTareas filtro={filtro} cuentas={cuentas} onCambiar={setFiltro} />
@@ -271,7 +320,8 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
               tareas={grupos.get(null) ?? []}
               filtro={filtro}
               asignables={columnas}
-              puedeEditar={puedeEditar}
+              rol={rol}
+              bloqueos={bloqueos}
               idArrastrada={idArrastrada}
               puedeSoltar={tareaArrastrada !== null && columnaOrigen !== null}
               acciones={acciones}
@@ -279,14 +329,15 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
             />
             {columnas.map((columna) => (
               <ColumnaTareas
-                key={columna.idUsuario}
+                key={columna.idGlobal}
                 miembro={columna}
-                tareas={grupos.get(columna.idUsuario) ?? []}
+                tareas={grupos.get(columna.idGlobal) ?? []}
                 filtro={filtro}
                 asignables={columnas}
-                puedeEditar={puedeEditar}
+                rol={rol}
+                bloqueos={bloqueos}
                 idArrastrada={idArrastrada}
-                puedeSoltar={tareaArrastrada !== null && columnaOrigen !== columna.idUsuario}
+                puedeSoltar={tareaArrastrada !== null && columnaOrigen !== columna.idGlobal}
                 acciones={acciones}
                 onSoltar={soltarEn}
               />
@@ -302,9 +353,9 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
           idAsignadoInicial={edicion ? columnaDe(edicion, idsColumnas) : null}
           asignables={columnas}
           onGuardar={guardar}
-          onEliminar={edicion ? () => eliminar(edicion.idTarea) : undefined}
+          onEliminar={edicion && puede(rol, 'tarea.eliminar') ? () => eliminar(edicion.idTarea) : undefined}
           onCerrar={() => setEdicion(undefined)}
-          soloLectura={edicion !== null && !puedeEditarTarea}
+          soloLectura={edicion !== null ? !puede(rol, 'tarea.editar') || !puedeEditarTarea : !puede(rol, 'tarea.crear')}
           banner={
             edicion ? (
               <BannerEdicion
@@ -326,4 +377,4 @@ function TareasContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: number }) {
       )}
     </PlantillaLayout>
   );
-}
+}

@@ -1,13 +1,13 @@
 import { CancelarInvitacionDTOSchema, CancelarInvitacionDTO } from './dto';
 import { IPersistenciaProyectos, ISincronizador } from './interfacesSincronizacion';
-import { exigirRol } from './permisos';
+import { exigirPermiso } from './permisos';
 
 export class CancelarInvitacion {
     constructor(private persistencia: IPersistenciaProyectos, private sincronizador: ISincronizador) {}
 
     async ejecutar(entrada: CancelarInvitacionDTO): Promise<void> {
         const dto = CancelarInvitacionDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, ['propietario']);
+        await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, 'miembro.cancelarInvitacion');
 
         const filas = await this.persistencia.ejecutar(
             `SELECT i.mail_invitado, p.id_remoto

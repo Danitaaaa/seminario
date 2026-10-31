@@ -15,6 +15,8 @@ import {
     ListarInvitacionesDTOSchema,
     CancelarInvitacionDTOSchema,
 } from '../logicaPersistente/gestionDeProyectos/dto';
+import { REGLAS } from '../logicaPersistente/gestionDeProyectos/reglasPermisos';
+
 
 export function registrarProyectosIpc(proyectos: Proyectos): void {
     /* ---------- Proyectos ---------- */
@@ -89,4 +91,6 @@ export function registrarProyectosIpc(proyectos: Proyectos): void {
         const validado = SincronizarProyectoDTOSchema.parse(datos);
         return proyectos.sincronizar(validado);
     });
+
+    ipcMain.handle('permisos:obtenerReglas', () => REGLAS);
 }

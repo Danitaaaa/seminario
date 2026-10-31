@@ -10,6 +10,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.m
 interface VisorPdfProps {
   contenido: Uint8Array;
   onGuardar: (bytes: Uint8Array) => Promise<void>;
+  soloLectura?: boolean;
 }
 
 const ANCHO_PAGINA = 760;
@@ -18,7 +19,7 @@ const TAMANIO_TEXTO = 12; // en puntos del PDF
 type Borrador = { x: number; y: number; texto: string };
 
 // Muestra el PDF con react-pdf y lo edita con pdf-lib: rotar, eliminar páginas y escribir texto sobre la página.
-export function VisorPdf({ contenido, onGuardar }: VisorPdfProps) {
+export function VisorPdf({ contenido, onGuardar, soloLectura = false }: VisorPdfProps) {
   const [bytes, setBytes] = useState(contenido);
   const [paginas, setPaginas] = useState(0);
   const [actual, setActual] = useState(1);
@@ -57,7 +58,7 @@ export function VisorPdf({ contenido, onGuardar }: VisorPdfProps) {
 
   // Con la herramienta de texto activa, un clic abre un campo en ese punto para escribir.
   const clicEnPagina = (evento: MouseEvent<HTMLDivElement>) => {
-    if (!modoTexto || borrador) return;
+    if (soloLectura || !modoTexto || borrador) return;
     const caja = evento.currentTarget.getBoundingClientRect();
     setBorrador({ x: evento.clientX - caja.left, y: evento.clientY - caja.top, texto: '' });
   };
@@ -99,6 +100,8 @@ export function VisorPdf({ contenido, onGuardar }: VisorPdfProps) {
         <button className="visor-boton visor-boton--contorno" disabled={actual <= 1} onClick={() => setActual((a) => a - 1)}>◀</button>
         <span>Página {actual} de {paginas}</span>
         <button className="visor-boton visor-boton--contorno" disabled={actual >= paginas} onClick={() => setActual((a) => a + 1)}>▶</button>
+        {!soloLectura && (
+          <>
         <span className="visor__separador" />
         <button
           className={`visor-boton ${modoTexto ? '' : 'visor-boton--contorno'}`}
@@ -113,6 +116,8 @@ export function VisorPdf({ contenido, onGuardar }: VisorPdfProps) {
         <button className="visor-boton visor-boton--contorno" onClick={rotar}>Rotar</button>
         <button className="visor-boton visor-boton--contorno" disabled={paginas <= 1} onClick={eliminarPagina}>Eliminar página</button>
         <button className="visor-boton" disabled={!modificado} onClick={guardar}>Guardar</button>
+          </>
+        )}
       </div>
 
       {error && <p className="visor__nota" onClick={() => setError(null)}>{error}</p>}

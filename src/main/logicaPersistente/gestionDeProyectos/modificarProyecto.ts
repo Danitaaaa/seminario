@@ -2,7 +2,7 @@ import { ModificarProyectoDTOSchema, ModificarProyectoDTO } from './dto';
 import { Proyecto } from './entidades';
 import { IPersistenciaProyectos } from './interfacesSincronizacion';
 import { materializarProyecto } from './materializador';
-import { exigirRol, registrarCambio } from './permisos';
+import { exigirPermiso, registrarCambio } from './permisos';
 
 interface IModificarNodo { ejecutar(dto: { id: number; nombre: string }): Promise<unknown>; }
 
@@ -11,7 +11,7 @@ export class ModificarProyecto {
 
     async ejecutar(entrada: ModificarProyectoDTO): Promise<Proyecto> {
         const dto = ModificarProyectoDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuario, ['propietario', 'editor']);
+        await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuario, 'proyecto.modificar');
 
         const sets: string[] = [];
         const params: unknown[] = [];

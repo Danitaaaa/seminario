@@ -4,13 +4,14 @@ interface Props {
   total: number;
   hechas: number;
   segmentos: SegmentoAporte[];
-  puedeEditar: boolean;
+  puedeCrear: boolean;
+  puedeRepartir: boolean;
   hayPorRepartir: boolean;
   onRepartir: () => void;
   onNueva: () => void;
 }
 
-export function ResumenTareas({ total, hechas, segmentos, puedeEditar, hayPorRepartir, onRepartir, onNueva }: Props) {
+export function ResumenTareas({ total, hechas, segmentos, puedeCrear, puedeRepartir, hayPorRepartir, onRepartir, onNueva }: Props) {
   const porcentaje = total === 0 ? 0 : Math.round((hechas / total) * 100);
   const descripcion = segmentos.length
     ? `Aporte a lo completado: ${segmentos.map((s) => `${s.nombre} ${s.hechas}`).join(', ')}`
@@ -39,20 +40,24 @@ export function ResumenTareas({ total, hechas, segmentos, puedeEditar, hayPorRep
         <span className="tareas-resumen__leyenda">Aporte de cada integrante a lo completado</span>
       </div>
 
-      {puedeEditar && (
+      {(puedeCrear || puedeRepartir) && (
         <div className="tareas-resumen__acciones">
-          <button
-            type="button"
-            className="tareas-boton"
-            onClick={onRepartir}
-            disabled={!hayPorRepartir}
-            title={hayPorRepartir ? undefined : 'No hay tareas pendientes sin asignar'}
-          >
-            Repartir equitativamente
-          </button>
-          <button type="button" className="tareas-boton tareas-boton--primario" onClick={onNueva}>
-            + Nueva tarea
-          </button>
+          {puedeRepartir && (
+            <button
+              type="button"
+              className="tareas-boton"
+              onClick={onRepartir}
+              disabled={!hayPorRepartir}
+              title={hayPorRepartir ? undefined : 'No hay tareas pendientes sin asignar'}
+            >
+              Repartir equitativamente
+            </button>
+          )}
+          {puedeCrear && (
+            <button type="button" className="tareas-boton tareas-boton--primario" onClick={onNueva}>
+              + Nueva tarea
+            </button>
+          )}
         </div>
       )}
     </div>

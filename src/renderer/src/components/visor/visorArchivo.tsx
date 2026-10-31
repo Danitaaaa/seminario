@@ -13,12 +13,13 @@ interface VisorArchivoProps {
   archivo: Archivo;
   onCerrar: () => void;
   onGuardado: () => void;
+  soloLectura?: boolean; // true: no se guarda nada aunque el visor permita editar
 }
 
 const mensaje = (e: unknown, porDefecto: string) => (e instanceof Error ? e.message : porDefecto);
 
 // Carga el archivo desde el main y elige el visor según la extensión.
-export function VisorArchivo({ archivo, onCerrar, onGuardado }: VisorArchivoProps) {
+export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = false }: VisorArchivoProps) {
   const [contenido, setContenido] = useState<Uint8Array | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado }: VisorArchivoProp
   }, [archivo.id]);
 
   const guardarBytes = async (bytes: Uint8Array) => {
+    if (soloLectura) return setError('Tu rol en este proyecto es de solo lectura.');
     try {
       await window.api.guardarArchivo({ id: archivo.id, contenido: bytes });
       setAviso('Cambios guardados.');
@@ -42,6 +44,7 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado }: VisorArchivoProp
   };
 
   const guardarDocx = async (html: string) => {
+    if (soloLectura) return setError('Tu rol en este proyecto es de solo lectura.');
     try {
       await window.api.guardarDocx({ id: archivo.id, html });
       setAviso('Cambios guardados.');
@@ -62,6 +65,7 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado }: VisorArchivoProp
           </div>
         </header>
 
+        {soloLectura && <p className="visor__aviso">Solo lectura: tu rol no permite modificar este archivo.</p>}
         {error && <CartelError mensaje={error} onCerrar={() => setError(null)} />}
         {aviso && (
           <p className="visor__aviso" onClick={() => setAviso(null)}>{aviso}</p>
@@ -69,10 +73,10 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado }: VisorArchivoProp
 
         <div className="visor__cuerpo">
           {!contenido && !error && <p className="visor__cargando">Cargando…</p>}
-          {contenido && tipo === 'pdf' && <VisorPdf contenido={contenido} onGuardar={guardarBytes} />}
-          {contenido && tipo === 'docx' && <VisorDocx contenido={contenido} onGuardar={guardarDocx} />}
-          {contenido && tipo === 'xlsx' && <VisorExcel contenido={contenido} onGuardar={guardarBytes} />}
-          {contenido && tipo === 'texto' && <VisorTexto contenido={contenido} onGuardar={guardarBytes} />}
+          {contenido && tipo === 'pdf' && <VisorPdf contenido={contenido} onGuardar={guardarBytes} soloLectura={soloLectura} />}
+          {contenido && tipo === 'docx' && <VisorDocx contenido={contenido} onGuardar={guardarDocx} soloLectura={soloLectura} />}
+          {contenido && tipo === 'xlsx' && <VisorExcel contenido={contenido} onGuardar={guardarBytes} soloLectura={soloLectura} />}
+          {contenido && tipo === 'texto' && <VisorTexto contenido={contenido} onGuardar={guardarBytes} soloLectura={soloLectura} />}
         </div>
       </div>
     </div>

@@ -16,6 +16,8 @@ import { VisorArchivo } from '../../components/visor/visorArchivo';
 import { ModalAbrirCon } from '../../components/visor/modalAbrirCon';
 import { tipoVisor } from '../../components/visor/formatos';
 import { leerVistaListado, guardarVistaListado } from '../../utils/vistaListadoGuardada';
+import type { RolMiembro } from '../../types/proyectos';
+import { puede } from '../../permisos';
 
 const usuarioLogueado = 'Usuario';
 
@@ -41,6 +43,7 @@ interface NodoPageProps {
     prefijoRuta?: ReactNode; // Antes de las migas (ej. "Proyectos /")
     subencabezado?: ReactNode; // Debajo de las migas (ej. avatares de colaboradores)
     lateral?: ReactNode; // Panel derecho (ej. panel lateral del proyecto)
+    rol?: RolMiembro | null; // Rol en el proyecto; por defecto 'propietario' (material personal)
 }
 
 const eliminarUno = (n: Nodo) =>
@@ -56,6 +59,7 @@ export function NodoPage({
     prefijoRuta,
     subencabezado,
     lateral,
+    rol = 'propietario',
 }: NodoPageProps = {}) {
     const [nodos, setNodos] = useState<Nodo[]>([]);
 
@@ -92,6 +96,10 @@ export function NodoPage({
     const [errorAbrir, setErrorAbrir] = useState<string | null>(null);
 
     const nodosSeleccionados = nodos.filter((n) => seleccionados.has(claveNodo(n)));
+
+    const puedeMover = (n: Nodo) => puede(rol, n.tipo === 'archivo' ? 'archivo.mover' : 'carpeta.mover');
+    const puedeEliminarNodo = (n: Nodo) => puede(rol, n.tipo === 'archivo' ? 'archivo.eliminar' : 'carpeta.eliminar');
+    const puedeRenombrarNodo = (n: Nodo) => puede(rol, n.tipo === 'archivo' ? 'archivo.renombrar' : 'carpeta.renombrar');
 
     const alternarOrden = (campo: OrdenarPor) => {
         if (campo === ordenActivo) {
@@ -167,6 +175,7 @@ export function NodoPage({
     };
 
     const onArrastrarInicio = (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => {
+        if (!puedeMover(nodo)) { evento.preventDefault(); return; }
         const clave = claveNodo(nodo);
         const yaSeleccionado = seleccionados.has(clave);
         if (!yaSeleccionado) {
@@ -179,14 +188,16 @@ export function NodoPage({
     };
 
     const onArrastrarSobre = (nodo: Nodo) => {
-        if (nodo.tipo !== 'carpeta') return;
+        if (nodo.tipo !== 'carpeta' || arrastrandoRef.current.length === 0) return;
         if (arrastrandoRef.current.some((n) => claveNodo(n) === claveNodo(nodo))) return;
         setDestinoArrastre(claveNodo(nodo));
     };
 
     const onSalirDestino = () => setDestinoArrastre(null);
 
-    const moverA = async (idDestino: number, aMover: Nodo[]) => {
+    const moverA = async (idDestino: number, candidatos: Nodo[]) => {
+        const aMover = candidatos.filter(puedeMover);
+        if (aMover.length === 0) return;
         const idsArchivos = aMover.filter((n) => n.tipo === 'archivo').map((n) => n.id);
         const carpetas = aMover.filter((n) => n.tipo === 'carpeta');
 
@@ -218,6 +229,7 @@ export function NodoPage({
     };
 
     const onArrastrarSobreMiga = (id: number) => {
+        if (arrastrandoRef.current.length === 0) return;
         setDestinoMiga(id);
         if (migaEnEspera.current === id) return;
         limpiarTimerMiga();
@@ -270,6 +282,7 @@ export function NodoPage({
     };
 
     const subirArchivo = () => {
+        if (!puede(rol, 'archivo.subir')) return;
         setMenuAgregarAbierto(false);
         setMostrarSubida(true);
     };
@@ -284,8 +297,9 @@ export function NodoPage({
         onSoltar,
         onSalirDestino,
         onAbrir,
-        onRenombrar: (nodo: Nodo) => setModal({ tipo: 'renombrar', nodo }),
-        onEliminar: (nodo: Nodo) => setModal({ tipo: 'eliminar', nodo }),
+        rol,
+        onRenombrar: (nodo: Nodo) => { if (puedeRenombrarNodo(nodo)) setModal({ tipo: 'renombrar', nodo }); },
+        onEliminar: (nodo: Nodo) => { if (puedeEliminarNodo(nodo)) setModal({ tipo: 'eliminar', nodo }); },
     };
 
     return (
@@ -311,6 +325,7 @@ export function NodoPage({
             {mostrarSubida ? (
                 <ArchivosPage
                     idPadre={idPadreActual}
+                    rol={rol}
                     onVolver={() => {
                         setMostrarSubida(false);
                         cargarContenido();
@@ -344,6 +359,7 @@ export function NodoPage({
                             onOrdenar={alternarOrden}
                             vista={vista}
                             onCambiarVista={setVista}
+                            rol={rol}
                             menuAgregarAbierto={menuAgregarAbierto}
                             onToggleMenuAgregar={() => setMenuAgregarAbierto((v) => !v)}
                             onSubirArchivo={subirArchivo}
@@ -352,10 +368,10 @@ export function NodoPage({
                                 setModal({ tipo: 'crear' });
                             }}
                             onEliminarSeleccion={() => {
-                                if (seleccionados.size === 0) return;
+                                if (!nodosSeleccionados.some(puedeEliminarNodo)) return;
                                 setModal({ tipo: 'eliminarSeleccion' });
                             }}
-                            haySeleccion={seleccionados.size > 0}
+                            haySeleccion={nodosSeleccionados.some(puedeEliminarNodo)}
                         />
                         {vista === 'lista' ? (
                             <TablaNodos {...propsListado} />
@@ -370,6 +386,7 @@ export function NodoPage({
             {archivoAbierto && (
                 <VisorArchivo
                     archivo={archivoAbierto}
+                    soloLectura={!puede(rol, 'archivo.editarContenido')}
                     onCerrar={() => setArchivoAbierto(null)}
                     onGuardado={cargarContenido}
                 />
@@ -442,10 +459,10 @@ export function NodoPage({
             {modal?.tipo === 'eliminarSeleccion' && (
                 <ModalConfirmarEliminar
                     titulo="Eliminar elementos"
-                    mensaje={`¿Seguro que querés eliminar ${seleccionados.size} elemento${seleccionados.size > 1 ? 's' : ''}? Esta acción no se puede deshacer.`}
+                    mensaje={`¿Seguro que querés eliminar ${nodosSeleccionados.filter(puedeEliminarNodo).length} elemento${nodosSeleccionados.filter(puedeEliminarNodo).length > 1 ? 's' : ''}? Esta acción no se puede deshacer.`}
                     onCancelar={() => setModal(null)}
                     onConfirmar={async () => {
-                        const aEliminar = nodosSeleccionados;
+                        const aEliminar = nodosSeleccionados.filter(puedeEliminarNodo);
                         const resultados = await Promise.allSettled(aEliminar.map(eliminarUno));
 
                         const fallidos = aEliminar.filter((_, i) => resultados[i].status === 'rejected');

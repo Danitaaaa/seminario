@@ -102,6 +102,9 @@ import { ListarDecks } from './logicaPersistente/gestionDeFlashcards/listarDecks
 import { CrearFlashcard } from './logicaPersistente/gestionDeFlashcards/crearFlashcard';
 import { ListarFlashcards } from './logicaPersistente/gestionDeFlashcards/listarFlashcards';
 import { ModificarFlashcard } from './logicaPersistente/gestionDeFlashcards/modificarFlashcard';
+import { ModificarDeck } from './logicaPersistente/gestionDeFlashcards/modificarDeck';
+import { EliminarDecks } from './logicaPersistente/gestionDeFlashcards/eliminarDecks';
+import { EliminarFlashcards } from './logicaPersistente/gestionDeFlashcards/eliminarFlashcards';
 import { Flashcards } from './administracionDePersistencia/flashcards';
 import { registerFlashcardsIpc } from './ipc/flashcards.ipc';
 import { RegistrarRevision } from './logicaPersistente/gestionDeRepeticionEspaciada/registrarRevision';
@@ -286,7 +289,7 @@ function wireDependencies(): ProcesoSesionEstudio {
   const modificarNodo = new ModificarNodo(persistencia);
   const buscarNodos = new BuscarNodos(persistencia);
   const buscarArchivos = new BuscarArchivos(persistencia);
-  const listarContenido = new ListarContenido(buscarNodos, buscarArchivos);
+  const listarContenido = new ListarContenido(buscarNodos, buscarArchivos, persistencia);
   const moverNodo = new MoverNodo(persistencia);
   const eliminarNodo = new EliminarNodo(persistencia);
   const nodos = new Nodos(crearNodo, modificarNodo, listarContenido, eliminarNodo, moverNodo);
@@ -404,7 +407,10 @@ function wireDependencies(): ProcesoSesionEstudio {
     new ListarDecks(persistencia),
     new CrearFlashcard(persistencia),
     new ListarFlashcards(persistencia),
-    new ModificarFlashcard(persistencia)
+    new ModificarFlashcard(persistencia),
+    new ModificarDeck(persistencia),
+    new EliminarDecks(persistencia),
+    new EliminarFlashcards(persistencia)
   );
   registerFlashcardsIpc(flashcards);
 

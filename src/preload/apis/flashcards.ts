@@ -31,4 +31,22 @@ export const flashcardsApi = {
       "flashcards:modificarFlashcard",
       datos
     ),
+
+  modificarDeck: (datos: unknown) =>
+    ipcRenderer.invoke(
+      "flashcards:modificarDeck",
+      datos
+    ),
+
+  eliminarDecks: (datos: { usuarioId: number; deckIds: number[] }) =>
+    ipcRenderer.invoke(
+      "flashcards:eliminarDecks",
+      datos
+    ),
+
+  eliminarFlashcards: (datos: { usuarioId: number; flashcardIds: number[] }) =>
+    ipcRenderer.invoke(
+      "flashcards:eliminarFlashcards",
+      datos
+    ),
 };

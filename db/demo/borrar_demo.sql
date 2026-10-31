@@ -19,8 +19,8 @@ BEGIN
   DELETE FROM nodos WHERE id_nodo = ANY(nodos_proyectos);
 
   -- Lo personal de los usuarios demo (eventos, horarios, sesiones y categorías se borran con el usuario).
-  DELETE FROM metas WHERE creada_por = ANY(demo);
-  DELETE FROM tareas WHERE creada_por = ANY(demo);
+  DELETE FROM metas WHERE creada_por_global = ANY(demo);
+  DELETE FROM tareas WHERE creada_por_global = ANY(demo);
   DELETE FROM usuarios WHERE id_usuario = ANY(demo);
 
   -- Carpeta de Material con los archivos de ejemplo (dos niveles).
