@@ -2,7 +2,7 @@ import { SincronizarProyectoDTOSchema, SincronizarProyectoDTO } from './dto';
 import type { CambioPendiente } from './entidades';
 import type { IPersistenciaProyectos, ISincronizador } from './interfacesSincronizacion';
 import { materializarCambio } from './materializador';
-import { exigirRol } from './permisos';
+import { exigirPermiso } from './permisos';
 import { ErrorSincronizacion } from './erroresSincronizacion';
 import { esEditable, type ResumenSubida, type EdicionCompartida } from './edicionCompartida';
 
@@ -28,7 +28,7 @@ export class SincronizarProyecto {
     async ejecutar(entrada: SincronizarProyectoDTO): Promise<ResultadoSincronizacion> {
         const dto = SincronizarProyectoDTOSchema.parse(entrada);
         // Los lectores también sincronizan, pero solo reciben.
-        const rol = await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuario, ['propietario', 'editor', 'lector']);
+        const rol = await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuario, 'proyecto.sincronizar');
         const puedeEnviar = rol !== 'lector';
         if (!this.sincronizador.estaConectado()) await this.sincronizador.conectar();
 

@@ -10,7 +10,7 @@ export class ModificarEvento {
 
   async ejecutar(datos: ModificarEventoDTO): Promise<Evento> {
     const actual = await buscarEvento(this.persistencia, datos.id);
-    await exigirAcceso(this.persistencia, actual.idProyecto, actual.usuarioId, datos.usuarioId, ['propietario', 'editor']);
+    await exigirAcceso(this.persistencia, actual.idProyecto, actual.usuarioId, datos.usuarioId, 'evento.eliminar');
 
     const campos: string[] = [];
     const valores: unknown[] = [];

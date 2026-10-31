@@ -9,9 +9,7 @@ CREATE TABLE IF NOT EXISTS metas (
     fecha_limite DATE,                              -- opcional: el día en que vence (cronograma y avisos)
     completada BOOLEAN NOT NULL DEFAULT FALSE,
     fecha_completada TIMESTAMP,
-    completada_por INT REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
     orden INT NOT NULL DEFAULT 0,
-    creada_por INT NOT NULL REFERENCES usuarios(id_usuario) ON DELETE RESTRICT,
     fecha_creacion TIMESTAMP NOT NULL DEFAULT NOW(),
     CHECK (mes = date_trunc('month', mes)::date),
     CHECK (completada = (fecha_completada IS NOT NULL))

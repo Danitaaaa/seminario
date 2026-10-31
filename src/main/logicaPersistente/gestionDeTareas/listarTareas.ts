@@ -14,7 +14,7 @@ export class ListarTareas {
         const dto = ListarTareasDTOSchema.parse(entrada);
         const idProyecto = dto.idProyecto ?? null;
         await exigirAcceso(this.persistencia, idProyecto, dto.idUsuario, dto.idUsuario,
-            ['propietario', 'editor', 'lector']);
+            'tarea.listar');
 
         return this.persistencia.transaccion(async tx => {
             const valores: unknown[] = [];

@@ -7,7 +7,7 @@ jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
     registrarCambioSiProyecto: jest.fn(),
     filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
     }),
 }), { virtual: true });
 
@@ -25,11 +25,11 @@ describe('EliminarMeta', () => {
 
     // Spec (reglas de permisos + caso 110): propietario y editor pueden eliminar metas; el lector no.
     it('exige propietario o editor (el lector no puede eliminar)', async () => {
-        const actual = filaMeta({ id_proyecto: 4, creada_por: 12 });
+        const actual = filaMeta({ id_proyecto: 4, creada_por_global: 12 });
         const { persistencia } = crearPersistenciaFalsa([[actual]], [[{ id_global: 'g' }]]);
         await new EliminarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
-        expect(acceso).toHaveBeenCalledWith(persistencia, 4, 12, 7, ['propietario', 'editor']);
-        expect(acceso.mock.calls[0][4]).not.toContain('lector');
+        expect(acceso).toHaveBeenCalledWith(persistencia, 4, 12, 7, 'meta.eliminar');
+        expect(acceso.mock.calls[0][4]).toBe('meta.eliminar');
     });
 
     it('no elimina si no hay permisos', async () => {

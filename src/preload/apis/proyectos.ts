@@ -18,4 +18,5 @@ export const proyectosApi = {
 
     sincronizarProyecto: (datos: unknown) => ipcRenderer.invoke('proyectos:sincronizar', datos),
     unirseAProyecto: (datos: unknown) => ipcRenderer.invoke('proyectos:unirse', datos),
+    obtenerReglas: () => ipcRenderer.invoke('permisos:obtenerReglas'),
 };

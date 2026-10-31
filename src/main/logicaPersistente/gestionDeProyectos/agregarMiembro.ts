@@ -2,14 +2,14 @@ import { AgregarMiembroDTOSchema, AgregarMiembroDTO } from './dto';
 import { ProyectoMiembro, RolMiembro } from './entidades';
 import { IPersistenciaProyectos, ISincronizador } from './interfacesSincronizacion';
 import { materializarMiembro } from './materializador';
-import { exigirRol, registrarCambio } from './permisos';
+import { exigirPermiso, registrarCambio } from './permisos';
 
 export class AgregarMiembro {
     constructor(private persistencia: IPersistenciaProyectos, private sincronizador: ISincronizador) {}
 
     async ejecutar(entrada: AgregarMiembroDTO): Promise<ProyectoMiembro> {
         const dto = AgregarMiembroDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, ['propietario']);
+        await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, 'miembro.invitar');
 
         const miembro = await this.persistencia.transaccion(async tx => {
             // El índice único parcial rechaza duplicados activos.

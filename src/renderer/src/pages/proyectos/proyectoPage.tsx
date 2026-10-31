@@ -8,6 +8,7 @@ import { AvataresMiembros } from '../../components/proyectos/avataresMiembros';
 import { GestionMiembros } from '../../components/proyectos/gestionMiembros';
 import { PanelLateralProyecto } from '../../components/proyectos/panelLateralProyecto';
 import { obtenerUsuarioId } from '../../../lib/sesion';
+import { rolDe } from '../../permisos';
 import '../../styles/nodos.css';
 import '../../styles/proyectos.css';
 
@@ -94,6 +95,9 @@ function ProyectoDetalleContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: nu
         );
     }
 
+    // Qué puede hacer cada rol está en shared/permisos.ts
+    const rol = rolDe(miembros, ID_USUARIO_ACTUAL);
+
     return (
         <NodoPage
             key={proyecto.idProyecto}
@@ -101,6 +105,7 @@ function ProyectoDetalleContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: nu
             idActivo="proyectos"
             raiz={{ id: proyecto.idNodoRaiz, nombre: proyecto.nombre }}
             vistaInicial="cuadricula"
+            rol={rol}
             prefijoRuta={
                 <>
                     <button
@@ -125,7 +130,7 @@ function ProyectoDetalleContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: nu
                     />
                 </>
             }
-            lateral={<PanelLateralProyecto idProyecto={proyecto.idProyecto} />}
+            lateral={<PanelLateralProyecto idProyecto={proyecto.idProyecto} rol={rol} />}
         />
     );
 }

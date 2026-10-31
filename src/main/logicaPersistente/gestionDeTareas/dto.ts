@@ -11,20 +11,28 @@ export const FechaSchema = z
         return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === f;
     }, 'La fecha no existe');
 
+// Identificador global de usuario (uid de Supabase), igual en todas las PCs.
+export const IdGlobalUsuarioSchema = z.string().uuid();
+
 // Sin idProyecto (o null) la tarea es personal.
 export const CrearTareaDTOSchema = z.object({
     idProyecto: z.number().int().nullable().optional(),
-    idUsuario: z.number().int(), // quien solicita (control de permisos)
+    idUsuario: z.number().int(), // quien solicita (id local, para permisos)
     titulo: z.string().trim().min(1).max(200),
     descripcion: z.string().max(1000).nullable().optional(),
     prioridad: PrioridadSchema.default('media'),
     fechaLimite: FechaSchema.nullable().optional(),
-    // Desde cuándo se trabaja en la tarea (para el cronograma de proyectos).
     fechaInicio: FechaSchema.nullable().optional(),
-    idAsignado: z.number().int().nullable().optional(), // solo válido en tareas de proyecto
-}).refine(d => !d.fechaInicio || !d.fechaLimite || d.fechaInicio <= d.fechaLimite, {
-    message: 'La fecha de inicio no puede ser posterior a la fecha límite',
-});
+    idAsignadoGlobal: IdGlobalUsuarioSchema.nullable().optional(), // solo válido en tareas de proyecto
+})
+    .refine(d => !d.fechaInicio || !d.fechaLimite || d.fechaInicio <= d.fechaLimite, {
+        message: 'La fecha de inicio no puede ser posterior a la fecha límite',
+        path: ['fechaInicio'],
+    })
+    .refine(d => d.idProyecto != null || d.idAsignadoGlobal == null, {
+        message: 'Una tarea personal no se puede asignar a otro usuario',
+        path: ['idAsignadoGlobal'],
+    });
 export type CrearTareaDTO = z.input<typeof CrearTareaDTOSchema>;
 
 // Sin idProyecto (o null) lista las tareas personales del usuario.
@@ -34,7 +42,7 @@ export const ListarTareasDTOSchema = z.object({
 });
 export type ListarTareasDTO = z.infer<typeof ListarTareasDTOSchema>;
 
-// Los campos que no vienen no se tocan. `null` en descripcion/fechaLimite los borra.
+// Los campos que no vienen no se tocan. `null` en descripcion/fechaLimite/fechaInicio los borra.
 export const ModificarTareaDTOSchema = z.object({
     idTarea: z.number().int(),
     idUsuario: z.number().int(),
@@ -43,6 +51,9 @@ export const ModificarTareaDTOSchema = z.object({
     prioridad: PrioridadSchema.optional(),
     fechaLimite: FechaSchema.nullable().optional(),
     fechaInicio: FechaSchema.nullable().optional(),
+}).refine(d => !d.fechaInicio || !d.fechaLimite || d.fechaInicio <= d.fechaLimite, {
+    message: 'La fecha de inicio no puede ser posterior a la fecha límite',
+    path: ['fechaInicio'],
 });
 export type ModificarTareaDTO = z.infer<typeof ModificarTareaDTOSchema>;
 
@@ -58,7 +69,7 @@ export type AlternarTareaDTO = z.infer<typeof AlternarTareaDTOSchema>;
 export const AsignarTareaDTOSchema = z.object({
     idTarea: z.number().int(),
     idUsuario: z.number().int(),
-    idAsignado: z.number().int().nullable(),
+    idAsignadoGlobal: IdGlobalUsuarioSchema.nullable(),
 });
 export type AsignarTareaDTO = z.infer<typeof AsignarTareaDTOSchema>;
 
@@ -73,4 +84,4 @@ export const EliminarTareaDTOSchema = z.object({
     idTarea: z.number().int(),
     idUsuario: z.number().int(),
 });
-export type EliminarTareaDTO = z.infer<typeof EliminarTareaDTOSchema>;
+export type EliminarTareaDTO = z.infer<typeof EliminarTareaDTOSchema>;

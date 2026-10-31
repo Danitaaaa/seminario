@@ -9,7 +9,7 @@ export class EliminarEvento {
 
   async ejecutar(datos: EliminarEventoDTO): Promise<void> {
     const actual = await buscarEvento(this.persistencia, datos.id);
-    await exigirAcceso(this.persistencia, actual.idProyecto, actual.usuarioId, datos.usuarioId, ['propietario', 'editor']);
+    await exigirAcceso(this.persistencia, actual.idProyecto, actual.usuarioId, datos.usuarioId, 'evento.eliminar');
 
     await this.persistencia.transaccion(async (tx) => {
       // El id_global se captura antes de que la fila desaparezca: el otro lado borra por él.

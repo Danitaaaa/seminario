@@ -14,11 +14,11 @@ const USUARIO_POR_ROL: Record<Rol, number> = { propietario: 1, editor: 2, lector
 // Escenario deliberadamente variado: el creador NO coincide siempre con el asignado ni con el
 // usuario que lista, y hay tareas sin asignar creadas por el propietario y por un editor.
 const FILAS = [
-    filaTarea({ id_tarea: 1, id_asignado: null, creada_por: 1, orden: 1, titulo: 'Sin asignar (creó propietario)' }),
-    filaTarea({ id_tarea: 2, id_asignado: 2, creada_por: 1, orden: 1, titulo: 'Asignada al editor' }),
-    filaTarea({ id_tarea: 3, id_asignado: 3, creada_por: 2, orden: 1, titulo: 'Asignada al lector' }),
-    filaTarea({ id_tarea: 4, id_asignado: null, creada_por: 2, orden: 2, titulo: 'Sin asignar (creó editor)' }),
-    filaTarea({ id_tarea: 5, id_asignado: 1, creada_por: 3, orden: 1, titulo: 'Asignada al propietario' }),
+    filaTarea({ id_tarea: 1, id_asignado_global: null, creada_por_global: 1, orden: 1, titulo: 'Sin asignar (creó propietario)' }),
+    filaTarea({ id_tarea: 2, id_asignado_global: 2, creada_por_global: 1, orden: 1, titulo: 'Asignada al editor' }),
+    filaTarea({ id_tarea: 3, id_asignado_global: 3, creada_por_global: 2, orden: 1, titulo: 'Asignada al lector' }),
+    filaTarea({ id_tarea: 4, id_asignado_global: null, creada_por_global: 2, orden: 2, titulo: 'Sin asignar (creó editor)' }),
+    filaTarea({ id_tarea: 5, id_asignado_global: 1, creada_por_global: 3, orden: 1, titulo: 'Asignada al propietario' }),
 ];
 
 const ESPERADO = new Map<number, number | null>([[1, null], [2, 2], [3, 3], [4, null], [5, 1]]);
@@ -44,16 +44,16 @@ describe('ListarTareas: asignación de las tareas listadas', () => {
             expect(r.map(t => t.idTarea)).toEqual([1, 2, 3, 4, 5]);
         });
 
-        it('cada tarea conserva exactamente su idAsignado (las sin asignar siguen en null)', async () => {
+        it('cada tarea conserva exactamente su idAsignadoGlobal (las sin asignar siguen en null)', async () => {
             const { promesa } = listar(rol);
             const r = await promesa;
-            expect(new Map(r.map(t => [t.idTarea, t.idAsignado]))).toEqual(ESPERADO);
+            expect(new Map(r.map(t => [t.idTarea, t.idAsignadoGlobal]))).toEqual(ESPERADO);
         });
 
         it('las únicas sin asignar son las que realmente no tienen asignado (1 y 4)', async () => {
             const { promesa } = listar(rol);
             const r = await promesa;
-            expect(r.filter(t => t.idAsignado === null).map(t => t.idTarea)).toEqual([1, 4]);
+            expect(r.filter(t => t.idAsignadoGlobal === null).map(t => t.idTarea)).toEqual([1, 4]);
         });
 
         it('una tarea sin asignar no queda atribuida al usuario que lista ni a quien la creó', async () => {
@@ -61,9 +61,9 @@ describe('ListarTareas: asignación de las tareas listadas', () => {
             const r = await promesa;
             const sinAsignar = r.filter(t => t.idTarea === 1 || t.idTarea === 4);
             for (const t of sinAsignar) {
-                const creador = FILAS.find(f => f.id_tarea === t.idTarea)!.creada_por;
-                expect(t.idAsignado).not.toBe(USUARIO_POR_ROL[rol]);
-                expect(t.idAsignado).not.toBe(creador);
+                const creador = FILAS.find(f => f.id_tarea === t.idTarea)!.creada_por_global;
+                expect(t.idAsignadoGlobal).not.toBe(USUARIO_POR_ROL[rol]);
+                expect(t.idAsignadoGlobal).not.toBe(creador);
             }
         });
     });
@@ -76,20 +76,20 @@ describe('ListarTareas: asignación de las tareas listadas', () => {
 
     it('una tarea asignada al propietario no figura como sin asignar (y viceversa)', async () => {
         const r = await listar('lector').promesa;
-        expect(r.find(t => t.idTarea === 5)?.idAsignado).toBe(1);
-        expect(r.find(t => t.idTarea === 1)?.idAsignado).toBeNull();
+        expect(r.find(t => t.idTarea === 5)?.idAsignadoGlobal).toBe(1);
+        expect(r.find(t => t.idTarea === 1)?.idAsignadoGlobal).toBeNull();
     });
 
-    it('normaliza un id_asignado ausente (undefined) a null, no a otro usuario', async () => {
-        const fila = filaTarea({ id_tarea: 9, creada_por: 2 });
-        delete (fila as any).id_asignado;
+    it('normaliza un id_asignado_global ausente (undefined) a null, no a otro usuario', async () => {
+        const fila = filaTarea({ id_tarea: 9, creada_por_global: 2 });
+        delete (fila as any).id_asignado_global;
         const [t] = await listar('editor', [fila]).promesa;
-        expect(t.idAsignado).toBeNull();
+        expect(t.idAsignadoGlobal).toBeNull();
     });
 
     it('conserva el orden devuelto por la base dentro de cada columna', async () => {
         const r = await listar('lector').promesa;
-        expect(r.filter(t => t.idAsignado === null).map(t => t.orden)).toEqual([1, 2]);
+        expect(r.filter(t => t.idAsignadoGlobal === null).map(t => t.orden)).toEqual([1, 2]);
     });
 });
 
@@ -102,16 +102,16 @@ describe('ListarTareas: la consulta de un proyecto no depende del usuario que li
 
         expect(valores).toEqual([ID_PROYECTO]);              // no se agrega el usuario como parámetro
         expect(sql).toMatch(/id_proyecto\s*=\s*\$1/);
-        expect(sql).not.toMatch(/creada_por\s*=/i);          // no filtra por creador
-        expect(sql).not.toMatch(/WHERE[\s\S]*id_asignado\s*(=|<>|!=|IS\s+NOT)/i); // no filtra por asignado
+        expect(sql).not.toMatch(/creada_por_global\s*=/i);          // no filtra por creador
+        expect(sql).not.toMatch(/WHERE[\s\S]*id_asignado_global\s*(=|<>|!=|IS\s+NOT)/i); // no filtra por asignado
     });
 
-    it('no reemplaza id_asignado nulo por otro valor en la consulta', async () => {
+    it('no reemplaza id_asignado_global nulo por otro valor en la consulta', async () => {
         const { promesa, ejecutar } = listar('lector');
         await promesa;
         const [sql] = consultasA(ejecutar, /FROM tareas/i)[0] as [string];
-        expect(sql).not.toMatch(/COALESCE\s*\(\s*(t\.)?id_asignado/i);
-        expect(sql).not.toMatch(/CASE[\s\S]*id_asignado[\s\S]*END/i);
+        expect(sql).not.toMatch(/COALESCE\s*\(\s*(t\.)?id_asignado_global/i);
+        expect(sql).not.toMatch(/CASE[\s\S]*id_asignado_global[\s\S]*END/i);
         expect(sql).not.toMatch(/JOIN/i);                    // un JOIN con miembros/usuarios puede pisar el nulo
     });
 });

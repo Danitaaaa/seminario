@@ -14,7 +14,7 @@ describe('Materializador de Tareas', () => {
     it('convierte las columnas de la base a las propiedades de la tarea', () => {
         const t = materializar({
             id_tarea: 42, id_global: 'g-42', id_proyecto: 10, titulo: 'X', prioridad: 'alta', orden: 3,
-            completada: true, creada_por: 7, fecha_creacion: new Date('2026-01-01T00:00:00Z'),
+            completada: true, creada_por_global: 7, fecha_creacion: new Date('2026-01-01T00:00:00Z'),
         });
         expect(t).toMatchObject({
             idTarea: 42, idGlobal: 'g-42', idProyecto: 10, titulo: 'X', prioridad: 'alta', orden: 3,
@@ -29,31 +29,31 @@ describe('Materializador de Tareas', () => {
         expect(t).toMatchObject({ idTarea: 42, titulo: 'X' });
     });
 
-    describe('id_asignado (origen del bug 7: tareas asignadas que salían en "Sin asignar")', () => {
+    describe('id_asignado_global (origen del bug 7: tareas asignadas que salían en "Sin asignar")', () => {
         it('null queda en null', () => {
-            expect(materializar({ id_asignado: null }).idAsignado).toBeNull();
+            expect(materializar({ id_asignado_global: null }).idAsignadoGlobal).toBeNull();
         });
 
         it('undefined (columna ausente) se normaliza a null', () => {
-            expect(materializar({}, ['id_asignado']).idAsignado).toBeNull();
+            expect(materializar({}, ['id_asignado_global']).idAsignadoGlobal).toBeNull();
         });
 
         it('un asignado se conserva', () => {
-            expect(materializar({ id_asignado: 8 }).idAsignado).toBe(8);
+            expect(materializar({ id_asignado_global: 8 }).idAsignadoGlobal).toBe(8);
         });
 
         it.each([
             ['propietario', 1], ['otro miembro', 8],
         ])('sin asignar no se atribuye a %s ni al creador', (_quien, creador) => {
-            expect(materializar({ id_asignado: null, creada_por: creador }).idAsignado).toBeNull();
+            expect(materializar({ id_asignado_global: null, creada_por_global: creador }).idAsignadoGlobal).toBeNull();
         });
 
         it('el asignado no se pisa con el creador', () => {
-            expect(materializar({ id_asignado: 8, creada_por: 1 }).idAsignado).toBe(8);
+            expect(materializar({ id_asignado_global: 8, creada_por_global: 1 }).idAsignadoGlobal).toBe(8);
         });
 
-        it('id_asignado 0 no se confunde con "sin asignar"', () => {
-            expect(materializar({ id_asignado: 0 }).idAsignado).toBe(0);
+        it('id_asignado_global 0 no se confunde con "sin asignar"', () => {
+            expect(materializar({ id_asignado_global: 0 }).idAsignadoGlobal).toBe(0);
         });
     });
 
@@ -83,21 +83,21 @@ describe('Materializador de Tareas', () => {
     describe('estado de cumplimiento (tests 101 y 102)', () => {
         it('tarea hecha conserva quién y cuándo la completó', () => {
             const fecha = new Date('2026-02-01T00:00:00Z');
-            const t = materializar({ completada: true, completada_por: 5, fecha_completada: fecha });
+            const t = materializar({ completada: true, completada_por_global: 5, fecha_completada: fecha });
             expect(t.completada).toBe(true);
             expect(t.completadaPor).toBe(5);
             expect(t.fechaCompletada).toEqual(fecha);
         });
 
         it('tarea pendiente no trae persona ni fecha de cumplimiento', () => {
-            const t = materializar({ completada: false, completada_por: null, fecha_completada: null });
+            const t = materializar({ completada: false, completada_por_global: null, fecha_completada: null });
             expect(t.completada).toBe(false);
             expect(t.completadaPor).toBeNull();
             expect(t.fechaCompletada).toBeNull();
         });
 
         it('persona y fecha de cumplimiento ausentes se normalizan a null', () => {
-            const t = materializar({ completada: false }, ['completada_por', 'fecha_completada']);
+            const t = materializar({ completada: false }, ['completada_por_global', 'fecha_completada']);
             expect(t.completadaPor).toBeNull();
             expect(t.fechaCompletada).toBeNull();
         });

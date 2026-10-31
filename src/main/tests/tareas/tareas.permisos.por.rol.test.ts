@@ -25,7 +25,7 @@ const NO_MIEMBRO = /El usuario no es miembro del proyecto/;
 const PERSONAL_AJENO = /No tenés permiso sobre este elemento personal/;
 
 function base(rol: Rol | null, sobrescribirTarea: Record<string, unknown> = {}) {
-    const tarea = filaTarea({ id_proyecto: ID_PROYECTO, creada_por: 99, id_asignado: 8, ...sobrescribirTarea });
+    const tarea = filaTarea({ id_proyecto: ID_PROYECTO, creada_por_global: 99, id_asignado_global: 8, ...sobrescribirTarea });
     return persistenciaPorSql([
         { cuando: /proyecto_miembros/i, filas: rol ? [{ rol, id_usuario: 8 }] : [] },
         { cuando: /MAX\s*\(/i, filas: [{ orden: 1 }] },
@@ -42,7 +42,7 @@ async function intentar(op: Operacion, p: IPersistenciaProyectos): Promise<Error
 const crear: Operacion = p => new CrearTarea(p).ejecutar({ idUsuario: U, idProyecto: ID_PROYECTO, titulo: 'T' });
 const modificar: Operacion = p => new ModificarTarea(p).ejecutar({ idTarea: 1, idUsuario: U, titulo: 'N' });
 const eliminar: Operacion = p => new EliminarTarea(p).ejecutar({ idTarea: 1, idUsuario: U });
-const asignar: Operacion = p => new AsignarTarea(p).ejecutar({ idTarea: 1, idUsuario: U, idAsignado: 8 });
+const asignar: Operacion = p => new AsignarTarea(p).ejecutar({ idTarea: 1, idUsuario: U, idAsignadoGlobal: 8 });
 const repartir: Operacion = p => new RepartirTareas(p).ejecutar({ idProyecto: ID_PROYECTO, idUsuario: U });
 const alternar: Operacion = p => new AlternarTarea(p).ejecutar({ idTarea: 1, idUsuario: U });
 const listar: Operacion = p => new ListarTareas(p).ejecutar({ idProyecto: ID_PROYECTO, idUsuario: U });
@@ -64,27 +64,27 @@ describe('Propietario y editor: operan sin restricción', () => {
 
     // Bug exploratorio Nº 3: "como editor de proyecto no se puede eliminar tareas".
     it('el editor elimina una tarea creada por otro miembro y se ejecuta el DELETE', async () => {
-        const { persistencia, ejecutar } = base('editor', { creada_por: 99 });
+        const { persistencia, ejecutar } = base('editor', { creada_por_global: 99 });
         await expect(eliminar(persistencia)).resolves.toBeUndefined();
         expect(consultasA(ejecutar, /DELETE FROM tareas/i)).toHaveLength(1);
     });
 
     it('el editor elimina una tarea propia', async () => {
-        const { persistencia, ejecutar } = base('editor', { creada_por: U });
+        const { persistencia, ejecutar } = base('editor', { creada_por_global: U });
         await expect(eliminar(persistencia)).resolves.toBeUndefined();
         expect(consultasA(ejecutar, /DELETE FROM tareas/i)).toHaveLength(1);
     });
 
     // Bug exploratorio Nº 4: "un propietario no le puede asignar una tarea a otro miembro".
     it('el propietario asigna una tarea a otro miembro y se ejecuta el UPDATE', async () => {
-        const { persistencia, ejecutar } = base('propietario', { id_asignado: null });
+        const { persistencia, ejecutar } = base('propietario', { id_asignado_global: null });
         await expect(asignar(persistencia)).resolves.toBeDefined();
         expect(consultasA(ejecutar, /^\s*UPDATE\s+tareas/i)).toHaveLength(1);
     });
 
     // Test 90
     it('un editor modifica una tarea creada por el propietario', async () => {
-        const { persistencia, ejecutar } = base('editor', { creada_por: 1 });
+        const { persistencia, ejecutar } = base('editor', { creada_por_global: 1 });
         await expect(modificar(persistencia)).resolves.toBeDefined();
         expect(consultasA(ejecutar, /^\s*UPDATE\s+tareas/i)).toHaveLength(1);
     });
@@ -102,7 +102,7 @@ describe('Solo lectura (lector)', () => {
     // eliminar/crear tareas propias; contradice la regla y el test 92. Acá se aplica la regla.)
     it('no puede eliminar ni modificar una tarea propia', async () => {
         for (const op of [eliminar, modificar]) {
-            const { persistencia, ejecutar } = base('lector', { creada_por: U });
+            const { persistencia, ejecutar } = base('lector', { creada_por_global: U });
             await expect(op(persistencia)).rejects.toThrow(PERMISOS);
             expect(consultasA(ejecutar, /^\s*(UPDATE|DELETE)/i)).toHaveLength(0);
         }
@@ -115,7 +115,7 @@ describe('Solo lectura (lector)', () => {
 
     // Test 104 + regla "Solo lectura | Consultar/Marcar tarea como hecha | Puede visualizar y marcarlas como hechas"
     it('puede marcar como hecha una tarea asignada (se ejecuta el UPDATE)', async () => {
-        const { persistencia, ejecutar } = base('lector', { id_asignado: 8, completada: false });
+        const { persistencia, ejecutar } = base('lector', { id_asignado_global: 8, completada: false });
         await expect(alternar(persistencia)).resolves.toBeDefined();
         expect(consultasA(ejecutar, /^\s*UPDATE\s+tareas/i)).toHaveLength(1);
     });
@@ -132,14 +132,14 @@ describe('Quien no es miembro activo (o fue dado de baja)', () => {
 describe('Tareas personales (sin proyecto)', () => {
     it.each([['modificar', modificar], ['eliminar', eliminar], ['marcar como hecha', alternar]] as Array<[string, Operacion]>)(
         '%s: otro usuario no puede operar sobre una tarea personal ajena', async (_nombre, op) => {
-            const { persistencia, ejecutar } = base('editor', { id_proyecto: null, creada_por: 99 });
+            const { persistencia, ejecutar } = base('editor', { id_proyecto: null, creada_por_global: 99 });
             await expect(op(persistencia)).rejects.toThrow(PERSONAL_AJENO);
             expect(consultasA(ejecutar, /^\s*(UPDATE|DELETE)/i)).toHaveLength(0);
         });
 
     it.each([['modificar', modificar], ['eliminar', eliminar]] as Array<[string, Operacion]>)(
         '%s: el creador sí puede operar su tarea personal', async (_nombre, op) => {
-            const { persistencia } = base(null, { id_proyecto: null, creada_por: U });
+            const { persistencia } = base(null, { id_proyecto: null, creada_por_global: U });
             const err = await intentar(op, persistencia);
             expect(err?.message ?? '').not.toMatch(PERSONAL_AJENO);
             expect(err?.message ?? '').not.toMatch(NO_MIEMBRO);

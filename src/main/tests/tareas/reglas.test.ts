@@ -18,47 +18,47 @@ jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
 
 const exigirAcceso = alcance.exigirAcceso as jest.Mock;
 const registrarCambio = alcance.registrarCambioSiProyecto as jest.Mock;
-const exigirRol = permisos.exigirRol as jest.Mock;
+const exigirPermiso = permisos.exigirPermiso as jest.Mock;
 
 beforeEach(() => {
     jest.resetAllMocks();
     exigirAcceso.mockResolvedValue(undefined);
     registrarCambio.mockResolvedValue(undefined);
-    exigirRol.mockResolvedValue('editor');
+    exigirPermiso.mockResolvedValue('editor');
 });
 
 const ID_PROYECTO = 10;
 
 /* ------------------------------------------------------------------ Crear (tests 85, 86) */
 describe('CrearTarea en proyecto', () => {
-    function baseCrear(esMiembro: boolean, idAsignado: number | null) {
+    function baseCrear(esMiembro: boolean, idAsignadoGlobal: number | null) {
         return persistenciaPorSql([
             { cuando: /proyecto_miembros/i, filas: esMiembro ? [{ x: 1 }] : [] },
             { cuando: /MAX\s*\(/i, filas: [{ orden: 7 }] },
-            { cuando: /^\s*INSERT INTO tareas/i, filas: [filaTarea({ id_tarea: 20, id_asignado: idAsignado, orden: 7 })] },
+            { cuando: /^\s*INSERT INTO tareas/i, filas: [filaTarea({ id_tarea: 20, titulo: 'Tarea', id_asignado_global: idAsignadoGlobal, orden: 7 })] },
         ]);
     }
 
-    it('85: sin asignar queda con idAsignado null y se registra para sincronizar', async () => {
+    it('85: sin asignar queda con idAsignadoGlobal null y se registra para sincronizar', async () => {
         const { persistencia, tx } = baseCrear(true, null);
-        const t = await new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: ID_PROYECTO, titulo: 'T' });
-        expect(t.idAsignado).toBeNull();
-        expect(registrarCambio).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', 20, 'crear', { titulo: 'T', idAsignado: null });
+        const t = await new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: ID_PROYECTO, titulo: 'Tarea' });
+        expect(t.idAsignadoGlobal).toBeNull();
+        expect(registrarCambio).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', 20, 'crear', { titulo: 'Tarea', idAsignadoGlobal: null });
     });
 
-    it('86: asignada a un miembro queda al final de su columna y se registra con el idAsignado', async () => {
+    it('86: asignada a un miembro queda al final de su columna y se registra con el idAsignadoGlobal', async () => {
         const { persistencia, ejecutar, tx } = baseCrear(true, 8);
-        const t = await new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: ID_PROYECTO, titulo: 'T', idAsignado: 8 });
-        expect(t).toMatchObject({ idAsignado: 8, orden: 7 });
+        const t = await new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: ID_PROYECTO, titulo: 'Tarea', idAsignadoGlobal: 8 });
+        expect(t).toMatchObject({ idAsignadoGlobal: 8, orden: 7 });
         const [insert] = consultasA(ejecutar, /^\s*INSERT INTO tareas/i);
         expect(insert[1]).toContain(7);
         expect(insert[1]).toContain(8);
-        expect(registrarCambio).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', 20, 'crear', { titulo: 'T', idAsignado: 8 });
+        expect(registrarCambio).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', 20, 'crear', { titulo: 'Tarea', idAsignadoGlobal: 8 });
     });
 
     it('no se puede asignar a quien no es miembro activo del proyecto: no inserta nada', async () => {
         const { persistencia, ejecutar } = baseCrear(false, 8);
-        await expect(new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: ID_PROYECTO, titulo: 'T', idAsignado: 8 }))
+        await expect(new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: ID_PROYECTO, titulo: 'Tarea', idAsignadoGlobal: 8 }))
             .rejects.toThrow();
         expect(consultasA(ejecutar, /^\s*INSERT/i)).toHaveLength(0);
         expect(registrarCambio).not.toHaveBeenCalled();
@@ -66,7 +66,7 @@ describe('CrearTarea en proyecto', () => {
 
     it('una tarea personal no puede nacer asignada a otro usuario (coherente con AsignarTarea)', async () => {
         const { persistencia, ejecutar } = baseCrear(true, 8);
-        await expect(new CrearTarea(persistencia).ejecutar({ idUsuario: 5, titulo: 'T', idAsignado: 8 })).rejects.toThrow();
+        await expect(new CrearTarea(persistencia).ejecutar({ idUsuario: 5, titulo: 'Tarea', idAsignadoGlobal: 8 })).rejects.toThrow();
         expect(consultasA(ejecutar, /^\s*INSERT/i)).toHaveLength(0);
     });
 });
@@ -79,53 +79,53 @@ describe('AsignarTarea', () => {
             { cuando: /MAX\s*\(/i, filas: [{ orden: ordenSiguiente }] },
             {
                 cuando: /^\s*UPDATE tareas/i,
-                filas: (_sql, p) => [filaTarea({ ...tarea, id_asignado: p[1], orden: p[2] })],
+                filas: (_sql, p) => [filaTarea({ ...tarea, id_asignado_global: p[1], orden: p[2] })],
             },
             { cuando: /FROM tareas/i, filas: [filaTarea(tarea)] },
         ]);
     }
 
     it('93: a un miembro que no es del proyecto no se le puede asignar', async () => {
-        const { persistencia, ejecutar } = crearPersistenciaFalsa([[filaTarea({ id_asignado: null })], []]);
-        await expect(new AsignarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, idAsignado: 99 })).rejects.toThrow();
+        const { persistencia, ejecutar } = crearPersistenciaFalsa([[filaTarea({ id_asignado_global: null })], []]);
+        await expect(new AsignarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, idAsignadoGlobal: 99 })).rejects.toThrow();
         expect(consultasA(ejecutar, /UPDATE tareas/)).toHaveLength(0);
         expect(registrarCambio).not.toHaveBeenCalled();
     });
 
-    it('94: mover una tarea pendiente a "Sin asignar" la deja con idAsignado null al final de esa columna', async () => {
-        const { persistencia, ejecutar, tx } = baseAsignar({ id_asignado: 8, completada: false }, 4);
-        const t = await new AsignarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, idAsignado: null });
-        expect(t).toMatchObject({ idAsignado: null, orden: 4 });
+    it('94: mover una tarea pendiente a "Sin asignar" la deja con idAsignadoGlobal null al final de esa columna', async () => {
+        const { persistencia, ejecutar, tx } = baseAsignar({ id_asignado_global: 8, completada: false }, 4);
+        const t = await new AsignarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, idAsignadoGlobal: null });
+        expect(t).toMatchObject({ idAsignadoGlobal: null, orden: 4 });
         const [update] = consultasA(ejecutar, /^\s*UPDATE tareas/i);
         expect(update[1]).toEqual([1, null, 4]);
-        expect(registrarCambio).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', 1, 'modificar', { idAsignado: null });
+        expect(registrarCambio).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', 1, 'modificar', { idAsignadoGlobal: null });
     });
 
     it('95: una tarea hecha no puede quedar sin asignar', async () => {
-        const { persistencia, ejecutar } = baseAsignar({ id_asignado: 8, completada: true, completada_por: 8 });
-        await expect(new AsignarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, idAsignado: null }))
+        const { persistencia, ejecutar } = baseAsignar({ id_asignado_global: 8, completada: true, completada_por_global: 8 });
+        await expect(new AsignarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, idAsignadoGlobal: null }))
             .rejects.toThrow(/hecha|completad/i);
         expect(consultasA(ejecutar, /^\s*UPDATE tareas/i)).toHaveLength(0);
         expect(registrarCambio).not.toHaveBeenCalled();
     });
 
     it('una tarea hecha sí se puede reasignar a otro miembro', async () => {
-        const { persistencia, ejecutar } = baseAsignar({ id_asignado: 8, completada: true });
-        await expect(new AsignarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, idAsignado: 9 })).resolves.toBeDefined();
+        const { persistencia, ejecutar } = baseAsignar({ id_asignado_global: 8, completada: true });
+        await expect(new AsignarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, idAsignadoGlobal: 9 })).resolves.toBeDefined();
         expect(consultasA(ejecutar, /^\s*UPDATE tareas/i)).toHaveLength(1);
     });
 });
 
-/* ------------------------------------------------------------------ Alternar (tests 101, 102, 103) */
+/* ------------------------------------------------------------------ Alternar (tests 101, 102, 103, 104) */
 describe('AlternarTarea', () => {
     it('101: al marcar como hecha se guarda quién y cuándo, y se registra para sincronizar', async () => {
         const { persistencia, ejecutar, tx } = crearPersistenciaFalsa([
-            [filaTarea({ id_asignado: 8, completada: false })],
-            [filaTarea({ id_asignado: 8, completada: true, completada_por: 5 })],
+            [filaTarea({ id_asignado_global: 8, completada: false })],
+            [filaTarea({ id_asignado_global: 8, completada: true, completada_por_global: 5 })],
         ]);
         await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, completada: true });
         const [sql, valores] = ejecutar.mock.calls[1];
-        expect(sql).toMatch(/completada_por/);
+        expect(sql).toMatch(/completada_por_global/);
         expect(sql).toMatch(/fecha_completada/);
         expect(valores).toEqual([1, true, 5]);
         expect(registrarCambio).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', 1, 'modificar', expect.anything());
@@ -133,28 +133,28 @@ describe('AlternarTarea', () => {
 
     it('102: al desmarcar vuelve a pendiente y se borran la persona y la fecha de cumplimiento', async () => {
         const { persistencia, ejecutar } = crearPersistenciaFalsa([
-            [filaTarea({ id_asignado: 8, completada: true, completada_por: 5, fecha_completada: new Date('2026-02-01') })],
-            [filaTarea({ id_asignado: 8, completada: false, completada_por: null, fecha_completada: null })],
+            [filaTarea({ id_asignado_global: 8, completada: true, completada_por_global: 5, fecha_completada: new Date('2026-02-01') })],
+            [filaTarea({ id_asignado_global: 8, completada: false, completada_por_global: null, fecha_completada: null })],
         ]);
         const t = await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, completada: false });
         expect(t.completada).toBe(false);
         const [sql, valores] = ejecutar.mock.calls[1];
         expect(valores[1]).toBe(false);
-        expect(sql).toMatch(/completada_por/);
+        expect(sql).toMatch(/completada_por_global/);
         expect(sql).toMatch(/fecha_completada/);
     });
 
     it('sin `completada` invierte una tarea hecha a pendiente', async () => {
         const { persistencia, ejecutar } = crearPersistenciaFalsa([
-            [filaTarea({ id_asignado: 8, completada: true })],
-            [filaTarea({ id_asignado: 8, completada: false })],
+            [filaTarea({ id_asignado_global: 8, completada: true })],
+            [filaTarea({ id_asignado_global: 8, completada: false })],
         ]);
         await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5 });
         expect(ejecutar.mock.calls[1][1][1]).toBe(false);
     });
 
     it('103: no se puede marcar como hecha una tarea sin asignar y se informa que hay que asignarla', async () => {
-        const { persistencia, ejecutar } = crearPersistenciaFalsa([[filaTarea({ id_asignado: null, completada: false })]]);
+        const { persistencia, ejecutar } = crearPersistenciaFalsa([[filaTarea({ id_asignado_global: null, completada: false })]]);
         await expect(new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, completada: true }))
             .rejects.toThrow(/asign/i);
         expect(consultasA(ejecutar, /UPDATE tareas/)).toHaveLength(0);
@@ -162,30 +162,30 @@ describe('AlternarTarea', () => {
     });
 
     it('103: tampoco al invertir (sin `completada`) una tarea sin asignar', async () => {
-        const { persistencia, ejecutar } = crearPersistenciaFalsa([[filaTarea({ id_asignado: null, completada: false })]]);
+        const { persistencia, ejecutar } = crearPersistenciaFalsa([[filaTarea({ id_asignado_global: null, completada: false })]]);
         await expect(new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5 })).rejects.toThrow(/asign/i);
         expect(consultasA(ejecutar, /UPDATE tareas/)).toHaveLength(0);
     });
 
     it('104: el lector está entre los roles permitidos para marcar como hecha', async () => {
         const { persistencia } = crearPersistenciaFalsa([
-            [filaTarea({ id_asignado: 8 })], [filaTarea({ id_asignado: 8, completada: true })],
+            [filaTarea({ id_asignado_global: 8 })], [filaTarea({ id_asignado_global: 8, completada: true })],
         ]);
         await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5 });
         const roles = exigirAcceso.mock.calls[0][4] as string[];
-        expect(roles).toEqual(expect.arrayContaining(['propietario', 'editor', 'lector']));
+        expect(exigirAcceso.mock.calls[0][4]).toBe('tarea.alternar');
     });
 });
 
 /* ------------------------------------------------------------------ Repartir (tests 96 a 100) */
 describe('RepartirTareas', () => {
-    const respuestaUpdate: Respuesta = (_sql, p) => [filaTarea({ id_tarea: p[0], id_asignado: p[1], orden: p[2] })];
+    const respuestaUpdate: Respuesta = (_sql, p) => [filaTarea({ id_tarea: p[0], id_asignado_global: p[1], orden: p[2] })];
     const respuestaOrden: Respuesta = () => [{ orden: 1 }];
 
     function cola(miembros: number[], cargas: Array<[number, number]>, pendientes: number[]): Respuesta[] {
         const r: Respuesta[] = [
             miembros.map(id => ({ id_usuario: id })),
-            cargas.map(([id, n]) => ({ id_asignado: id, n })),
+            cargas.map(([id, n]) => ({ id_asignado_global: id, n })),
             pendientes.map(id => ({ id_tarea: id })),
         ];
         for (const _ of pendientes) r.push(respuestaOrden, respuestaUpdate);
@@ -198,10 +198,10 @@ describe('RepartirTareas', () => {
     };
 
     const asignaciones = (ejecutar: jest.Mock) =>
-        consultasA(ejecutar, /^\s*UPDATE tareas/i).map(([, p]) => ({ idTarea: (p as number[])[0], idAsignado: (p as number[])[1] }));
+        consultasA(ejecutar, /^\s*UPDATE tareas/i).map(([, p]) => ({ idTarea: (p as number[])[0], idAsignadoGlobal: (p as number[])[1] }));
 
-    const conteo = (a: Array<{ idAsignado: number }>) =>
-        a.reduce<Record<number, number>>((acc, x) => ({ ...acc, [x.idAsignado]: (acc[x.idAsignado] ?? 0) + 1 }), {});
+    const conteo = (a: Array<{ idAsignadoGlobal: number }>) =>
+        a.reduce<Record<number, number>>((acc, x) => ({ ...acc, [x.idAsignadoGlobal]: (acc[x.idAsignadoGlobal] ?? 0) + 1 }), {});
 
     it('96: seis tareas entre tres miembros sin carga: dos para cada uno', async () => {
         const { promesa, ejecutar } = repartir(cola([1, 2, 3], [], [11, 12, 13, 14, 15, 16]));
@@ -234,7 +234,7 @@ describe('RepartirTareas', () => {
         const { promesa, ejecutar } = repartir(cola([1, 2], [], [11]));
         await promesa;
         const [sql, params] = ejecutar.mock.calls[2];
-        expect(sql).toMatch(/id_asignado IS NULL/i);
+        expect(sql).toMatch(/id_asignado_global IS NULL/i);
         expect(params).toContain(ID_PROYECTO);
     });
 
@@ -245,13 +245,13 @@ describe('RepartirTareas', () => {
         expect(registrarCambio).not.toHaveBeenCalled();
     });
 
-    it('100: cada tarea repartida se registra como "modificar" con su nuevo idAsignado', async () => {
+    it('100: cada tarea repartida se registra como "modificar" con su nuevo idAsignadoGlobal', async () => {
         const { promesa, ejecutar, tx } = repartir(cola([1, 2, 3], [], [11, 12, 13]));
         await promesa;
         const a = asignaciones(ejecutar);
         expect(registrarCambio).toHaveBeenCalledTimes(3);
-        for (const { idTarea, idAsignado } of a) {
-            expect(registrarCambio).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', idTarea, 'modificar', { idAsignado });
+        for (const { idTarea, idAsignadoGlobal } of a) {
+            expect(registrarCambio).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', idTarea, 'modificar', { idAsignadoGlobal });
         }
     });
 });

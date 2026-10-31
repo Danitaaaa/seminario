@@ -69,14 +69,14 @@ export class ManejadorMeta implements ManejadorEntidad {
 
   async leer(idProyecto: number, idGlobal: string) {
     const f = await this.p.ejecutar(
-      `SELECT (to_jsonb(m) - 'id_meta' - 'creada_por' - 'id_proyecto' - 'id_global'
-                           - 'id_meta_origen' - 'completada_por')
+      `SELECT (to_jsonb(m) - 'id_meta' - 'creada_por_global' - 'id_proyecto' - 'id_global'
+                           - 'id_meta_origen' - 'completada_por_global')
               || jsonb_build_object('creador_mail', uc.email,
                                     'completada_por_mail', ur.email,
                                     'origen_global', mo.id_global) AS datos
        FROM metas m
-       LEFT JOIN usuarios uc ON uc.id_usuario = m.creada_por
-       LEFT JOIN usuarios ur ON ur.id_usuario = m.completada_por
+       LEFT JOIN usuarios uc ON uc.id_usuario = m.creada_por_global
+       LEFT JOIN usuarios ur ON ur.id_usuario = m.completada_por_global
        LEFT JOIN metas mo ON mo.id_meta = m.id_meta_origen
        WHERE m.id_global = $1 AND m.id_proyecto = $2`, [idGlobal, idProyecto]);
     return f[0] ? { datos: f[0].datos } : null;
@@ -94,14 +94,14 @@ export class ManejadorMeta implements ManejadorEntidad {
     const completadaPor = await usuarioPorMail(this.p, d.completada_por_mail);
     await this.p.ejecutar(
       `INSERT INTO metas (id_global, id_proyecto, titulo, descripcion, mes, orden, completada,
-                          fecha_completada, completada_por, id_meta_origen, creada_por, fecha_limite)
+                          fecha_completada, completada_por_global, id_meta_origen, creada_por_global, fecha_limite)
        VALUES ($1,$2,$3,$4,$5::date,$6,$7,$8,$9,
                (SELECT id_meta FROM metas WHERE id_global = $10::uuid), $11, $12::date)
        ON CONFLICT (id_global) DO UPDATE SET
          titulo = EXCLUDED.titulo, descripcion = EXCLUDED.descripcion, mes = EXCLUDED.mes,
          fecha_limite = EXCLUDED.fecha_limite,
          orden = EXCLUDED.orden, completada = EXCLUDED.completada,
-         fecha_completada = EXCLUDED.fecha_completada, completada_por = EXCLUDED.completada_por,
+         fecha_completada = EXCLUDED.fecha_completada, completada_por_global = EXCLUDED.completada_por_global,
          id_meta_origen = COALESCE(EXCLUDED.id_meta_origen, metas.id_meta_origen)`,
       [idGlobal, idProyecto, d.titulo, d.descripcion ?? null, d.mes, d.orden ?? 0,
        d.completada ?? false, d.fecha_completada ?? null, completadaPor,
@@ -117,14 +117,14 @@ export class ManejadorTarea implements ManejadorEntidad {
   async leer(idProyecto: number, idGlobal: string) {
     const f = await this.p.ejecutar(
       `SELECT (to_jsonb(t) - 'id_tarea' - 'id_proyecto' - 'id_global'
-                           - 'creada_por' - 'id_asignado' - 'completada_por')
+                           - 'creada_por_global' - 'id_asignado_global' - 'completada_por_global')
               || jsonb_build_object('creador_mail', uc.email,
                                     'asignado_mail', ua.email,
                                     'completada_por_mail', ur.email) AS datos
        FROM tareas t
-       LEFT JOIN usuarios uc ON uc.id_usuario = t.creada_por
-       LEFT JOIN usuarios ua ON ua.id_usuario = t.id_asignado
-       LEFT JOIN usuarios ur ON ur.id_usuario = t.completada_por
+       LEFT JOIN usuarios uc ON uc.id_usuario = t.creada_por_global
+       LEFT JOIN usuarios ua ON ua.id_usuario = t.id_asignado_global
+       LEFT JOIN usuarios ur ON ur.id_usuario = t.completada_por_global
        WHERE t.id_global = $1 AND t.id_proyecto = $2`, [idGlobal, idProyecto]);
     return f[0] ? { datos: f[0].datos } : null;
   }
@@ -143,15 +143,15 @@ export class ManejadorTarea implements ManejadorEntidad {
     const completadaPor = await usuarioPorMail(this.p, d.completada_por_mail);
     await this.p.ejecutar(
       `INSERT INTO tareas (id_global, id_proyecto, titulo, descripcion, prioridad, fecha_limite,
-                           id_asignado, orden, completada, fecha_completada, completada_por, creada_por, fecha_inicio)
+                           id_asignado_global, orden, completada, fecha_completada, completada_por_global, creada_por_global, fecha_inicio)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        ON CONFLICT (id_global) DO UPDATE SET
          titulo = EXCLUDED.titulo, descripcion = EXCLUDED.descripcion, prioridad = EXCLUDED.prioridad,
-         fecha_limite = EXCLUDED.fecha_limite, fecha_inicio = EXCLUDED.fecha_inicio, id_asignado = EXCLUDED.id_asignado,
+         fecha_limite = EXCLUDED.fecha_limite, fecha_inicio = EXCLUDED.fecha_inicio, id_asignado_global = EXCLUDED.id_asignado_global,
          orden = EXCLUDED.orden, completada = EXCLUDED.completada,
-         fecha_completada = EXCLUDED.fecha_completada, completada_por = EXCLUDED.completada_por`,
+         fecha_completada = EXCLUDED.fecha_completada, completada_por_global = EXCLUDED.completada_por_global`,
       [idGlobal, idProyecto, d.titulo, d.descripcion ?? null, d.prioridad ?? 'media', d.fecha_limite ?? null,
        asignado, d.orden ?? 0, d.completada ?? false, d.fecha_completada ?? null, completadaPor, creadaPor,
        d.fecha_inicio ?? null]);
   }
-}
+}

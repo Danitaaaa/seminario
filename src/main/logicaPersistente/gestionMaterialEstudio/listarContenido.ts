@@ -1,7 +1,9 @@
+import { Persistencia } from '../../persistencia/persistencia';
 import { BuscarNodos } from "./buscarNodos";
 import { BuscarArchivos } from "./buscarArchivos";
 import { ElementoContenido } from "./entidades";
 import { ListarContenidoDTO, BuscadorArchivoDTO } from "./dto";
+import { exigirPermisoNodo } from './alcanceContenido';
 
 type Comparador = (a: ElementoContenido, b: ElementoContenido) => number;
 
@@ -10,9 +12,12 @@ export class ListarContenido {
     constructor(
         private readonly buscarNodos: BuscarNodos,
         private readonly buscarArchivos: BuscarArchivos,
+        private readonly persistencia: Persistencia, // nuevo: actualizá donde se instancia
     ) {}
 
     async ejecutar(criterios: ListarContenidoDTO): Promise<ElementoContenido[]> {
+        await exigirPermisoNodo(this.persistencia, criterios.idPadre, 'archivo.ver');
+
         const ordenarPor = criterios.ordenarPor ?? 'nombre';
 
         // 'tipo' no existe en las búsquedas internas: el orden final lo hace ordenar()

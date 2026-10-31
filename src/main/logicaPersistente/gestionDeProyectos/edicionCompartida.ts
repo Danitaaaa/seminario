@@ -8,7 +8,7 @@ import {
     ErrorBloqueoOcupado, ErrorBloqueoPerdido, ErrorPermiso, ErrorServidorNoDisponible, ErrorSinConexion,
     ErrorSincronizacion, ErrorVersionDesactualizada,
 } from './erroresSincronizacion';
-import { exigirRol, obtenerRolActivo } from './permisos';
+import { exigirPermiso, obtenerRolActivo } from './permisos';
 
 /* ---------------- Tipos públicos ---------------- */
 
@@ -154,7 +154,7 @@ export class EdicionCompartida {
      */
     async guardar(entrada: unknown): Promise<ResultadoGuardado> {
         const dto = ClaveDTO.parse(entrada);
-        await exigirRol(this.p, dto.idProyecto, dto.idUsuario, ['propietario', 'editor']);
+        await exigirPermiso(this.p, dto.idProyecto, dto.idUsuario, 'archivo.editarContenido');
         const idRemoto = await this.idRemoto(dto.idProyecto);
         if (!idRemoto) return { resultado: 'local' };
 
@@ -313,7 +313,7 @@ export class EdicionCompartida {
 
     async listarConflictos(entrada: unknown): Promise<{ entidad: EntidadEditable; idGlobal: string }[]> {
         const dto = ProyectoUsuarioDTO.parse(entrada);
-        await exigirRol(this.p, dto.idProyecto, dto.idUsuario, ['propietario', 'editor', 'lector']);
+        await exigirPermiso(this.p, dto.idProyecto, dto.idUsuario, 'conflictos.listar');
         const filas = await this.p.ejecutar(
             `SELECT entidad, id_global FROM estado_entidad_remota WHERE id_proyecto = $1 AND conflicto_remoto IS NOT NULL`,
             [dto.idProyecto]);
@@ -346,7 +346,7 @@ export class EdicionCompartida {
      */
     async resolverConflicto(entrada: unknown): Promise<{ version: number }> {
         const dto = ResolverConflictoDTO.parse(entrada);
-        await exigirRol(this.p, dto.idProyecto, dto.idUsuario, ['propietario', 'editor']);
+        await exigirPermiso(this.p, dto.idProyecto, dto.idUsuario, 'conflictos.resolver');
         const clave: ClaveEntidad = { entidad: dto.entidad, idGlobal: dto.idGlobal };
         const e = await this.estadoLocal(dto.idProyecto, clave);
         const remoto = e.conflicto;

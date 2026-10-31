@@ -1,27 +1,27 @@
 import { IPersistenciaProyectos } from './interfacesSincronizacion';
-import { exigirRol, registrarCambio } from './permisos';
+import { exigirPermiso, registrarCambio } from './permisos';
+import type { Accion } from './reglasPermisos';
 
-type Rol = Parameters<typeof exigirRol>[3][number];
 type Tx = Parameters<typeof registrarCambio>[0];
 type Entidad = Parameters<typeof registrarCambio>[2];
 type IdEntidad = Parameters<typeof registrarCambio>[3];
-type Accion = Parameters<typeof registrarCambio>[4];
+type Operacion = Parameters<typeof registrarCambio>[4]; // antes se llamaba Accion
 type Datos = Parameters<typeof registrarCambio>[5];
 
-// Con proyecto: exige uno de los roles indicados.
+// Con proyecto: exige que el rol del usuario esté permitido para la acción.
 // Sin proyecto (elemento personal): solo puede operar quien lo creó.
 export async function exigirAcceso(
     persistencia: IPersistenciaProyectos,
     idProyecto: number | null | undefined,
-    idCreador: number,
-    idUsuario: number,
-    roles: Rol[],
+    idCreador: string | number,
+    idUsuario: string | number,
+    accion: Accion,
 ): Promise<void> {
     if (idProyecto == null) {
         if (idCreador !== idUsuario) throw new Error('No tenés permiso sobre este elemento personal');
         return;
     }
-    await exigirRol(persistencia, idProyecto, idUsuario, roles);
+    await exigirPermiso(persistencia, idProyecto, idUsuario, accion);
 }
 
 // Tabla y PK de las entidades con id_global que se registran por este camino.
@@ -40,19 +40,19 @@ export async function registrarCambioSiProyecto(
     idProyecto: number | null | undefined,
     entidad: Entidad,
     idEntidad: IdEntidad,
-    accion: Accion,
+    operacion: Operacion,
     datos: Datos,
 ): Promise<void> {
     if (idProyecto == null) return;
 
     let payload = datos;
     const t = TABLA_ENTIDAD[entidad as string];
-    if (t && accion !== 'eliminar') {
+    if (t && operacion !== 'eliminar') {
         // t.tabla y t.pk salen de la constante de arriba, no de datos del usuario.
         const f = await tx.ejecutar(`SELECT id_global FROM ${t.tabla} WHERE ${t.pk} = $1`, [idEntidad]);
         if (f[0]) payload = { ...(datos as object | undefined), idGlobal: f[0].id_global };
     }
-    await registrarCambio(tx, idProyecto, entidad, idEntidad, accion, payload);
+    await registrarCambio(tx, idProyecto, entidad, idEntidad, operacion, payload);
 }
 
 // Condición SQL de alcance: con proyecto filtra por proyecto; sin proyecto, por elementos personales del usuario.
@@ -60,11 +60,11 @@ export async function registrarCambioSiProyecto(
 export function filtroAlcance(
     valores: unknown[],
     idProyecto: number | null | undefined,
-    idUsuario: number,
+    idUsuario: number | string,
 ): string {
     if (idProyecto == null) {
         valores.push(idUsuario);
-        return `id_proyecto IS NULL AND creada_por = $${valores.length}`;
+        return `id_proyecto IS NULL AND creada_por_global = $${valores.length}`;
     }
     valores.push(idProyecto);
     return `id_proyecto = $${valores.length}`;

@@ -5,11 +5,12 @@ interface BarraEditorProps {
   modificado: boolean;
   onGuardar: () => void;
   conFormato?: boolean;
+  soloLectura?: boolean; // sin barra: no hay nada que editar ni guardar
 }
 
 // Barra de herramientas compartida por los editores de Word y de notas.
-export function BarraEditor({ editor, modificado, onGuardar, conFormato = true }: BarraEditorProps) {
-  if (!editor) return null;
+export function BarraEditor({ editor, modificado, onGuardar, conFormato = true, soloLectura = false }: BarraEditorProps) {
+  if (!editor || soloLectura) return null;
 
   const boton = (etiqueta: string, activo: boolean, accion: () => void) => (
     <button

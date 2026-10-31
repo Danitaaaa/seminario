@@ -7,7 +7,7 @@ jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
     registrarCambioSiProyecto: jest.fn(),
     filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
     }),
 }), { virtual: true });
 
@@ -20,7 +20,7 @@ describe('EstadisticasMetasProyecto', () => {
     it('exige acceso de lectura (cualquier rol)', async () => {
         const { persistencia } = crearPersistenciaFalsa([[], []]);
         await new EstadisticasMetasProyecto(persistencia).ejecutar({ idUsuario: 7, idProyecto: 3 });
-        expect(acceso).toHaveBeenCalledWith(persistencia, 3, 7, 7, ['propietario', 'editor', 'lector']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, 3, 7, 7, 'meta.listar');
     });
 
     it('no consulta si no hay acceso', async () => {
@@ -94,9 +94,9 @@ describe('EstadisticasMetasProyecto', () => {
     it('en metas personales filtra por usuario', async () => {
         const { persistencia, ejecutar } = crearPersistenciaFalsa([[], []]);
         await new EstadisticasMetasProyecto(persistencia).ejecutar({ idUsuario: 7 });
-        expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, ['propietario', 'editor', 'lector']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, 'meta.listar');
         expect(filtro).toHaveBeenCalledWith(expect.any(Array), null, 7);
-        expect(ejecutar.mock.calls[0][0]).toContain('creada_por = $1');
+        expect(ejecutar.mock.calls[0][0]).toContain('creada_por_global = $1');
     });
 
     it('ejecuta primero la consulta por mes y luego la de miembros, con los mismos valores', async () => {
@@ -106,7 +106,7 @@ describe('EstadisticasMetasProyecto', () => {
         const [sqlMes, valoresMes] = ejecutar.mock.calls[0];
         const [sqlMiembro, valoresMiembro] = ejecutar.mock.calls[1];
         expect(sqlMes).toContain('GROUP BY mes ORDER BY mes');
-        expect(sqlMiembro).toContain('GROUP BY completada_por ORDER BY completadas DESC');
+        expect(sqlMiembro).toContain('GROUP BY completada_por_global ORDER BY completadas DESC');
         expect(valoresMiembro).toEqual(valoresMes);
     });
 
@@ -125,7 +125,7 @@ describe('EstadisticasMetasProyecto', () => {
         const { persistencia, ejecutar } = crearPersistenciaFalsa([[], []]);
         await new EstadisticasMetasProyecto(persistencia).ejecutar({ idUsuario: 7 });
         const sql: string = ejecutar.mock.calls[1][0];
-        expect(sql).toContain('AND completada AND completada_por IS NOT NULL');
+        expect(sql).toContain('AND completada AND completada_por_global IS NOT NULL');
     });
 
     it('rechaza rangos con formato inválido sin consultar', async () => {

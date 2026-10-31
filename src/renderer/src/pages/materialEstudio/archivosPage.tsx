@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Nodo } from '../../types/nodo';
 import { CartelError } from '../../components/comunes/cartelError';
+import type { RolMiembro } from '../../types/proyectos';
+import { puede } from '../../permisos';
 import '../../styles/archivos.css';
 
 type Props = {
   idPadre: number;
   onVolver: () => void;
+  rol?: RolMiembro | null; // por defecto 'propietario' (material personal)
 };
 
 type Elegido = { nombre: string; extension: string; rutaFisica: string; tamanio: number };
 
 const mensaje = (e: unknown, porDefecto: string) => (e instanceof Error ? e.message : porDefecto);
 
-export function ArchivosPage({ idPadre, onVolver }: Props) {
+export function ArchivosPage({ idPadre, onVolver, rol = 'propietario' }: Props) {
   const [seleccionado, setSeleccionado] = useState<Elegido | null>(null);
   const [archivos, setArchivos] = useState<Nodo[]>([]);
   const [carpetas, setCarpetas] = useState<Nodo[]>([]);
@@ -97,12 +100,16 @@ export function ArchivosPage({ idPadre, onVolver }: Props) {
 
       <button className="archivos-boton-secundario" onClick={onVolver}>← Volver</button>
 
+      {puede(rol, 'archivo.subir') && (
+        <>
       <h2>Subir archivo</h2>
       <div className="archivos-dropzone">
         <span>{seleccionado ? `${seleccionado.nombre}.${seleccionado.extension}` : 'Ningún archivo elegido'}</span>
         <button className="archivos-boton-secundario" onClick={elegirArchivo}>Elegir archivo</button>
         {seleccionado && <button className="archivos-boton" onClick={subir}>Subir</button>}
       </div>
+        </>
+      )}
 
       <h2>Archivos en esta carpeta</h2>
 
@@ -124,11 +131,13 @@ export function ArchivosPage({ idPadre, onVolver }: Props) {
         {archivos.map((a) =>
           a.tipo !== 'archivo' ? null : (
             <li className="archivos-item" key={a.id}>
-              <input
-                type="checkbox"
-                checked={seleccionadosIds.includes(a.id)}
-                onChange={() => alternarSeleccion(a.id)}
-              />
+              {puede(rol, 'archivo.mover') && (
+                <input
+                  type="checkbox"
+                  checked={seleccionadosIds.includes(a.id)}
+                  onChange={() => alternarSeleccion(a.id)}
+                />
+              )}
               {editandoId === a.id ? (
                 <>
                   <input value={nombreEditado} onChange={(e) => setNombreEditado(e.target.value)} />
@@ -141,16 +150,20 @@ export function ArchivosPage({ idPadre, onVolver }: Props) {
                 <>
                   <span className="archivos-item-info">{a.nombre}.{a.extension} — {a.tamaño} bytes</span>
                   <div className="archivos-item-acciones">
-                    <button
-                      className="archivos-boton-secundario"
-                      onClick={() => {
-                        setEditandoId(a.id);
-                        setNombreEditado(a.nombre);
-                      }}
-                    >
-                      Editar
-                    </button>
-                    <button className="archivos-boton-peligro" onClick={() => eliminar(a.id)}>Eliminar</button>
+                    {puede(rol, 'archivo.renombrar') && (
+                      <button
+                        className="archivos-boton-secundario"
+                        onClick={() => {
+                          setEditandoId(a.id);
+                          setNombreEditado(a.nombre);
+                        }}
+                      >
+                        Editar
+                      </button>
+                    )}
+                    {puede(rol, 'archivo.eliminar') && (
+                      <button className="archivos-boton-peligro" onClick={() => eliminar(a.id)}>Eliminar</button>
+                    )}
                   </div>
                 </>
               )}

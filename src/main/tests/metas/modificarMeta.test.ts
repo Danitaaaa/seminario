@@ -7,7 +7,7 @@ jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
     registrarCambioSiProyecto: jest.fn(),
     filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
     }),
 }), { virtual: true });
 
@@ -26,10 +26,10 @@ describe('ModificarMeta', () => {
     });
 
     it('exige propietario o editor usando proyecto y creador de la meta existente', async () => {
-        const actual = filaMeta({ id_proyecto: 4, creada_por: 12 });
+        const actual = filaMeta({ id_proyecto: 4, creada_por_global: 12 });
         const { persistencia } = crearPersistenciaFalsa([[actual]], [[actual]]);
         await new ModificarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7, titulo: 'X' });
-        expect(acceso).toHaveBeenCalledWith(persistencia, 4, 12, 7, ['propietario', 'editor']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, 4, 12, 7, 'meta.editar');
     });
 
     it('no actualiza si el usuario no tiene permisos', async () => {
@@ -91,7 +91,7 @@ describe('ModificarMeta', () => {
         const { persistencia, tx } = crearPersistenciaFalsa(
             [[filaMeta()]], [[filaMeta({ id_meta: 8, id_proyecto: 2, titulo: 'Final', orden: 6 })]]);
         await new ModificarMeta(persistencia).ejecutar({ idMeta: 8, idUsuario: 7, titulo: 'Final' });
-        expect(registrar).toHaveBeenCalledWith(tx, 2, 'meta', 8, 'modificar', { titulo: 'Final', orden: 6 });
+        expect(registrar).toHaveBeenCalledWith(tx, 2, 'meta', 8, 'modificar', { titulo: 'Final', orden: 6, fechaLimite: null });
     });
 
     it('rechaza un DTO inválido antes de consultar', async () => {

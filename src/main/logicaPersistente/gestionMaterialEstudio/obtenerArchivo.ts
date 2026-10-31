@@ -2,12 +2,15 @@ import { Persistencia } from '../../persistencia/persistencia';
 import { Archivo } from './entidades';
 import { materializarArchivo } from './materializador';
 import { ObtenerArchivoDTO } from './dto';
+import { exigirPermisoArchivo } from './alcanceContenido';
 
 // Devuelve un archivo por id y registra el acceso
 export class ObtenerArchivo {
   constructor(private readonly persistencia: Persistencia) {}
 
   async ejecutar(datos: ObtenerArchivoDTO): Promise<Archivo> {
+    await exigirPermisoArchivo(this.persistencia, datos.id, 'archivo.ver');
+
     const filas = await this.persistencia.ejecutar(
       `UPDATE archivos SET ultima_fecha_acceso = NOW()
        WHERE id_archivo = $1 RETURNING *`,

@@ -9,7 +9,7 @@ export type Fila = Record<string, any>;
 export const COLUMNAS_TAREA = `id_tarea, id_global, id_proyecto, titulo, descripcion, prioridad,
     to_char(fecha_limite, 'YYYY-MM-DD') AS fecha_limite,
     to_char(fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio,
-    id_asignado, completada, fecha_completada, completada_por, orden, creada_por, fecha_creacion`;
+    id_asignado_global, completada, fecha_completada, completada_por_global, orden, creada_por, fecha_creacion`;
 
 export function materializarTarea(fila: Fila): Tarea {
     return {
@@ -21,12 +21,12 @@ export function materializarTarea(fila: Fila): Tarea {
         prioridad: fila.prioridad,
         fechaLimite: fila.fecha_limite ?? null,
         fechaInicio: fila.fecha_inicio ?? null,
-        idAsignado: fila.id_asignado ?? null,
+        idAsignadoGlobal: fila.id_asignado_global ?? null,
         completada: fila.completada,
         fechaCompletada: fila.fecha_completada ?? null,
-        completadaPor: fila.completada_por ?? null,
+        completadaPorGlobal: fila.completada_por_global ?? null,
         orden: fila.orden,
-        creadaPor: fila.creada_por,
+        creadaPorGlobal: fila.creada_por,
         fechaCreacion: fila.fecha_creacion,
     };
 }

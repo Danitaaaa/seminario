@@ -11,16 +11,16 @@ export class CrearMeta {
     async ejecutar(entrada: CrearMetaDTO): Promise<Meta> {
         const dto = CrearMetaDTOSchema.parse(entrada);
         const idProyecto = dto.idProyecto ?? null;
-        await exigirAcceso(this.persistencia, idProyecto, dto.idUsuario, dto.idUsuario, ['propietario', 'editor']);
+        await exigirAcceso(this.persistencia, idProyecto, dto.idUsuario, dto.idUsuario, 'meta.crear');
 
         return this.persistencia.transaccion(async tx => {
             const filas = await tx.ejecutar(
-                `INSERT INTO metas (id_proyecto, titulo, descripcion, mes, orden, creada_por, fecha_limite)
+                `INSERT INTO metas (id_proyecto, titulo, descripcion, mes, orden, creada_por_global, fecha_limite)
                  VALUES ($1::int, $2, $3, $4::date,
                          (SELECT COALESCE(MAX(m.orden), 0) + 1 FROM metas m
                            WHERE m.id_proyecto IS NOT DISTINCT FROM $1::int
                              AND m.mes = $4::date
-                             AND ($1::int IS NOT NULL OR m.creada_por = $5::int)),
+                             AND ($1::int IS NOT NULL OR m.creada_por_global = $5::int)),
                          $5::int, $6::date)
                  RETURNING ${COLUMNAS_META}`,
                 [idProyecto, dto.titulo, dto.descripcion ?? null, mesAFecha(dto.mes), dto.idUsuario, dto.fechaLimite ?? null],

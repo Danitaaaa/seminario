@@ -3,6 +3,7 @@ import { Archivo } from './entidades';
 import { materializarArchivo } from './materializador';
 import { MoverArchivosDTO } from './dto';
 import { registrarCambioContenido } from '../gestionDeProyectos/alcanceContenido';
+import { exigirPermisoArchivos, exigirPermisoNodo } from './alcanceContenido';
 
 // Reasigna la carpeta padre de uno o más archivos.
 export class MoverArchivos {
@@ -26,6 +27,13 @@ export class MoverArchivos {
     );
     if (destino.length === 0) {
       throw new Error('La carpeta destino no existe');
+    }
+
+    // Permiso para sacar del origen y para poner en el destino.
+    const proyOrigen = await exigirPermisoArchivos(this.persistencia, datos.ids, 'archivo.mover');
+    const proyDestino = await exigirPermisoNodo(this.persistencia, datos.idPadre, 'archivo.subir');
+    if (proyOrigen !== proyDestino) {
+      throw new Error('No se pueden mover archivos entre proyectos distintos');
     }
 
     const filas = await this.persistencia.ejecutar(

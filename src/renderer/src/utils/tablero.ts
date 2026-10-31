@@ -20,23 +20,34 @@ const PALETA: ColorMiembro[] = [
 
 export const COLOR_SIN_ASIGNAR = '#B9BDC9';
 
+type MiembroConIdGlobal = Miembro & { idGlobalUsuario: string };
+
 // Único punto donde se traduce un Miembro del proyecto al tablero.
-export function aMiembroTablero(miembro: Miembro): MiembroTablero {
-  return { 
-    idUsuario: miembro.idUsuario, 
-    nombre: miembro.nombre ?? '', // Solución al error de tipado si nombre es opcional/undefined
-    rol: miembro.rol 
+// Solo se llama con miembros que ya tienen id global (ver armarColumnas).
+export function aMiembroTablero(miembro: MiembroConIdGlobal): MiembroTablero {
+  return {
+    idGlobal: miembro.idGlobalUsuario,
+    nombre: miembro.nombre ?? '',
+    rol: miembro.rol,
   };
 }
 
-export function armarColumnas(miembros: Miembro[], idUsuarioActual: number): ColumnaMiembro[] {
-  const tablero = miembros.filter((m) => m.rol !== 'lector').map(aMiembroTablero);
+// idGlobalActual es null en proyectos personales (sin cuenta sincronizada): en ese caso
+// no hay columnas de personas, solo "Sin asignar".
+export function armarColumnas(miembros: Miembro[], idGlobalActual: string | null): ColumnaMiembro[] {
+  const esActual = (id: string) => idGlobalActual !== null && id === idGlobalActual;
+
+  const tablero = miembros
+    .filter((m): m is MiembroConIdGlobal => m.activo && m.rol !== 'lector' && m.idGlobalUsuario != null)
+    .map(aMiembroTablero);
+
   // "Vos" primero; el resto conserva el orden original.
-  tablero.sort((a, b) => Number(b.idUsuario === idUsuarioActual) - Number(a.idUsuario === idUsuarioActual));
+  tablero.sort((a, b) => Number(esActual(b.idGlobal)) - Number(esActual(a.idGlobal)));
+
   return tablero.map((m, i) => ({
     ...m,
     color: PALETA[i % PALETA.length],
-    esYo: m.idUsuario === idUsuarioActual,
+    esYo: esActual(m.idGlobal),
   }));
 }
 
@@ -57,22 +68,24 @@ export function primerNombre(nombre: string): string {
 export function nombreCorto(nombre: string): string {
   const palabras = nombre.trim().split(/\s+/).filter(Boolean);
   if (palabras.length < 2) return nombre.trim();
-  return `${palabras[0]} ${palabras[palabras.length - 1][0].toUpperCase()}.`; // Corregido el salto de línea
+  return `${palabras[0]} ${palabras[palabras.length - 1][0].toUpperCase()}.`;
 }
 
 // Columna a la que pertenece una tarea. Si el asignado ya no está en el proyecto, vuelve a "sin asignar".
-export function columnaDe(tarea: Tarea, idsColumnas: Set<number>): number | null {
-  return tarea.idAsignado !== null && idsColumnas.has(tarea.idAsignado) ? tarea.idAsignado : null;
+export function columnaDe(tarea: Tarea, idsColumnas: Set<string>): string | null {
+  return tarea.idAsignadoGlobal !== null && idsColumnas.has(tarea.idAsignadoGlobal)
+    ? tarea.idAsignadoGlobal
+    : null;
 }
 
 export function agruparPorColumna(
   tareas: Tarea[],
   columnas: ColumnaMiembro[],
-): Map<number | null, Tarea[]> {
-  const ids = new Set(columnas.map((c) => c.idUsuario));
-  const grupos = new Map<number | null, Tarea[]>();
+): Map<string | null, Tarea[]> {
+  const ids = new Set(columnas.map((c) => c.idGlobal));
+  const grupos = new Map<string | null, Tarea[]>();
   grupos.set(null, []);
-  for (const c of columnas) grupos.set(c.idUsuario, []);
+  for (const c of columnas) grupos.set(c.idGlobal, []);
 
   for (const t of tareas) grupos.get(columnaDe(t, ids))?.push(t);
   for (const lista of grupos.values()) lista.sort((a, b) => a.orden - b.orden || a.idTarea - b.idTarea);
@@ -94,7 +107,7 @@ export function coincideFiltro(tarea: Tarea, filtro: FiltroTareas, enSinAsignar:
 
 export function contarFiltros(
   tareas: Tarea[],
-  grupos: Map<number | null, Tarea[]>,
+  grupos: Map<string | null, Tarea[]>,
 ): Record<FiltroTareas, number> {
   return {
     todas: tareas.length,
@@ -107,17 +120,17 @@ export function contarFiltros(
 // Cuánto aporta cada integrante a lo ya hecho, medido sobre el total del proyecto.
 export function segmentosAporte(
   columnas: ColumnaMiembro[],
-  grupos: Map<number | null, Tarea[]>,
+  grupos: Map<string | null, Tarea[]>,
   total: number,
 ): SegmentoAporte[] {
-  const hechasDe = (clave: number | null) => grupos.get(clave)?.filter((t) => t.completada).length ?? 0;
+  const hechasDe = (clave: string | null) => grupos.get(clave)?.filter((t) => t.completada).length ?? 0;
   const porcentaje = (n: number) => (total === 0 ? 0 : (n / total) * 100);
 
   const segmentos: SegmentoAporte[] = columnas.map((c) => ({
-    clave: String(c.idUsuario),
+    clave: c.idGlobal,
     nombre: c.esYo ? 'Vos' : nombreCorto(c.nombre),
-    hechas: hechasDe(c.idUsuario),
-    porcentaje: porcentaje(hechasDe(c.idUsuario)),
+    hechas: hechasDe(c.idGlobal),
+    porcentaje: porcentaje(hechasDe(c.idGlobal)),
     fondo: c.color.fondo,
   }));
 

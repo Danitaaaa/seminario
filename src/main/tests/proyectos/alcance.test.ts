@@ -22,7 +22,7 @@ describe('exigirAcceso', () => {
 describe('filtroAlcance', () => {
     it('sin proyecto filtra por elementos personales del usuario', () => {
         const v: unknown[] = [];
-        expect(filtroAlcance(v, null, 7)).toBe('id_proyecto IS NULL AND creada_por = $1');
+        expect(filtroAlcance(v, null, 7)).toBe('id_proyecto IS NULL AND creada_por_global = $1');
         expect(v).toEqual([7]);
     });
     it('con proyecto filtra por proyecto y respeta la numeración de parámetros', () => {

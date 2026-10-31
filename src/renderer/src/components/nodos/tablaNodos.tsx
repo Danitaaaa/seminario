@@ -1,5 +1,6 @@
 import type { MouseEvent, DragEvent } from 'react';
 import { claveNodo, type Nodo } from '../../types/nodo';
+import type { RolMiembro } from '../../types/proyectos';
 import { FilaNodo } from './filaNodo';
 
 interface TablaNodosProps {
@@ -14,6 +15,7 @@ interface TablaNodosProps {
     onArrastrarSobre: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onSoltar: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onSalirDestino: () => void;
+    rol?: RolMiembro | null;
 }
 
 // Solo arma la tabla (encabezado + filas) y reparte el estado de selección/arrastre
@@ -21,7 +23,7 @@ interface TablaNodosProps {
 export function TablaNodos({
     nodos, seleccionados, destinoArrastre,
     onSeleccionar, onAbrir, onRenombrar, onEliminar,
-    onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino,
+    onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino, rol,
 }: TablaNodosProps) {
     if (nodos.length === 0) {
         return <p className="nodos-vacio">Esta carpeta no tiene elementos.</p>;
@@ -55,6 +57,7 @@ export function TablaNodos({
                         onArrastrarSobre={onArrastrarSobre}
                         onSoltar={onSoltar}
                         onSalirDestino={onSalirDestino}
+                        rol={rol}
                     />
                 );
             })}

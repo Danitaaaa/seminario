@@ -10,7 +10,7 @@ export class CrearEvento {
 
   async ejecutar(datos: CrearEventoDTO): Promise<Evento> {
     const idProyecto = datos.idProyecto ?? null;
-    await exigirAcceso(this.persistencia, idProyecto, datos.usuarioId, datos.usuarioId, ['propietario', 'editor']);
+    await exigirAcceso(this.persistencia, idProyecto, datos.usuarioId, datos.usuarioId, 'evento.crear');
 
     return this.persistencia.transaccion(async (tx) => {
       const filas = await tx.ejecutar(

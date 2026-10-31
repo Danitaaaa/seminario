@@ -9,11 +9,11 @@ export interface Tarea {
     prioridad: Prioridad;
     fechaLimite: string | null; // AAAA-MM-DD
     fechaInicio: string | null; // AAAA-MM-DD
-    idAsignado: number | null;
+    idAsignadoGlobal: string | null;     // uid global del usuario; null = sin asignar
     completada: boolean;
     fechaCompletada: Date | null;
-    completadaPor: number | null;
+    completadaPorGlobal: string | null;  // uid global
     orden: number;
-    creadaPor: number;
+    creadaPorGlobal: string;             // uid global
     fechaCreacion: Date;
-}
+}

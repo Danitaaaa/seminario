@@ -7,7 +7,7 @@ import * as alcance from '../../logicaPersistente/gestionDeProyectos/alcance';
 jest.mock('../../logicaPersistente/gestionDeProyectos/permisos');
 jest.mock('../../logicaPersistente/gestionDeProyectos/alcance');
 
-const exigirRolMock = permisos.exigirRol as jest.Mock;
+const exigirRolMock = permisos.exigirPermiso as jest.Mock;
 const registrarCambioMock = alcance.registrarCambioSiProyecto as jest.Mock;
 
 beforeEach(() => {
@@ -19,14 +19,14 @@ beforeEach(() => {
 const ID_PROYECTO = 10;
 
 const respuestaUpdate: Respuesta = (_sql, p) => [
-    filaTarea({ id_tarea: p[0], id_asignado: p[1], orden: p[2] }),
+    filaTarea({ id_tarea: p[0], id_asignado_global: p[1], orden: p[2] }),
 ];
 const respuestaOrden = (n = 1): Respuesta => () => [{ orden: n }];
 
 function cola(miembros: number[], cargas: Array<[number, number]>, pendientes: number[]): Respuesta[] {
     const r: Respuesta[] = [
         miembros.map(id => ({ id_usuario: id })),
-        cargas.map(([id, n]) => ({ id_asignado: id, n })),
+        cargas.map(([id, n]) => ({ id_asignado_global: id, n })),
         pendientes.map(id => ({ id_tarea: id })),
     ];
     for (const _ of pendientes) r.push(respuestaOrden(), respuestaUpdate);
@@ -38,18 +38,18 @@ const ejecutarCaso = (p: any) =>
 
 const asignaciones = (ejecutar: jest.Mock) =>
     consultasA(ejecutar, /^\s*UPDATE tareas/i).map(([, p]) => ({
-        idTarea: (p as number[])[0], idAsignado: (p as number[])[1],
+        idTarea: (p as number[])[0], idAsignadoGlobal: (p as number[])[1],
     }));
 
-const conteo = (a: Array<{ idAsignado: number }>) =>
-    a.reduce<Record<number, number>>((acc, x) => ({ ...acc, [x.idAsignado]: (acc[x.idAsignado] ?? 0) + 1 }), {});
+const conteo = (a: Array<{ idAsignadoGlobal: number }>) =>
+    a.reduce<Record<number, number>>((acc, x) => ({ ...acc, [x.idAsignadoGlobal]: (acc[x.idAsignadoGlobal] ?? 0) + 1 }), {});
 
 describe('RepartirTareas', () => {
     describe('permisos', () => {
         it('exige rol propietario o editor sobre el proyecto', async () => {
             const { persistencia } = crearPersistenciaFalsa(cola([1], [], []));
             await ejecutarCaso(persistencia);
-            expect(exigirRolMock).toHaveBeenCalledWith(persistencia, ID_PROYECTO, 5, ['propietario', 'editor']);
+            expect(exigirRolMock).toHaveBeenCalledWith(persistencia, ID_PROYECTO, 5, 'tarea.repartir');
         });
 
         it('si el rol no alcanza (lector) propaga el error y no consulta ni modifica nada', async () => {
@@ -66,7 +66,7 @@ describe('RepartirTareas', () => {
             const { persistencia, ejecutar } = crearPersistenciaFalsa(cola([1, 2], [], [11]));
             await ejecutarCaso(persistencia);
             const [sql, params] = ejecutar.mock.calls[2];
-            expect(sql).toMatch(/id_asignado IS NULL/i);
+            expect(sql).toMatch(/id_asignado_global IS NULL/i);
             expect(params).toContain(ID_PROYECTO);
         });
 
@@ -163,13 +163,13 @@ describe('RepartirTareas', () => {
     });
 
     describe('sincronización (test 100)', () => {
-        it('cada tarea repartida se registra como "modificar" con su nuevo idAsignado', async () => {
+        it('cada tarea repartida se registra como "modificar" con su nuevo idAsignadoGlobal', async () => {
             const { persistencia, ejecutar, tx } = crearPersistenciaFalsa(cola([1, 2, 3], [], [11, 12, 13]));
             await ejecutarCaso(persistencia);
             const a = asignaciones(ejecutar);
             expect(registrarCambioMock).toHaveBeenCalledTimes(3);
-            for (const { idTarea, idAsignado } of a) {
-                expect(registrarCambioMock).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', idTarea, 'modificar', { idAsignado });
+            for (const { idTarea, idAsignadoGlobal } of a) {
+                expect(registrarCambioMock).toHaveBeenCalledWith(tx, ID_PROYECTO, 'tarea', idTarea, 'modificar', { idAsignadoGlobal });
             }
         });
 

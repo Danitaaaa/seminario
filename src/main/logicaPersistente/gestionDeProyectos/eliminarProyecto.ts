@@ -1,7 +1,7 @@
 import { unlink } from 'node:fs/promises';
 import { EliminarProyectoDTOSchema, EliminarProyectoDTO } from './dto';
 import { IPersistenciaProyectos, ISincronizador } from './interfacesSincronizacion';
-import { exigirRol } from './permisos';
+import { exigirPermiso } from './permisos';
 import { asegurarConexion } from './miembrosRemotos';
 
 export class EliminarProyecto {
@@ -14,7 +14,7 @@ export class EliminarProyecto {
 
     async ejecutar(entrada: EliminarProyectoDTO): Promise<void> {
         const dto = EliminarProyectoDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuario, ['propietario']);
+        await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuario, 'proyecto.eliminar');
 
         const proy = await this.persistencia.ejecutar<{ id_remoto: string | null }>(
             `SELECT id_remoto FROM proyectos WHERE id_proyecto = $1`, [dto.idProyecto]);

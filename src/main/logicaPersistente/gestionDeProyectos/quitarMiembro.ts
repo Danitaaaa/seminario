@@ -1,6 +1,6 @@
 import { QuitarMiembroDTOSchema, QuitarMiembroDTO } from './dto';
 import { IPersistenciaProyectos, ISincronizador } from './interfacesSincronizacion';
-import { exigirRol } from './permisos';
+import { exigirPermiso } from './permisos';
 import { asegurarConexion, buscarMiembroRemoto, idRemotoDe, mailDelMiembro } from './miembrosRemotos';
 
 export class QuitarMiembro {
@@ -15,21 +15,42 @@ export class QuitarMiembro {
         const mail = await mailDelMiembro(this.persistencia, dto);
         const abandona = mail === yo[0].email;
 
-        if (!abandona) await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, ['propietario']);
+        if (!abandona) await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante!, 'miembro.quitar');
 
         const idRemoto = await idRemotoDe(this.persistencia, dto.idProyecto);
         await asegurarConexion(this.sincronizador);
 
         const objetivo = await buscarMiembroRemoto(this.sincronizador, idRemoto, mail);
         if (!objetivo || !objetivo.activo) throw new Error('El usuario no es miembro activo del proyecto');
-        if (objetivo.rol === 'propietario') throw new Error('El propietario no puede darse de baja del proyecto');
 
-        // Primero el servidor: si falla, no cambia nada. Sin conexión no se puede quitar a nadie,
-        // porque la baja local dejaría el acceso abierto en el servidor.
+        // Si es el propietario quien abandona, debemos transferir el rol antes de darlo de baja
+        if (objetivo.rol === 'propietario') {
+            const miembrosActivos = await this.persistencia.ejecutar<{ id_usuario: number; email: string; rol: string }>(
+                `SELECT u.id_usuario, LOWER(u.email) AS email, pm.rol 
+                 FROM proyecto_miembros pm 
+                 JOIN usuarios u ON u.id_usuario = pm.id_usuario 
+                 WHERE pm.id_proyecto = $1 AND pm.fecha_baja IS NULL AND LOWER(u.email) != $2`,
+                [dto.idProyecto, mail]
+            );
+
+            if (miembrosActivos.length === 0) {
+                throw new Error('El propietario no puede abandonar el proyecto siendo el único miembro activo.');
+            }
+
+            const sucesor = miembrosActivos.find(m => m.rol === 'editor') || miembrosActivos[0];
+
+            // Actualizamos el rol en el servidor y en la base de datos local
+            await this.sincronizador.gestionarMiembroPorMail(idRemoto, sucesor.email, 'alta', 'propietario');
+            await this.persistencia.ejecutar(
+                `UPDATE proyecto_miembros SET rol = 'propietario' WHERE id_proyecto = $1 AND id_usuario = $2`,
+                [dto.idProyecto, sucesor.id_usuario]
+            );
+        }
+
+        // Luego procedemos a dar de baja al miembro en el servidor
         await this.sincronizador.gestionarMiembroPorMail(idRemoto, mail, 'baja');
 
-        // Espejo local (existe, por ejemplo, en la PC de quien abandona el proyecto).
-        // No se registra en la cola de cambios: tras la baja el servidor rechazaría ese envío (SIN_PERMISO).
+        // Actualizamos el estado en la base de datos local
         await this.persistencia.ejecutar(
             `UPDATE proyecto_miembros pm SET fecha_baja = NOW()
              FROM usuarios u

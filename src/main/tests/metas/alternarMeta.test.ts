@@ -7,7 +7,7 @@ jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
     registrarCambioSiProyecto: jest.fn(),
     filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
     }),
 }), { virtual: true });
 
@@ -23,10 +23,10 @@ describe('AlternarMeta', () => {
     });
 
     it('exige propietario o editor con el proyecto y creador de la meta', async () => {
-        const actual = filaMeta({ id_proyecto: 4, creada_por: 12 });
+        const actual = filaMeta({ id_proyecto: 4, creada_por_global: 12 });
         const { persistencia } = crearPersistenciaFalsa([[actual]], [[actual]]);
         await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
-        expect(acceso).toHaveBeenCalledWith(persistencia, 4, 12, 7, ['propietario', 'editor']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, 4, 12, 7, 'meta.alternar');
     });
 
     it('no modifica nada si no hay permisos', async () => {
@@ -79,12 +79,12 @@ describe('AlternarMeta', () => {
         await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
         const sql: string = txEjecutar.mock.calls[0][0];
         expect(sql).toContain('fecha_completada = CASE WHEN $1 THEN NOW() ELSE NULL END');
-        expect(sql).toContain('completada_por = CASE WHEN $1 THEN $2::int ELSE NULL END');
+        expect(sql).toContain('completada_por_global = CASE WHEN $1 THEN $2::int ELSE NULL END');
         expect(sql).toContain('WHERE id_meta = $3');
     });
 
-    it('guarda como "completada_por" al usuario que solicita (no al creador)', async () => {
-        const { persistencia, txEjecutar } = crearPersistenciaFalsa([[filaMeta({ creada_por: 12 })]], [[filaMeta()]]);
+    it('guarda como "completada_por_global" al usuario que solicita (no al creador)', async () => {
+        const { persistencia, txEjecutar } = crearPersistenciaFalsa([[filaMeta({ creada_por_global: 12 })]], [[filaMeta()]]);
         await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
         expect(txEjecutar.mock.calls[0][1][1]).toBe(7);
     });
@@ -105,9 +105,7 @@ describe('AlternarMeta', () => {
     it('el lector no puede marcar ni desmarcar metas (roles exigidos sin "lector")', async () => {
         const { persistencia } = crearPersistenciaFalsa([[filaMeta({ id_proyecto: 4 })]], [[filaMeta()]]);
         await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
-        const roles: string[] = acceso.mock.calls[0][4];
-        expect(roles).toEqual(['propietario', 'editor']);
-        expect(roles).not.toContain('lector');
+        expect(acceso.mock.calls[0][4]).toBe('meta.alternar');
     });
 
     it('si el acceso se rechaza (lector) no actualiza, no registra y no importa el valor de "completada"', async () => {
@@ -130,8 +128,8 @@ describe('AlternarMeta', () => {
     });
 
     it('en una meta personal ajena el control de acceso recibe al creador real de la meta', async () => {
-        const { persistencia } = crearPersistenciaFalsa([[filaMeta({ id_proyecto: null, creada_por: 12 })]], [[filaMeta()]]);
+        const { persistencia } = crearPersistenciaFalsa([[filaMeta({ id_proyecto: null, creada_por_global: 12 })]], [[filaMeta()]]);
         await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
-        expect(acceso).toHaveBeenCalledWith(persistencia, null, 12, 7, ['propietario', 'editor']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, null, 12, 7, 'meta.alternar');
     });
 });

@@ -2,21 +2,19 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MiniCalendario } from '../comunes/miniCalendario';
 import { MetasMensuales } from '../comunes/metasMensuales';
+import type { RolMiembro } from '../../types/proyectos';
 
 interface PanelLateralProyectoProps {
     idProyecto?: number;
-    /** false para lectores: ven las metas pero no las pueden marcar. */
-    puedeEditarMetas?: boolean;
-    /** true para el propietario: puede borrar metas. */
-    puedeEliminarMetas?: boolean;
+    /** Rol del usuario en el proyecto (sin rol = sin permisos). */
+    rol?: RolMiembro | null;
     calendario?: ReactNode;
     metas?: ReactNode;
 }
 
 export function PanelLateralProyecto({
     idProyecto,
-    puedeEditarMetas = true,
-    puedeEliminarMetas = false,
+    rol = null,
     calendario,
     metas,
 }: PanelLateralProyectoProps) {
@@ -52,11 +50,7 @@ export function PanelLateralProyecto({
                 <h2 className="panel-proyecto__titulo">Metas mensuales</h2>
                 {metas ??
                     (idProyecto !== undefined ? (
-                        <MetasMensuales
-                            idProyecto={idProyecto}
-                            puedeEditar={puedeEditarMetas}
-                            puedeEliminar={puedeEliminarMetas}
-                        />
+                        <MetasMensuales idProyecto={idProyecto} rol={rol} />
                     ) : (
                         <div className="panel-proyecto__vacio">Próximamente</div>
                     ))}

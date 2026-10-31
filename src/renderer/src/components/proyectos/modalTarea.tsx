@@ -7,7 +7,7 @@ interface Props {
   // null = tarea nueva
   tarea: Tarea | null;
   // id de la columna a la que pertenece hoy la tarea (ya normalizado)
-  idAsignadoInicial: number | null;
+  idAsignadoInicial: string | null;
   asignables: MiembroTablero[];
   onGuardar: (datos: DatosTarea) => Promise<boolean>;
   onEliminar?: () => Promise<boolean>;
@@ -18,11 +18,7 @@ interface Props {
 }
 
 // '' = sin asignar. Devuelve undefined si el valor no es un id válido (así nunca se manda NaN).
-const leerIdAsignado = (v: string): number | null | undefined => {
-  if (v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : undefined;
-};
+const leerIdAsignado = (v: string): string | null => (v === '' ? null : v);
 
 export function ModalTarea({
   tarea,
@@ -40,7 +36,7 @@ export function ModalTarea({
   const [fechaLimite, setFechaLimite] = useState(tarea?.fechaLimite ?? '');
   const [fechaInicio, setFechaInicio] = useState(tarea?.fechaInicio ?? '');
   const [errorFechas, setErrorFechas] = useState<string | null>(null);
-  const [idAsignado, setIdAsignado] = useState(idAsignadoInicial == null ? '' : String(idAsignadoInicial));
+  const [idAsignadoGlobal, setIdAsignado] = useState(idAsignadoInicial ?? '');
   const [errorTitulo, setErrorTitulo] = useState<string | null>(null);
   const [errorAsignado, setErrorAsignado] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -72,7 +68,7 @@ export function ModalTarea({
       return;
     }
 
-    const asignado = leerIdAsignado(idAsignado);
+    const asignado = leerIdAsignado(idAsignadoGlobal);
     if (asignado === undefined) {
       setErrorAsignado('No se pudo leer el integrante asignado. Elegí otro e intentá de nuevo.');
       return;
@@ -85,7 +81,7 @@ export function ModalTarea({
       prioridad,
       fechaLimite: fechaLimite === '' ? null : fechaLimite,
       fechaInicio: fechaInicio === '' ? null : fechaInicio,
-      idAsignado: asignado,
+      idAsignadoGlobal: asignado,
     });
     setOcupado(false);
     if (ok) onCerrar();
@@ -159,7 +155,7 @@ export function ModalTarea({
         <label className="tarea-campo">
           <span>Asignada a</span>
           <select
-            value={idAsignado}
+            value={idAsignadoGlobal}
             disabled={soloLectura}
             onChange={(e) => {
               setIdAsignado(e.target.value);
@@ -169,7 +165,7 @@ export function ModalTarea({
           >
             {permiteSinAsignar && <option value="">Sin asignar</option>}
             {asignables.map((m) => (
-              <option key={m.idUsuario} value={String(m.idUsuario)}>
+              <option key={m.idGlobal} value={String(m.idGlobal)}>
                 {nombreCorto(m.nombre)}
               </option>
             ))}
@@ -201,4 +197,4 @@ export function ModalTarea({
       </form>
     </div>
   );
-}
+}

@@ -92,4 +92,8 @@ export class Usuarios {
     async actualizarRostro(datos: ActualizarRostroDto): Promise<{ exito: boolean; mensaje: string }> {
         return this.actualizarRostroCaso.ejecutar(datos);
     }
+
+    async getIdGlobal(idUsuario: number): Promise<string | null> {
+        return this.obtenerPerfilCaso.getIdGlobal(idUsuario);
+    }
 }

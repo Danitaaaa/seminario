@@ -6,6 +6,7 @@ import type { Matrix, CellBase } from 'react-spreadsheet';
 interface VisorExcelProps {
   contenido: Uint8Array;
   onGuardar: (bytes: Uint8Array) => Promise<void>;
+  soloLectura?: boolean;
 }
 
 type Celda = CellBase<string>;
@@ -27,11 +28,11 @@ function textoCelda(celda: ExcelJS.Cell): string {
   return String(v);
 }
 
-function aMatriz(hoja: ExcelJS.Worksheet): Matrix<Celda> {
+function aMatriz(hoja: ExcelJS.Worksheet, soloLectura: boolean): Matrix<Celda> {
   const filas = Math.max(hoja.rowCount, FILAS_MINIMAS);
   const columnas = Math.max(hoja.columnCount, COLUMNAS_MINIMAS);
   return Array.from({ length: filas }, (_, f) =>
-    Array.from({ length: columnas }, (_, c) => ({ value: textoCelda(hoja.getCell(f + 1, c + 1)) }))
+    Array.from({ length: columnas }, (_, c) => ({ value: textoCelda(hoja.getCell(f + 1, c + 1)), readOnly: soloLectura }))
   );
 }
 
@@ -45,7 +46,7 @@ function valorExcel(texto: string): ExcelJS.CellValue {
 
 // Lee la planilla con ExcelJS y la muestra en react-spreadsheet. Al guardar solo toca las celdas cambiadas,
 // así se conservan estilos y fórmulas del resto.
-export function VisorExcel({ contenido, onGuardar }: VisorExcelProps) {
+export function VisorExcel({ contenido, onGuardar, soloLectura = false }: VisorExcelProps) {
   const [libro, setLibro] = useState<ExcelJS.Workbook | null>(null);
   const [indiceHoja, setIndiceHoja] = useState(0);
   const [originales, setOriginales] = useState<Matrix<Celda>[]>([]);
@@ -59,21 +60,22 @@ export function VisorExcel({ contenido, onGuardar }: VisorExcelProps) {
     wb.xlsx
       .load(buffer)
       .then(() => {
-        const matrices = wb.worksheets.map(aMatriz);
+        const matrices = wb.worksheets.map((h) => aMatriz(h, soloLectura));
         setLibro(wb);
         setOriginales(matrices);
         setDatos(matrices);
       })
       .catch(() => setError('No se pudo leer la planilla.'));
-  }, [contenido]);
+  }, [contenido, soloLectura]);
 
   const cambiar = (nueva: Matrix<Celda>) => {
+    if (soloLectura) return;
     setDatos((prev) => prev.map((m, i) => (i === indiceHoja ? nueva : m)));
     setModificado(true);
   };
 
   const guardar = async () => {
-    if (!libro) return;
+    if (!libro || soloLectura) return;
     libro.worksheets.forEach((hoja, h) => {
       datos[h].forEach((fila, f) =>
         fila.forEach((celda, c) => {
@@ -104,10 +106,14 @@ export function VisorExcel({ contenido, onGuardar }: VisorExcelProps) {
             {hoja.name}
           </button>
         ))}
-        <span className="visor__separador" />
-        <button className="visor-boton" disabled={!modificado} onClick={guardar}>Guardar</button>
+        {!soloLectura && (
+          <>
+            <span className="visor__separador" />
+            <button className="visor-boton" disabled={!modificado} onClick={guardar}>Guardar</button>
+          </>
+        )}
       </div>
-      <p className="visor__nota">Las fórmulas se muestran con su último resultado. Para escribir una fórmula empezá con "=".</p>
+      {!soloLectura && <p className="visor__nota">Las fórmulas se muestran con su último resultado. Para escribir una fórmula empezá con "=".</p>}
       <div className="visor-excel__grilla">
         {datos[indiceHoja] && <Spreadsheet data={datos[indiceHoja]} onChange={cambiar} />}
       </div>

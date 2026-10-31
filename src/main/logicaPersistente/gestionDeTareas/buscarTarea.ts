@@ -24,43 +24,59 @@ export function buscarTarea(persistencia: IPersistenciaProyectos, idTarea: numbe
     return persistencia.transaccion(tx => buscarTareaEnTx(tx, idTarea));
 }
 
+export type Columna = { local: number | null; global: string | null };
+
+// 'u:12' -> { local: 12, global: null } | uuid -> { local: null, global: uuid } | null -> sin asignar
+export function parsearClave(clave: string | null | undefined): Columna {
+    if (!clave) return { local: null, global: null };
+    if (clave.startsWith('u:')) {
+        const n = Number(clave.slice(2));
+        if (!Number.isInteger(n)) throw new Error('Asignado inválido');
+        return { local: n, global: null };
+    }
+    return { local: null, global: clave };
+}
+
+// Acepta la clave cruda o una Columna ya parseada.
+function comoColumna(valor: Columna | string | null | undefined): Columna {
+    return valor !== null && typeof valor === 'object' ? valor : parsearClave(valor);
+}
+
 // Solo propietarios y editores con membresía activa pueden tener tareas asignadas.
-export async function exigirAsignable(tx: Tx, idProyecto: number, idUsuario: number): Promise<void> {
+export async function exigirAsignable(
+    tx: Tx, idProyecto: number, asignado: Columna | string | null | undefined,
+): Promise<void> {
+    const col = comoColumna(asignado);
+    if (col.local === null && col.global === null) return; // sin asignar: no hay nada que validar
+
     const filas = await consultar(
         tx,
         `SELECT 1 FROM proyecto_miembros
-         WHERE id_proyecto = $1 AND id_usuario = $2 AND fecha_baja IS NULL
-           AND rol IN ('propietario', 'editor')`,
-        [idProyecto, idUsuario],
+         WHERE id_proyecto = $1
+           AND fecha_baja IS NULL
+           AND rol IN ('propietario', 'editor')
+           AND (id_usuario = $2::int OR id_global_usuario = $3::uuid)`,
+        [idProyecto, col.local, col.global],
     );
     if (filas.length === 0) {
         throw new Error('Solo se puede asignar a integrantes activos con permiso de edición');
     }
 }
 
-// Posición al final de la columna (idAsignado = null es la columna "sin asignar").
-// Para tareas personales (idProyecto = null) el orden es por usuario creador.
 export async function siguienteOrden(
     tx: Tx,
     idProyecto: number | null,
-    idAsignado: number | null,
-    idUsuario?: number,
+    asignado: Columna | string | null | undefined,
 ): Promise<number> {
-    if (idProyecto === null) {
-        if (idUsuario === undefined) throw new Error('Falta el usuario para ordenar una tarea personal');
-        const filas = await consultar(
-            tx,
-            `SELECT COALESCE(MAX(orden), 0) + 1 AS orden
-             FROM tareas WHERE id_proyecto IS NULL AND creada_por = $1`,
-            [idUsuario],
-        );
-        return Number(filas[0].orden);
-    }
+    const col = comoColumna(asignado);
     const filas = await consultar(
         tx,
-        `SELECT COALESCE(MAX(orden), 0) + 1 AS orden
-         FROM tareas WHERE id_proyecto = $1 AND id_asignado IS NOT DISTINCT FROM $2::int`,
-        [idProyecto, idAsignado],
+        `SELECT (COALESCE(MAX(orden), 0) + 1)::int AS orden
+         FROM tareas
+         WHERE id_proyecto IS NOT DISTINCT FROM $1::int
+           AND id_asignado        IS NOT DISTINCT FROM $2::int
+           AND id_asignado_global IS NOT DISTINCT FROM $3::uuid`,
+        [idProyecto, col.local, col.global],
     );
     return Number(filas[0].orden);
 }

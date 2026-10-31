@@ -4,54 +4,54 @@ import { IPersistenciaProyectos } from '../../logicaPersistente/gestionDeProyect
 
 jest.mock('../../logicaPersistente/gestionDeProyectos/permisos');
 
-const exigirRol = permisos.exigirRol as jest.Mock;
+const exigirPermiso = permisos.exigirPermiso as jest.Mock;
 const registrarCambio = permisos.registrarCambio as jest.Mock;
 
 const persistencia = {} as IPersistenciaProyectos;
 
 beforeEach(() => {
     jest.resetAllMocks();
-    exigirRol.mockResolvedValue('editor');
+    exigirPermiso.mockResolvedValue('editor');
     registrarCambio.mockResolvedValue(undefined);
 });
 
 describe('exigirAcceso', () => {
     describe('elemento personal (sin proyecto)', () => {
         it.each([[null], [undefined]])('idProyecto=%p: el creador puede operar y no se consulta el rol', async idProyecto => {
-            await expect(exigirAcceso(persistencia, idProyecto, 5, 5, ['propietario'])).resolves.toBeUndefined();
-            expect(exigirRol).not.toHaveBeenCalled();
+            await expect(exigirAcceso(persistencia, idProyecto, 5, 5, 'proyecto.eliminar')).resolves.toBeUndefined();
+            expect(exigirPermiso).not.toHaveBeenCalled();
         });
 
         it('otro usuario distinto del creador: lanza', async () => {
-            await expect(exigirAcceso(persistencia, null, 5, 6, ['propietario', 'editor']))
+            await expect(exigirAcceso(persistencia, null, 5, 6, 'tarea.crear'))
                 .rejects.toThrow('No tenés permiso sobre este elemento personal');
-            expect(exigirRol).not.toHaveBeenCalled();
+            expect(exigirPermiso).not.toHaveBeenCalled();
         });
 
-        it('los roles son irrelevantes: el creador siempre puede, aunque pida solo "lector"', async () => {
-            await expect(exigirAcceso(persistencia, null, 5, 5, [])).resolves.toBeUndefined();
+        it('la acción es irrelevante: el creador siempre puede, aunque sea una acción de lectura', async () => {
+            await expect(exigirAcceso(persistencia, null, 5, 5, 'tarea.listar')).resolves.toBeUndefined();
         });
     });
 
     describe('elemento de proyecto', () => {
-        it('delega en exigirRol con proyecto, usuario que opera y roles', async () => {
-            await exigirAcceso(persistencia, 10, 5, 6, ['propietario', 'editor']);
-            expect(exigirRol).toHaveBeenCalledWith(persistencia, 10, 6, ['propietario', 'editor']);
+        it('delega en exigirPermiso con proyecto, usuario que opera y acción', async () => {
+            await exigirAcceso(persistencia, 10, 5, 6, 'tarea.crear');
+            expect(exigirPermiso).toHaveBeenCalledWith(persistencia, 10, 6, 'tarea.crear');
         });
 
         it('ignora idCreador: no hace falta ser el creador si el rol alcanza', async () => {
-            await expect(exigirAcceso(persistencia, 10, 5, 6, ['editor'])).resolves.toBeUndefined();
+            await expect(exigirAcceso(persistencia, 10, 5, 6, 'tarea.crear')).resolves.toBeUndefined();
         });
 
-        it('propaga el rechazo de exigirRol', async () => {
-            exigirRol.mockRejectedValue(new Error('No tenés permisos para esta operación'));
-            await expect(exigirAcceso(persistencia, 10, 5, 5, ['propietario']))
+        it('propaga el rechazo de exigirPermiso', async () => {
+            exigirPermiso.mockRejectedValue(new Error('No tenés permisos para esta operación'));
+            await expect(exigirAcceso(persistencia, 10, 5, 5, 'proyecto.eliminar'))
                 .rejects.toThrow('No tenés permisos para esta operación');
         });
 
         it('idProyecto 0 se trata como proyecto (solo null/undefined son personales)', async () => {
-            await exigirAcceso(persistencia, 0, 5, 5, ['editor']);
-            expect(exigirRol).toHaveBeenCalledWith(persistencia, 0, 5, ['editor']);
+            await exigirAcceso(persistencia, 0, 5, 5, 'tarea.crear');
+            expect(exigirPermiso).toHaveBeenCalledWith(persistencia, 0, 5, 'tarea.crear');
         });
     });
 });
@@ -125,7 +125,7 @@ describe('filtroAlcance', () => {
 
     it.each([[null], [undefined]])('idProyecto=%p: filtra tareas personales del usuario', idProyecto => {
         const valores: unknown[] = [];
-        expect(filtroAlcance(valores, idProyecto, 5)).toBe('id_proyecto IS NULL AND creada_por = $1');
+        expect(filtroAlcance(valores, idProyecto, 5)).toBe('id_proyecto IS NULL AND creada_por_global = $1');
         expect(valores).toEqual([5]);
     });
 });

@@ -74,7 +74,7 @@ export type CambiarRolMiembroDTO = z.infer<typeof CambiarRolMiembroDTOSchema>;
 
 export const QuitarMiembroDTOSchema = z.object({
     idProyecto: z.number().int(),
-    idUsuarioSolicitante: z.number().int(),
+    idUsuarioSolicitante: z.number().int().optional(), // Sacar??
     idUsuarioMiembro: z.number().int().optional(),
     mailMiembro: z.string().trim().email().max(254).optional(),
 }).refine(d => d.idUsuarioMiembro != null || d.mailMiembro, {

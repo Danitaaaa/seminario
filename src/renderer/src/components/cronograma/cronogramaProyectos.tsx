@@ -106,8 +106,8 @@ export function CronogramaProyectos({ idUsuario, eventos }: Props) {
     .flatMap((d) =>
       d.tareas.map((tarea) => {
         const rango = rangoTarea(tarea);
-        const asignado = tarea.idAsignado === null ? null : d.miembros.find((m) => m.idUsuario === tarea.idAsignado);
-        const color = (tarea.idAsignado !== null && d.colores.get(tarea.idAsignado)) || SIN_ASIGNAR;
+        const asignado = tarea.idAsignadoGlobal === null ? null : d.miembros.find((m) => m.idUsuario === tarea.idAsignadoGlobal);
+        const color = (tarea.idAsignadoGlobal !== null && d.colores.get(tarea.idAsignadoGlobal)) || SIN_ASIGNAR;
         return { tarea, proyecto: d.proyecto, rango, asignado, color };
       })
     )
@@ -209,7 +209,7 @@ export function CronogramaProyectos({ idUsuario, eventos }: Props) {
         ) : (
           <>
             {filas.map(({ tarea, proyecto, rango, asignado, color }) => {
-              const apagada = resaltado !== null && tarea.idAsignado !== resaltado;
+              const apagada = resaltado !== null && tarea.idAsignadoGlobal !== resaltado;
               const nombre = asignado?.nombre ?? "Sin asignar";
               const etiqueta = asignado ? primerNombre(asignado.nombre) : "Sin asignar";
               return (

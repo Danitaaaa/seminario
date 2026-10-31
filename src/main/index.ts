@@ -289,7 +289,7 @@ function wireDependencies(): ProcesoSesionEstudio {
   const modificarNodo = new ModificarNodo(persistencia);
   const buscarNodos = new BuscarNodos(persistencia);
   const buscarArchivos = new BuscarArchivos(persistencia);
-  const listarContenido = new ListarContenido(buscarNodos, buscarArchivos);
+  const listarContenido = new ListarContenido(buscarNodos, buscarArchivos, persistencia);
   const moverNodo = new MoverNodo(persistencia);
   const eliminarNodo = new EliminarNodo(persistencia);
   const nodos = new Nodos(crearNodo, modificarNodo, listarContenido, eliminarNodo, moverNodo);

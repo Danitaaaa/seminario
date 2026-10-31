@@ -1,6 +1,7 @@
 import { Pool, PoolClient, QueryResultRow } from 'pg';
+import { IPersistenciaProyectos } from '../logicaPersistente/gestionDeProyectos/interfacesSincronizacion';
 
-export class Persistencia {
+export class Persistencia implements IPersistenciaProyectos {
   constructor(
     private readonly baseDeDatos: Pool,
     private readonly ejecutor: Pick<Pool | PoolClient, 'query'> = baseDeDatos,

@@ -7,7 +7,7 @@ jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
     registrarCambioSiProyecto: jest.fn(),
     filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
     }),
 }), { virtual: true });
 
@@ -29,30 +29,30 @@ describe('CrearMeta', () => {
     it('exige rol propietario o editor sobre el proyecto (null si es personal)', async () => {
         const { persistencia } = crearPersistenciaFalsa([], [[filaMeta()]]);
         await new CrearMeta(persistencia).ejecutar(entrada);
-        expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, ['propietario', 'editor']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, 'meta.crear');
     });
 
     it('para una meta de proyecto pasa el idProyecto al control de acceso', async () => {
         const { persistencia } = crearPersistenciaFalsa([], [[filaMeta({ id_proyecto: 5 })]]);
         await new CrearMeta(persistencia).ejecutar({ ...entrada, idProyecto: 5 });
-        expect(acceso).toHaveBeenCalledWith(persistencia, 5, 7, 7, ['propietario', 'editor']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, 5, 7, 7, 'meta.crear');
     });
 
-    it('inserta con los parámetros correctos', async () => {
+it('inserta con los parámetros correctos', async () => {
         const { persistencia, txEjecutar } = crearPersistenciaFalsa([], [[filaMeta()]]);
         await new CrearMeta(persistencia).ejecutar({ ...entrada, idProyecto: 5, descripcion: 'Desc' });
         const [sql, valores] = txEjecutar.mock.calls[0];
         expect(sql).toContain('INSERT INTO metas');
         expect(sql).toContain('RETURNING');
-        expect(valores).toEqual([5, 'Correr 10k', 'Desc', '2026-10-01', 7]);
+        expect(valores).toEqual([5, 'Correr 10k', 'Desc', '2026-10-01', 7, null]);
     });
 
     it('guarda idProyecto null y descripción null cuando se omiten', async () => {
         const { persistencia, txEjecutar } = crearPersistenciaFalsa([], [[filaMeta()]]);
         await new CrearMeta(persistencia).ejecutar(entrada);
-        expect(txEjecutar.mock.calls[0][1]).toEqual([null, 'Correr 10k', null, '2026-10-01', 7]);
+        expect(txEjecutar.mock.calls[0][1]).toEqual([null, 'Correr 10k', null, '2026-10-01', 7, null]);
     });
-
+    
     it('trata idProyecto null explícito igual que omitido', async () => {
         const { persistencia, txEjecutar } = crearPersistenciaFalsa([], [[filaMeta()]]);
         await new CrearMeta(persistencia).ejecutar({ ...entrada, idProyecto: null });
@@ -66,7 +66,7 @@ describe('CrearMeta', () => {
         expect(sql).toContain('COALESCE(MAX(m.orden), 0) + 1');
         expect(sql).toContain('m.id_proyecto IS NOT DISTINCT FROM $1::int');
         expect(sql).toContain('m.mes = $4::date');
-        expect(sql).toContain('($1::int IS NOT NULL OR m.creada_por = $5::int)');
+        expect(sql).toContain('($1::int IS NOT NULL OR m.creada_por_global = $5::int)');
     });
 
     it('aplica trim al título antes de insertar', async () => {

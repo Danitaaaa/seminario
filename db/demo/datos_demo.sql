@@ -134,7 +134,7 @@ BEGIN
     (sofi, 'Entrega del resumen de Inglés', (hoy - 8) + time '12:00', 'Entregas', 'leve', NULL);
 
   -- Metas personales del mes (una vencida y sin cumplir, para ver el aviso)
-  INSERT INTO metas (titulo, mes, fecha_limite, completada, fecha_completada, completada_por, orden, creada_por) VALUES
+  INSERT INTO metas (titulo, mes, fecha_limite, completada, fecha_completada, completada_por_global, orden, creada_por_global) VALUES
     ('Terminar la guía 3 de Análisis', mes, hoy - 2, FALSE, NULL, NULL, 0, sofi),
     ('Estudiar 10 horas para Física', mes, NULL, TRUE, now(), sofi, 1, sofi),
     ('Pasar en limpio los apuntes de BD', mes, hoy + 6, FALSE, NULL, NULL, 2, sofi);
@@ -147,8 +147,8 @@ BEGIN
   INSERT INTO proyecto_miembros (id_proyecto, id_usuario, rol, fecha_union) VALUES
     (p_sem, caro, 'propietario', hoy - 120), (p_sem, sofi, 'editor', hoy - 119), (p_sem, alba, 'editor', hoy - 118);
 
-  INSERT INTO tareas (id_proyecto, titulo, prioridad, fecha_inicio, fecha_limite, id_asignado, completada,
-                      fecha_completada, completada_por, orden, creada_por, fecha_creacion) VALUES
+  INSERT INTO tareas (id_proyecto, titulo, prioridad, fecha_inicio, fecha_limite, id_asignado_global, completada,
+                      fecha_completada, completada_por_global, orden, creada_por_global, fecha_creacion) VALUES
     (p_sem, 'Relevar requisitos', 'alta', hoy - 18, hoy - 12, sofi, TRUE, now() - interval '12 days', sofi, 0, caro, hoy - 20),
     (p_sem, 'Armar presentación', 'media', hoy - 4, hoy + 2, sofi, FALSE, NULL, NULL, 1, caro, hoy - 10),
     (p_sem, 'Escribir el informe final', 'alta', hoy + 1, hoy + 14, sofi, FALSE, NULL, NULL, 2, caro, hoy - 5),
@@ -166,7 +166,7 @@ BEGIN
     (p_sem, 'Modelo de datos', 'alta', hoy - 55, hoy - 40, alba, TRUE, now() - interval '41 days', alba, 3, caro, hoy - 60),
     (p_sem, 'Maqueta de pantallas', 'media', hoy - 45, hoy - 30, sofi, TRUE, now() - interval '33 days', sofi, 5, caro, hoy - 50);
 
-  INSERT INTO metas (id_proyecto, titulo, mes, fecha_limite, completada, fecha_completada, completada_por, orden, creada_por) VALUES
+  INSERT INTO metas (id_proyecto, titulo, mes, fecha_limite, completada, fecha_completada, completada_por_global, orden, creada_por_global) VALUES
     (p_sem, 'Cerrar el alcance', mes, hoy - 5, TRUE, now() - interval '5 days', caro, 0, caro),
     (p_sem, 'Primera versión del informe', mes, hoy + 7, FALSE, NULL, NULL, 1, caro),
     (p_sem, 'Demo funcionando', mes, NULL, FALSE, NULL, NULL, 2, sofi);
@@ -183,13 +183,13 @@ BEGIN
   INSERT INTO proyecto_miembros (id_proyecto, id_usuario, rol, fecha_union) VALUES
     (p_bd, alba, 'propietario', hoy - 10), (p_bd, sofi, 'editor', hoy - 9);
 
-  INSERT INTO tareas (id_proyecto, titulo, prioridad, fecha_inicio, fecha_limite, id_asignado, completada,
-                      fecha_completada, completada_por, orden, creada_por, fecha_creacion) VALUES
+  INSERT INTO tareas (id_proyecto, titulo, prioridad, fecha_inicio, fecha_limite, id_asignado_global, completada,
+                      fecha_completada, completada_por_global, orden, creada_por_global, fecha_creacion) VALUES
     (p_bd, 'Modelo entidad-relación', 'alta', hoy - 8, hoy - 3, alba, TRUE, now() - interval '3 days', alba, 0, alba, hoy - 10),
     (p_bd, 'Normalizar tablas', 'media', hoy - 2, hoy + 4, sofi, FALSE, NULL, NULL, 0, alba, hoy - 6),
     (p_bd, 'Consultas del enunciado', 'media', hoy + 3, hoy + 12, alba, FALSE, NULL, NULL, 1, alba, hoy - 4);
 
-  INSERT INTO metas (id_proyecto, titulo, mes, completada, orden, creada_por) VALUES
+  INSERT INTO metas (id_proyecto, titulo, mes, completada, orden, creada_por_global) VALUES
     (p_bd, 'Tener el DER aprobado', mes, FALSE, 0, alba);
 
   -- Material: una carpeta con subcarpetas y archivos de varios tipos.

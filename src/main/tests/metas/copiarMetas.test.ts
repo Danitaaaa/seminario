@@ -7,7 +7,7 @@ jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
     registrarCambioSiProyecto: jest.fn(),
     filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
     }),
 }), { virtual: true });
 
@@ -41,13 +41,13 @@ describe('CopiarMetas', () => {
     it('exige propietario o editor', async () => {
         const { persistencia } = crearPersistenciaFalsa([], [[]]);
         await new CopiarMetas(persistencia).ejecutar({ ...entrada, idProyecto: 3 });
-        expect(acceso).toHaveBeenCalledWith(persistencia, 3, 7, 7, ['propietario', 'editor']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, 3, 7, 7, 'meta.copiar');
     });
 
     it('en metas personales pasa idProyecto null', async () => {
         const { persistencia } = crearPersistenciaFalsa([], [[]]);
         await new CopiarMetas(persistencia).ejecutar(entrada);
-        expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, ['propietario', 'editor']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, 'meta.copiar');
     });
 
     it('no abre transacción si no hay permisos', async () => {
@@ -95,8 +95,8 @@ describe('CopiarMetas', () => {
         const { persistencia, txEjecutar } = crearPersistenciaFalsa([], [[]]);
         await new CopiarMetas(persistencia).ejecutar(entrada);
         const sql: string = txEjecutar.mock.calls[0][0];
-        expect(sql).toContain('o.creada_por = $5::int');
-        expect(sql).toContain('d.creada_por = $5::int');
+        expect(sql).toContain('o.creada_por_global = $5::int');
+        expect(sql).toContain('d.creada_por_global = $5::int');
     });
 
     it('devuelve las metas copiadas materializadas', async () => {

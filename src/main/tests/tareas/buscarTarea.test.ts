@@ -12,8 +12,8 @@ function txConTransaccion(txObj: any) {
 
 // La columna "Sin asignar" puede consultarse con `IS NULL` o con una comparación null-safe contra el
 // parámetro ($2 = null). Lo que importa es el resultado, no la forma exacta del SQL.
-const COLUMNA_SIN_ASIGNAR = /id_asignado\s+(IS\s+NULL|IS\s+NOT\s+DISTINCT\s+FROM\s+\$2)/i;
-const COLUMNA_DEL_MIEMBRO = /id_asignado\s*(=|IS\s+NOT\s+DISTINCT\s+FROM)\s*\$2/i;
+const COLUMNA_SIN_ASIGNAR = /id_asignado_global\s+(IS\s+NULL|IS\s+NOT\s+DISTINCT\s+FROM\s+\$2)/i;
+const COLUMNA_DEL_MIEMBRO = /id_asignado_global\s*(=|IS\s+NOT\s+DISTINCT\s+FROM)\s*\$2/i;
 
 describe('consultar', () => {
     it('delega en tx.ejecutar con sql y parámetros y devuelve las filas', async () => {
@@ -47,10 +47,10 @@ describe('buscarTareaEnTx', () => {
         expect(ejecutar.mock.calls[0][1]).toEqual([42]);
     });
 
-    it('conserva el idAsignado nulo de una tarea sin asignar', async () => {
-        const { tx } = crearPersistenciaFalsa([[filaTarea({ id_asignado: null, creada_por: 1 })]]);
+    it('conserva el idAsignadoGlobal nulo de una tarea sin asignar', async () => {
+        const { tx } = crearPersistenciaFalsa([[filaTarea({ id_asignado_global: null, creada_por_global: 1 })]]);
         const t = await buscarTareaEnTx(txConTransaccion(tx), 1);
-        expect(t.idAsignado).toBeNull();
+        expect(t.idAsignadoGlobal).toBeNull();
     });
 
     it('lanza si la tarea no existe', async () => {
@@ -62,7 +62,7 @@ describe('buscarTareaEnTx', () => {
 describe('buscarTarea (con persistencia)', () => {
     it('abre una transacción y devuelve la tarea materializada', async () => {
         const { persistencia, transaccion } = crearPersistenciaFalsa([
-            [filaTarea({ id_tarea: 7, id_proyecto: null, creada_por: 3 })],
+            [filaTarea({ id_tarea: 7, id_proyecto: null, creada_por_global: 3 })],
         ]);
         const t = await buscarTarea(persistencia, 7);
         expect(transaccion).toHaveBeenCalledTimes(1);
@@ -107,7 +107,7 @@ describe('siguienteOrden', () => {
         const txCompleto = txConTransaccion(tx);
         const orden = await siguienteOrden(txCompleto, null, null, 9);
         expect(orden).toBe(4);
-        expect(ejecutar.mock.calls[0][0]).toContain('id_proyecto IS NULL AND creada_por = $1');
+        expect(ejecutar.mock.calls[0][0]).toContain('id_proyecto IS NULL AND creada_por_global = $1');
         expect(ejecutar.mock.calls[0][1]).toEqual([9]);
     });
 
@@ -140,7 +140,7 @@ describe('siguienteOrden', () => {
     it('en un proyecto no depende de quién crea (el creador no entra en la consulta)', async () => {
         const { tx, ejecutar } = crearPersistenciaFalsa([[{ orden: 2 }]]);
         await siguienteOrden(txConTransaccion(tx), 10, null, 5);
-        expect(ejecutar.mock.calls[0][0]).not.toMatch(/creada_por/i);
+        expect(ejecutar.mock.calls[0][0]).not.toMatch(/creada_por_global/i);
         expect(ejecutar.mock.calls[0][1]).not.toContain(5);
     });
 

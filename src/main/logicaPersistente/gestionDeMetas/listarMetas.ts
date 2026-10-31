@@ -14,7 +14,7 @@ export class ListarMetas {
         const dto = ListarMetasDTOSchema.parse(entrada);
         const idProyecto = dto.idProyecto ?? null;
         await exigirAcceso(this.persistencia, idProyecto, dto.idUsuario, dto.idUsuario,
-            ['propietario', 'editor', 'lector']);
+            'meta.listar');
 
         const valores: unknown[] = [];
         const alcance = filtroAlcance(valores, idProyecto, dto.idUsuario);

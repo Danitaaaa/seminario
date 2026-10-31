@@ -18,8 +18,8 @@ export function LoginPage(){
     const navigate = useNavigate();
 
     const finalizarInicioSesion = (usuarioId: number) => {
-    guardarSesion(usuarioId);
-    navigate("/dashboard", { replace: true });
+        guardarSesion(usuarioId);
+        navigate("/dashboard", { replace: true });
     };
 
     const iniciarSesion = async () => {
@@ -65,7 +65,7 @@ export function LoginPage(){
                     >
                         ¿Olvidaste tu contraseña?
                     </p>
-                    
+
                     <div className="login-actions">
                         <Button onClick={iniciarSesion}>Iniciar sesión</Button>
                         <Button variant="secondary" onClick={cancelar}>Cancelar</Button>
@@ -106,5 +106,5 @@ export function LoginPage(){
                 )}
             </section>
         </main>
-);
+    );
 }

@@ -1,5 +1,6 @@
 import type { MouseEvent, DragEvent } from 'react';
 import { claveNodo, type Nodo } from '../../types/nodo';
+import type { RolMiembro } from '../../types/proyectos';
 import { TarjetaNodo } from './tarjetaNodo';
 
 interface CuadriculaNodosProps {
@@ -14,12 +15,13 @@ interface CuadriculaNodosProps {
     onArrastrarSobre: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onSoltar: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onSalirDestino: () => void;
+    rol?: RolMiembro | null;
 }
 
 export function CuadriculaNodos({
     nodos, seleccionados, destinoArrastre,
     onSeleccionar, onAbrir, onRenombrar, onEliminar,
-    onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino,
+    onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino, rol,
 }: CuadriculaNodosProps) {
     if (nodos.length === 0) {
         return <p className="nodos-vacio">Esta carpeta no tiene elementos.</p>;
@@ -43,6 +45,7 @@ export function CuadriculaNodos({
                         onArrastrarSobre={onArrastrarSobre}
                         onSoltar={onSoltar}
                         onSalirDestino={onSalirDestino}
+                        rol={rol}
                     />
                 );
             })}

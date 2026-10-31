@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { InvitacionPendiente, Miembro } from '../../types/proyectos';
+import { puede, rolDe } from '../../permisos';
 
 type RolEditable = 'editor' | 'lector';
 
@@ -65,7 +66,10 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
     // CAMBIO: defensivo, por si llega algún miembro dado de baja.
     const activos = miembros.filter((m) => m.activo !== false);
 
-    const esPropietario = activos.some((m) => m.idUsuario === idUsuarioActual && m.rol === 'propietario');
+    const rol = rolDe(activos, idUsuarioActual);
+    const puedeInvitar = puede(rol, 'miembro.invitar');
+    const puedeCambiarRol = puede(rol, 'miembro.cambiarRol');
+    const puedeQuitarOtros = puede(rol, 'miembro.quitar');
 
     // CAMBIO: si el servidor ya lista a alguien como pendiente, no se repite desde la tabla de invitaciones.
     const mailsListados = new Set(activos.map((m) => m.mail.toLowerCase()));
@@ -78,7 +82,7 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
     };
 
     const cargarInvitaciones = useCallback(async () => {
-        if (!esPropietario) return setInvitaciones([]);
+        if (!puedeInvitar) return setInvitaciones([]);
         try {
             setInvitaciones(
                 await window.api.listarInvitaciones({ idProyecto, idUsuarioSolicitante: idUsuarioActual }),
@@ -87,7 +91,7 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
             console.error(e);
             setError(limpiar(e));
         }
-    }, [esPropietario, idProyecto, idUsuarioActual]);
+    }, [puedeInvitar, idProyecto, idUsuarioActual]);
 
     // Al abrir el panel (y cada vez que cambian los miembros) se refrescan las pendientes.
     useEffect(() => {
@@ -197,8 +201,8 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
                             const propio = m.idUsuario === idUsuarioActual;
                             const nombre = nombreDe(m);
                             const color = PALETA[semilla(m) % PALETA.length];
-                            const editable = esPropietario && m.rol !== 'propietario' && !m.pendiente;
-                            const puedeQuitar = m.rol !== 'propietario' && (esPropietario || propio);
+                            const editable = puedeCambiarRol && m.rol !== 'propietario' && !m.pendiente;
+                            const puedeQuitar = m.rol !== 'propietario' && (puedeQuitarOtros || propio);
                             return (
                                 <li
                                     key={m.mail}
@@ -254,7 +258,7 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
                             );
                         })}
 
-                        {esPropietario && invitacionesVisibles.map((inv) => (
+                        {puedeInvitar && invitacionesVisibles.map((inv) => (
                             <li key={`inv-${inv.idInvitacion}`} className="miembros-item miembros-item--pendiente">
                                 <span className="miembros-item__avatar" aria-hidden="true">
                                     {iniciales(inv.mail)}
@@ -279,7 +283,7 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
                         ))}
                     </ul>
 
-                    {esPropietario && (
+                    {puedeInvitar && (
                         <div className="miembros-agregar">
                             <label className="miembros-agregar__titulo" htmlFor="miembro-mail">
                                 Invitar por mail

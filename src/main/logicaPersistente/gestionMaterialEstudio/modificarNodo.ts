@@ -3,6 +3,7 @@ import { materializarNodo } from "./materializador";
 import { Persistencia } from "../../persistencia/persistencia";
 import { Nodo } from "./entidades"
 import { registrarCambioContenido } from "../gestionDeProyectos/alcanceContenido";
+import { exigirPermisoNodo } from "./alcanceContenido";
 
 // Renombra un nodo existente
 export class ModificarNodo {
@@ -14,6 +15,8 @@ export class ModificarNodo {
         if (!nombre) {
             throw new Error("El nombre no puede estar vacío");
         }
+
+        await exigirPermisoNodo(this.persistencia, datos.id, 'carpeta.renombrar');
 
         const filas = await this.persistencia.ejecutar(
             `UPDATE nodos

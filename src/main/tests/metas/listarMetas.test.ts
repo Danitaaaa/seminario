@@ -8,7 +8,7 @@ jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
     registrarCambioSiProyecto: jest.fn(),
     filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
     }),
 }), { virtual: true });
 
@@ -21,13 +21,13 @@ describe('ListarMetas', () => {
     it('exige acceso de lectura (cualquier rol)', async () => {
         const { persistencia } = crearPersistenciaFalsa([[]]);
         await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10', idProyecto: 3 });
-        expect(acceso).toHaveBeenCalledWith(persistencia, 3, 7, 7, ['propietario', 'editor', 'lector']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, 3, 7, 7, 'meta.listar');
     });
 
     it('en metas personales pasa idProyecto null', async () => {
         const { persistencia } = crearPersistenciaFalsa([[]]);
         await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10' });
-        expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, ['propietario', 'editor', 'lector']);
+        expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, 'meta.listar');
         expect(filtro).toHaveBeenCalledWith(expect.any(Array), null, 7);
     });
 
@@ -46,7 +46,7 @@ describe('ListarMetas', () => {
         const { persistencia, ejecutar } = crearPersistenciaFalsa([[]]);
         await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10' });
         const [sql, valores] = ejecutar.mock.calls[0];
-        expect(sql).toContain('creada_por = $1');
+        expect(sql).toContain('creada_por_global = $1');
         expect(valores).toEqual([7, '2026-10-01']);
     });
 

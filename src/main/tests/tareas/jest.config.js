@@ -8,4 +8,6 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  // Asegura que las funciones globales de Jest estén disponibles en los tests
+  injectGlobals: true, 
 };

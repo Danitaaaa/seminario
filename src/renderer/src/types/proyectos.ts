@@ -1,6 +1,6 @@
 export type RolMiembro = 'propietario' | 'editor' | 'lector';
 
-export interface Proyecto {
+export interface Proyecto {  
     idProyecto: number;
     nombre: string;
     //materiaAsociada: string | null;
@@ -11,6 +11,7 @@ export interface Proyecto {
 }
 
 export interface Miembro {
+    idGlobalUsuario: string | null;
     idUsuario: number | null;
     idProyectoMiembro: number | null;
     nombre: string;

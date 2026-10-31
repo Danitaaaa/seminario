@@ -55,21 +55,21 @@ describe('CrearTareaDTOSchema', () => {
     it('acepta el mínimo (tarea personal)', () => {
         const r = CrearTareaDTOSchema.parse(base);
         expect(r.idProyecto).toBeUndefined();
-        expect(r.idAsignado).toBeUndefined();
+        expect(r.idAsignadoGlobal).toBeUndefined();
     });
     it('acepta todos los campos', () => {
         const r = CrearTareaDTOSchema.parse({
-            ...base, idProyecto: 3, descripcion: 'd', prioridad: 'alta', fechaLimite: '2026-12-01', idAsignado: 7,
+            ...base, idProyecto: 3, descripcion: 'd', prioridad: 'alta', fechaLimite: '2026-12-01', idAsignadoGlobal: 7,
         });
-        expect(r).toMatchObject({ idProyecto: 3, descripcion: 'd', prioridad: 'alta', fechaLimite: '2026-12-01', idAsignado: 7 });
+        expect(r).toMatchObject({ idProyecto: 3, descripcion: 'd', prioridad: 'alta', fechaLimite: '2026-12-01', idAsignadoGlobal: 7 });
     });
-    it('acepta null en idProyecto, descripcion, fechaLimite e idAsignado', () => {
+    it('acepta null en idProyecto, descripcion, fechaLimite e idAsignadoGlobal', () => {
         expect(CrearTareaDTOSchema.safeParse({
-            ...base, idProyecto: null, descripcion: null, fechaLimite: null, idAsignado: null,
+            ...base, idProyecto: null, descripcion: null, fechaLimite: null, idAsignadoGlobal: null,
         }).success).toBe(true);
     });
-    it('conserva idAsignado null (tarea sin asignar) y no lo reemplaza', () => {
-        expect(CrearTareaDTOSchema.parse({ ...base, idProyecto: 3, idAsignado: null }).idAsignado).toBeNull();
+    it('conserva idAsignadoGlobal null (tarea sin asignar) y no lo reemplaza', () => {
+        expect(CrearTareaDTOSchema.parse({ ...base, idProyecto: 3, idAsignadoGlobal: null }).idAsignadoGlobal).toBeNull();
     });
     it('recorta espacios del título', () => {
         expect(CrearTareaDTOSchema.parse({ ...base, titulo: '  hola  ' }).titulo).toBe('hola');
@@ -98,8 +98,8 @@ describe('CrearTareaDTOSchema', () => {
         expect(CrearTareaDTOSchema.safeParse({ ...base, idUsuario: 1.5 }).success).toBe(false);
         expect(CrearTareaDTOSchema.safeParse({ ...base, idUsuario: '1' }).success).toBe(false);
         expect(CrearTareaDTOSchema.safeParse({ ...base, idProyecto: 2.2 }).success).toBe(false);
-        expect(CrearTareaDTOSchema.safeParse({ ...base, idAsignado: 'x' }).success).toBe(false);
-        expect(CrearTareaDTOSchema.safeParse({ ...base, idAsignado: 1.5 }).success).toBe(false);
+        expect(CrearTareaDTOSchema.safeParse({ ...base, idAsignadoGlobal: 'x' }).success).toBe(false);
+        expect(CrearTareaDTOSchema.safeParse({ ...base, idAsignadoGlobal: 1.5 }).success).toBe(false);
     });
     it('rechaza prioridad y fecha inválidas', () => {
         expect(CrearTareaDTOSchema.safeParse({ ...base, prioridad: 'x' }).success).toBe(false);
@@ -198,20 +198,20 @@ describe('AlternarTareaDTOSchema', () => {
 });
 
 describe('AsignarTareaDTOSchema', () => {
-    it('idAsignado puede ser entero o null', () => {
-        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignado: 3 }).success).toBe(true);
-        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignado: null }).success).toBe(true);
+    it('idAsignadoGlobal puede ser entero o null', () => {
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: 3 }).success).toBe(true);
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: null }).success).toBe(true);
     });
-    it('idAsignado es obligatorio (undefined no vale)', () => {
+    it('idAsignadoGlobal es obligatorio (undefined no vale)', () => {
         expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1 }).success).toBe(false);
     });
-    it('idAsignado debe ser entero', () => {
-        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignado: 'x' }).success).toBe(false);
-        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignado: 1.5 }).success).toBe(false);
+    it('idAsignadoGlobal debe ser entero', () => {
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: 'x' }).success).toBe(false);
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: 1.5 }).success).toBe(false);
     });
     it('exige idTarea e idUsuario', () => {
-        expect(AsignarTareaDTOSchema.safeParse({ idUsuario: 1, idAsignado: 3 }).success).toBe(false);
-        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idAsignado: 3 }).success).toBe(false);
+        expect(AsignarTareaDTOSchema.safeParse({ idUsuario: 1, idAsignadoGlobal: 3 }).success).toBe(false);
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idAsignadoGlobal: 3 }).success).toBe(false);
     });
 });
 

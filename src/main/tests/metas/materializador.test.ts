@@ -21,20 +21,19 @@ describe('COLUMNAS_META', () => {
     });
 });
 
-describe('materializarMeta', () => {
-    it('mapea todas las columnas a la entidad Meta', () => {
-        const fecha = new Date('2026-10-05T10:00:00Z');
-        const fila = filaMeta({
-            id_meta: 10, id_proyecto: 3, titulo: 'T', descripcion: 'D', mes_texto: '2026-11',
-            completada: true, fecha_completada: fecha, completada_por: 9, orden: 4, creada_por: 8,
-            trasladada_a: '2026-12', id_meta_origen: 2,
-        });
-        expect(materializarMeta(fila)).toEqual({
-            idMeta: 10, idProyecto: 3, titulo: 'T', descripcion: 'D', mes: '2026-11',
-            completada: true, fechaCompletada: fecha, completadaPor: 9, orden: 4, creadaPor: 8,
-            fechaCreacion: fila.fecha_creacion, trasladadaA: '2026-12', idMetaOrigen: 2,
-        });
+it('mapea todas las columnas a la entidad Meta', () => {
+    const fecha = new Date('2026-10-05T10:00:00Z');
+    const fila = filaMeta({
+        id_meta: 10, id_proyecto: 3, titulo: 'T', descripcion: 'D', mes_texto: '2026-11',
+        completada: true, fecha_completada: fecha, completada_por_global: 9, orden: 4, creada_por_global: 8,
+        trasladada_a: '2026-12', id_meta_origen: 2,
     });
+    expect(materializarMeta(fila)).toEqual({
+        idMeta: 10, idProyecto: 3, titulo: 'T', descripcion: 'D', mes: '2026-11',
+        completada: true, fechaCompletada: fecha, completadaPor: 9, orden: 4, creadaPor: 8,
+        fechaCreacion: fila.fecha_creacion, fechaLimite: null, trasladadaA: '2026-12', idMetaOrigen: 2,
+    });
+});
 
     it('usa mes_texto y no la columna mes (DATE)', () => {
         const meta = materializarMeta(filaMeta({ mes: new Date('2026-10-01T00:00:00Z'), mes_texto: '2026-10' }));
@@ -46,7 +45,7 @@ describe('materializarMeta', () => {
         delete fila.id_proyecto;
         delete fila.descripcion;
         delete fila.fecha_completada;
-        delete fila.completada_por;
+        delete fila.completada_por_global;
         delete fila.trasladada_a;
         delete fila.id_meta_origen;
         const meta = materializarMeta(fila);
@@ -67,4 +66,3 @@ describe('materializarMeta', () => {
     it('conserva idProyecto=0 sin convertirlo en null', () => {
         expect(materializarMeta(filaMeta({ id_proyecto: 0 })).idProyecto).toBe(0);
     });
-});

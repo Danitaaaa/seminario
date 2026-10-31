@@ -121,4 +121,8 @@ export function registerUsuariosIpc(usuarios: Usuarios, hooks: HooksSesion): voi
         if (canceled || filePaths.length === 0) return null;
         return usuarios.actualizarFotoPerfil(id, filePaths[0]);
     });
+
+    ipcMain.handle('usuarios:idGlobal', async (_e, idUsuario: number) => {
+        return usuarios.getIdGlobal(idUsuario);
+    });
 }

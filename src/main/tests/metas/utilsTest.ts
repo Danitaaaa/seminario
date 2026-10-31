@@ -1,8 +1,5 @@
 import { IPersistenciaProyectos } from '../../logicaPersistente/gestionDeProyectos/interfacesSincronizacion';
 
-// Persistencia falsa con dos colas de respuestas:
-//  - lecturas:   lo que devuelve persistencia.ejecutar (consultas fuera de transacción)
-//  - escrituras: lo que devuelve tx.ejecutar (consultas dentro de transacción)
 export function crearPersistenciaFalsa(lecturas: any[][] = [], escrituras: any[][] = []) {
     const ejecutar = jest.fn(async (_sql: string, _valores?: unknown[]) => lecturas.shift() ?? []);
     const txEjecutar = jest.fn(async (_sql: string, _valores?: unknown[]) => escrituras.shift() ?? []);
@@ -17,7 +14,6 @@ export function crearPersistenciaFalsa(lecturas: any[][] = [], escrituras: any[]
     };
 }
 
-// Fila tal como la devuelve la BD (snake_case), con valores por defecto sobrescribibles.
 export function filaMeta(o: Record<string, any> = {}) {
     return {
         id_meta: 1,
@@ -26,11 +22,13 @@ export function filaMeta(o: Record<string, any> = {}) {
         descripcion: null,
         mes: '2026-10-01',
         mes_texto: '2026-10',
+        fecha_limite: null,
+        fecha_limite_texto: null,
         completada: false,
         fecha_completada: null,
-        completada_por: null,
+        completada_por_global: null,
         orden: 1,
-        creada_por: 7,
+        creada_por_global: 7,
         fecha_creacion: new Date('2026-10-01T12:00:00Z'),
         trasladada_a: null,
         id_meta_origen: null,

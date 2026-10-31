@@ -3,7 +3,7 @@ import { Tarea } from './entidades';
 import { COLUMNAS_TAREA, materializarTarea } from './materializador';
 import { consultar, siguienteOrden } from './buscarTarea';
 import { IPersistenciaProyectos } from '../gestionDeProyectos/interfacesSincronizacion';
-import { exigirRol } from '../gestionDeProyectos/permisos';
+import { exigirPermiso } from '../gestionDeProyectos/permisos';
 import { registrarCambioSiProyecto } from '../gestionDeProyectos/alcance';
 
 export class RepartirTareas {
@@ -14,7 +14,7 @@ export class RepartirTareas {
     // Solo aplica a proyectos (las tareas personales no se asignan).
     async ejecutar(entrada: RepartirTareasDTO): Promise<Tarea[]> {
         const dto = RepartirTareasDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuario, ['propietario', 'editor']);
+        await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuario, 'tarea.repartir');
 
         return this.persistencia.transaccion(async tx => {
             const miembros = await consultar(
@@ -31,19 +31,19 @@ export class RepartirTareas {
 
             const cargas = await consultar(
                 tx,
-                `SELECT id_asignado, COUNT(*)::int AS n FROM tareas
-                 WHERE id_proyecto = $1 AND NOT completada AND id_asignado IS NOT NULL
-                 GROUP BY id_asignado`,
+                `SELECT id_asignado_global, COUNT(*)::int AS n FROM tareas
+                 WHERE id_proyecto = $1 AND NOT completada AND id_asignado_global IS NOT NULL
+                 GROUP BY id_asignado_global`,
                 [dto.idProyecto],
             );
             for (const c of cargas) {
-                if (carga.has(c.id_asignado)) carga.set(c.id_asignado, c.n);
+                if (carga.has(c.id_asignado_global)) carga.set(c.id_asignado_global, c.n);
             }
 
             const pendientes = await consultar(
                 tx,
                 `SELECT id_tarea FROM tareas
-                 WHERE id_proyecto = $1 AND NOT completada AND id_asignado IS NULL
+                 WHERE id_proyecto = $1 AND NOT completada AND id_asignado_global IS NULL
                  ORDER BY fecha_limite NULLS LAST, orden, id_tarea`,
                 [dto.idProyecto],
             );
@@ -61,7 +61,7 @@ export class RepartirTareas {
                 const orden = await siguienteOrden(tx, dto.idProyecto, elegido);
                 const filas = await consultar(
                     tx,
-                    `UPDATE tareas SET id_asignado = $2, orden = $3
+                    `UPDATE tareas SET id_asignado_global = $2, orden = $3
                      WHERE id_tarea = $1
                      RETURNING ${COLUMNAS_TAREA}`,
                     [pendiente.id_tarea, elegido, orden],
@@ -70,7 +70,7 @@ export class RepartirTareas {
                 carga.set(elegido, cargaDe(elegido) + 1);
                 // Antes llamaba a registrarCambio directo: sin idGlobal en el payload, el cambio no se subía por ningún camino.
                 await registrarCambioSiProyecto(tx, dto.idProyecto, 'tarea', tarea.idTarea, 'modificar',
-                    { idAsignado: tarea.idAsignado });
+                    { idAsignadoGlobal: tarea.idAsignadoGlobal });
                 repartidas.push(tarea);
             }
             return repartidas;

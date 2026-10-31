@@ -11,13 +11,13 @@ export class AlternarTarea {
     async ejecutar(entrada: AlternarTareaDTO): Promise<Tarea> {
         const dto = AlternarTareaDTOSchema.parse(entrada);
         const actual = await buscarTarea(this.persistencia, dto.idTarea);
-        await exigirAcceso(this.persistencia, actual.idProyecto, actual.creadaPor, dto.idUsuario,
-            ['propietario', 'editor']);
+        await exigirAcceso(this.persistencia, actual.idProyecto, actual.creadaPorGlobal, dto.idUsuario,
+            'tarea.alternar');
 
         const completada = dto.completada ?? !actual.completada;
         if (completada === actual.completada) return actual;
         // En un proyecto, la tarea debe estar asignada para marcarla como hecha (las personales no se asignan)
-        if (completada && actual.idProyecto !== null && actual.idAsignado === null) {
+        if (completada && actual.idProyecto !== null && actual.idAsignadoGlobal === null) {
             throw new Error('Asigná la tarea a un integrante antes de marcarla como hecha');
         }
 
@@ -27,7 +27,7 @@ export class AlternarTarea {
                 `UPDATE tareas
                  SET completada = $2::boolean,
                      fecha_completada = CASE WHEN $2::boolean THEN NOW() ELSE NULL END,
-                     completada_por = CASE WHEN $2::boolean THEN $3::int ELSE NULL END
+                     completada_por_global = CASE WHEN $2::boolean THEN $3::int ELSE NULL END
                  WHERE id_tarea = $1
                  RETURNING ${COLUMNAS_TAREA}`,
                 [dto.idTarea, completada, dto.idUsuario],
