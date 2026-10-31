@@ -33,10 +33,10 @@ async function main(): Promise<void> {
   verificar('Rechazar edición de mazo inexistente o ajeno',
     /no se encontró el mazo/i.test(errorMazoInexistente), errorMazoInexistente);
 
-  verificar('Aceptar nombre de mazo de 50 caracteres',
-    modificarDeckSchema.safeParse({ usuarioId: 1, deckId: 1, nombre: 'x'.repeat(50) }).success);
-  verificar('Rechazar nombre de mazo de 51 caracteres',
-    !modificarDeckSchema.safeParse({ usuarioId: 1, deckId: 1, nombre: 'x'.repeat(51) }).success);
+  verificar('Aceptar nombre de mazo de 100 caracteres',
+    modificarDeckSchema.safeParse({ usuarioId: 1, deckId: 1, nombre: 'x'.repeat(100) }).success);
+  verificar('Rechazar nombre de mazo de 101 caracteres',
+    !modificarDeckSchema.safeParse({ usuarioId: 1, deckId: 1, nombre: 'x'.repeat(101) }).success);
   verificar('Rechazar nombre de mazo vacío',
     !modificarDeckSchema.safeParse({ usuarioId: 1, deckId: 1, nombre: '  ' }).success);
 }

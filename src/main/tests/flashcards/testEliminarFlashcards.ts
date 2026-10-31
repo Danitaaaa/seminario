@@ -20,6 +20,7 @@ async function main(): Promise<void> {
   const cantidad = await new EliminarFlashcards(persistencia).ejecutar({
     usuarioId: 9,
     flashcardIds: [11, 12],
+    deckId: 0
   });
   verificar('Eliminar selección de flashcards y devolver cantidad', cantidad === 2);
   verificar('Eliminar solo flashcards que pertenecen a mazos del usuario',
@@ -32,13 +33,14 @@ async function main(): Promise<void> {
   const cantidadAjena = await new EliminarFlashcards(sinCoincidencias).ejecutar({
     usuarioId: 9,
     flashcardIds: [999],
+    deckId: 0
   });
   verificar('No contar flashcards inexistentes o de otro usuario', cantidadAjena === 0);
 
   verificar('Rechazar selección de flashcards vacía',
-    !eliminarFlashcardsSchema.safeParse({ usuarioId: 9, flashcardIds: [] }).success);
+    !eliminarFlashcardsSchema.safeParse({ usuarioId: 9, flashcardIds: [], deckId: 0 }).success);
   verificar('Rechazar IDs de flashcard duplicados',
-    !eliminarFlashcardsSchema.safeParse({ usuarioId: 9, flashcardIds: [11, 11] }).success);
+    !eliminarFlashcardsSchema.safeParse({ usuarioId: 9, flashcardIds: [11, 11], deckId: 0 }).success);
 }
 
 main().then(terminar).catch((error) => {
