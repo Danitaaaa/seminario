@@ -19,19 +19,29 @@ BEGIN
   DELETE FROM nodos WHERE id_nodo = ANY(nodos_proyectos);
 
   -- Lo personal de los usuarios demo (eventos, horarios, sesiones y categorías se borran con el usuario).
-  DELETE FROM metas WHERE creada_por_global = ANY(demo);
-  DELETE FROM tareas WHERE creada_por_global = ANY(demo);
+  DELETE FROM metas WHERE id_usuario = ANY(demo);
   DELETE FROM usuarios WHERE id_usuario = ANY(demo);
 
-  -- Carpeta de Material con los archivos de ejemplo (dos niveles).
+  -- Carpeta de Material con los archivos de ejemplo, en todos sus niveles.
   SELECT id_nodo INTO carpeta FROM nodos WHERE id_padre = 1 AND nombre = 'Material de demo';
   IF carpeta IS NOT NULL THEN
-    DELETE FROM archivos WHERE id_padre IN (SELECT id_nodo FROM nodos WHERE id_padre = carpeta) OR id_padre = carpeta;
-    DELETE FROM nodos WHERE id_padre = carpeta;
-    DELETE FROM nodos WHERE id_nodo = carpeta;
+    WITH RECURSIVE arbol AS (
+      SELECT id_nodo FROM nodos WHERE id_nodo = carpeta
+      UNION ALL
+      SELECT n.id_nodo FROM nodos n JOIN arbol a ON n.id_padre = a.id_nodo
+    )
+    SELECT array_agg(id_nodo) INTO nodos_proyectos FROM arbol;
+    DELETE FROM repeticiones_material WHERE id_nodo = ANY(nodos_proyectos);
+    DELETE FROM archivos WHERE id_padre = ANY(nodos_proyectos);
+    DELETE FROM nodos WHERE id_nodo = ANY(nodos_proyectos);
   END IF;
 END $$;
 
--- Las materias son compartidas entre usuarios: no se borran.
+-- La formación y las materias de Sofi se borran solas con su usuario.
+-- Las materias sueltas que cargaba la versión anterior de la demo, si ya nadie las usa.
+DELETE FROM materia m
+ WHERE m.id_formacion IS NULL
+   AND m.nombre IN ('Análisis Matemático', 'Física', 'Seminario de Integración', 'Base de Datos', 'Inglés Técnico')
+   AND NOT EXISTS (SELECT 1 FROM sesion_estudio s WHERE s.id_materia = m.id_materia);
 
 COMMIT;
