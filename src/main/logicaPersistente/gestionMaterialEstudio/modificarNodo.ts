@@ -5,7 +5,7 @@ import { Nodo } from "./entidades"
 import { registrarCambioContenido } from "../gestionDeProyectos/alcanceContenido";
 import { exigirPermisoNodo } from "./alcanceContenido";
 
-// Renombra un nodo existente
+// Renombra un nodo existente y, si se indica, cambia su materia asociada
 export class ModificarNodo {
     constructor(private readonly persistencia: Persistencia) {}
 
@@ -18,11 +18,15 @@ export class ModificarNodo {
 
         await exigirPermisoNodo(this.persistencia, datos.id, 'carpeta.renombrar');
 
+        // Si no viene idMateria se deja la que tenía: la consulta solo la toca cuando $3 es true.
+        const cambiaMateria = datos.idMateria !== undefined;
         const filas = await this.persistencia.ejecutar(
             `UPDATE nodos
-            SET nombre = $1, ultima_fecha_modificacion = NOW()
+            SET nombre = $1,
+                id_materia = CASE WHEN $3 THEN $4::int ELSE id_materia END,
+                ultima_fecha_modificacion = NOW()
             WHERE id_nodo = $2 RETURNING *`,
-            [nombre, datos.id]
+            [nombre, datos.id, cambiaMateria, datos.idMateria ?? null]
         );
 
         if (filas.length === 0) {

@@ -5,8 +5,9 @@ export interface Nodo {
     fechaDeCarga: Date;
     ultimaFechaAcceso: Date;
     ultimaFechaModificacion: Date;
-    tamaño: BigInt;
+    tamaño: number;
     nodoPadre: number | null;
+    idMateria: number | null; // materia asociada a la carpeta (opcional)
 }
 
 export interface Archivo {
@@ -33,4 +34,6 @@ export interface ElementoContenido {
     ultimaFechaModificacion: Date;
     tamaño: string;
     extension: string;
+    idMateria: number | null; // solo carpetas
+    materia: string | null;   // nombre de la materia, para mostrarlo en la tarjeta
 }

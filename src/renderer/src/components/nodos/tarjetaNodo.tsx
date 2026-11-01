@@ -62,6 +62,7 @@ export function TarjetaNodo({
 
             <Icono src={icono} tamaño={64} alt={nodo.nombre} />
             <span className="tarjeta-nodo__nombre">{nodo.nombre}</span>
+            {nodo.tipo === 'carpeta' && nodo.materia && <span className="nodo-materia">{nodo.materia}</span>}
         </div>
     );
 }

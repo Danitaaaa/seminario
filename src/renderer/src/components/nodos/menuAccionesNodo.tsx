@@ -24,7 +24,7 @@ export function MenuAccionesNodo({ abierto, onRenombrar, onEliminar, rol = 'prop
             {puedeRenombrar && (
                 <button type="button" className="menu-acciones-nodo__opcion" onClick={onRenombrar}>
                     <Icono src={iconoPencil} tamaño={16} />
-                    <span>Renombrar</span>
+                    <span>{nodoTipo === 'carpeta' ? 'Editar' : 'Renombrar'}</span>
                 </button>
             )}
             {puedeEliminar && (

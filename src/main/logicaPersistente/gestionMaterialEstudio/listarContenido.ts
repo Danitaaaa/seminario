@@ -1,6 +1,7 @@
 import { Persistencia } from '../../persistencia/persistencia';
 import { BuscarNodos } from "./buscarNodos";
 import { BuscarArchivos } from "./buscarArchivos";
+import { BuscarNodosPorMateria } from "./buscarNodosPorMateria";
 import { ElementoContenido } from "./entidades";
 import { ListarContenidoDTO, BuscadorArchivoDTO } from "./dto";
 import { exigirPermisoNodo } from './alcanceContenido';
@@ -13,6 +14,7 @@ export class ListarContenido {
         private readonly buscarNodos: BuscarNodos,
         private readonly buscarArchivos: BuscarArchivos,
         private readonly persistencia: Persistencia, // nuevo: actualizá donde se instancia
+        private readonly buscarPorMateria: BuscarNodosPorMateria,
     ) {}
 
     async ejecutar(criterios: ListarContenidoDTO): Promise<ElementoContenido[]> {
@@ -29,10 +31,14 @@ export class ListarContenido {
             ordenarPor: ordenarPor === 'tipo' ? 'nombre' : ordenarPor,
         };
 
-        const [nodos, archivos] = await Promise.all([
-            criterios.tipo === 'archivo' ? [] : this.buscarNodos.ejecutar(criteriosBusqueda),
-            criterios.tipo === 'carpeta' ? [] : this.buscarArchivos.ejecutar(criteriosBusqueda),
-        ]);
+        // Filtro por materia: solo carpetas de esa materia, en cualquier nivel debajo de idPadre.
+        const [nodos, archivos] = criterios.idMateria
+            ? [await this.buscarPorMateria.ejecutar(criterios.idPadre, criterios.idMateria), []]
+            : await Promise.all([
+                criterios.tipo === 'archivo' ? [] : this.buscarNodos.ejecutar(criteriosBusqueda),
+                criterios.tipo === 'carpeta' ? [] : this.buscarArchivos.ejecutar(criteriosBusqueda),
+            ]);
+        const nombresMaterias = await this.nombresDeMaterias(nodos.map((n) => n.idMateria));
 
         const elementos: ElementoContenido[] = [
             ...nodos.map((n): ElementoContenido => ({
@@ -44,6 +50,8 @@ export class ListarContenido {
                 ultimaFechaAcceso: n.ultimaFechaAcceso,
                 ultimaFechaModificacion: n.ultimaFechaModificacion,
                 tamaño: n.tamaño.toString(),
+                idMateria: n.idMateria,
+                materia: n.idMateria ? nombresMaterias.get(n.idMateria) ?? null : null,
             })),
             ...archivos.map((a): ElementoContenido => ({
                 id: a.id,
@@ -54,6 +62,8 @@ export class ListarContenido {
                 ultimaFechaAcceso: a.ultimaFechaAcceso,
                 ultimaFechaModificacion: a.ultimaFechaModificacion,
                 tamaño: a.tamanio.toString(),
+                idMateria: null,
+                materia: null,
             })),
         ];
 
@@ -63,6 +73,17 @@ export class ListarContenido {
         }
 
         return this.ordenar(elementos, ordenarPor, criterios.direccion);
+    }
+
+    // Trae en una sola consulta los nombres de las materias de las carpetas listadas.
+    private async nombresDeMaterias(ids: (number | null)[]): Promise<Map<number, string>> {
+        const unicos = [...new Set(ids.filter((id): id is number => id !== null))];
+        if (unicos.length === 0) return new Map();
+        const filas = await this.persistencia.ejecutar(
+            `SELECT id_materia, nombre FROM materia WHERE id_materia = ANY($1::int[])`,
+            [unicos]
+        );
+        return new Map(filas.map((f: any) => [f.id_materia, f.nombre]));
     }
 
     private ordenar(

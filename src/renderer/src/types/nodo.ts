@@ -9,6 +9,8 @@ interface NodoBase {
 
 export interface Carpeta extends NodoBase {
     tipo: 'carpeta';
+    idMateria?: number | null; // materia asociada (solo en Material personal)
+    materia?: string | null;   // su nombre, para mostrarlo
 }
 
 export interface Archivo extends NodoBase {

@@ -56,6 +56,7 @@ export function FilaNodo({
             <span className="fila-nodo__nombre">
                 <Icono src={icono} tamaño={20} />
                 <span>{nodo.nombre}</span>
+                {nodo.tipo === 'carpeta' && nodo.materia && <span className="nodo-materia">{nodo.materia}</span>}
             </span>
             <span className="fila-nodo__celda">{tipo}</span>
             <span className="fila-nodo__celda">{formatearTamaño(Number(nodo.tamaño))}</span>
