@@ -5,6 +5,7 @@ import { CrearArchivo } from '../../logicaPersistente/gestionMaterialEstudio/cre
 import { BuscarNodos } from '../../logicaPersistente/gestionMaterialEstudio/buscarNodos';
 import { BuscarArchivos } from '../../logicaPersistente/gestionMaterialEstudio/buscarArchivos';
 import { ListarContenido } from '../../logicaPersistente/gestionMaterialEstudio/listarContenido';
+import { BuscarNodosPorMateria } from '../../logicaPersistente/gestionMaterialEstudio/buscarNodosPorMateria';
 import { ElementoContenido } from '../../logicaPersistente/gestionMaterialEstudio/entidades';
 import { EntornoArchivos } from './entornoTest';
 
@@ -15,7 +16,8 @@ async function main() {
   const entorno = new EntornoArchivos();
   const crearNodo = new CrearNodo(persistencia);
   const crearArchivo = new CrearArchivo(persistencia, entorno.almacenamiento);
-  const listar = new ListarContenido(new BuscarNodos(persistencia), new BuscarArchivos(persistencia));
+  const listar = new ListarContenido(new BuscarNodos(persistencia), new BuscarArchivos(persistencia), persistencia,
+    new BuscarNodosPorMateria(persistencia));
 
   const raiz = await crearNodo.ejecutar({ nombre: 'Test ListarContenido', idPadre: 1 });
   const zeta = await crearNodo.ejecutar({ nombre: 'Zeta', idPadre: raiz.id });

@@ -142,6 +142,16 @@ async function main(): Promise<void> {
         return `${r.archivos} archivos | ${r.bytes} bytes (${typeof r.bytes}) | ${r.carpetas} carpetas`;
     });
 
+    await caso(11, 'Contar el aporte de cada integrante por su id local, no por el UUID', 'aporte por id_asignado | sin asignar = sin id local ni UUID', async () => {
+        const { persistencia, llamadas } = persistenciaFalsa([[{ id_proyecto: 1, nombre: 'Seminario', total: 1, hechas: 0, pendientes: 1,
+            vencidas: 0, sin_asignar: 0, metas_total: 0, metas_completadas: 0 }], [], []]);
+        await new ResumenProyectos(persistencia).ejecutar(pedidoProyectos);
+        comprobar(llamadas[1][0].includes('t.id_asignado = m.id_usuario'), 'El aporte no se cruza por id_asignado');
+        comprobar(!/id_asignado_global\s*=\s*m\.id_usuario/.test(llamadas[1][0]), 'Compara el UUID con un número');
+        comprobar(llamadas[0][0].includes('t.id_asignado IS NULL AND t.id_asignado_global IS NULL'), 'Sin asignar mal calculado');
+        return 'aporte por id_asignado | sin asignar = sin id local ni UUID';
+    });
+
     console.log(`\nResultado: ${bien} BIEN, ${mal} MAL.`);
     if (mal > 0) process.exitCode = 1;
 }

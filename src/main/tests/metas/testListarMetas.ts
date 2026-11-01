@@ -62,7 +62,7 @@ async function main(): Promise<void> {
         const { persistencia, llamadas } = persistenciaFalsa();
         await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10' });
         const [sql, valores] = llamadas[0];
-        comprobar(/id_proyecto IS NULL AND creada_por = \$1/.test(sql), 'No filtra metas personales');
+        comprobar(/id_proyecto IS NULL AND id_usuario = \$1/.test(sql), 'No filtra metas personales');
         comprobar(/mes = \$2::date/.test(sql), 'No filtra por mes');
         comprobar(/ORDER BY orden, id_meta/.test(sql), 'No respeta el orden elegido');
         return `metas personales del usuario ${valores[0]}, del mes, en su orden`;

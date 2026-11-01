@@ -32,7 +32,7 @@ function main() {
   console.log('--- materializarNodo ---');
   const nodo = materializarNodo(filaNodo);
   console.log(nodo);
-  console.log('Tipo de tamaño:', typeof nodo.tamaño, '(la entidad dice BigInt)');
+  console.log('Tipo de tamaño:', typeof nodo.tamaño, '(debe ser number)');
 
   console.log('--- materializarArchivo ---');
   const archivo = materializarArchivo(filaArchivo);
@@ -47,7 +47,11 @@ function main() {
   console.log('tamanio:', materializarArchivo({ ...filaArchivo, tamaño: null }).tamanio);
 
   console.log('--- Archivo con tamaño no numérico ---');
-  console.log('tamanio:', materializarArchivo({ ...filaArchivo, tamaño: 'abc' }).tamanio);
+  try {
+    console.log('NO falló:', materializarArchivo({ ...filaArchivo, tamaño: 'abc' }).tamanio);
+  } catch (e: any) {
+    console.log('Error:', e.message);
+  }
 
   console.log('--- Fila vacía {} ---');
   console.log(materializarNodo({}));
