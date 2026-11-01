@@ -34,7 +34,7 @@ export function ModalConfiguracionSesion({ sesion, onCancelar, onGuardar }: Moda
 
   useEffect(() => {
     window.api
-      .listarOpcionesSesionEstudio()
+      .listarOpcionesSesionEstudio(sesion.idUsuario)
       .then((o) => {
         setMaterias(o.materias);
         setMetodos(o.metodosEstudio);

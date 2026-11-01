@@ -36,7 +36,7 @@ export const sesionesEstudioApi = {
   reiniciarPomodoro: conSesion('sesionesEstudio:pomodoroReiniciar'),
   cambiarFasePomodoro: (datos: unknown) => ipcRenderer.invoke('sesionesEstudio:pomodoroFase', datos),
 
-  listarOpcionesSesionEstudio: () => ipcRenderer.invoke('sesionesEstudio:opciones'),
+  listarOpcionesSesionEstudio: (usuarioId: number) => ipcRenderer.invoke('sesionesEstudio:opciones', { usuarioId }),
   listarMaterias: (usuarioId: number) => ipcRenderer.invoke('sesionesEstudio:materias', { usuarioId }),
   registrarMateria: (datos: unknown) => ipcRenderer.invoke('sesionesEstudio:registrarMateria', datos),
   modificarMateria: (datos: unknown) => ipcRenderer.invoke('sesionesEstudio:modificarMateria', datos),

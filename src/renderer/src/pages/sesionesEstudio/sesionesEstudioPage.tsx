@@ -9,7 +9,6 @@ import { BarraFiltrosSesiones } from '../../components/sesionEstudio/barraFiltro
 import { ListadoSesiones } from '../../components/sesionEstudio/listadoSesiones';
 import { ModalConfiguracionSesion, type CambiosSesion } from '../../components/sesionEstudio/modalConfiguracionSesion';
 import { ModalEliminarSesion } from '../../components/sesionEstudio/modalEliminarSesion';
-import { ModalMaterias } from '../../components/sesionEstudio/modalMaterias';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { obtenerUsuarioId } from '../../../lib/sesion';
@@ -20,7 +19,7 @@ import { useSesionEnCurso } from './useSesionEnCurso';
 import '../../styles/nodos.css';
 import '../../styles/sesionesEstudio.css';
 
-// Pestaña "Sesiones de estudio": cartel de bienvenida, "Registrar materia +" y la lista de sesiones
+// Pestaña "Sesiones de estudio": cartel de bienvenida y la lista de sesiones
 // con el mismo estilo que Material (ordenar, eliminar seleccionadas, cuadrícula o lista).
 export function SesionesEstudioPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
@@ -35,7 +34,6 @@ export function SesionesEstudioPage() {
   const ultimaSeleccionada = useRef<number | null>(null);
   const [enConfiguracion, setEnConfiguracion] = useState<SesionEstudio | null>(null);
   const [porEliminar, setPorEliminar] = useState<SesionEstudio[] | null>(null);
-  const [registrandoMateria, setRegistrandoMateria] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { sesion: sesionEnCurso, snapshot } = useSesionEnCurso(usuarioId);
 
@@ -144,9 +142,6 @@ export function SesionesEstudioPage() {
           <h3 className="sesiones__subtitulo">
             <GraduationCap size={18} aria-hidden="true" /> Sesiones de estudio
           </h3>
-          <button type="button" className="sesiones__registrar-materia" onClick={() => setRegistrandoMateria(true)}>
-            Registrar materia +
-          </button>
         </div>
 
         {error && <CartelError mensaje={error} onCerrar={() => setError(null)} onReintentar={cargar} />}
@@ -195,16 +190,6 @@ export function SesionesEstudioPage() {
         />
       )}
 
-      {registrandoMateria && (
-        <ModalMaterias
-          usuarioId={usuarioId}
-          onCerrar={() => {
-            setRegistrandoMateria(false);
-            // Un cambio de nombre se refleja en la columna Materia de la lista.
-            void cargar();
-          }}
-        />
-      )}
     </PlantillaLayout>
   );
 }

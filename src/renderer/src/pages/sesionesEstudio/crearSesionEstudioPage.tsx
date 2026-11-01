@@ -4,14 +4,13 @@ import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
 import { ListaObjetivos } from '../../components/sesionEstudio/listaObjetivos';
-import { ModalMaterias } from '../../components/sesionEstudio/modalMaterias';
 import { ModalSuperposicion } from '../../components/sesionEstudio/modalSuperposicion';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import type { OpcionesSesionEstudio, SesionEstudio } from '../../types/sesionesEstudio';
 import type { Deck } from '../../types/flashcards';
 import { claseDeMetodo } from '../../utils/metodosEstudio';
-import { aInputFechaHora, desdeInputFechaHora, extraerMensajeError } from './utilidades';
+import { materiasParaSesion, aInputFechaHora, desdeInputFechaHora, extraerMensajeError } from './utilidades';
 import '../../styles/sesionesEstudio.css';
 
 interface ObjetivoNuevo {
@@ -46,7 +45,6 @@ export function CrearSesionEstudioPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
   const navigate = useNavigate();
   const avisos = usarAvisos();
-  const [registrandoMateria, setRegistrandoMateria] = useState(false);
   const [superpuestas, setSuperpuestas] = useState<SesionEstudio[] | null>(null);
   const [opciones, setOpciones] = useState<OpcionesSesionEstudio>({ materias: [], metodosEstudio: [] });
   const [nombre, setNombre] = useState('');
@@ -66,7 +64,7 @@ export function CrearSesionEstudioPage() {
 
   useEffect(() => {
     window.api
-      .listarOpcionesSesionEstudio()
+      .listarOpcionesSesionEstudio(usuarioId)
       .then(setOpciones)
       .catch((e) => setError(extraerMensajeError(e, 'No se pudieron cargar las opciones.')));
     window.api.listarDecks(usuarioId).then(setMazos).catch(() => setMazos([]));
@@ -147,20 +145,17 @@ export function CrearSesionEstudioPage() {
         </label>
 
         <label className="sesiones__campo">
-          <span className="sesiones__campo-cabecera">
-            Materia
-            <button type="button" className="sesiones__registrar-materia" onClick={() => setRegistrandoMateria(true)}>
-              Registrar materia +
-            </button>
-          </span>
+          Materia
           <select
             value={idMateria}
             onChange={(e) => setIdMateria(e.target.value === '' ? '' : Number(e.target.value))}
           >
             <option value="">Elegí una materia</option>
-            {opciones.materias.map((m) => (
-              <option key={m.idMateria} value={m.idMateria}>{m.nombre}</option>
-            ))}
+            {/* Primero las que cursa, después las que tiene para rendir. Sin aprobadas ni no cursadas. */}
+            {materiasParaSesion(opciones.materias).map(({ grupo, materias }) => {
+              const items = materias.map((m) => <option key={m.idMateria} value={m.idMateria}>{m.nombre}</option>);
+              return grupo ? <optgroup key={grupo} label={grupo}>{items}</optgroup> : items;
+            })}
           </select>
         </label>
 
@@ -262,18 +257,6 @@ export function CrearSesionEstudioPage() {
           />
         )}
 
-      {registrandoMateria && (
-        <ModalMaterias
-          usuarioId={usuarioId}
-          onCerrar={() => setRegistrandoMateria(false)}
-          onCambio={(materias) => {
-            // El selector muestra los nombres nuevos; si se eliminó la elegida, queda sin elegir.
-            setOpciones((o) => ({ ...o, materias: materias.map(({ idMateria, nombre }) => ({ idMateria, nombre })) }));
-            setIdMateria((actual) => (actual !== '' && materias.some((m) => m.idMateria === actual) ? actual : ''));
-          }}
-          onRegistrada={(materia) => setIdMateria(materia.idMateria)}
-        />
-      )}
     </PlantillaLayout>
   );
 }

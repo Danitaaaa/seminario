@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Timer, CalendarClock, Lightbulb, FolderKanban, CalendarDays, type LucideIcon,
-  ChartColumn,
+  ChartColumn, GraduationCap,
 } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { MiniCalendario } from '../../components/comunes/miniCalendario';
@@ -21,6 +21,7 @@ type Modulo = {
 // El tono de cada portada se define en dashboard.css.
 const MODULOS: Modulo[] = [
   { titulo: 'Material', descripcion: '¡Administrá tus apuntes, bibliografía y demás!', ruta: rutaDe('material'), icono: BookOpen, tono: 'material' },
+  { titulo: 'Materias', descripcion: 'Tu carrera, cursos y el estado de cada materia.', ruta: rutaDe('materias'), icono: GraduationCap, tono: 'materias' },
   { titulo: 'Sesiones de estudio', descripcion: 'Ingresá a las sesiones de estudio para una mejor concentración.', ruta: rutaDe('sesiones'), icono: Timer, tono: 'sesiones' },
   { titulo: 'Horarios', descripcion: 'Horarios de cursado.', ruta: rutaDe('horarios'), icono: CalendarClock, tono: 'horarios' },
   { titulo: 'Métodos', descripcion: 'Creá tus métodos para tus sesiones de estudio.', ruta: rutaDe('metodos'), icono: Lightbulb, tono: 'metodos' },

@@ -8,6 +8,9 @@ import { BarraFiltrosNodos } from '../../components/nodos/barraFiltrosNodos';
 import { TablaNodos } from '../../components/nodos/tablaNodos';
 import { CuadriculaNodos } from '../../components/nodos/cuadriculaNodos';
 import { ModalNodo } from '../../components/nodos/modalNodo';
+import { ModalEditarCarpeta } from '../../components/nodos/modalEditarCarpeta';
+import type { OpcionMateria } from '../../types/materias';
+import { obtenerUsuarioId } from '../../../lib/sesion';
 import { ModalConfirmarEliminar } from '../../components/nodos/modalConfirmarEliminar';
 import '../../styles/nodos.css';
 import { CartelError } from '../../components/comunes/cartelError';
@@ -95,6 +98,19 @@ export function NodoPage({
     const [archivoAbrirCon, setArchivoAbrirCon] = useState<Archivo | null>(null);
     const [errorAbrir, setErrorAbrir] = useState<string | null>(null);
 
+    // Materias: solo en el Material personal (en un proyecto las carpetas son compartidas).
+    const conMaterias = raiz.id === RAIZ_MATERIAL.id;
+    const [materias, setMaterias] = useState<OpcionMateria[]>([]);
+    const [filtroMateria, setFiltroMateria] = useState<number | ''>('');
+    const materiaFiltrada = materias.find((m) => m.idMateria === filtroMateria);
+    // Para el filtro: las materias agrupadas por formación (ya vienen ordenadas por formación).
+    const materiasPorFormacion = materias.reduce<{ formacion: string; materias: OpcionMateria[] }[]>((acc, m) => {
+        const ultimo = acc[acc.length - 1];
+        if (ultimo && ultimo.formacion === m.formacion) ultimo.materias.push(m);
+        else acc.push({ formacion: m.formacion, materias: [m] });
+        return acc;
+    }, []);
+
     const nodosSeleccionados = nodos.filter((n) => seleccionados.has(claveNodo(n)));
 
     const puedeMover = (n: Nodo) => puede(rol, n.tipo === 'archivo' ? 'archivo.mover' : 'carpeta.mover');
@@ -112,21 +128,30 @@ export function NodoPage({
 
     const cargarContenido = useCallback(() => {
         return window.api.listarContenido({
-            idPadre: idPadreActual,
+            // Con filtro de materia se busca en todo Material, desde la raíz.
+            idPadre: filtroMateria === '' ? idPadreActual : raiz.id,
             ordenarPor: ordenActivo,
             direccion,
             busqueda: busqueda || undefined,
+            idMateria: filtroMateria === '' ? undefined : filtroMateria,
         })
             .then(setNodos)
             .catch((error) => {
                 console.error('No se pudo listar el contenido', error);
                 setErrorListar(error instanceof Error ? error.message : 'No se pudo cargar el listado.');
             });
-    }, [idPadreActual, ordenActivo, direccion, busqueda]);
+    }, [idPadreActual, ordenActivo, direccion, busqueda, filtroMateria, raiz.id]);
 
     useEffect(() => {
         cargarContenido();
     }, [cargarContenido]);
+
+    useEffect(() => {
+        if (!conMaterias) return;
+        window.api.listarMateriasUsuario({ usuarioId: obtenerUsuarioId() ?? 0 })
+            .then(setMaterias)
+            .catch(() => setMaterias([]));
+    }, [conMaterias]);
 
     const limpiarTimerMiga = useCallback(() => {
         if (timerMiga.current) clearTimeout(timerMiga.current);
@@ -262,6 +287,13 @@ export function NodoPage({
 
     const onAbrir = (nodo: Nodo) => {
         if (nodo.tipo === 'carpeta') {
+            // Desde el filtro por materia la carpeta puede estar en cualquier nivel: se entra desde la raíz.
+            if (filtroMateria !== '') {
+                setFiltroMateria('');
+                setRuta([raiz, { id: nodo.id, nombre: nodo.nombre }]);
+                setSeleccionados(new Set());
+                return;
+            }
             setRuta((prev) => [...prev, { id: nodo.id, nombre: nodo.nombre }]);
             setSeleccionados(new Set());
             return;
@@ -353,6 +385,28 @@ export function NodoPage({
 
                         {subencabezado}
 
+                        {conMaterias && materias.length > 0 && (
+                            <div className="nodos-filtro-materia">
+                                <label>
+                                    Materia
+                                    <select value={filtroMateria} onChange={(e) => setFiltroMateria(e.target.value === '' ? '' : Number(e.target.value))}>
+                                        <option value="">Todas</option>
+                                        {materiasPorFormacion.map((f) => (
+                                            <optgroup key={f.formacion} label={f.formacion}>
+                                                {f.materias.map((m) => <option key={m.idMateria} value={m.idMateria}>{m.nombre}</option>)}
+                                            </optgroup>
+                                        ))}
+                                    </select>
+                                </label>
+                                {materiaFiltrada && (
+                                    <span className="nodos-filtro-materia__aviso">
+                                        Carpetas de <strong>{materiaFiltrada.nombre}</strong> en todo tu Material
+                                        <button type="button" onClick={() => setFiltroMateria('')}>Quitar filtro</button>
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
                         <BarraFiltrosNodos
                             ordenActivo={ordenActivo}
                             direccion={direccion}
@@ -416,7 +470,24 @@ export function NodoPage({
                 />
             )}
 
-            {modal?.tipo === 'renombrar' && (
+            {modal?.tipo === 'renombrar' && modal.nodo.tipo === 'carpeta' && conMaterias && (
+                <ModalEditarCarpeta
+                    carpeta={modal.nodo}
+                    materias={materias}
+                    onCancelar={() => setModal(null)}
+                    onGuardar={async (nombre, idMateria) => {
+                        try {
+                            await window.api.modificarNodo({ id: modal.nodo.id, nombre, idMateria });
+                            setModal(null);
+                            await cargarContenido();
+                        } catch (error) {
+                            console.error('No se pudo editar la carpeta', error);
+                        }
+                    }}
+                />
+            )}
+
+            {modal?.tipo === 'renombrar' && !(modal.nodo.tipo === 'carpeta' && conMaterias) && (
                 <ModalNodo
                     titulo="Renombrar"
                     valorInicial={modal.nodo.nombre}

@@ -9,6 +9,9 @@ export type FasePomodoro = 'pomodoro' | 'descanso_corto' | 'descanso_largo';
 export interface Materia {
   idMateria: number;
   nombre: string;
+  // Solo en las opciones del formulario: estado y grupo ("Formación · 1er año") para el selector.
+  estado?: string;
+  grupo?: string | null;
 }
 
 // Materia con la cantidad de sesiones del usuario que la usan (modal "Materias").

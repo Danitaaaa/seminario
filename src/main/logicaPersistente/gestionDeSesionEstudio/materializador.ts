@@ -67,7 +67,10 @@ export function materializarPestana(fila: any): PestanaSesion {
 
 // Convierte una fila de la tabla materia en una Materia.
 export function materializarMateria(fila: any): Materia {
-  return { idMateria: fila.id_materia, nombre: fila.nombre };
+  const materia: Materia = { idMateria: fila.id_materia, nombre: fila.nombre };
+  if (fila.estado !== undefined) materia.estado = fila.estado;
+  if (fila.grupo !== undefined) materia.grupo = fila.grupo;
+  return materia;
 }
 
 // Convierte una fila de tipo_metodo_estudio en un TipoMetodoEstudio.

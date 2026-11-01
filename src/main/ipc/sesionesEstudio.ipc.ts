@@ -156,8 +156,9 @@ export function registerSesionesEstudioIpc(
 
   // ---- Materias y resumen ----
 
-  ipcMain.handle('sesionesEstudio:opciones', async () => {
-    return aTransportable(await sesiones.listarOpciones());
+  ipcMain.handle('sesionesEstudio:opciones', async (_event, datos: unknown) => {
+    const { usuarioId } = usuarioIdSchema.parse(datos);
+    return aTransportable(await sesiones.listarOpciones(usuarioId));
   });
 
   ipcMain.handle('sesionesEstudio:materias', async (_event, datos: unknown) => {

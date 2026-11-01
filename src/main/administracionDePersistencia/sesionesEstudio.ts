@@ -184,8 +184,8 @@ export class SesionesEstudio {
 
   // ---- Materias, resumen y procesos de fondo ----
 
-  async listarOpciones(): Promise<OpcionesSesionEstudio> {
-    return this.cu.opciones.ejecutar();
+  async listarOpciones(idUsuario: number): Promise<OpcionesSesionEstudio> {
+    return this.cu.opciones.ejecutar(idUsuario);
   }
 
   async listarMaterias(idUsuario: number): Promise<MateriaConUso[]> {

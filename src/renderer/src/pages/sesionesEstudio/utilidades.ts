@@ -128,3 +128,31 @@ export function formatearFechaLarga(fecha: Date = new Date()): string {
   const texto = fecha.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
+
+// Agrupa las materias del selector por formación y año, en el orden en que llegan.
+// Las que no tienen grupo (cargadas antes del módulo Materias) van sueltas.
+export function agruparMaterias<T extends { grupo?: string | null }>(materias: T[]): { grupo: string | null; materias: T[] }[] {
+  const grupos: { grupo: string | null; materias: T[] }[] = [];
+  for (const materia of materias) {
+    const grupo = materia.grupo ?? null;
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && ultimo.grupo === grupo) ultimo.materias.push(materia);
+    else grupos.push({ grupo, materias: [materia] });
+  }
+  return grupos;
+}
+
+// Materias para el selector de una sesión nueva:
+// primero las que está cursando, después las que tiene para rendir (libres y regulares) por año.
+// No se muestran las aprobadas ni las que todavía no cursó. Las cargadas antes del módulo Materias
+// (sin grupo) se muestran siempre, al final.
+export function materiasParaSesion<T extends { estado?: string; grupo?: string | null }>(materias: T[]) {
+  const cursando = materias.filter((m) => m.grupo && m.estado === 'cursando');
+  const paraRendir = materias.filter((m) => m.grupo && (m.estado === 'libre' || m.estado === 'regular'));
+  const sinFormacion = materias.filter((m) => !m.grupo);
+  return [
+    ...(cursando.length ? [{ grupo: 'Cursando ahora' as string | null, materias: cursando }] : []),
+    ...agruparMaterias(paraRendir).map((g) => ({ ...g, grupo: `Para rendir · ${g.grupo}` })),
+    ...(sinFormacion.length ? [{ grupo: null as string | null, materias: sinFormacion }] : []),
+  ];
+}

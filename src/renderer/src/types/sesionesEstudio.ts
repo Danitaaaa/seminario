@@ -7,6 +7,8 @@ export type FasePomodoro = 'pomodoro' | 'descanso_corto' | 'descanso_largo';
 export interface Materia {
   idMateria: number;
   nombre: string;
+  estado?: string;
+  grupo?: string | null;
 }
 
 export interface MateriaConUso extends Materia {
@@ -164,7 +166,7 @@ export interface SesionesEstudioApi {
   reiniciarPomodoro(usuarioId: number, idSesion: number): Promise<SesionEstudio>;
   cambiarFasePomodoro(datos: { usuarioId: number; idSesion: number; fase: FasePomodoro }): Promise<SesionEstudio>;
 
-  listarOpcionesSesionEstudio(): Promise<OpcionesSesionEstudio>;
+  listarOpcionesSesionEstudio(usuarioId: number): Promise<OpcionesSesionEstudio>;
   listarMaterias(usuarioId: number): Promise<MateriaConUso[]>;
   registrarMateria(datos: { nombre: string }): Promise<MateriaConUso>;
   modificarMateria(datos: { usuarioId: number; idMateria: number; nombre: string }): Promise<MateriaConUso>;

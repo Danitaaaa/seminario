@@ -1,5 +1,4 @@
 import type { HorarioCursado } from '../types/horarios';
-import '../styles/tonos.css';
 
 // Tonos que el usuario puede elegir para sus materias. No son colores fijos:
 // cada uno sale de la paleta activa (ver styles/tonos.css), así que cambian

@@ -28,6 +28,7 @@ import { MoverNodo } from './logicaPersistente/gestionMaterialEstudio/moverNodo'
 import { Nodos } from './administracionDePersistencia/nodo';
 import { registrarNodosIpc } from './ipc/nodo.ipc';
 import { ListarContenido } from './logicaPersistente/gestionMaterialEstudio/listarContenido';
+import { BuscarNodosPorMateria } from './logicaPersistente/gestionMaterialEstudio/buscarNodosPorMateria';
 import { CrearArchivo } from './logicaPersistente/gestionMaterialEstudio/crearArchivo';
 import { Archivos } from './administracionDePersistencia/archivos';
 import { registerArchivosIpc } from './ipc/archivos.ipc';
@@ -87,6 +88,19 @@ import { ModificarHorario } from './logicaPersistente/gestionDeHorarios/modifica
 import { EliminarHorario } from './logicaPersistente/gestionDeHorarios/eliminarHorario';
 import { Horarios } from './administracionDePersistencia/horarios';
 import { registerHorariosIpc } from './ipc/horarios.ipc';
+
+// Gestion de materias
+import { ListarFormaciones } from './logicaPersistente/gestionDeMaterias/listarFormaciones';
+import { CrearFormacion } from './logicaPersistente/gestionDeMaterias/crearFormacion';
+import { ModificarFormacion } from './logicaPersistente/gestionDeMaterias/modificarFormacion';
+import { EliminarFormacion } from './logicaPersistente/gestionDeMaterias/eliminarFormacion';
+import { ListarMaterias } from './logicaPersistente/gestionDeMaterias/listarMaterias';
+import { CrearMaterias } from './logicaPersistente/gestionDeMaterias/crearMaterias';
+import { ModificarMateria } from './logicaPersistente/gestionDeMaterias/modificarMateria';
+import { EliminarMateria } from './logicaPersistente/gestionDeMaterias/eliminarMateria';
+import { ListarMateriasUsuario } from './logicaPersistente/gestionDeMaterias/listarMateriasUsuario';
+import { Materias } from './administracionDePersistencia/materias';
+import { registerMateriasIpc } from './ipc/materias.ipc';
 import { registerEnlacesIpc } from './ipc/enlaces.ipc';
 import { VerificarPassword } from './logicaPersistente/gestionDeUsuarios/verificarPassword';
 import { ActualizarRostro } from './logicaPersistente/gestionDeUsuarios/actualizarRostro';
@@ -289,7 +303,7 @@ function wireDependencies(): ProcesoSesionEstudio {
   const modificarNodo = new ModificarNodo(persistencia);
   const buscarNodos = new BuscarNodos(persistencia);
   const buscarArchivos = new BuscarArchivos(persistencia);
-  const listarContenido = new ListarContenido(buscarNodos, buscarArchivos, persistencia);
+  const listarContenido = new ListarContenido(buscarNodos, buscarArchivos, persistencia, new BuscarNodosPorMateria(persistencia));
   const moverNodo = new MoverNodo(persistencia);
   const eliminarNodo = new EliminarNodo(persistencia);
   const nodos = new Nodos(crearNodo, modificarNodo, listarContenido, eliminarNodo, moverNodo);
@@ -360,6 +374,16 @@ function wireDependencies(): ProcesoSesionEstudio {
     new ModificarHorario(persistencia), new EliminarHorario(persistencia)
   );
   registerHorariosIpc(horarios);
+
+  // Gestion de materias
+  const materias = new Materias(
+    new ListarFormaciones(persistencia), new CrearFormacion(persistencia),
+    new ModificarFormacion(persistencia), new EliminarFormacion(persistencia),
+    new ListarMaterias(persistencia), new CrearMaterias(persistencia),
+    new ModificarMateria(persistencia), new EliminarMateria(persistencia),
+    new ListarMateriasUsuario(persistencia)
+  );
+  registerMateriasIpc(materias);
 
   // Gestion de metas
   const metas = new Metas(

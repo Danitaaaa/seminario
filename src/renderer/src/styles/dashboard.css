@@ -47,6 +47,7 @@
 }
 
 /* Tonos de portada (modo claro): mezclas de frost-blue y steel sobre la superficie */
+.dashboard__portada--materias  { background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface)); color: var(--color-primary); }
 .dashboard__portada--material   { background: color-mix(in srgb, var(--color-frost-blue) 25%, var(--color-surface)); color: var(--color-steel); }
 .dashboard__portada--sesiones   { background: color-mix(in srgb, var(--color-frost-blue) 50%, var(--color-surface)); color: var(--color-storm); }
 .dashboard__portada--horarios   { background: color-mix(in srgb, var(--color-frost-blue) 40%, var(--color-surface)); color: var(--color-storm); }

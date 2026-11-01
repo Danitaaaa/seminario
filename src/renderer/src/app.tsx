@@ -13,6 +13,9 @@ import { cargarModelos } from "../lib/cargarModelos";
 import { Proximamente } from "./pages/proximamente/proximamente";
 import { EventosPage } from "./pages/eventos/eventosPage";
 import { HorariosPage } from "./pages/horarios/horariosPage";
+import { MateriasPage } from "./pages/materias/materiasPage";
+import { FormacionPage } from "./pages/materias/formacionPage";
+import { CargarPlanPage } from "./pages/materias/cargarPlanPage";
 import { PerfilPage } from "./pages/perfil/perfilPage";
 import { PanelPerfil } from "./pages/perfil/panelPerfil";
 import { AjustesPage } from "./pages/ajustes/ajustesPage";
@@ -55,6 +58,10 @@ export default function App() {
         <Route path="/material" element={<NodoPage />} />
         <Route path="/eventos" element={<EventosPage />} />
         <Route path="/horarios" element={<HorariosPage />} />
+        <Route path="/materias" element={<MateriasPage />} />
+        <Route path="/materias/formacion" element={<FormacionPage />} />
+        <Route path="/materias/formacion/:idFormacion" element={<FormacionPage />} />
+        <Route path="/materias/plan/:idFormacion" element={<CargarPlanPage />} />
         <Route path="/cronograma" element={<CronogramaPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
         <Route path="/ajustes" element={<AjustesPage />} />

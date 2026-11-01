@@ -37,13 +37,14 @@ type Resultado<T> =
   | { ok: false; codigo: string; mensaje: string; detalle?: Record<string, unknown> };
 import type { SesionesEstudioApi } from './sesionesEstudio';
 import type { SpotifyApi } from './spotify';
+import type { MateriasApi } from './materias';
 
 declare global {
   interface Window {
-    api: SesionesEstudioApi & SpotifyApi & {
+    api: SesionesEstudioApi & SpotifyApi & MateriasApi & {
       // Gestion de material de estudio
       crearNodo: (datos: { nombre: string; idPadre: number | null }) => Promise<Nodo>;
-      modificarNodo: (datos: { id: number; nombre: string }) => Promise<Nodo>;
+      modificarNodo: (datos: { id: number; nombre: string; idMateria?: number | null }) => Promise<Nodo>;
       moverNodo: (datos: { id: number; idNuevoPadre: number | null }) => Promise<Nodo>;
       listarContenido: (criterios: unknown) => Promise<Nodo[]>;
       eliminarNodo: (datos: { id: number }) => Promise<void>;
