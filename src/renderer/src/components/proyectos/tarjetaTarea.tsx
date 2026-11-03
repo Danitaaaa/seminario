@@ -1,6 +1,8 @@
 import type { DragEvent } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Lock, Pencil, Trash2 } from 'lucide-react';
+import type { RolMiembro } from '../../types/proyectos';
 import type { Prioridad, Tarea } from '../../types/tareas';
+import { puede } from '../../permisos';
 import { estaVencida, formatearHecha, formatearVence } from '../../utils/fechasTareas';
 
 const ETIQUETA_PRIORIDAD: Record<Prioridad, string> = {
@@ -14,29 +16,34 @@ export interface AccionesTarjeta {
   onEditar: (tarea: Tarea) => void;
   onEliminar: (tarea: Tarea) => void;
   // Ya no se usa desde la tarjeta (se asigna arrastrando o desde el modal); se conserva por compatibilidad.
-  onAsignar: (tarea: Tarea, idAsignado: number | null) => void;
+  onAsignar: (tarea: Tarea, idAsignadoGlobal: string | null) => void;
   onArrastrarInicio: (tarea: Tarea) => void;
   onArrastrarFin: () => void;
 }
 
 interface Props extends AccionesTarjeta {
   tarea: Tarea;
-  puedeEditar: boolean;
+  rol: RolMiembro | null;
   arrastrando: boolean;
+  bloqueadaPor?: string; // nombre de quien la está editando
 }
 
 export function TarjetaTarea({
   tarea,
-  puedeEditar,
+  rol,
   arrastrando,
+  bloqueadaPor,
   onAlternar,
   onEditar,
   onEliminar,
   onArrastrarInicio,
   onArrastrarFin,
 }: Props) {
-  const asignada = tarea.idAsignado !== null;
-  const arrastrable = puedeEditar && !tarea.completada;
+  const asignada = tarea.idAsignadoGlobal !== null;
+  const bloqueada = !!bloqueadaPor;
+  const puedeEditarTarea = puede(rol, 'tarea.editar');
+  const puedeBorrarTarea = puede(rol, 'tarea.eliminar');
+  const arrastrable = puede(rol, 'tarea.asignar') && !tarea.completada && !bloqueada;
 
   function alIniciarArrastre(e: DragEvent<HTMLElement>) {
     const origen = e.currentTarget;
@@ -65,10 +72,12 @@ export function TarjetaTarea({
         'tarea-tarjeta',
         tarea.completada ? 'tarea-tarjeta--hecha' : '',
         arrastrando ? 'tarea-tarjeta--fantasma' : '',
+        bloqueada ? 'tarea-tarjeta--bloqueada' : '',
       ]
         .filter(Boolean)
         .join(' ')}
       data-titulo={tarea.titulo}
+      title={bloqueada ? `${bloqueadaPor} está editando esta tarea` : undefined}
       draggable={arrastrable}
       onDragStart={arrastrable ? alIniciarArrastre : undefined}
       onDragEnd={arrastrable ? onArrastrarFin : undefined}
@@ -78,7 +87,7 @@ export function TarjetaTarea({
           type="checkbox"
           className="tarea-tarjeta__check"
           checked={tarea.completada}
-          disabled={!puedeEditar}
+          disabled={!puede(rol, 'tarea.alternar') || bloqueada}
           onChange={() => onAlternar(tarea)}
           aria-label={`Marcar como ${tarea.completada ? 'pendiente' : 'hecha'}: ${tarea.titulo}`}
         />
@@ -91,7 +100,7 @@ export function TarjetaTarea({
       )}
 
       <div className="tarea-tarjeta__cuerpo">
-        {puedeEditar ? (
+        {puedeEditarTarea ? (
           <button type="button" className="tarea-tarjeta__titulo" onClick={() => onEditar(tarea)}>
             {tarea.titulo}
           </button>
@@ -103,29 +112,39 @@ export function TarjetaTarea({
             {tarea.completada ? formatearHecha(tarea.fechaCompletada) : formatearVence(tarea.fechaLimite)}
           </span>
           <span className="tarea-chip">{ETIQUETA_PRIORIDAD[tarea.prioridad]}</span>
+          {bloqueada && (
+            <span className="tarea-chip tarea-chip--bloqueo">
+              <Lock size={11} /> {bloqueadaPor} está editando
+            </span>
+          )}
         </div>
       </div>
 
-      {puedeEditar && (
+      {(puedeEditarTarea || puedeBorrarTarea) && (
         <div className="tarea-tarjeta__acciones">
-          <button
-            type="button"
-            className="tarea-tarjeta__accion"
-            aria-label={`Editar «${tarea.titulo}»`}
-            title="Editar"
-            onClick={() => onEditar(tarea)}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            type="button"
-            className="tarea-tarjeta__accion tarea-tarjeta__accion--peligro"
-            aria-label={`Eliminar «${tarea.titulo}»`}
-            title="Eliminar"
-            onClick={() => onEliminar(tarea)}
-          >
-            <Trash2 size={14} />
-          </button>
+          {puedeEditarTarea && (
+            <button
+              type="button"
+              className="tarea-tarjeta__accion"
+              aria-label={`Editar «${tarea.titulo}»`}
+              title="Editar"
+              onClick={() => onEditar(tarea)}
+            >
+              <Pencil size={14} />
+            </button>
+          )}
+          {puedeBorrarTarea && (
+            <button
+              type="button"
+              className="tarea-tarjeta__accion tarea-tarjeta__accion--peligro"
+              aria-label={`Eliminar «${tarea.titulo}»`}
+              title="Eliminar"
+              disabled={bloqueada}
+              onClick={() => onEliminar(tarea)}
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
         </div>
       )}
     </article>

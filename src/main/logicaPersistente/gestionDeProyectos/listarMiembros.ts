@@ -2,7 +2,7 @@ import { ListarMiembrosDTOSchema, ListarMiembrosDTO } from './dto';
 import { ProyectoMiembro } from './entidades';
 import { IPersistenciaProyectos, ISincronizador, MiembroRemoto } from './interfacesSincronizacion';
 import { materializarMiembro } from './materializador';
-import { exigirRol } from './permisos';
+import { exigirPermiso } from './permisos';
 import { asegurarConexion } from './miembrosRemotos';
 
 export class ListarMiembros {
@@ -10,7 +10,7 @@ export class ListarMiembros {
 
     async ejecutar(entrada: ListarMiembrosDTO): Promise<ProyectoMiembro[]> {
         const dto = ListarMiembrosDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, ['propietario', 'editor', 'lector']);
+        await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, 'miembro.listar');
 
         const f = await this.persistencia.ejecutar<{ id_remoto: string | null }>(
             `SELECT id_remoto FROM proyectos WHERE id_proyecto = $1`, [dto.idProyecto]);

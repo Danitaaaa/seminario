@@ -1,0 +1,23 @@
+/* Agregar al final de styles/tareas.css */
+
+.tarea-tarjeta--bloqueada {
+  border-color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 8%, var(--color-surface));
+}
+
+.tarea-tarjeta--bloqueada .tarea-tarjeta__check {
+  cursor: not-allowed;
+}
+
+.tarea-chip--bloqueo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: color-mix(in srgb, var(--color-warning) 22%, var(--color-surface));
+  color: var(--color-text-primary);
+}
+
+.tarea-tarjeta__accion:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

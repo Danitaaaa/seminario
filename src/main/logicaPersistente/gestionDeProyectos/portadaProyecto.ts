@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { Persistencia } from '../../persistencia/persistencia';
 import { FORMATOS, leerComoDataUrl } from '../gestionDeUsuarios/fotoPerfil';
-import { exigirRol } from './permisos';
+import { exigirPermiso } from './permisos';
 import { PortadaProyectoDTO } from './dto';
 
 // Una portada muy pesada haría lento el listado: se acepta hasta 5 MB.
@@ -10,7 +10,7 @@ const TAMANIO_MAXIMO = 5 * 1024 * 1024;
 
 // Cualquier integrante puede ver y elegir la portada: es solo de su compu.
 async function rutaGuardada(persistencia: Persistencia, datos: PortadaProyectoDTO): Promise<string | null> {
-    await exigirRol(persistencia, datos.idProyecto, datos.idUsuario, ['propietario', 'editor', 'lector']);
+    await exigirPermiso(persistencia, datos.idProyecto, datos.idUsuario, 'proyecto.obtener');
     const filas = await persistencia.ejecutar<{ ruta: string }>(
         `SELECT ruta FROM portadas_proyecto WHERE id_proyecto = $1`,
         [datos.idProyecto]

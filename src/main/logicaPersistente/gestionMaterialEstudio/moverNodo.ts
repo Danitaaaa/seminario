@@ -3,6 +3,7 @@ import { materializarNodo } from "./materializador";
 import { Persistencia } from "../../persistencia/persistencia";
 import { Nodo } from "./entidades"
 import { registrarCambioContenido } from "../gestionDeProyectos/alcanceContenido";
+import { exigirPermisoNodo } from "./alcanceContenido";
 
 // Cambia el nodoPadre de uno o más nodos
 export class MoverNodo {
@@ -56,6 +57,13 @@ export class MoverNodo {
         );
         if (descendientes.length > 0) {
             throw new Error("No se puede mover un nodo dentro de uno de sus descendientes");
+        }
+
+        // Permiso para sacar la carpeta del origen y para crear en el destino.
+        const proyOrigen = await exigirPermisoNodo(this.persistencia, id, 'carpeta.mover');
+        const proyDestino = await exigirPermisoNodo(this.persistencia, idNuevoPadre, 'carpeta.crear');
+        if (proyOrigen !== proyDestino) {
+            throw new Error('No se pueden mover carpetas entre proyectos distintos');
         }
 
         const filas = await this.persistencia.ejecutar(

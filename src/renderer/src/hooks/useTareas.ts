@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DatosTarea, Tarea } from '../types/tareas';
+import { obtenerUsuarioIdGlobal } from '../../lib/sesion'; // ajustá la ruta según dónde esté este hook
 
 type CamposEditables = Partial<Pick<DatosTarea, 'titulo' | 'descripcion' | 'prioridad' | 'fechaLimite' | 'fechaInicio'>>;
 
@@ -109,7 +110,7 @@ export function useTareas(idProyecto: number, idUsuario: number) {
         ...tarea,
         completada,
         fechaCompletada: completada ? new Date().toISOString() : null,
-        completadaPor: completada ? idUsuario : null,
+        completadaPorGlobal: completada ? obtenerUsuarioIdGlobal() : null,
       });
 
       const nueva = await ejecutar(
@@ -128,18 +129,17 @@ export function useTareas(idProyecto: number, idUsuario: number) {
   );
 
   const asignar = useCallback(
-    async (tarea: Tarea, idAsignado: number | null): Promise<boolean> => {
-      if (idAsignado !== null && !Number.isFinite(idAsignado)) return false;
-      if (tarea.idAsignado === idAsignado) return true;
+    async (tarea: Tarea, idAsignadoGlobal: string | null): Promise<boolean> => {
+      if (tarea.idAsignadoGlobal === idAsignadoGlobal) return true;
       const previas = tareasRef.current;
 
       const ordenFinal =
-        Math.max(0, ...previas.filter((t) => t.idAsignado === idAsignado).map((t) => t.orden)) + 1;
+        Math.max(0, ...previas.filter((t) => t.idAsignadoGlobal === idAsignadoGlobal).map((t) => t.orden)) + 1;
 
-      reemplazar({ ...tarea, idAsignado, orden: ordenFinal });
+      reemplazar({ ...tarea, idAsignadoGlobal, orden: ordenFinal });
 
       const nueva = await ejecutar(
-        () => window.api.asignarTarea({ idTarea: tarea.idTarea, idUsuario, idAsignado }) as Promise<Tarea>,
+        () => window.api.asignarTarea({ idTarea: tarea.idTarea, idUsuario, idAsignadoGlobal }) as Promise<Tarea>,
         'No se pudo asignar la tarea.',
       );
 
@@ -195,4 +195,4 @@ export function useTareas(idProyecto: number, idUsuario: number) {
     repartir,
     eliminar,
   };
-}
+}

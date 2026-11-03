@@ -14,7 +14,7 @@ export class EstadisticasMetasProyecto {
         const dto = EstadisticasMetasDTOSchema.parse(entrada);
         const idProyecto = dto.idProyecto ?? null;
         await exigirAcceso(this.persistencia, idProyecto, dto.idUsuario, dto.idUsuario,
-            ['propietario', 'editor', 'lector']);
+            'meta.listar');
 
         const valores: unknown[] = [];
         const filtros = [filtroAlcance(valores, idProyecto, dto.idUsuario)];
@@ -33,16 +33,11 @@ export class EstadisticasMetasProyecto {
                    FROM metas m WHERE ${donde}) x
              GROUP BY mes ORDER BY mes`, valores);
 
-        const porMiembro = await this.persistencia.ejecutar(
-            `SELECT completada_por AS id_usuario, COUNT(*)::int AS completadas
-             FROM metas WHERE ${donde} AND completada AND completada_por IS NOT NULL
-             GROUP BY completada_por ORDER BY completadas DESC`, valores);
 
         return {
             porMes: porMes.map(f => ({
                 mes: f.mes, total: f.total, completadas: f.completadas, trasladadas: f.trasladadas,
             })),
-            porMiembro: porMiembro.map(f => ({ idUsuario: f.id_usuario, completadas: f.completadas })),
         };
     }
 }

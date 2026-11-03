@@ -1,12 +1,15 @@
 import { Persistencia } from '../../persistencia/persistencia';
 import { EliminarNodoDTO } from './dto';
 import { registrarCambioContenido } from '../gestionDeProyectos/alcanceContenido';
+import { exigirPermisoNodo } from './alcanceContenido';
 
 // Elimina un nodo siempre que esté vacío
 export class EliminarNodo {
     constructor(private readonly persistencia: Persistencia) {}
 
     async ejecutar(datos: EliminarNodoDTO): Promise<void> {
+        await exigirPermisoNodo(this.persistencia, datos.id, 'carpeta.eliminar');
+
         let eliminado: { id_nodo: number; id_global: string; id_padre: number | null };
         try {
             const filas = await this.persistencia.ejecutar(

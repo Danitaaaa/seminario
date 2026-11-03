@@ -5,17 +5,17 @@ export interface Tarea {
   // Identificador compartido entre PCs (columna id_global). Los ids locales no sirven para sincronizar.
   idGlobal: string;
   idProyecto: number;
+  idAsignadoGlobal: string | null;
   titulo: string;
   descripcion: string | null;
   prioridad: Prioridad;
   fechaLimite: string | null; // AAAA-MM-DD
   fechaInicio: string | null; // AAAA-MM-DD
-  idAsignado: number | null;
   completada: boolean;
   fechaCompletada: string | null;
-  completadaPor: number | null;
+  completadaPorGlobal: string | null;
   orden: number;
-  creadaPor: number;
+  creadaPorGlobal: string;
   fechaCreacion: string;
 }
 
@@ -26,7 +26,7 @@ export interface DatosTarea {
   prioridad: Prioridad;
   fechaLimite: string | null;
   fechaInicio: string | null;
-  idAsignado: number | null;
+  idAsignadoGlobal: string | null; 
 }
 
 export type FiltroTareas = 'todas' | 'pendientes' | 'hechas' | 'sinAsignar';
@@ -35,7 +35,7 @@ export type RolMiembro = 'propietario' | 'editor' | 'lector';
 
 // Integrante que puede tener tareas (propietario o editor).
 export interface MiembroTablero {
-  idUsuario: number;
+  idGlobal: string;
   nombre: string;
   rol: RolMiembro;
 }

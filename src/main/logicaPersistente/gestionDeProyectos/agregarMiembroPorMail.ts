@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { InvitarMiembroDTOSchema, InvitarMiembroDTO } from './dto';
 import { IPersistenciaProyectos, ISincronizador } from './interfacesSincronizacion';
-import { exigirRol } from './permisos';
+import { exigirPermiso } from './permisos';
 import { asegurarConexion, buscarMiembroRemoto } from './miembrosRemotos';
 import { enviarInvitacionProyecto } from '../../servicios/correo'; // ajustá la ruta
 
@@ -21,7 +21,7 @@ export class AgregarMiembroPorMail {
 
     async ejecutar(entrada: InvitarMiembroDTO): Promise<InvitacionEnviada> {
         const dto = InvitarMiembroDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, ['propietario']);
+        await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, 'miembro.invitar');
 
         const mailInvitado = dto.mail.trim().toLowerCase();
 

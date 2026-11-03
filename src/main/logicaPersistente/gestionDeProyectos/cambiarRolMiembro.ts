@@ -1,6 +1,6 @@
 import { CambiarRolMiembroDTOSchema, CambiarRolMiembroDTO } from './dto';
 import { IPersistenciaProyectos, ISincronizador } from './interfacesSincronizacion';
-import { exigirRol } from './permisos';
+import { exigirPermiso } from './permisos';
 import { asegurarConexion, buscarMiembroRemoto, idRemotoDe, mailDelMiembro } from './miembrosRemotos';
 
 export class CambiarRolMiembro {
@@ -8,7 +8,7 @@ export class CambiarRolMiembro {
 
     async ejecutar(entrada: CambiarRolMiembroDTO): Promise<{ mail: string; rol: 'editor' | 'lector' }> {
         const dto = CambiarRolMiembroDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, ['propietario']);
+        await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, 'miembro.cambiarRol');
 
         const mail = await mailDelMiembro(this.persistencia, dto);
         const idRemoto = await idRemotoDe(this.persistencia, dto.idProyecto);

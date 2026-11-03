@@ -1,6 +1,6 @@
 import { ListarInvitacionesDTOSchema, ListarInvitacionesDTO } from './dto';
 import { IPersistenciaProyectos } from './interfacesSincronizacion';
-import { exigirRol } from './permisos';
+import { exigirPermiso } from './permisos';
 
 // La invitación se liga al mail: el invitado puede no estar registrado en esta base.
 export interface InvitacionPendiente {
@@ -15,7 +15,7 @@ export class ListarInvitaciones {
 
     async ejecutar(entrada: ListarInvitacionesDTO): Promise<InvitacionPendiente[]> {
         const dto = ListarInvitacionesDTOSchema.parse(entrada);
-        await exigirRol(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, ['propietario']);
+        await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuarioSolicitante, 'proyecto.listarInvitaciones');
 
         const filas = await this.persistencia.ejecutar(
             `SELECT id_invitacion, mail_invitado, rol, fecha_vencimiento

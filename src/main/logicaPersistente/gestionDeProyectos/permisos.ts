@@ -2,10 +2,11 @@ import { IPersistenciaProyectos } from './interfacesSincronizacion';
 import { RolMiembro } from './entidades';
 import { EntidadSincronizable } from './entidades';
 import { OperacionSincronizable } from './entidades';
+import { REGLAS, Accion } from './reglasPermisos';
 
-// Devuelve el rol activo del usuario en el proyecto, o null si no es miembro. 
+// Devuelve el rol activo del usuario en el proyecto, o null si no es miembro.
 export async function obtenerRolActivo(
-    p: IPersistenciaProyectos, idProyecto: number, idUsuario: number,
+    p: IPersistenciaProyectos, idProyecto: number, idUsuario: string | number,
 ): Promise<RolMiembro | null> {
     const filas = await p.ejecutar(
         `SELECT rol FROM proyecto_miembros
@@ -15,8 +16,9 @@ export async function obtenerRolActivo(
     return filas[0]?.rol ?? null;
 }
 
-export async function exigirRol(
-    p: IPersistenciaProyectos, idProyecto: number, idUsuario: number, permitidos: RolMiembro[],
+// Interno (sin export): los roles ya no se pasan desde los casos de uso.
+async function exigirRolInterno(
+    p: IPersistenciaProyectos, idProyecto: number, idUsuario: string | number, permitidos: readonly RolMiembro[],
 ): Promise<RolMiembro> {
     const rol = await obtenerRolActivo(p, idProyecto, idUsuario);
     if (!rol) throw new Error('El usuario no es miembro del proyecto');
@@ -24,7 +26,16 @@ export async function exigirRol(
     return rol;
 }
 
-// Registra un cambio local en la cola de sincronización y sube la versión del proyecto. 
+// Punto de entrada: el caso de uso declara la acción, la tabla decide los roles.
+export async function exigirPermiso(
+    p: IPersistenciaProyectos, idProyecto: number, idUsuario: string | number, accion: Accion,
+): Promise<RolMiembro> {
+    const permitidos = REGLAS[accion];
+    if (!permitidos) throw new Error(`Acción de permiso desconocida: ${String(accion)}`);
+    return exigirRolInterno(p, idProyecto, idUsuario, permitidos);
+}
+
+// Registra un cambio local en la cola de sincronización y sube la versión del proyecto.
 export async function registrarCambio(
     p: IPersistenciaProyectos, idProyecto: number,
     entidad: EntidadSincronizable, idEntidad: number,

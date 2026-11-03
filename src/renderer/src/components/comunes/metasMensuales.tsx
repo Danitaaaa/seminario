@@ -4,6 +4,8 @@ import { cssVar as colors } from '../../styles/variables';
 import { typography } from '../../styles/typography';
 import { spacing } from '../../styles/spacing';
 import type { Meta } from '../../types/metas';
+import type { RolMiembro } from '../../types/proyectos';
+import { puede } from '../../permisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 
 const MESES = [
@@ -18,13 +20,15 @@ const nombreMes = (clave: string) => MESES[Number(clave.slice(5, 7)) - 1];
 
 interface MetasMensualesProps {
   idProyecto: number;
-  /** false para lectores: ven las metas pero no pueden marcarlas ni editarlas. */
-  puedeEditar?: boolean;
-  /** true para el propietario: es el único que puede borrar metas. */
-  puedeEliminar?: boolean;
+  /** Rol del usuario en el proyecto: la tabla de permisos decide qué puede hacer. */
+  rol: RolMiembro | null;
 }
 
-export function MetasMensuales({ idProyecto, puedeEditar = true, puedeEliminar = false }: MetasMensualesProps) {
+export function MetasMensuales({ idProyecto, rol }: MetasMensualesProps) {
+  const puedeCrear = puede(rol, 'meta.crear');
+  const puedeEditarMeta = puede(rol, 'meta.editar');
+  const puedeAlternar = puede(rol, 'meta.alternar');
+  const puedeBorrar = puede(rol, 'meta.eliminar');
   // Sin sesión queda en 0 y el main rechaza los pedidos.
   const ID_USUARIO_ACTUAL = obtenerUsuarioId() ?? 0;
   const hoy = new Date();
@@ -90,7 +94,7 @@ export function MetasMensuales({ idProyecto, puedeEditar = true, puedeEliminar =
   }
 
   async function alternar(meta: Meta): Promise<void> {
-    if (!puedeEditar || meta.trasladadaA) return;
+    if (!puedeAlternar || meta.trasladadaA) return;
     // Actualización optimista: se refleja al instante y se reconcilia al recargar
     setMetas((prev) => prev.map((m) => (m.idMeta === meta.idMeta ? { ...m, completada: !m.completada } : m)));
     await ejecutar(
@@ -184,13 +188,13 @@ export function MetasMensuales({ idProyecto, puedeEditar = true, puedeEliminar =
                   role="checkbox"
                   aria-checked={meta.completada}
                   aria-label={meta.completada ? 'Desmarcar meta' : 'Marcar meta como completada'}
-                  disabled={!puedeEditar}
+                  disabled={!puedeAlternar}
                   onClick={() => alternar(meta)}
                   style={{
                     ...estiloCasilla,
                     background: meta.completada ? colors.secondary : 'transparent',
                     borderColor: meta.completada ? colors.secondary : colors.border,
-                    cursor: puedeEditar ? 'pointer' : 'default',
+                    cursor: puedeAlternar ? 'pointer' : 'default',
                   }}
                 >
                   {meta.completada && <Check size={12} style={{ color: colors.white }} strokeWidth={3} />}
@@ -213,16 +217,16 @@ export function MetasMensuales({ idProyecto, puedeEditar = true, puedeEliminar =
               ) : (
                 <span
                   onClick={() => {
-                    if (!puedeEditar || trasladada) return;
+                    if (!puedeEditarMeta || trasladada) return;
                     setEditandoId(meta.idMeta);
                     setTituloEditado(meta.titulo);
                   }}
-                  title={puedeEditar && !trasladada ? 'Tocar para editar' : undefined}
+                  title={puedeEditarMeta && !trasladada ? 'Tocar para editar' : undefined}
                   style={{
                     ...estiloTitulo,
                     textDecoration: tachada ? 'line-through' : 'none',
                     color: tachada ? colors.textSecondary : colors.textPrimary,
-                    cursor: puedeEditar && !trasladada ? 'text' : 'default',
+                    cursor: puedeEditarMeta && !trasladada ? 'text' : 'default',
                   }}
                 >
                   {meta.titulo}
@@ -233,7 +237,7 @@ export function MetasMensuales({ idProyecto, puedeEditar = true, puedeEliminar =
                 <span style={estiloEtiquetaTraslado}>→ {nombreMes(meta.trasladadaA!)}</span>
               )}
 
-              {puedeEliminar && (
+              {puedeBorrar && (
                 <button
                   type="button"
                   onClick={() => eliminar(meta)}
@@ -248,7 +252,7 @@ export function MetasMensuales({ idProyecto, puedeEditar = true, puedeEliminar =
         })}
       </ul>
 
-      {puedeEditar && (
+      {puedeCrear && (
         <>
           <input
             value={nuevoTitulo}

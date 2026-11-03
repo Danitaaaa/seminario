@@ -401,11 +401,11 @@ export function DeckFlashcardsPage() {
 
     try {
       setGuardando(true);
-      const usuarioId = usuarioIdActual();
-      const resultados = await Promise.allSettled(flashcardsSeleccionadas.map((idFlashcard) =>
-        window.api.eliminarFlashcard({ usuarioId, idFlashcard }),
-      ));
-      const eliminadas = resultados.filter((resultado) => resultado.status === 'fulfilled').length;
+      const eliminadas = await window.api.eliminarFlashcards({
+        usuarioId: usuarioIdActual(),
+        deckId,
+        flashcardIds: flashcardsSeleccionadas,
+      });
       setFlashcardsSeleccionadas([]);
       if (flashcardsSeleccionadas.includes(editandoId ?? -1)) limpiarFormulario();
       await cargarMazo();

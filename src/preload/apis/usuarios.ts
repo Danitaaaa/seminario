@@ -14,6 +14,9 @@ export const usuariosApi = {
     // Avisa al main que se cerró la sesión: detiene la sincronización de proyectos.
     cerrarSesion: () => ipcRenderer.invoke("usuarios:cerrarSesion"),
 
+    obtenerIdGlobal: (idUsuario: number): Promise<string | null> =>
+    ipcRenderer.invoke('usuarios:idGlobal', idUsuario),
+
     // Gestion de perfil
     obtenerPerfil: (datos: unknown) => ipcRenderer.invoke("usuarios:obtenerPerfil", datos),
     modificarPerfil: (datos: unknown) => ipcRenderer.invoke("usuarios:modificarPerfil", datos),
