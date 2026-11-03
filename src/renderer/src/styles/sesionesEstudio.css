@@ -905,6 +905,11 @@
   color: var(--color-steel);
 }
 
+
+.editor-sesion__hoja--error {
+  color: var(--color-error);
+}
+
 .editor-sesion__hoja .ProseMirror {
   min-height: 460px;
   padding: 28px 32px;
@@ -971,6 +976,286 @@
 
 .pestanas-sesion__pestana:hover {
   border-color: var(--color-frost-blue);
+}
+
+.pestanas-sesion__agregar--abierto {
+  border-style: solid;
+  background: var(--color-frost-suave);
+  color: var(--color-text);
+}
+
+/* Pestañas de archivos abiertos desde Material: llevan un ícono y siempre se pueden cerrar. */
+.pestanas-sesion__pestana--archivo {
+  border-style: dashed;
+}
+
+.pestanas-sesion__pestana--archivo.pestanas-sesion__pestana--activa {
+  border-style: solid;
+}
+
+.pestanas-sesion__pestana--archivo .pestanas-sesion__boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+/* En una pestaña de archivo que no está activa la cruz va oscura (sobre fondo claro). */
+.pestanas-sesion__pestana--archivo:not(.pestanas-sesion__pestana--activa) .pestanas-sesion__cerrar {
+  color: var(--color-steel);
+}
+
+.pestanas-sesion__pestana--archivo:not(.pestanas-sesion__pestana--activa) .pestanas-sesion__cerrar:hover {
+  background: var(--color-frost-suave);
+  color: var(--color-text);
+}
+
+/* Contenido de una pestaña de archivo (ocupa el lugar de la hoja del editor). */
+.vista-archivo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 460px;
+  overflow: hidden;
+  padding: 12px;
+  border: 1px solid var(--color-frost-claro);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+/* El PDF va centrado y, si igual no entra, se desplaza adentro de su recuadro sin taparle nada al panel derecho. */
+.vista-archivo .visor-pdf {
+  min-width: 0;
+}
+
+.vista-archivo .visor-pdf__documento {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+  overflow: auto;
+}
+
+.vista-archivo .visor-excel {
+  min-width: 0;
+  overflow: auto;
+}
+
+.vista-archivo__aviso {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-sm);
+  color: var(--color-steel);
+  font-size: var(--tamano-sm);
+  text-align: center;
+}
+
+.vista-archivo__aviso p {
+  margin: 0;
+}
+
+.vista-archivo__aviso .boton-chico {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vista-archivo__aviso--error {
+  color: var(--color-error);
+}
+
+/* Menú del "+" de las pestañas: Crear pestaña / Abrir archivo o carpeta (mismo estilo que el de Material). */
+.menu-pestana {
+  position: relative;
+  display: inline-flex;
+}
+
+.menu-pestana__lista {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 210px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgba(11, 26, 51, 0.12);
+}
+
+.menu-pestana__opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-pestana__opcion svg {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.menu-pestana__opcion:hover {
+  background: var(--color-background);
+}
+
+/* Ventana "Abrir desde Material" */
+.abrir-material {
+  width: min(520px, 92vw);
+}
+
+.abrir-material__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-sm);
+}
+
+.abrir-material__cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-steel);
+  cursor: pointer;
+}
+
+.abrir-material__cerrar:hover {
+  background: var(--color-frost-suave);
+  color: var(--color-text);
+}
+
+.abrir-material__buscador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-steel);
+}
+
+.abrir-material__buscador input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.abrir-material__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 340px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.abrir-material__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text);
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.abrir-material__item:hover {
+  background: var(--color-frost-suave);
+}
+
+.abrir-material__flecha {
+  color: var(--color-steel);
+}
+
+.abrir-material__nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.abrir-material__tipo {
+  color: var(--color-steel);
+  font-size: 0.8rem;
+}
+
+.abrir-material__ruta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  color: var(--color-steel);
+  font-size: var(--tamano-sm);
+}
+
+.abrir-material__miga {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.abrir-material__miga-boton {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-primary);
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.abrir-material__miga-boton:hover {
+  background: var(--color-frost-suave);
+  text-decoration: underline;
+}
+
+.abrir-material__miga-actual {
+  padding: 2px 6px;
+  color: var(--color-text);
+  font-weight: var(--peso-medium);
+}
+
+.abrir-material__mensaje {
+  margin: 0;
+  padding: var(--espacio-md) 0;
+  color: var(--color-steel);
+  font-size: var(--tamano-sm);
+  text-align: center;
+}
+
+.abrir-material__mensaje--error {
+  color: var(--color-error);
 }
 
 .pestanas-sesion__pestana--activa,

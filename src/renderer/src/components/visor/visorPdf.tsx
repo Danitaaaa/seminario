@@ -10,6 +10,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.m
 interface VisorPdfProps {
   contenido: Uint8Array;
   onGuardar: (bytes: Uint8Array) => Promise<void>;
+  ancho?: number;
 }
 
 const ANCHO_PAGINA = 760;
@@ -18,7 +19,7 @@ const TAMANIO_TEXTO = 12; // en puntos del PDF
 type Borrador = { x: number; y: number; texto: string };
 
 // Muestra el PDF con react-pdf y lo edita con pdf-lib: rotar, eliminar páginas y escribir texto sobre la página.
-export function VisorPdf({ contenido, onGuardar }: VisorPdfProps) {
+  export function VisorPdf({ contenido, onGuardar, ancho = ANCHO_PAGINA }: VisorPdfProps) {
   const [bytes, setBytes] = useState(contenido);
   const [paginas, setPaginas] = useState(0);
   const [actual, setActual] = useState(1);
@@ -133,9 +134,9 @@ export function VisorPdf({ contenido, onGuardar }: VisorPdfProps) {
           >
             <Page
               pageNumber={actual}
-              width={ANCHO_PAGINA}
+              width={ancho}
               renderTextLayer={!modoTexto}
-              onLoadSuccess={(pagina) => setEscala(ANCHO_PAGINA / pagina.originalWidth)}
+              onLoadSuccess={(pagina) => setEscala(ancho / pagina.originalWidth)}
             />
             {borrador && (
               <input
