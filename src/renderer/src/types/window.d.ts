@@ -78,12 +78,17 @@ declare global {
       crearDeck: (datos: { usuarioId: number; nombre: string; descripcion?: string; materiaAsociada?: string }) => Promise<Deck>;
       listarDecks: (usuarioId: number) => Promise<Deck[]>;
       crearFlashcard: (datos: { usuarioId: number; deckId: number; pregunta: string; respuesta: string }) => Promise<Flashcard>;
+      eliminarDeck: (datos: { idDeck: number }) => Promise<void>;
+      modificarDeck: (datos: { idDeck: number; nombre?: string; descripcion?: string | null; materiaAsociada?: string | null }) => Promise<Deck>;
+      modificarFlashcard: (datos: { idFlashcard: number; pregunta?: string; respuesta?: string }) => Promise<Flashcard>;
       listarFlashcards: (datos: { usuarioId: number; deckId: number }) => Promise<Flashcard[]>;
       listarFlashcardsPendientes: (usuarioId: number) => Promise<FlashcardPendiente[]>;
+      eliminarFlashcard: (datos: { idFlashcard: number }) => Promise<void>;
+      registrarRevisionFlashcard: (datos: { usuarioId: number; flashcardId: number; dificultad: 'dificil' | 'intermedio' | 'facil' }) => Promise<FlashcardPendiente>;
       registrarRevision: (datos: { usuarioId: number; flashcardId: number; dificultad: 'dificil' | 'intermedio' | 'facil' }) => Promise<FlashcardPendiente>;
       listarRepeticionesMaterial: (usuarioId: number) => Promise<RepeticionMaterial[]>;
       guardarRepeticionMaterial: (datos: { usuarioId: number; nodoId: number; intervaloDias: 1 | 3 | 7 | 14 }) => Promise<RepeticionMaterial>;
-    
+      
 
   };
 }

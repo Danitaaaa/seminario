@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { pool, verifyDbConnection } from '../../persistencia/baseDeDatos';
-import type { Persistencia } from '../../persistencia/Persistencia';
+import type { Persistencia } from '../../persistencia/persistencia';
 import { IniciarSesion } from '../../logicaPersistente/gestionDeUsuarios/iniciarSesion';
 
 
@@ -53,21 +53,21 @@ async function main(): Promise<void> {
         comprobar(consultas.length === 1, 'Se esperaba una consulta');
         return `Sesión iniciada para ${usuario.email}`;
     });
-    await caso(2, 'Iniciar sesión con usuario inexistente', 'Error: El usuario no existe', async () => {
+    await caso(2, 'Iniciar sesión con usuario inexistente', 'Error: Correo o contraseña incorrectos.', async () => {
         const { iniciar } = ejecutar();
-        await rechaza(() => iniciar.ejecutar({ email: 'alba@example.com', password }), 'El usuario no existe');
-        return 'Error: El usuario no existe';
+        await rechaza(() => iniciar.ejecutar({ email: 'alba@example.com', password }), 'Correo o contraseña incorrectos.');
+        return 'Error: Correo o contraseña incorrectos.';
     });
-    await caso(3, 'Iniciar sesión con correo no verificado', 'Error: El email no está validado', async () => {
+    await caso(3, 'Iniciar sesión con correo no verificado', 'Error: Verificá tu correo antes de iniciar sesión.', async () => {
         const { iniciar } = ejecutar(fila(false));
-        await rechaza(() => iniciar.ejecutar({ email: 'alba@example.com', password }), 'El email no está validado');
-        return 'Error: El email no está validado';
+        await rechaza(() => iniciar.ejecutar({ email: 'alba@example.com', password }), 'Verificá tu correo antes de iniciar sesión.');
+        return 'Error: Verificá tu correo antes de iniciar sesión.';
     });
-    await caso(4, 'Iniciar sesión con contraseña incorrecta', 'Error: La contraseña es incorrecta.', async () => {
+    await caso(4, 'Iniciar sesión con contraseña incorrecta', 'Error: Correo o contraseña incorrectos.', async () => {
         const { iniciar } = ejecutar(fila());
         await rechaza(() => iniciar.ejecutar({ email: 'alba@example.com', password: 'Incorrecta123!' }),
-            'La contraseña es incorrecta.');
-        return 'Error: La contraseña es incorrecta.';
+            'Correo o contraseña incorrectos.');
+        return 'Error: Correo o contraseña incorrectos.';
     });
     console.log(`\nResultado: ${bien} BIEN, ${mal} MAL.`);
     if (mal) process.exitCode = 1;

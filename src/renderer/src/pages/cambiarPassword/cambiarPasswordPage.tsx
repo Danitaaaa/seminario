@@ -5,11 +5,13 @@ import { Input } from "../../components/ui/input/input";
 import { Card } from "../../components/ui/card/card";
 import { Title } from "../../components/ui/title/title";
 import { CartelError } from "../../components/comunes/cartelError";
+import { usarAvisos } from "../../hooks/usarAvisos";
 
 export function CambiarPasswordPage() {
     const [nuevaPassword, setNuevaPassword] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    const { exito } = usarAvisos();
     const email = localStorage.getItem("emailPendiente");
 
     async function cambiarPassword() {
@@ -25,7 +27,7 @@ export function CambiarPasswordPage() {
             const volverA = localStorage.getItem("volverA") ?? "/";
             localStorage.removeItem("emailPendiente");
             localStorage.removeItem("volverA");
-            alert("Contraseña cambiada exitosamente");
+            exito("Contraseña cambiada correctamente.");
 
             navigate(volverA);
 

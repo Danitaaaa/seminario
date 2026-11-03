@@ -673,7 +673,7 @@ app.whenReady().then(async () => {
   procesoSesion = wireDependencies();
   const recordatorios = new EnviarRecordatoriosPendientes(new Persistencia(pool));
   let recordatoriosEnCurso = false;
-  const enviarRecordatorios = async () => {
+  const enviarRecordatorios = async (): Promise<void> => {
     if (recordatoriosEnCurso) return;
     recordatoriosEnCurso = true;
     try {
