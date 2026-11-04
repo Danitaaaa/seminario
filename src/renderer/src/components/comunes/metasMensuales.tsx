@@ -7,6 +7,7 @@ import type { Meta } from '../../types/metas';
 import type { RolMiembro } from '../../types/proyectos';
 import { puede } from '../../permisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
+import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -64,6 +65,12 @@ export function MetasMensuales({ idProyecto, rol }: MetasMensualesProps) {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  // Cambios que llegan de otras PCs: se vuelven a pedir las metas del mes que se está viendo.
+  // `cargar` ya captura sus propios errores.
+  useCambiosRemotos(idProyecto, () => {
+    void cargar();
+  });
 
   function cambiarMes(delta: number): void {
     const nuevo = new Date(anio, mesIndex + delta, 1);

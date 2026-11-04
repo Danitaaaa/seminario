@@ -6,6 +6,7 @@ import { Categoria as CategoriaRegistro } from '../../types/categorias';
 import type { RolMiembro } from '../../types/proyectos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import { puede, rolDe } from '../../permisos';
+import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
 import '../../styles/eventos.css';
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
@@ -44,6 +45,13 @@ const NOMBRES_MES = [
   'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
+function mensajeDeError(err: unknown, porDefecto: string): string {
+  // Electron antepone "Error invoking remote method ...: Error: " al mensaje real.
+  const texto = err instanceof Error ? err.message : '';
+  const limpio = texto.replace(/^Error invoking remote method '[^']*': (Error: )?/, '').trim();
+  return limpio || porDefecto;
+}
+
 function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   const hoy = new Date();
   const navigate = useNavigate();
@@ -72,7 +80,13 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [cargando, setCargando] = useState(false);
 
-  const [categoriasVisibles, setCategoriasVisibles] = useState<Set<string>>(new Set());
+  // Se guardan las ocultas (no las visibles): una categoría nueva, propia o llegada por sincronización, aparece tildada.
+  const [categoriasOcultas, setCategoriasOcultas] = useState<Set<string>>(new Set());
+  // Grupos de categorías de proyecto desplegados (en /eventos arrancan plegados para ocupar poco lugar).
+  const [gruposAbiertos, setGruposAbiertos] = useState<Set<string>>(new Set());
+  const [errorCategoria, setErrorCategoria] = useState<string | null>(null);
+  // Proyecto del evento que se está editando/creando: define qué categorías ofrece el formulario.
+  const [formIdProyecto, setFormIdProyecto] = useState<number | null>(null);
   const [nuevaCategoriaNombre, setNuevaCategoriaNombre] = useState('');
   const [categoriaEditandoId, setCategoriaEditandoId] = useState<number | null>(null);
   const [categoriaEditandoNombre, setCategoriaEditandoNombre] = useState('');
@@ -132,10 +146,18 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
 
   useEffect(() => {
     cargarCategorias();
-  }, [usuarioId]);
+  }, [usuarioId, idProyecto]);
 
-  async function cargarEventos(): Promise<void> {
-    setCargando(true);
+  // Cambios que llegan de otras PCs. En modo proyecto solo escucha ese proyecto;
+  // en /eventos escucha todos (muestra personales + los de mis proyectos).
+  // La recarga es silenciosa para que no parpadee el "Cargando...".
+  useCambiosRemotos(idProyecto ?? 'todos', () => {
+    cargarEventos(true).catch(console.error);
+    cargarCategorias().catch(console.error);
+  });
+
+  async function cargarEventos(silencioso = false): Promise<void> {
+    if (!silencioso) setCargando(true);
     try {
       const desde = fechaLocalISO(anio, mesIndex, 1, '00:00');
       const hasta = `${formatoFechaISO(anio, mesIndex, dias)}T23:59:59`;
@@ -147,64 +169,117 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
       });
       setEventos(resultado);
     } finally {
-      setCargando(false);
+      if (!silencioso) setCargando(false);
     }
   }
 
-  async function cargarCategorias(): Promise<void> {
-    const resultado: CategoriaRegistro[] = await window.api.listarCategorias({
-      usuarioId,
-    });
-    setCategorias(resultado);
-    // Todas tildadas por defecto la primera vez que se cargan.
-    setCategoriasVisibles((prev) => {
-      if (prev.size > 0) return prev;
-      return new Set(resultado.map((c) => c.nombre));
-    });
-    if (resultado.length > 0 && !formCategoria) {
-      setFormCategoria(resultado[0].nombre);
+  // En un proyecto: solo las de ese proyecto (compartidas). En /eventos: las personales y, aparte,
+  // las de mis proyectos (solo para filtrar).
+  const puedeGestionarCategorias = puede(rol, 'evento.editar'); // crear/editar/eliminar: propietario y editor
+
+  const gruposCategorias = useMemo(() => {
+    type Item = { nombre: string; registro?: CategoriaRegistro; editable: boolean };
+    const propias = categorias.filter((c) => idProyecto !== undefined || c.idProyecto == null);
+    const grupos: { clave: string; titulo: string | null; items: Item[] }[] = [{
+      clave: 'propias',
+      titulo: null,
+      items: propias.map((registro) => ({
+        nombre: registro.nombre, registro, editable: puedeGestionarCategorias,
+      })),
+    }];
+    if (idProyecto === undefined) {
+      // Las de proyectos se muestran por proyecto, solo para tildar/destildar (se editan dentro del proyecto).
+      for (const c of categorias.filter((x) => x.idProyecto != null)) {
+        const clave = `p${c.idProyecto}`;
+        let g = grupos.find((x) => x.clave === clave);
+        if (!g) {
+          g = { clave, titulo: c.nombreProyecto ?? `Proyecto ${c.idProyecto}`, items: [] };
+          grupos.push(g);
+        }
+        g.items.push({ nombre: c.nombre, registro: c, editable: false });
+      }
     }
+    return grupos;
+  }, [categorias, idProyecto, puedeGestionarCategorias]);
+
+  // Nombres que ofrece el formulario de evento según el proyecto al que pertenece (null = personal).
+  function opcionesCategoria(idProy: number | null, actual?: string): string[] {
+    const propias = categorias.filter((c) => (c.idProyecto ?? null) === idProy).map((c) => c.nombre);
+    const nombres = [...propias];
+    if (actual && !nombres.includes(actual)) nombres.push(actual);
+    return nombres;
+  }
+  const opcionesForm = useMemo(
+    () => opcionesCategoria(formIdProyecto, formCategoria),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [categorias, formIdProyecto, formCategoria]
+  );
+
+  async function cargarCategorias(): Promise<void> {
+    // En un proyecto: solo las de ese proyecto. En /eventos: personales + las de mis proyectos.
+    const resultado: CategoriaRegistro[] = await window.api.listarCategorias({ usuarioId, idProyecto });
+    setCategorias(resultado);
   }
 
   async function agregarCategoria(): Promise<void> {
     const nombre = nuevaCategoriaNombre.trim();
     if (!nombre) return;
-    await window.api.crearCategoria({ usuarioId, nombre });
-    setNuevaCategoriaNombre('');
-    await cargarCategorias();
-    setCategoriasVisibles((prev) => new Set(prev).add(nombre));
+    const existe = gruposCategorias[0].items.some((i) => i.nombre.toLowerCase() === nombre.toLowerCase());
+    if (existe) {
+      setErrorCategoria('Ya existe una categoría con ese nombre.');
+      return;
+    }
+    try {
+      setErrorCategoria(null);
+      await window.api.crearCategoria({ usuarioId, idProyecto, nombre });
+      setNuevaCategoriaNombre('');
+      await cargarCategorias();
+    } catch (err) {
+      setErrorCategoria(mensajeDeError(err, 'No se pudo crear la categoría.'));
+    }
   }
 
   async function guardarRenombreCategoria(id: number): Promise<void> {
     const nombre = categoriaEditandoNombre.trim();
-    if (!nombre) {
-      setCategoriaEditandoId(null);
-      return;
-    }
-    await window.api.modificarCategoria({ id, nombre });
+    const actual = categorias.find((c) => c.id === id);
     setCategoriaEditandoId(null);
-    await cargarCategorias();
+    if (!nombre || !actual || nombre === actual.nombre) return;
+    try {
+      setErrorCategoria(null);
+      await window.api.modificarCategoria({ usuarioId, id, nombre });
+      await cargarCategorias();
+    } catch (err) {
+      setErrorCategoria(mensajeDeError(err, 'No se pudo renombrar la categoría.'));
+    }
   }
 
   async function eliminarCategoria(categoria: CategoriaRegistro): Promise<void> {
-    await window.api.eliminarCategoria({ id: categoria.id });
-    setCategoriasVisibles((prev) => {
-      const siguiente = new Set(prev);
-      siguiente.delete(categoria.nombre);
-      return siguiente;
-    });
-    await cargarCategorias();
+    try {
+      setErrorCategoria(null);
+      await window.api.eliminarCategoria({ usuarioId, id: categoria.id });
+      await cargarCategorias();
+    } catch (err) {
+      setErrorCategoria(mensajeDeError(err, 'No se pudo eliminar la categoría.'));
+    }
   }
 
-  // Los eventos de proyecto se muestran siempre: su categoría puede ser de otro miembro
-  // y no existir entre mis categorías, así que el filtro no debe ocultarlos.
+  // Los eventos guardan la categoría como texto: solo se ocultan las que el usuario destildó.
   const eventosVisibles = useMemo(
-    () => eventos.filter((e) => e.idProyecto != null || categoriasVisibles.has(e.categoria)),
-    [eventos, categoriasVisibles]
+    () => eventos.filter((e) => !categoriasOcultas.has(e.categoria)),
+    [eventos, categoriasOcultas]
   );
 
+  function alternarGrupo(clave: string): void {
+    setGruposAbiertos((prev) => {
+      const siguiente = new Set(prev);
+      if (siguiente.has(clave)) siguiente.delete(clave);
+      else siguiente.add(clave);
+      return siguiente;
+    });
+  }
+
   function alternarCategoria(nombre: string): void {
-    setCategoriasVisibles((prev) => {
+    setCategoriasOcultas((prev) => {
       const siguiente = new Set(prev);
       if (siguiente.has(nombre)) siguiente.delete(nombre);
       else siguiente.add(nombre);
@@ -236,7 +311,9 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
     setEditandoId(null);
     setFormTitulo('');
     setFormDescripcion('');
-    setFormCategoria(categorias[0]?.nombre ?? '');
+    const idProy = idProyecto ?? null;
+    setFormIdProyecto(idProy);
+    setFormCategoria(opcionesCategoria(idProy)[0] ?? '');
     setFormPrioridad('media');
     setFormHora('09:00');
     setFormNotificacionesActivas(false);
@@ -250,7 +327,9 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
     setEditandoId(evento.id);
     setFormTitulo(evento.titulo);
     setFormDescripcion(evento.descripcion ?? '');
-    setFormCategoria(evento.categoria ?? categorias[0]?.nombre ?? '');
+    const idProy = evento.idProyecto ?? idProyecto ?? null;
+    setFormIdProyecto(idProy);
+    setFormCategoria(evento.categoria ?? opcionesCategoria(idProy)[0] ?? '');
     setFormPrioridad(evento.prioridad ?? 'media');
     const fechaEvento = new Date(evento.fecha);
     const hh = String(fechaEvento.getHours()).padStart(2, '0');
@@ -306,7 +385,7 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
           usuarioId,
           titulo: formTitulo.trim(),
           descripcion: formDescripcion.trim() || null,
-          categoria: formCategoria,
+          categoria: formCategoria || 'Otro', // sin categorías en el contexto: queda 'Otro'
           prioridad: formPrioridad,
           fecha: fechaLocalISO(anio, mesIndex, diaSeleccionado, formHora),
           notificacionesActivas: formNotificacionesActivas,
@@ -321,7 +400,7 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
           descripcion: formDescripcion.trim() || null,
           lugar: null,
           fecha: fechaLocalISO(anio, mesIndex, diaSeleccionado, formHora),
-          categoria: formCategoria,
+          categoria: formCategoria || 'Otro', // sin categorías en el contexto: queda 'Otro'
           prioridad: formPrioridad,
           notificacionesActivas: formNotificacionesActivas,
           recordatorios: formNotificacionesActivas ? formRecordatorios : [],
@@ -451,53 +530,80 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
           <div className="eventos-col-lateral">
             <h3 className="eventos-subtitulo-chico">Categorías</h3>
             <div className="eventos-categorias">
-              {categorias.map((cat) => (
-                <div key={cat.id} className="eventos-fila-categoria">
-                  <input
-                    type="checkbox"
-                    checked={categoriasVisibles.has(cat.nombre)}
-                    onChange={() => alternarCategoria(cat.nombre)}
-                  />
-                  {categoriaEditandoId === cat.id ? (
-                    <input
-                      autoFocus
-                      className="eventos-input-inline"
-                      value={categoriaEditandoNombre}
-                      onChange={(e) => setCategoriaEditandoNombre(e.target.value)}
-                      onBlur={() => guardarRenombreCategoria(cat.id)}
-                      onKeyDown={(e) => e.key === 'Enter' && guardarRenombreCategoria(cat.id)}
-                    />
-                  ) : (
-                    <span
-                      className="eventos-categoria-nombre"
-                      onClick={() => {
-                        setCategoriaEditandoId(cat.id);
-                        setCategoriaEditandoNombre(cat.nombre);
-                      }}
-                      title="Tocar para renombrar"
+              {gruposCategorias.map((grupo) => (
+                <div key={grupo.clave}>
+                  {grupo.titulo && (
+                    <button
+                      type="button"
+                      className="eventos-categoria-grupo"
+                      onClick={() => alternarGrupo(grupo.clave)}
+                      aria-expanded={gruposAbiertos.has(grupo.clave)}
+                      style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center',
+                               background: 'none', border: 'none', padding: '6px 0', cursor: 'pointer',
+                               color: 'inherit', font: 'inherit', fontWeight: 600 }}
                     >
-                      {cat.nombre}
-                    </span>
+                      <span>{grupo.titulo}</span>
+                      <span>{gruposAbiertos.has(grupo.clave) ? '▾' : '▸'} {grupo.items.length}</span>
+                    </button>
                   )}
-                  <button
-                    className="eventos-boton-quitar-categoria"
-                    onClick={() => eliminarCategoria(cat)}
-                    aria-label={`Eliminar categoría ${cat.nombre}`}
-                  >
-                    ✕
-                  </button>
+                  {(!grupo.titulo || gruposAbiertos.has(grupo.clave)) && grupo.items.map((item) => {
+                    const cat = item.registro;
+                    return (
+                      <div key={`${grupo.clave}:${item.nombre}`} className="eventos-fila-categoria">
+                        <input
+                          type="checkbox"
+                          checked={!categoriasOcultas.has(item.nombre)}
+                          onChange={() => alternarCategoria(item.nombre)}
+                        />
+                        {cat && categoriaEditandoId === cat.id ? (
+                          <input
+                            autoFocus
+                            className="eventos-input-inline"
+                            value={categoriaEditandoNombre}
+                            onChange={(e) => setCategoriaEditandoNombre(e.target.value)}
+                            onBlur={() => guardarRenombreCategoria(cat.id)}
+                            onKeyDown={(e) => e.key === 'Enter' && guardarRenombreCategoria(cat.id)}
+                          />
+                        ) : (
+                          <span
+                            className="eventos-categoria-nombre"
+                            onClick={() => {
+                              if (!cat || !item.editable) return;
+                              setCategoriaEditandoId(cat.id);
+                              setCategoriaEditandoNombre(cat.nombre);
+                            }}
+                            title={cat && item.editable ? 'Tocar para renombrar' : undefined}
+                          >
+                            {item.nombre}
+                          </span>
+                        )}
+                        {cat && item.editable && (
+                          <button
+                            className="eventos-boton-quitar-categoria"
+                            onClick={() => eliminarCategoria(cat)}
+                            aria-label={`Eliminar categoría ${cat.nombre}`}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
-              <div className="eventos-nueva-categoria">
-                <input
-                  className="eventos-input-inline"
-                  placeholder="Nueva categoría..."
-                  value={nuevaCategoriaNombre}
-                  onChange={(e) => setNuevaCategoriaNombre(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && agregarCategoria()}
-                />
-                <button className="eventos-boton-nav" onClick={agregarCategoria}>+</button>
-              </div>
+              {puedeGestionarCategorias && (
+                <div className="eventos-nueva-categoria">
+                  <input
+                    className="eventos-input-inline"
+                    placeholder="Nueva categoría..."
+                    value={nuevaCategoriaNombre}
+                    onChange={(e) => setNuevaCategoriaNombre(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && agregarCategoria()}
+                  />
+                  <button className="eventos-boton-nav" onClick={agregarCategoria}>+</button>
+                </div>
+              )}
+              {errorCategoria && <div className="eventos-error">{errorCategoria}</div>}
             </div>
 
             <h3 className="eventos-subtitulo-chico">Eventos del día</h3>
@@ -569,11 +675,19 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
                 />
 
                 <label className="eventos-etiqueta">Categoría</label>
-                <select className="eventos-input" value={formCategoria} onChange={(e) => setFormCategoria(e.target.value)}>
-                  {categorias.map((cat) => (
-                    <option key={cat.id} value={cat.nombre}>{cat.nombre}</option>
-                  ))}
-                </select>
+                {opcionesForm.length > 0 ? (
+                  <select className="eventos-input" value={formCategoria} onChange={(e) => setFormCategoria(e.target.value)}>
+                    {opcionesForm.map((nombre) => (
+                      <option key={nombre} value={nombre}>{nombre}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="eventos-texto-secundario">
+                    {formIdProyecto !== null
+                      ? 'Este proyecto todavía no tiene categorías: el evento quedará como «Otro».'
+                      : 'No tenés categorías personales: el evento quedará como «Otro».'}
+                  </p>
+                )}
 
                 <label className="eventos-etiqueta">Hora</label>
                 <input

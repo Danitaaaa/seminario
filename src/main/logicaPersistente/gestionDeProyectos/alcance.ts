@@ -32,6 +32,7 @@ const TABLA_ENTIDAD: Partial<Record<string, { tabla: string; pk: string }>> = {
     evento: { tabla: 'eventos', pk: 'id' },
     meta:   { tabla: 'metas',   pk: 'id_meta' },
     tarea:  { tabla: 'tareas',  pk: 'id_tarea' },
+    categoria: { tabla: 'categorias', pk: 'id' },
 };
 
 // Solo registra el cambio para sincronizar si el elemento pertenece a un proyecto.

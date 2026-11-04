@@ -48,21 +48,23 @@ export async function resolverAsignado(tx: Tx, idProyecto: number, col: Columna)
     const filas = await consultar(
         tx,
         `SELECT id_usuario, id_global_usuario FROM proyecto_miembros
-         WHERE id_proyecto = $1
-           AND fecha_baja IS NULL
-           AND rol IN ('propietario', 'editor')
+         WHERE id_proyecto = $1 AND fecha_baja IS NULL AND rol IN ('propietario', 'editor')
            AND (id_usuario = $2::int OR id_global_usuario = $3::uuid)
-         ORDER BY fecha_union DESC
-         LIMIT 1`,
+         ORDER BY fecha_union DESC LIMIT 1`,
         [idProyecto, col.local, col.global],
     );
-    if (filas.length === 0) {
-        throw new Error('Solo se puede asignar a integrantes activos con permiso de edición');
+    if (filas.length > 0) {
+        const m = filas[0];
+        return m.id_global_usuario
+            ? { local: null, global: m.id_global_usuario }
+            : { local: m.id_usuario, global: null };
     }
-    const m = filas[0];
-    return m.id_global_usuario
-        ? { local: null, global: m.id_global_usuario }
-        : { local: m.id_usuario, global: null };
+    // Miembro que solo existe en el servidor (sin fila local): se acepta su uid si el proyecto está sincronizado.
+    if (col.global) {
+        const p = await consultar(tx, `SELECT id_remoto FROM proyectos WHERE id_proyecto = $1`, [idProyecto]);
+        if (p[0]?.id_remoto) return { local: null, global: col.global };
+    }
+    throw new Error('Solo se puede asignar a integrantes activos con permiso de edición');
 }
 
 // Siguiente posición dentro de una columna del tablero.

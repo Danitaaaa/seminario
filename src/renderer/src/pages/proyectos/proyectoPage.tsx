@@ -7,6 +7,7 @@ import { CartelError } from '../../components/comunes/cartelError';
 import { AvataresMiembros } from '../../components/proyectos/avataresMiembros';
 import { GestionMiembros } from '../../components/proyectos/gestionMiembros';
 import { PanelLateralProyecto } from '../../components/proyectos/panelLateralProyecto';
+import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import { rolDe } from '../../permisos';
 import '../../styles/nodos.css';
@@ -56,6 +57,12 @@ function ProyectoDetalleContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: nu
         setMiembros(m);
     }, [idProyecto, ID_USUARIO_ACTUAL]);
 
+    // Cambios que llegan de otras PCs (alguien se une, cambia un rol, etc.): se actualizan los miembros.
+    // Va antes del return anticipado de más abajo para respetar el orden de los hooks.
+    useCambiosRemotos(idProyecto, () => {
+        recargarMiembros().catch((e) => console.error('No se pudieron actualizar los miembros', e));
+    });
+
     useEffect(() => {
         let activo = true;
         Promise.all([
@@ -104,6 +111,7 @@ function ProyectoDetalleContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: nu
             titulo={proyecto.nombre}
             idActivo="proyectos"
             raiz={{ id: proyecto.idNodoRaiz, nombre: proyecto.nombre }}
+            idProyecto={proyecto.idProyecto}
             vistaInicial="cuadricula"
             rol={rol}
             prefijoRuta={

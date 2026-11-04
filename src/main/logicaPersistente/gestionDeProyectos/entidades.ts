@@ -18,6 +18,7 @@ export interface ProyectoMiembro {
     nombre: string;
     idUsuario: number | null;           // null si el usuario no existe en esta base
     idProyectoMiembro: number | null;
+    idGlobalUsuario: string | null; 
     rol: RolMiembro;
     activo: boolean;
     pendiente: boolean;
@@ -25,7 +26,7 @@ export interface ProyectoMiembro {
     fechaBaja: Date | null;             // baja; null mientras esté activo
 }
 
-export type EntidadSincronizable = 'proyecto' | 'miembro' | 'nodo' | 'archivo' | 'evento' | 'meta' | 'tarea';
+export type EntidadSincronizable = 'proyecto' | 'miembro' | 'nodo' | 'archivo' | 'evento' | 'meta' | 'tarea' | 'categoria';
 export type OperacionSincronizable = 'crear' | 'modificar' | 'eliminar' | 'mover';
 
 export interface CambioPendiente {

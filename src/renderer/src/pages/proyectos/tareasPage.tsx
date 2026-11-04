@@ -14,6 +14,7 @@ import { ModalConflicto } from '../../components/proyectos/modalConflicto';
 import { useTareas } from '../../hooks/useTareas';
 import { useEdicionCompartida, useBloqueos } from '../../hooks/useEdicionCompartida';
 import type { ClaveEdicion, Resultado } from '../../hooks/useEdicionCompartida';
+import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
 import { conBloqueo } from '../../utils/conBloqueo';
 import {
   agruparPorColumna,
@@ -33,7 +34,6 @@ const NOMBRE_USUARIO_ACTUAL = ''; //Pendiente hasta implementación de perfil
 
 interface ApiSync {
   listarConflictos(d: { idProyecto: number; idUsuario: number }): Promise<Resultado<{ entidad: string; idGlobal: string }[]>>;
-  alEventoSincronizacion(cb: (e: any) => void): () => void;
 }
 
 // El id global puede ser null (proyectos personales / usuario sin cuenta sincronizada): es válido.
@@ -134,14 +134,13 @@ function TareasContenido({
   }, [cargarConflictos]);
 
   // Cambios que llegan de otras PCs: se recarga el tablero y la lista de conflictos.
-  useEffect(() => {
-    const api = window.api as unknown as ApiSync;
-    return api.alEventoSincronizacion((ev) => {
-      if (ev.idProyecto !== idProyecto) return;
-      if (ev.tipo === 'cambios_recibidos') void recargar();
-      if (ev.tipo === 'cambios_recibidos' || ev.tipo === 'conflicto_detectado') void cargarConflictos();
-    });
-  }, [idProyecto, recargar, cargarConflictos]);
+  useCambiosRemotos(idProyecto, () => {
+    void recargar();
+    void cargarConflictos();
+  });
+
+  // Un conflicto detectado no trae cambios nuevos: solo se actualiza la lista de conflictos.
+  useCambiosRemotos(idProyecto, () => void cargarConflictos(), { tipos: ['conflicto_detectado'] });
 
   /* ---------- Proyecto y miembros ---------- */
 

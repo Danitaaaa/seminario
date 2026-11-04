@@ -4,7 +4,7 @@ import WebSocket from 'ws';
 import type { CambioPendiente, RolMiembro } from './entidades';
 import type {
     AvisoRemoto, MiembroRemoto, CambiosRemotos, ClaveEntidad, EstadoBloqueo, EstadoRemoto, IAvisos, IBloqueador,
-    ISincronizador, VersionRemota,
+    ISincronizador, VersionRemota, InfoEnlace
 } from './interfacesSincronizacion';
 import {
     ErrorArchivoGrande, ErrorSesionExpirada, ErrorSincronizacion, ErrorSinConexion,
@@ -102,11 +102,11 @@ export class SincronizadorSupabase implements ISincronizador, IBloqueador, IAvis
         return { idRemoto: r.id, enlace: `${this.esquema}${r.token}`, version: Number(r.version) };
     }
 
-    async resolverEnlace(enlace: string) {
+    async resolverEnlace(enlace: string): Promise<InfoEnlace> {
         const token = enlace.startsWith(this.esquema) ? enlace.slice(this.esquema.length).replace(/\/+$/, '') : '';
         if (!token) throw new ErrorSincronizacion('INVITACION_INVALIDA', 'El enlace de invitación es inválido.');
-        const r = await this.rpc<{ id: string; nombre: string; rol: RolMiembro }>('resolver_invitacion', { p_token: token });
-        return { idRemoto: r.id, nombre: r.nombre, numeroProyecto: r.id.slice(0, 8), rol: r.rol };
+        const r = await this.rpc<{ id: string; nombre: string; rol: RolMiembro; uid: string }>('resolver_invitacion', { p_token: token });
+        return { idRemoto: r.id, nombre: r.nombre, numeroProyecto: r.id.slice(0, 8), rol: r.rol, idUsuarioGlobal: r.uid };
     }
 
     async enviarCambios(idRemoto: string, cambios: CambioPendiente[]): Promise<number> {
@@ -163,6 +163,7 @@ export class SincronizadorSupabase implements ISincronizador, IBloqueador, IAvis
         return (datos ?? []).map((m: any): MiembroRemoto => ({
             mail: String(m.mail).toLowerCase(),
             rol: m.rol,
+            idGlobal: m.idGlobal ?? m.id_usuario_global ?? null,
             activo: !!m.activo,
             pendiente: !!m.pendiente,
             fechaUnion: fecha(m.fechaUnion ?? m.unido_en),

@@ -105,17 +105,11 @@ export class ManejadorTarea implements ManejadorEntidad {
 
   async leer(idProyecto: number, idGlobal: string) {
     const f = await this.p.ejecutar(
-      `SELECT (to_jsonb(t) - 'id_tarea' - 'id_proyecto' - 'id_global' - 'id_usuario'
-                           - 'id_asignado' - 'id_asignado_global')
+      `SELECT (to_jsonb(t) - 'id_tarea' - 'id_proyecto' - 'id_global' - 'id_usuario' - 'id_asignado')
               || jsonb_build_object('asignado_mail', ua.email) AS datos
-       FROM tareas t
-       LEFT JOIN proyecto_miembros pm
-              ON pm.id_proyecto = t.id_proyecto
-             AND ((t.id_asignado_global IS NOT NULL AND pm.id_global_usuario = t.id_asignado_global)
-               OR (t.id_asignado IS NOT NULL AND pm.id_usuario = t.id_asignado))
-       LEFT JOIN usuarios ua ON ua.id_usuario = pm.id_usuario
-       WHERE t.id_global = $1 AND t.id_proyecto = $2
-       LIMIT 1`, [idGlobal, idProyecto]);
+      FROM tareas t
+      LEFT JOIN usuarios ua ON ua.id_usuario = t.id_asignado
+      WHERE t.id_global = $1 AND t.id_proyecto = $2`, [idGlobal, idProyecto]);
     return f[0] ? { datos: f[0].datos } : null;
   }
 
@@ -128,10 +122,9 @@ export class ManejadorTarea implements ManejadorEntidad {
     }
     if (!d || !d.titulo) return;
 
-    // Asignado: se busca por mail el miembro de ESTE proyecto. Si no existe, queda sin asignar.
-    // Con uid global se guarda ese (proyecto compartido); si no, el id local (proyecto personal).
-    let asignadoLocal: number | null = null;
-    let asignadoGlobal: string | null = null;
+    /// Compartido: el uid global viaja tal cual. Local (solo proyectos personales): se resuelve por mail.
+    var asignadoGlobal: string | null = d.id_asignado_global ?? null;
+    var asignadoLocal: number | null = asignadoGlobal ? null : await usuarioPorMail(this.p, d.asignado_mail);
     const idLocal = await usuarioPorMail(this.p, d.asignado_mail);
     if (idLocal !== null) {
       const m = await this.p.ejecutar(
