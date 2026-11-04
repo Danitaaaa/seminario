@@ -5,6 +5,7 @@ import { Card } from '../../components/ui/card/card';
 import { Input } from '../../components/ui/input/input';
 import { Title } from '../../components/ui/title/title';
 import { CartelError } from '../../components/comunes/cartelError';
+import { usarAvisos } from '../../hooks/usarAvisos';
 
 export function VerificarMailPage() {
 
@@ -12,6 +13,7 @@ export function VerificarMailPage() {
     const [error, setError] = useState("");
 
     const navigate = useNavigate();
+    const { exito } = usarAvisos();
 
     const email = localStorage.getItem("emailPendiente");
 
@@ -26,8 +28,7 @@ export function VerificarMailPage() {
         try {
             await window.api.verificarMail({email,codigo});
 
-            alert("Correo verificado");
-
+            exito("Correo verificado correctamente.");
             navigate("/");
 
         } catch (error) {

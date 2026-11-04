@@ -9,7 +9,7 @@ interface ContenidoPendiente {
     detalle: string;
 }
 
-// Agrupa contenido vencido y limita los recordatorios a uno cada 24 horas por usuario.
+// Agrupa contenido vencido y limita los recordatorios a uno por día por usuario.
 export class EnviarRecordatoriosPendientes {
 
     constructor(
@@ -18,7 +18,7 @@ export class EnviarRecordatoriosPendientes {
 
     async ejecutar(): Promise<void> {
 
-        // Busca contenido vencido solo de usuarios verificados sin envío en las últimas 24 horas.
+        // Busca repasos vencidos de usuarios que todavía no recibieron el aviso de hoy.
         const filas =
             await this.persistencia.ejecutar(
                 `
@@ -41,7 +41,7 @@ export class EnviarRecordatoriosPendientes {
                         FROM notificaciones_repaso_enviadas n
                         WHERE
                             n.id_usuario = u.id_usuario
-                            AND n.enviado_en > CURRENT_TIMESTAMP - INTERVAL '24 hours'
+                            AND n.fecha_envio = CURRENT_DATE
                     )
 
                 UNION ALL
@@ -65,7 +65,7 @@ export class EnviarRecordatoriosPendientes {
                         FROM notificaciones_repaso_enviadas n
                         WHERE
                             n.id_usuario = u.id_usuario
-                            AND n.enviado_en > CURRENT_TIMESTAMP - INTERVAL '24 hours'
+                            AND n.fecha_envio = CURRENT_DATE
                     )
 
                 ORDER BY
@@ -92,7 +92,7 @@ export class EnviarRecordatoriosPendientes {
             porUsuario.set(fila.id_usuario,grupo);
         }
 
-        // Registra el momento de envío únicamente después de que SMTP lo acepta.
+        // Registra el día de envío únicamente después de que SMTP lo acepta.
         for (const [usuarioId,grupo] of porUsuario) {
 
             try {
@@ -107,14 +107,12 @@ export class EnviarRecordatoriosPendientes {
                         notificaciones_repaso_enviadas
                     (
                         id_usuario,
-                        fecha_envio,
-                        enviado_en
+                        fecha_envio
                     )
                     VALUES
                     (
                         $1,
-                        CURRENT_DATE,
-                        CURRENT_TIMESTAMP
+                        CURRENT_DATE
                     )
                     ON CONFLICT
                     (

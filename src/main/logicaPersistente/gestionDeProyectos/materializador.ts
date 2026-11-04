@@ -22,6 +22,7 @@ export function materializarMiembro(fila: any): ProyectoMiembro {
     return {
         idProyectoMiembro: fila.id_proyecto_miembro ?? null,
         idUsuario: fila.id_usuario ?? null,
+        idGlobalUsuario: fila.id_global_usuario ?? null,
         nombre: fila.nombre_usuario,
         mail: String(fila.email).toLowerCase(),
         rol: fila.rol,

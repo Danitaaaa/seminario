@@ -15,11 +15,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
 
     embedding_facial FLOAT8[],
 
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    codigo_verificacion VARCHAR(6),
+    fecha_expiracion_codigo TIMESTAMP
 );
-
-ALTER TABLE usuarios
-ADD COLUMN codigo_verificacion VARCHAR(6);
-
-ALTER TABLE usuarios
-ADD COLUMN fecha_expiracion_codigo TIMESTAMP;

@@ -57,20 +57,28 @@ async function main(): Promise<void> {
       (consultaPendientes.match(/proxima_revision\s*<=\s*CURRENT_DATE/gi) ?? []).length === 2);
   verificar('Excluir usuarios sin email verificado',
     (consultaPendientes.match(/email_verificado\s*=\s*TRUE/gi) ?? []).length === 2);
-  verificar('Enviar un único correo agrupado por usuario',
+  verificar('No reenviar a usuarios que ya recibieron un aviso hoy',
+    (consultaPendientes.match(/n\.fecha_envio\s*=\s*CURRENT_DATE/gi) ?? []).length === 2 &&
+      !/enviado_en/i.test(consultaPendientes));
+  verificar('Enviar un correo diario por cada usuario con repasos pendientes',
     correosEnviados.length === 2 &&
-      correosEnviados[0].destinatario === 'alba@example.test' &&
-      correosEnviados[0].contenido.includes('Bases de datos: ¿Qué es una base de datos?') &&
-      correosEnviados[0].contenido.includes('Unidad 2 (material)'));
-  verificar('Registrar fecha y hora de cada envío aceptado',
+      correosEnviados.some(({ destinatario, contenido }) =>
+        destinatario === 'alba@example.test' &&
+        contenido.includes('Bases de datos: ¿Qué es una base de datos?') &&
+        contenido.includes('Unidad 2 (material)')) &&
+      correosEnviados.some(({ destinatario, contenido }) =>
+        destinatario === 'otro@example.test' &&
+        contenido.includes('Diseño: ¿Qué es un caso de uso?')));
+  verificar('Registrar el día de envío después de la aceptación SMTP',
     consultas.filter(({ sql }) => /INSERT INTO\s+notificaciones_repaso_enviadas/i.test(sql)).length === 2 &&
       consultas.filter(({ sql }) => /INSERT INTO\s+notificaciones_repaso_enviadas/i.test(sql))
-        .every(({ sql }) => /fecha_envio,\s*enviado_en/i.test(sql) &&
-          /CURRENT_DATE,\s*CURRENT_TIMESTAMP/i.test(sql)) &&
+        .every(({ sql }) => /id_usuario,\s*fecha_envio/i.test(sql) &&
+          /VALUES\s*\(\s*\$1,\s*CURRENT_DATE\s*\)/i.test(sql) &&
+          !/enviado_en/i.test(sql)) &&
       JSON.stringify(consultas.filter(({ sql }) => /INSERT INTO\s+notificaciones_repaso_enviadas/i.test(sql))
         .map(({ valores }) => valores[0])) === JSON.stringify([7, 8]));
-  verificar('Bloquear otro recordatorio durante las 24 horas posteriores al envío',
-    (consultaPendientes.match(/n\.enviado_en\s*>\s*CURRENT_TIMESTAMP\s*-\s*INTERVAL\s+'24 hours'/gi) ?? []).length === 2 &&
+  verificar('Evitar más de un registro por usuario y día',
+    (consultaPendientes.match(/n\.fecha_envio\s*=\s*CURRENT_DATE/gi) ?? []).length === 2 &&
       consultas.some(({ sql }) => /ON CONFLICT\s*\(\s*id_usuario,\s*fecha_envio\s*\)\s*DO NOTHING/i.test(sql)));
 
   const { consultas: consultasSinVencidos, persistencia: sinVencidos } =

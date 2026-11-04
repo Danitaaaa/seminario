@@ -403,6 +403,7 @@ export function DeckFlashcardsPage() {
       setGuardando(true);
       const eliminadas = await window.api.eliminarFlashcards({
         usuarioId: usuarioIdActual(),
+        deckId,
         flashcardIds: flashcardsSeleccionadas,
       });
       setFlashcardsSeleccionadas([]);

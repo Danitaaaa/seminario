@@ -8,7 +8,7 @@ import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCa
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
 import type { Deck, Flashcard, FlashcardPendiente, RepeticionMaterial } from './flashcards';
 import type { Notificacion } from './notificaciones';
-import type { 
+import type {
   Proyecto,
   Miembro,
   CrearProyectoDatos,
@@ -107,10 +107,10 @@ declare global {
       eliminarEvento: (datos: { id: number }) => Promise<{ ok: boolean }>;
 
       // Gestion de categorias
-      crearCategoria: (datos: CrearCategoriaInput) => Promise<Categoria>;
-      listarCategorias: (datos: ListarCategoriasInput) => Promise<Categoria[]>;
-      modificarCategoria: (datos: ModificarCategoriaInput) => Promise<Categoria>;
-      eliminarCategoria: (datos: { id: number }) => Promise<{ ok: boolean }>;
+      listarCategorias(d: { usuarioId: number; idProyecto?: number | null }): Promise<Categoria[]>;
+      crearCategoria(d: { usuarioId: number; idProyecto?: number | null; nombre: string }): Promise<Categoria>;
+      modificarCategoria(d: { usuarioId: number; id: number; nombre: string }): Promise<Categoria>;
+      eliminarCategoria(d: { usuarioId: number; id: number }): Promise<{ ok: true }>;
 
       // Gestion de horarios
       crearHorario: (datos: CrearHorarioInput) => Promise<HorarioCursado>;
@@ -122,12 +122,17 @@ declare global {
       crearDeck: (datos: { usuarioId: number; nombre: string; descripcion?: string; materiaAsociada?: string }) => Promise<Deck>;
       listarDecks: (usuarioId: number) => Promise<Deck[]>;
       crearFlashcard: (datos: { usuarioId: number; deckId: number; pregunta: string; respuesta: string }) => Promise<Flashcard>;
+      eliminarDeck: (datos: { idDeck: number }) => Promise<void>;
+      modificarDeck: (datos: { idDeck: number; nombre?: string; descripcion?: string | null; materiaAsociada?: string | null }) => Promise<Deck>;
+      modificarFlashcard: (datos: { idFlashcard: number; pregunta?: string; respuesta?: string }) => Promise<Flashcard>;
       listarFlashcards: (datos: { usuarioId: number; deckId: number }) => Promise<Flashcard[]>;
       listarFlashcardsPendientes: (usuarioId: number) => Promise<FlashcardPendiente[]>;
+      eliminarFlashcard: (datos: { idFlashcard: number }) => Promise<void>;
+      registrarRevisionFlashcard: (datos: { usuarioId: number; flashcardId: number; dificultad: 'dificil' | 'intermedio' | 'facil' }) => Promise<FlashcardPendiente>;
       registrarRevision: (datos: { usuarioId: number; flashcardId: number; dificultad: 'dificil' | 'intermedio' | 'facil' }) => Promise<FlashcardPendiente>;
       listarRepeticionesMaterial: (usuarioId: number) => Promise<RepeticionMaterial[]>;
       guardarRepeticionMaterial: (datos: { usuarioId: number; nodoId: number; intervaloDias: 1 | 3 | 7 | 14 }) => Promise<RepeticionMaterial>;
-    
+
       // Gestion de proyectos
       crearProyecto: (datos: CrearProyectoDatos) => Promise<Proyecto>;
       modificarProyecto: (datos: ModificarProyectoDatos) => Promise<Proyecto>;
@@ -146,15 +151,17 @@ declare global {
       obtenerReglas: () => Promise<Record<string, readonly RolMiembro[]>>;
       listarInvitaciones: (datos: { idProyecto: number; idUsuarioSolicitante: number }) => Promise<InvitacionPendiente[]>;
       cancelarInvitacion: (datos: { idProyecto: number; idUsuarioSolicitante: number; idInvitacion: number }) => Promise<void>;
-      // Estadísticas
+
+      // Estadisticas
       resumenProyectos: (datos: { idUsuario: number; mes: string; hoy: string; desde: string; desfaseMinutos: number }) => Promise<ResumenProyecto[]>;
       resumenMaterial: (datos: { idUsuario: number }) => Promise<ResumenMaterial>;
       resumenSesionesEstudio: (datos: { idUsuario: number; desde: string; desfaseMinutos: number }) => Promise<ResumenSesiones>;
 
-      // Portada del proyecto (imagen local; null = colores de la paleta)
+      // Portada del proyecto
       obtenerPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;
       elegirPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;
       quitarPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<void>;
+
       // Gestion de tareas
       listarTareas: (datos: unknown) => Promise<Tarea[]>;
       crearTarea: (datos: unknown) => Promise<Tarea>;
@@ -164,7 +171,7 @@ declare global {
       repartirTareas: (datos: unknown) => Promise<Tarea[]>;
       eliminarTarea: (datos: unknown) => Promise<{ ok: boolean }>;
 
-      // Gestion de metas (personales y de proyectos)
+      // Gestion de metas
       listarMetas: (datos: unknown) => Promise<Meta[]>;
       crearMeta: (datos: unknown) => Promise<Meta>;
       modificarMeta: (datos: unknown) => Promise<Meta>;

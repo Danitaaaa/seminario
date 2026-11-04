@@ -52,6 +52,12 @@ export const REGLAS = {
     'proyecto.eliminar': PROPIETARIO, // Verificado
     'proyecto.obtener': TODOS, // Verificado
     'proyecto.sincronizar': TODOS, // Verificado
+
+    // Categorías
+    'categoria.listar': TODOS,
+    'categoria.crear': EDITOR,
+    'categoria.editar': EDITOR,
+    'categoria.eliminar': EDITOR,
 } as const satisfies Record<string, readonly RolMiembro[]>;
 
 export type Accion = keyof typeof REGLAS;

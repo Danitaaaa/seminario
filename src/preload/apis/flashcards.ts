@@ -44,7 +44,7 @@ export const flashcardsApi = {
       datos
     ),
 
-  eliminarFlashcards: (datos: { usuarioId: number; flashcardIds: number[] }) =>
+  eliminarFlashcards: (datos: { usuarioId: number; deckId: number; flashcardIds: number[] }) =>
     ipcRenderer.invoke(
       "flashcards:eliminarFlashcards",
       datos
