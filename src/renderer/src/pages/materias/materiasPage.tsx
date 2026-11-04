@@ -1,19 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { GraduationCap, Pencil, Plus, Trash2, Upload } from 'lucide-react';
+import { GraduationCap, Plus, Upload } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
 import { ModalMateria } from '../../components/materias/modalMateria';
+import { ProgresoFormacion } from '../../components/materias/progresoFormacion';
+import { VistaTablero } from '../../components/materias/vistaTablero';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import type { EstadoMateria, Formacion, MateriaFormacion } from '../../types/materias';
-import { ESTADOS, NOMBRE_ESTADO, NOMBRE_TIPO, ORGANIZACIONES, agruparPorAnio, mensajeDeError, textoDuracion } from './utilidadesMaterias';
+import { NOMBRE_TIPO, ORGANIZACIONES, mensajeDeError, textoDuracion } from './utilidadesMaterias';
 import '../../styles/materias.css';
 
-type Filtro = 'todas' | EstadoMateria;
-
-// Pestaña "Materias": formaciones del usuario y sus materias por año y cuatrimestre.
+// Pestaña "Materias": formaciones del usuario y sus materias, en un tablero por estado.
 export function MateriasPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
   const navigate = useNavigate();
@@ -21,7 +21,6 @@ export function MateriasPage() {
   const [parametros, setParametros] = useSearchParams();
   const [formaciones, setFormaciones] = useState<Formacion[] | null>(null);
   const [materias, setMaterias] = useState<MateriaFormacion[]>([]);
-  const [filtro, setFiltro] = useState<Filtro>('todas');
   const [editando, setEditando] = useState<MateriaFormacion | 'nueva' | null>(parametros.get('nueva') ? 'nueva' : null);
   const [porEliminar, setPorEliminar] = useState<MateriaFormacion | Formacion | null>(null);
   const [error, setError] = useState('');
@@ -47,17 +46,6 @@ export function MateriasPage() {
       setError(mensajeDeError(e, 'No se pudieron cargar las materias.'));
     }
   }
-
-  const cantidades = useMemo(() => {
-    const c: Record<EstadoMateria, number> = { no_cursada: 0, cursando: 0, libre: 0, regular: 0, aprobada: 0 };
-    materias.forEach((m) => c[m.estado]++);
-    return c;
-  }, [materias]);
-
-  const anios = useMemo(
-    () => agruparPorAnio(filtro === 'todas' ? materias : materias.filter((m) => m.estado === filtro)),
-    [materias, filtro]
-  );
 
   async function eliminar(): Promise<void> {
     if (!porEliminar) return;
@@ -87,6 +75,19 @@ export function MateriasPage() {
     else cargarMaterias(materia.idFormacion);
   }
 
+  // Se cambia en pantalla al soltar y se vuelve atrás si no se pudo guardar.
+  async function cambiarEstado(materia: MateriaFormacion, estado: EstadoMateria): Promise<void> {
+    const reemplazar = (m: MateriaFormacion) => setMaterias((ms) => ms.map((x) => (x.idMateria === m.idMateria ? m : x)));
+    reemplazar({ ...materia, estado });
+    try {
+      const { idMateria, nombre, anio, cuatrimestre } = materia;
+      reemplazar(await window.api.modificarMateriaFormacion({ usuarioId, idMateria, nombre, anio, cuatrimestre, estado }));
+    } catch (e) {
+      reemplazar(materia);
+      avisos.error(mensajeDeError(e, 'No se pudo cambiar el estado.'));
+    }
+  }
+
   const organizacion = ORGANIZACIONES.find((o) => o.valor === formacion?.organizacion)?.nombre.toLowerCase();
 
   return (
@@ -110,7 +111,7 @@ export function MateriasPage() {
                 {formaciones!.map((f) => (
                   <button key={f.idFormacion} type="button" role="tab" aria-selected={f.idFormacion === formacion.idFormacion}
                     className={`materias-pestana ${f.idFormacion === formacion.idFormacion ? 'materias-pestana--activa' : ''}`}
-                    onClick={() => { setFiltro('todas'); setParametros({ f: String(f.idFormacion) }); }}>
+                    onClick={() => setParametros({ f: String(f.idFormacion) })}>
                     {f.nombre}
                   </button>
                 ))}
@@ -124,42 +125,20 @@ export function MateriasPage() {
               </div>
             </div>
 
-            <section className="materias-resumen">
-              <div className="materias-resumen__datos">
-                <span className="materias-insignia"><GraduationCap size={26} /></span>
-                <div>
-                  <span className="materias-etiqueta">{NOMBRE_TIPO[formacion.tipo]}</span>
-                  <strong>{formacion.nombre}</strong>
-                  <span className="materias-detalle">
-                    {[formacion.institucion, formacion.duracionAnios && textoDuracion(formacion.duracionAnios), organizacion,
-                      formacion.anioActual && `cursando ${formacion.anioActual}° año`].filter(Boolean).join(' · ')}
-                  </span>
-                </div>
+            <section className="materias-cabecera">
+              <div>
+                <span className="materias-etiqueta">{NOMBRE_TIPO[formacion.tipo]}</span>
+                <h2 className="materias-cabecera__nombre">{formacion.nombre}</h2>
+                <span className="materias-detalle">
+                  {[formacion.institucion, formacion.duracionAnios && textoDuracion(formacion.duracionAnios), organizacion,
+                    formacion.anioActual && `cursando ${formacion.anioActual}° año`].filter(Boolean).join(' · ')}
+                </span>
               </div>
-              <div className="materias-resumen__numeros">
-                {ESTADOS.map((e) => (
-                  <div key={e.valor} className={`materias-numero materias-numero--${e.valor}`}>
-                    <strong>{cantidades[e.valor]}</strong><span>{e.nombre}</span>
-                  </div>
-                ))}
-                <div className="materias-resumen__links">
-                  <button type="button" className="materias-link" onClick={() => navigate(`/materias/formacion/${formacion.idFormacion}`)}>Editar</button>
-                  <button type="button" className="materias-link materias-link--peligro" onClick={() => setPorEliminar(formacion)}>Eliminar</button>
-                </div>
+              <div className="materias-resumen__links">
+                <button type="button" className="materias-link" onClick={() => navigate(`/materias/formacion/${formacion.idFormacion}`)}>Editar</button>
+                <button type="button" className="materias-link materias-link--peligro" onClick={() => setPorEliminar(formacion)}>Eliminar</button>
               </div>
             </section>
-
-            {materias.length > 0 && (
-              <div className="materias-filtros">
-                <span>Mostrar:</span>
-                {(['todas', ...ESTADOS.map((e) => e.valor)] as Filtro[]).map((f) => (
-                  <button key={f} type="button" aria-pressed={filtro === f}
-                    className={`materias-chip ${filtro === f ? 'materias-chip--activo' : ''}`} onClick={() => setFiltro(f)}>
-                    {f === 'todas' ? 'Todas' : NOMBRE_ESTADO[f]}
-                  </button>
-                ))}
-              </div>
-            )}
 
             {materias.length === 0 && (
               <section className="materias-vacio">
@@ -172,30 +151,13 @@ export function MateriasPage() {
               </section>
             )}
 
-            {anios.map((anio) => (
-              <section key={anio.titulo} className="materias-anio">
-                <h2>{anio.titulo}</h2>
-                {anio.grupos.map((grupo) => (
-                  <div key={grupo.titulo} className="materias-grupo">
-                    <span className="materias-grupo__titulo">{grupo.titulo}</span>
-                    <div className="materias-grilla">
-                      {grupo.materias.map((m) => (
-                        <article key={m.idMateria} className="materias-tarjeta">
-                          <div className="materias-tarjeta__cabecera">
-                            <strong>{m.nombre}</strong>
-                            <div>
-                              <button type="button" className="materias-icono" aria-label={`Editar ${m.nombre}`} onClick={() => setEditando(m)}><Pencil size={16} /></button>
-                              <button type="button" className="materias-icono" aria-label={`Eliminar ${m.nombre}`} onClick={() => setPorEliminar(m)}><Trash2 size={16} /></button>
-                            </div>
-                          </div>
-                          <span className={`materias-pildora materias-estado--${m.estado}`}>{NOMBRE_ESTADO[m.estado]}</span>
-                        </article>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </section>
-            ))}
+            {materias.length > 0 && (
+              <>
+                <ProgresoFormacion materias={materias} />
+
+                <VistaTablero materias={materias} onEditar={setEditando} onCambiarEstado={(m, e) => void cambiarEstado(m, e)} />
+              </>
+            )}
           </>
         )}
       </div>

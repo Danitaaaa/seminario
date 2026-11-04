@@ -10,6 +10,7 @@ import { CuadriculaNodos } from '../../components/nodos/cuadriculaNodos';
 import { ModalNodo } from '../../components/nodos/modalNodo';
 import { ModalEditarCarpeta } from '../../components/nodos/modalEditarCarpeta';
 import type { OpcionMateria } from '../../types/materias';
+import { FiltroMateria } from '../../components/nodos/filtroMateria';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import { ModalConfirmarEliminar } from '../../components/nodos/modalConfirmarEliminar';
 import '../../styles/nodos.css';
@@ -103,13 +104,6 @@ export function NodoPage({
     const [materias, setMaterias] = useState<OpcionMateria[]>([]);
     const [filtroMateria, setFiltroMateria] = useState<number | ''>('');
     const materiaFiltrada = materias.find((m) => m.idMateria === filtroMateria);
-    // Para el filtro: las materias agrupadas por formación (ya vienen ordenadas por formación).
-    const materiasPorFormacion = materias.reduce<{ formacion: string; materias: OpcionMateria[] }[]>((acc, m) => {
-        const ultimo = acc[acc.length - 1];
-        if (ultimo && ultimo.formacion === m.formacion) ultimo.materias.push(m);
-        else acc.push({ formacion: m.formacion, materias: [m] });
-        return acc;
-    }, []);
 
     const nodosSeleccionados = nodos.filter((n) => seleccionados.has(claveNodo(n)));
 
@@ -387,17 +381,7 @@ export function NodoPage({
 
                         {conMaterias && materias.length > 0 && (
                             <div className="nodos-filtro-materia">
-                                <label>
-                                    Materia
-                                    <select value={filtroMateria} onChange={(e) => setFiltroMateria(e.target.value === '' ? '' : Number(e.target.value))}>
-                                        <option value="">Todas</option>
-                                        {materiasPorFormacion.map((f) => (
-                                            <optgroup key={f.formacion} label={f.formacion}>
-                                                {f.materias.map((m) => <option key={m.idMateria} value={m.idMateria}>{m.nombre}</option>)}
-                                            </optgroup>
-                                        ))}
-                                    </select>
-                                </label>
+                                <FiltroMateria materias={materias} valor={filtroMateria} onCambiar={setFiltroMateria} />
                                 {materiaFiltrada && (
                                     <span className="nodos-filtro-materia__aviso">
                                         Carpetas de <strong>{materiaFiltrada.nombre}</strong> en todo tu Material

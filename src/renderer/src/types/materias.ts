@@ -54,6 +54,8 @@ export interface OpcionMateria {
   nombre: string;
   formacion: string; // nombre de la formación
   grupo: string;     // "Formación · 1° año"
+  anio: number | null;
+  estado: EstadoMateria;
 }
 
 export interface MateriasApi {

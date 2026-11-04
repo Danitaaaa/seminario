@@ -420,6 +420,62 @@
     cursor: pointer;
 }
 
+.filtro-materia {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.filtro-materia__select {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--color-frost-blue);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-steel);
+}
+
+.filtro-materia__select select {
+    min-height: 34px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--color-storm);
+    font: inherit;
+    cursor: pointer;
+}
+
+.filtro-materia__select select:focus { outline: none; }
+
+.filtro-materia__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.filtro-materia__chip {
+    padding: 5px 14px;
+    border: 1px solid var(--color-frost-blue);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-steel);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.filtro-materia__chip:hover { border-color: var(--color-steel); }
+
+.filtro-materia__chip--activo {
+    border-color: var(--color-storm);
+    background: var(--color-storm);
+    color: var(--color-white);
+}
+
 .modal--editar-carpeta { width: 420px; }
 
 .modal__campo {

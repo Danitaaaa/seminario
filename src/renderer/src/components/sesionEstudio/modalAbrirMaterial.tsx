@@ -1,30 +1,38 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Search, X } from 'lucide-react';
 import type { Archivo, Nodo } from '../../types/nodo';
+import type { Materia } from '../../types/sesionesEstudio';
 import { resolverIconoNodo } from '../../utils/iconoNodo';
 import { Icono } from '../comunes/icono';
 import { extraerMensajeError } from '../../pages/sesionesEstudio/utilidades';
 
 // Carpeta raíz de Material ("Material Estudio"), la misma que usa la pantalla de Material.
 const ID_RAIZ_MATERIAL = 1;
+// Carpeta donde se guardan los Word de las sesiones: no se ofrece para abrir.
+const CARPETA_SESIONES = 'Sesiones de estudio';
 
 type Miga = { id: number; nombre: string };
 
 interface ModalAbrirMaterialProps {
+  materia?: Materia | null;
   onElegir: (archivo: Archivo) => void;
   onCerrar: () => void;
 }
 
 // Ventana para abrir un archivo de Material como pestaña de la sesión.
 // Se recorren las carpetas igual que en Material (clic para entrar, la ruta de arriba para volver)
-// y al elegir un archivo se abre. Solo usa funciones que Material ya expone (listarContenido):
-// no modifica nada de ese módulo.
-export function ModalAbrirMaterial({ onElegir, onCerrar }: ModalAbrirMaterialProps) {
-  const [ruta, setRuta] = useState<Miga[]>([{ id: ID_RAIZ_MATERIAL, nombre: 'Material' }]);
+// y al elegir un archivo se abre. Si la sesión tiene materia, arranca mostrando solo las carpetas
+// asociadas a esa materia; si no, todo Material. Solo usa funciones que Material ya expone (listarContenido).
+export function ModalAbrirMaterial({ materia, onElegir, onCerrar }: ModalAbrirMaterialProps) {
+  const [soloMateria, setSoloMateria] = useState(!!materia);
+  const nombreRaiz = soloMateria && materia ? materia.nombre : 'Material';
+  const [ruta, setRuta] = useState<Miga[]>([{ id: ID_RAIZ_MATERIAL, nombre: nombreRaiz }]);
   const [nodos, setNodos] = useState<Nodo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
   const idCarpeta = ruta[ruta.length - 1].id;
+  const enRaiz = ruta.length === 1;
+  const filtrarPorMateria = enRaiz && soloMateria && !!materia;
 
   // Cada vez que se cambia de carpeta se carga su contenido.
   useEffect(() => {
@@ -32,13 +40,18 @@ export function ModalAbrirMaterial({ onElegir, onCerrar }: ModalAbrirMaterialPro
     setNodos(null);
     setError(null);
     window.api
-      .listarContenido({ idPadre: idCarpeta, ordenarPor: 'nombre', direccion: 'ASC' })
+      .listarContenido({
+        idPadre: idCarpeta,
+        ordenarPor: 'nombre',
+        direccion: 'ASC',
+        idMateria: filtrarPorMateria ? materia?.idMateria : undefined,
+      })
       .then((lista) => activo && setNodos(lista))
       .catch((e) => activo && setError(extraerMensajeError(e, 'No se pudo cargar el contenido de Material.')));
     return () => {
       activo = false;
     };
-  }, [idCarpeta]);
+  }, [idCarpeta, filtrarPorMateria, materia?.idMateria]);
 
   useEffect(() => {
     const alPresionar = (e: KeyboardEvent) => e.key === 'Escape' && onCerrar();
@@ -50,6 +63,7 @@ export function ModalAbrirMaterial({ onElegir, onCerrar }: ModalAbrirMaterialPro
   const visibles = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
     return (nodos ?? [])
+      .filter((n) => !(n.tipo === 'carpeta' && n.nombre === CARPETA_SESIONES))
       .filter((n) => texto === '' || n.nombre.toLowerCase().includes(texto))
       .sort((a, b) =>
         a.tipo === b.tipo ? a.nombre.localeCompare(b.nombre, 'es') : a.tipo === 'carpeta' ? -1 : 1
@@ -66,7 +80,12 @@ export function ModalAbrirMaterial({ onElegir, onCerrar }: ModalAbrirMaterialPro
     setBusqueda('');
   }
 
-  const enRaiz = ruta.length === 1;
+  function alternarMateria() {
+    const nuevo = !soloMateria;
+    setSoloMateria(nuevo);
+    setRuta([{ id: ID_RAIZ_MATERIAL, nombre: nuevo && materia ? materia.nombre : 'Material' }]);
+    setBusqueda('');
+  }
 
   return (
     <div className="sesiones__overlay" onClick={onCerrar}>
@@ -85,23 +104,30 @@ export function ModalAbrirMaterial({ onElegir, onCerrar }: ModalAbrirMaterialPro
         </div>
         <p className="sesiones__modal-texto">Entrá a una carpeta o elegí un archivo para abrirlo en una pestaña nueva.</p>
 
-        <nav className="abrir-material__ruta" aria-label="Ubicación en Material">
-          {ruta.map((miga, i) => {
-            const ultima = i === ruta.length - 1;
-            return (
-              <span key={miga.id} className="abrir-material__miga">
-                {i > 0 && <ChevronRight size={14} aria-hidden="true" />}
-                {ultima ? (
-                  <span className="abrir-material__miga-actual" aria-current="page">{miga.nombre}</span>
-                ) : (
-                  <button type="button" className="abrir-material__miga-boton" onClick={() => volverA(i)}>
-                    {miga.nombre}
-                  </button>
-                )}
-              </span>
-            );
-          })}
-        </nav>
+        <div className="abrir-material__barra">
+          <nav className="abrir-material__ruta" aria-label="Ubicación en Material">
+            {ruta.map((miga, i) => {
+              const ultima = i === ruta.length - 1;
+              return (
+                <span key={miga.id} className="abrir-material__miga">
+                  {i > 0 && <ChevronRight size={14} aria-hidden="true" />}
+                  {ultima ? (
+                    <span className="abrir-material__miga-actual" aria-current="page">{miga.nombre}</span>
+                  ) : (
+                    <button type="button" className="abrir-material__miga-boton" onClick={() => volverA(i)}>
+                      {miga.nombre}
+                    </button>
+                  )}
+                </span>
+              );
+            })}
+          </nav>
+          {materia && enRaiz && (
+            <button type="button" className="abrir-material__miga-boton" onClick={alternarMateria}>
+              {soloMateria ? 'Ver todo Material' : `Ver solo ${materia.nombre}`}
+            </button>
+          )}
+        </div>
 
         <label className="abrir-material__buscador">
           <Search size={15} aria-hidden="true" />
@@ -118,7 +144,11 @@ export function ModalAbrirMaterial({ onElegir, onCerrar }: ModalAbrirMaterialPro
         {!error && nodos === null && <p className="abrir-material__mensaje">Cargando…</p>}
         {!error && nodos !== null && visibles.length === 0 && (
           <p className="abrir-material__mensaje">
-            {busqueda.trim() ? 'No hay resultados para esa búsqueda.' : 'Esta carpeta está vacía.'}
+            {busqueda.trim()
+              ? 'No hay resultados para esa búsqueda.'
+              : filtrarPorMateria
+                ? `No hay carpetas asociadas a ${materia?.nombre}.`
+                : 'Esta carpeta está vacía.'}
           </p>
         )}
 

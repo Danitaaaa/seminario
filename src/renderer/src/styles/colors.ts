@@ -40,8 +40,8 @@ splashBrillo: '#8BA3C5',
 
 
 //Sesion de estudio
-crema: "#EEEADF",        
-cremaOscuro: "#E2DDCD",  
+crema: "#EEF2F7",        
+cremaOscuro: "#DCE4EF",  
 frostSuave: "#E8EDF5",   
 noche: "#0B1A33",       
 nocheClaro: "#1C2C4C",

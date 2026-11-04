@@ -1210,6 +1210,13 @@ button.abrir-material__item:hover {
   font-size: 0.8rem;
 }
 
+.abrir-material__barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .abrir-material__ruta {
   display: flex;
   flex-wrap: wrap;

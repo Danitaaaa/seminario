@@ -229,7 +229,7 @@ export function SesionEstudioPage() {
             )}
 
             <div className={`sesion__cuerpo${panelVisible ? '' : ' sesion__cuerpo--sin-panel'}`}>
-              <EditorSesion key={sesion.idSesion} usuarioId={usuarioId} idSesion={sesion.idSesion} />
+              <EditorSesion key={sesion.idSesion} usuarioId={usuarioId} idSesion={sesion.idSesion} materia={sesion.materiaAsociada} />
 
               {panelVisible ? (
                 <aside className="sesion__lateral" aria-label="Herramientas de la sesión">

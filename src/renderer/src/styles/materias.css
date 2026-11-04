@@ -98,16 +98,6 @@
   text-transform: uppercase;
 }
 
-.materias-resumen__numeros { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espacio-lg); text-align: center; }
-.materias-numero { display: flex; flex-direction: column; }
-.materias-numero strong { font-size: 1.75rem; }
-.materias-numero span { font-size: 0.875rem; color: var(--color-text-secondary); }
-.materias-numero--aprobada strong { color: var(--color-success); }
-.materias-numero--regular strong { color: color-mix(in srgb, var(--color-warning) 70%, var(--color-text)); }
-.materias-numero--cursando strong { color: var(--color-primary); }
-.materias-numero--libre strong { color: var(--color-steel); }
-.materias-numero--no_cursada strong { color: var(--color-text-secondary); }
-
 .materias-resumen__links { display: flex; flex-direction: column; gap: 2px; }
 
 .materias-link {
@@ -126,50 +116,6 @@
 .materias-link:hover { text-decoration: underline; }
 .materias-link--peligro { color: var(--color-error); }
 
-/* Filtros */
-.materias-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espacio-sm); color: var(--color-text-secondary); }
-
-.materias-chip {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--color-frost-claro);
-  border-radius: 999px;
-  background: var(--color-surface);
-  font: inherit;
-  color: var(--color-primary);
-  cursor: pointer;
-}
-
-.materias-chip--activo { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-white); }
-
-/* Listado por año */
-.materias-anio { display: flex; flex-direction: column; gap: var(--espacio-md); }
-.materias-anio h2 { font-size: 1.75rem; }
-.materias-grupo { display: flex; flex-direction: column; gap: 10px; }
-
-.materias-grupo__titulo {
-  font-size: 0.8125rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-light);
-}
-
-.materias-grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-
-.materias-tarjeta {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: var(--color-surface);
-}
-
-.materias-tarjeta__cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--espacio-sm); }
-.materias-tarjeta__cabecera strong { font-size: 1.0625rem; line-height: 1.25; }
-.materias-tarjeta__cabecera > div { display: flex; flex: none; }
-
 .materias-icono {
   display: grid;
   place-items: center;
@@ -186,12 +132,6 @@
 
 /* Estados: pastilla en la tarjeta y opciones del modal */
 .materias-pildora { align-self: flex-start; padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; }
-
-.materias-estado--aprobada { background: color-mix(in srgb, var(--color-success) 16%, var(--color-surface)); color: color-mix(in srgb, var(--color-success) 75%, var(--color-text)); }
-.materias-estado--regular { background: color-mix(in srgb, var(--color-warning) 20%, var(--color-surface)); color: color-mix(in srgb, var(--color-warning) 55%, var(--color-text)); }
-.materias-estado--cursando { background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface)); color: var(--color-primary); }
-.materias-estado--libre { background: var(--color-frost-suave); color: var(--color-steel); }
-.materias-estado--no_cursada { background: transparent; color: var(--color-text-secondary); border: 1px dashed var(--color-frost-blue); }
 
 .materias-vacio { flex-direction: column; align-items: center; text-align: center; padding: var(--espacio-xl) var(--espacio-lg); }
 .materias-vacio p { margin: 0; max-width: 46ch; color: var(--color-text-light); }
@@ -424,3 +364,95 @@
 
 .materias-estado-opcion input { accent-color: var(--color-primary); }
 .materias-estado-opcion--activa { outline: 2px solid currentColor; }
+
+/* Cabecera de la formación */
+.materias-cabecera { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--espacio-md); }
+.materias-cabecera > div:first-child { display: flex; flex-direction: column; gap: 4px; }
+.materias-cabecera__nombre { font-size: 2.25rem; line-height: 1.15; }
+
+/* Progreso */
+.materias-progreso {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: var(--espacio-md) var(--espacio-lg);
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: var(--sombra-card);
+}
+.materias-progreso__cabecera { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 28px; }
+.materias-progreso__porcentaje { margin: 0; color: var(--color-text-light); }
+.materias-progreso__porcentaje strong { margin-right: 4px; font-size: 2.25rem; color: var(--color-text); }
+.materias-progreso__leyenda { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; list-style: none; color: var(--color-text-secondary); }
+.materias-progreso__leyenda li { display: inline-flex; align-items: center; gap: 8px; }
+.materias-progreso__punto { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.materias-progreso__barra { display: flex; height: 12px; overflow: hidden; border-radius: 999px; background: var(--color-frost-suave); }
+.materias-progreso__parte { height: 100%; border-radius: 0; }
+.materias-progreso__punto--aprobada { background: var(--color-storm); }
+.materias-progreso__punto--regular { background: var(--color-steel); }
+.materias-progreso__punto--cursando { background: var(--color-frost-blue); }
+.materias-progreso__punto--libre { background: var(--color-frost-claro); }
+.materias-progreso__punto--no_cursada { background: transparent; border: 1px dashed var(--color-frost-blue); }
+
+/* Estados: los mismos tonos en la barra, las pastillas y el tablero.
+   El texto sobre los tonos oscuros es --color-surface, así contrasta también en modo oscuro. */
+.materias-estado--aprobada { background: var(--color-storm); color: var(--color-surface); }
+.materias-estado--regular { background: var(--color-steel); color: var(--color-surface); }
+.materias-estado--cursando { background: var(--color-frost-blue); color: var(--color-text); }
+.materias-estado--libre { background: var(--color-frost-claro); color: var(--color-text); }
+.materias-estado--no_cursada { background: transparent; color: var(--color-steel); border: 1px dashed var(--color-frost-blue); }
+
+/* Tablero por estado */
+.materias-tablero { display: flex; flex-direction: column; gap: 14px; }
+.materias-tablero__barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+
+.materias-segmento { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 12px; background: var(--color-frost-suave); }
+.materias-segmento button {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-steel);
+  font: inherit;
+  cursor: pointer;
+}
+.materias-segmento button:hover { color: var(--color-text); }
+.materias-segmento .materias-segmento--activo { background: var(--color-storm); color: var(--color-surface); }
+
+.materias-tablero__columnas { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; align-items: start; }
+.materias-tablero__columna {
+  display: flex;
+  min-height: 140px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: var(--color-frost-suave);
+}
+.materias-tablero__columna--destino { border-color: var(--color-frost-blue); border-style: dashed; }
+.materias-tablero__titulo { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.materias-tablero__titulo h3 { flex: 1; margin: 0; font-size: 1.1rem; color: var(--color-text); }
+.materias-tablero__titulo span:last-child { color: var(--color-steel); }
+
+.materias-ficha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  text-align: left;
+  cursor: grab;
+}
+.materias-ficha strong { font-weight: 400; line-height: 1.25; }
+.materias-ficha span { font-size: 0.8125rem; opacity: 0.85; }
+.materias-ficha:hover { filter: brightness(1.08); }
+.materias-ficha:active { cursor: grabbing; }
+.materias-ficha--aprobada { background: var(--color-storm); color: var(--color-surface); }
+.materias-ficha--regular { background: var(--color-steel); color: var(--color-surface); }
+.materias-ficha--cursando { background: var(--color-frost-blue); color: var(--color-text); }
+.materias-ficha--libre { background: var(--color-frost-claro); color: var(--color-text); }
+.materias-ficha--no_cursada { border: 1px dashed var(--color-frost-blue); background: var(--color-surface); color: var(--color-steel); }
+.materias-ficha--arrastrando { opacity: 0.4; }

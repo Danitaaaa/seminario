@@ -34,8 +34,6 @@ export const CUATRIMESTRES: { valor: Cuatrimestre; nombre: string }[] = [
   { valor: 'anual', nombre: 'Anual' },
 ];
 
-const NOMBRE_CUATRI = Object.fromEntries(CUATRIMESTRES.map((c) => [c.valor, c.nombre])) as Record<Cuatrimestre, string>;
-
 export interface MomentoCursado {
   anioActual: number | null;
   cuatrimestreActual: 'primero' | 'segundo' | null;
@@ -68,25 +66,8 @@ export function textoDuracion(anios: number): string {
 // Para sugerir el cuatrimestre: de agosto en adelante se toma el 2do.
 export const cuatrimestreDeHoy = (): 'primero' | 'segundo' => (new Date().getMonth() >= 7 ? 'segundo' : 'primero');
 
-export interface GrupoAnio {
-  titulo: string;
-  grupos: { titulo: string; materias: MateriaFormacion[] }[];
-}
-
-// Arma "Año 1 › 1er cuatrimestre › materias" a partir de la lista ya ordenada por el backend.
-export function agruparPorAnio(materias: MateriaFormacion[]): GrupoAnio[] {
-  const anios: GrupoAnio[] = [];
-  for (const m of materias) {
-    const tituloAnio = m.anio ? `Año ${m.anio}` : 'Sin año';
-    let anio = anios.find((a) => a.titulo === tituloAnio);
-    if (!anio) anios.push((anio = { titulo: tituloAnio, grupos: [] }));
-    const tituloGrupo = m.cuatrimestre ? NOMBRE_CUATRI[m.cuatrimestre] : 'Sin cuatrimestre';
-    let grupo = anio.grupos.find((g) => g.titulo === tituloGrupo);
-    if (!grupo) anio.grupos.push((grupo = { titulo: tituloGrupo, materias: [] }));
-    grupo.materias.push(m);
-  }
-  return anios;
-}
+const CUATRI_CORTO: Record<Cuatrimestre, string> = { primero: '1C', segundo: '2C', anual: 'Anual' };
+export const cuatrimestreCorto = (c: Cuatrimestre | null): string => (c ? CUATRI_CORTO[c] : '');
 
 // Electron envuelve el error como "Error invoking remote method '...': Error: <mensaje>".
 export function mensajeDeError(err: unknown, generico: string): string {

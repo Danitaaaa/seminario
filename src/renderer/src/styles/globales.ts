@@ -1,6 +1,6 @@
 export const globales = {
   colors: {
-    fondo: "#F0ECDD",
+    fondo: "#EEF2F7",
 
     primario: "#495B7D",
     primarioOscuro: "#02122F",
