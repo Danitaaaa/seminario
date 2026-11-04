@@ -33,17 +33,13 @@ export class IniciarSesion {
         );
 
         if (filas.length === 0) {
-            throw new Error(
-                "El usuario no existe"
-            );
+            throw new Error("Correo o contraseña incorrectos.");
         }
 
         const usuario = materializarUsuario(filas[0]);
 
         if (!usuario.emailVerificado) {
-            throw new Error(
-                "El email no está validado"
-            );
+            throw new Error("Verificá tu correo antes de iniciar sesión.");
         }
 
         const passwordValida = await bcrypt.compare(
@@ -52,7 +48,7 @@ export class IniciarSesion {
         );
 
         if (!passwordValida) {
-            throw new Error('La contraseña es incorrecta.');
+            throw new Error("Correo o contraseña incorrectos.");
         }
 
         return usuario;

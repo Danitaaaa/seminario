@@ -11,7 +11,7 @@ import type {
 import type { ResumenMaterial, ResumenProyecto, ResumenSesiones } from './estadisticas';
 import type { Deck, Flashcard, FlashcardPendiente, RepeticionMaterial } from './flashcards';
 import type { Notificacion } from './notificaciones';
-import type { 
+import type {
   Proyecto,
   Miembro,
   CrearProyectoDatos,
@@ -152,7 +152,7 @@ declare global {
       modificarFlashcard: (datos: { usuarioId: number; idFlashcard: number; pregunta: string; respuesta: string }) => Promise<Flashcard>;
       modificarDeck: (datos: { usuarioId: number; deckId: number; nombre: string }) => Promise<void>;
       eliminarDecks: (datos: { usuarioId: number; deckIds: number[] }) => Promise<number>;
-      eliminarFlashcards: (datos: { usuarioId: number; flashcardIds: number[] }) => Promise<number>;
+      eliminarFlashcards: (datos: { usuarioId: number; deckId: number; flashcardIds: number[] }) => Promise<number>;
       listarFlashcardsPendientes: (usuarioId: number) => Promise<FlashcardPendiente[]>;
       registrarRevision: (datos: { usuarioId: number; flashcardId: number; dificultad: 'dificil' | 'intermedio' | 'facil' }) => Promise<FlashcardPendiente>;
       listarRepeticionesMaterial: (usuarioId: number) => Promise<RepeticionMaterial[]>;
@@ -177,15 +177,17 @@ declare global {
 
       listarInvitaciones: (datos: { idProyecto: number; idUsuarioSolicitante: number }) => Promise<InvitacionPendiente[]>;
       cancelarInvitacion: (datos: { idProyecto: number; idUsuarioSolicitante: number; idInvitacion: number }) => Promise<void>;
-      // Estadísticas
+
+      // Estadisticas
       resumenProyectos: (datos: { idUsuario: number; mes: string; hoy: string; desde: string; desfaseMinutos: number }) => Promise<ResumenProyecto[]>;
       resumenMaterial: (datos: { idUsuario: number }) => Promise<ResumenMaterial>;
       resumenSesionesEstudio: (datos: { idUsuario: number; desde: string; desfaseMinutos: number }) => Promise<ResumenSesiones>;
 
-      // Portada del proyecto (imagen local; null = colores de la paleta)
+      // Portada del proyecto
       obtenerPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;
       elegirPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;
       quitarPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<void>;
+
       // Gestion de tareas
       listarTareas: (datos: unknown) => Promise<Tarea[]>;
       crearTarea: (datos: unknown) => Promise<Tarea>;

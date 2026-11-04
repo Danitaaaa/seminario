@@ -8,6 +8,10 @@ interface CartelErrorProps {
 }
 
 export function CartelError({ mensaje, titulo = 'Ocurrió un error', onCerrar, onReintentar }: CartelErrorProps) {
+    const mensajeVisible = mensaje
+        .replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/i, '')
+        .trim() || 'No se pudo completar la acción.';
+
     return (
         <div className="cartel-error" role="alert">
             <svg className="cartel-error__icono" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -18,7 +22,7 @@ export function CartelError({ mensaje, titulo = 'Ocurrió un error', onCerrar, o
 
             <div className="cartel-error__contenido">
                 <p className="cartel-error__titulo">{titulo}</p>
-                <p className="cartel-error__mensaje">{mensaje}</p>
+                <p className="cartel-error__mensaje">{mensajeVisible}</p>
                 {onReintentar && (
                     <button type="button" className="cartel-error__reintentar" onClick={onReintentar}>
                         Reintentar

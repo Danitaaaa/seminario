@@ -1,14 +1,14 @@
 import { z } from "zod";
 
-const campoObligatorioSchema = z.string().min(1, "Este campo es obligatorio.");
+const campoObligatorioSchema = z.string().min(1, "Campo obligatorio.");
 
 const nombreSchema = campoObligatorioSchema.regex(
     /^\p{L}{2,}( \p{L}{2,})*$/u,
     "Cada palabra debe tener al menos dos letras; use solo letras y spacing."
 );
 
-const emailSchema = campoObligatorioSchema.pipe(
-    z.email({ error: "Ingresá un email válido." })
+const emailSchema = z.string().trim().min(1, "Ingresá un correo.").pipe(
+    z.email({ error: "Ingresá un correo válido." })
 );
 
 export const passwordSchema = campoObligatorioSchema
