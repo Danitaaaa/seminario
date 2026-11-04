@@ -166,6 +166,7 @@ import {
   ManejadorMeta,
   ManejadorTarea,
 } from './logicaPersistente/gestionDeProyectos/manejadoresEntidades';
+import { ManejadorCategoria } from './logicaPersistente/gestionDeCategorias/manejadorCategoria';
 import { ManejadorNodo, ManejadorArchivo } from './logicaPersistente/gestionDeProyectos/manejadoresContenido';
 import { Edicion } from './administracionDePersistencia/edicion';
 import { registerEdicionIpc } from './ipc/edicion.ipc'; // ajustá si tu archivo se llama distinto
@@ -445,6 +446,7 @@ function wireDependencies(): ProcesoSesionEstudio {
     evento: new ManejadorEvento(persistencia, usuarioSesionSync),
     meta: new ManejadorMeta(persistencia, usuarioSesionSync),
     tarea: new ManejadorTarea(persistencia, usuarioSesionSync),
+    categoria: new ManejadorCategoria(persistencia, usuarioSesionSync),
   };
 
   const sync = componerSincronizacion({

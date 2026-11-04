@@ -107,10 +107,10 @@ declare global {
       eliminarEvento: (datos: { id: number }) => Promise<{ ok: boolean }>;
 
       // Gestion de categorias
-      crearCategoria: (datos: CrearCategoriaInput) => Promise<Categoria>;
-      listarCategorias: (datos: ListarCategoriasInput) => Promise<Categoria[]>;
-      modificarCategoria: (datos: ModificarCategoriaInput) => Promise<Categoria>;
-      eliminarCategoria: (datos: { id: number }) => Promise<{ ok: boolean }>;
+      listarCategorias(d: { usuarioId: number; idProyecto?: number | null }): Promise<Categoria[]>;
+      crearCategoria(d: { usuarioId: number; idProyecto?: number | null; nombre: string }): Promise<Categoria>;
+      modificarCategoria(d: { usuarioId: number; id: number; nombre: string }): Promise<Categoria>;
+      eliminarCategoria(d: { usuarioId: number; id: number }): Promise<{ ok: true }>;
 
       // Gestion de horarios
       crearHorario: (datos: CrearHorarioInput) => Promise<HorarioCursado>;

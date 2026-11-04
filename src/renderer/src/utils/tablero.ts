@@ -43,7 +43,7 @@ export function armarColumnas(miembros: Miembro[], idGlobalActual: string | null
 
   // "Vos" primero; el resto conserva el orden original.
   tablero.sort((a, b) => Number(esActual(b.idGlobal)) - Number(esActual(a.idGlobal)));
-
+  console.debug('miembros:', miembros.map(m => ({ mail: m.mail, idGlobal: m.idGlobalUsuario })), 'yo:', idGlobalActual);
   return tablero.map((m, i) => ({
     ...m,
     color: PALETA[i % PALETA.length],

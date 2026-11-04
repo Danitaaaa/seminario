@@ -23,6 +23,7 @@ export class SincronizarProyecto {
         private persistencia: IPersistenciaProyectos,
         private sincronizador: ISincronizador,
         private edicion: Edicion,
+        private ultimaRevisionIds = new Map<number, number>(),
     ) {}
 
     async ejecutar(entrada: SincronizarProyectoDTO): Promise<ResultadoSincronizacion> {
@@ -91,6 +92,8 @@ export class SincronizarProyecto {
             throw e;
         }
 
+        await this.completarIdsGlobales(dto.idProyecto, idRemoto);
+
         // 3. Subir las ediciones hechas sin conexión (con bloqueo y detección de conflictos)
         const ediciones = puedeEnviar
             ? await this.edicion.subirPendientes(dto.idProyecto)
@@ -117,4 +120,27 @@ export class SincronizarProyecto {
             `UPDATE proyectos SET version_servidor = GREATEST(version_servidor, $1) WHERE id_proyecto = $2`,
             [version, idProyecto]);
     }
+
+    private async completarIdsGlobales(idProyecto: number, idRemoto: string): Promise<void> {
+        const ahora = Date.now();
+        if (ahora - (this.ultimaRevisionIds.get(idProyecto) ?? 0) < 60_000) return;
+        const faltan = await this.persistencia.ejecutar(
+            `SELECT 1 FROM proyecto_miembros
+            WHERE id_proyecto = $1 AND fecha_baja IS NULL AND id_global_usuario IS NULL LIMIT 1`, [idProyecto]);
+        if (faltan.length === 0) return;
+        this.ultimaRevisionIds.set(idProyecto, ahora);
+        try {
+            for (const m of await this.sincronizador.listarMiembrosRemotos(idRemoto)) {
+                if (!m.idGlobal) continue;
+                await this.persistencia.ejecutar(
+                    `UPDATE proyecto_miembros pm SET id_global_usuario = $3::uuid
+                    FROM usuarios u
+                    WHERE u.id_usuario = pm.id_usuario AND LOWER(u.email) = LOWER($2)
+                    AND pm.id_proyecto = $1 AND pm.id_global_usuario IS NULL`,
+                    [idProyecto, m.mail, m.idGlobal]);
+            }
+        } catch (e) { console.warn('[sync] no se pudieron completar los ids globales:', e); }
+    }
+
+    
 }

@@ -21,9 +21,19 @@ export interface MiembroRemoto {
     mail: string;
     rol: RolMiembro;
     activo: boolean;
+    idGlobal: string | null;
     pendiente: boolean;
     fechaUnion: Date | null;   // unido_en
     fechaBaja: Date | null;    // baja_en
+}
+
+// Resultado de resolver un enlace de invitación.
+export interface InfoEnlace {
+    idRemoto: string;
+    nombre: string;
+    numeroProyecto: string;
+    rol?: RolMiembro;
+    idUsuarioGlobal: string; // auth.uid() de Supabase
 }
 
 // Interfaz de conexión con el servidor externo de sincronización.
@@ -36,7 +46,7 @@ export interface ISincronizador {
     publicarProyecto(idProyectoLocal: number, nombre: string): Promise<EstadoRemoto>;
 
     // Resuelve un enlace de invitación a un proyecto remoto (incluye el rol del usuario si ya fue invitado).
-    resolverEnlace(enlace: string): Promise<{ idRemoto: string; nombre: string; numeroProyecto: string; rol?: RolMiembro }>;
+    resolverEnlace(enlace: string): Promise<InfoEnlace>;
 
     // Envía los cambios locales pendientes. Devuelve la nueva versión del servidor.
     enviarCambios(idRemoto: string, cambios: CambioPendiente[]): Promise<number>;
