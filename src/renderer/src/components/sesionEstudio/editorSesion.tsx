@@ -4,9 +4,15 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Check, CloudOff, Loader2 } from 'lucide-react';
 import type { PestanaSesion } from '../../types/sesionesEstudio';
+import type { Archivo } from '../../types/nodo';
 import { BarraEditorSesion } from './barraEditorSesion';
 import { PestanasSesion } from './pestanasSesion';
 import { ModalConfirmar } from './modalConfirmar';
+import { ModalAbrirMaterial } from './modalAbrirMaterial';
+import { VistaArchivoSesion } from './vistaArchivoSesion';
+import { EditorArchivoSesion } from './editorArchivoSesion';
+import { tipoVisor } from '../visor/formatos';
+import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { extraerMensajeError } from '../../pages/sesionesEstudio/utilidades';
 
@@ -30,6 +36,11 @@ export function EditorSesion({ usuarioId, idSesion }: EditorSesionProps) {
   const [cargando, setCargando] = useState(true);
   const [estado, setEstado] = useState<EstadoGuardado>('guardado');
   const [porEliminar, setPorEliminar] = useState<PestanaSesion | null>(null);
+  // Archivos de Material abiertos como pestañas. Se recuerdan por sesión (en este equipo)
+  // para que sigan abiertos al volver; no forman parte del documento ni del Word de la sesión.
+  const [eligiendoArchivo, setEligiendoArchivo] = useState(false);
+  const [archivos, setArchivos] = usarPreferencia<Archivo[]>(`sesion:${idSesion}:archivos`, []);
+  const [idArchivoActivo, setIdArchivoActivo] = useState<number | null>(null);
 
   const pendientes = useRef(new Map<number, string>());
   const temporizador = useRef<number | undefined>(undefined);
@@ -93,9 +104,11 @@ export function EditorSesion({ usuarioId, idSesion }: EditorSesionProps) {
     if (await guardarPendientes()) avisos.exito('Se guardaron los cambios.');
   }, [guardarPendientes, avisos]);
 
-  // Ctrl+S / Cmd+S guarda.
+  // Ctrl+S / Cmd+S guarda. Si hay un archivo de Material abierto, lo guarda su propia pestaña.
+  const hayArchivoActivo = useRef(false);
   useEffect(() => {
     const alPresionar = (e: KeyboardEvent) => {
+      if (hayArchivoActivo.current) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         void guardarAhora();
@@ -106,6 +119,7 @@ export function EditorSesion({ usuarioId, idSesion }: EditorSesionProps) {
   }, [guardarAhora]);
 
   async function elegir(idPestana: number) {
+    setIdArchivoActivo(null);
     if (idPestana === idActiva) return;
     void guardarPendientes();
     setIdActiva(idPestana);
@@ -116,6 +130,7 @@ export function EditorSesion({ usuarioId, idSesion }: EditorSesionProps) {
       await guardarPendientes();
       const nueva = await window.api.crearPestanaSesion({ usuarioId, idSesion });
       setPestanas((actuales) => [...actuales, nueva]);
+      setIdArchivoActivo(null);
       setIdActiva(nueva.idPestana);
       avisos.exito(`Se creó la pestaña "${nueva.titulo}".`);
     } catch (e) {
@@ -148,30 +163,91 @@ export function EditorSesion({ usuarioId, idSesion }: EditorSesionProps) {
     }
   }
 
+  // Abre el archivo elegido en Material como una pestaña más (si ya estaba abierto, solo lo muestra).
+  function abrirArchivo(archivo: Archivo) {
+    setEligiendoArchivo(false);
+    void guardarPendientes();
+    setArchivos((actuales) => (actuales.some((a) => a.id === archivo.id) ? actuales : [...actuales, archivo]));
+    setIdArchivoActivo(archivo.id);
+  }
+
+  // Cierra la pestaña del archivo. Si era la que se estaba viendo, vuelve al documento de la sesión.
+  function cerrarArchivo(idArchivo: number) {
+    setArchivos((actuales) => actuales.filter((a) => a.id !== idArchivo));
+    if (idArchivoActivo === idArchivo) setIdArchivoActivo(null);
+  }
+
+  function elegirArchivo(idArchivo: number) {
+    void guardarPendientes();
+    setIdArchivoActivo(idArchivo);
+  }
+
+  const archivoActivo = archivos.find((a) => a.id === idArchivoActivo) ?? null;
+  hayArchivoActivo.current = archivoActivo !== null;
+  const tipoArchivo = archivoActivo ? tipoVisor(archivoActivo.extension) : null;
+
+  // Después de guardar un Word desde su pestaña se vuelven a leer las pestañas de la sesión:
+  // si ese Word era el de esta misma sesión, Material ya actualizó su contenido en la base.
+  const recargarPestanas = useCallback(() => {
+    window.api
+      .listarPestanasSesion(usuarioId, idSesion)
+      .then((lista) => setPestanas(lista))
+      .catch(() => undefined);
+  }, [usuarioId, idSesion]);
+
   const activa = pestanas.find((p) => p.idPestana === idActiva) ?? null;
 
-  const barraPestanas = (
+  // Fila de pestañas; a la derecha va el estado de guardado de lo que se está viendo.
+  const filaPestanas = (guardado: ReactNode) => (
     <div className="editor-sesion__fila-pestanas">
       <PestanasSesion
         pestanas={pestanas}
-        idActiva={idActiva}
+        idActiva={archivoActivo ? null : idActiva}
         onElegir={(id) => void elegir(id)}
         onAgregar={() => void agregar()}
+        onAbrirArchivo={() => setEligiendoArchivo(true)}
+        archivos={archivos}
+        idArchivoActivo={archivoActivo?.id ?? null}
+        onElegirArchivo={elegirArchivo}
+        onCerrarArchivo={cerrarArchivo}
         onRenombrar={(id, t) => void renombrar(id, t)}
         onEliminar={setPorEliminar}
       />
-      <div className="editor-sesion__guardado">
-        <IndicadorGuardado estado={estado} />
-        <button type="button" className="boton-chico" onClick={() => void guardarAhora()} title="Guardar (Ctrl+S)">
-          Guardar
-        </button>
-      </div>
+      {guardado}
+    </div>
+  );
+
+  const guardadoSesion = (
+    <div className="editor-sesion__guardado">
+      <IndicadorGuardado estado={estado} />
+      <button type="button" className="boton-chico" onClick={() => void guardarAhora()} title="Guardar (Ctrl+S)">
+        Guardar
+      </button>
     </div>
   );
 
   return (
     <div className="editor-sesion">
-      {cargando || !activa ? (
+      {archivoActivo && (tipoArchivo === 'docx' || tipoArchivo === 'texto') ? (
+        // Word y texto: se ven y se editan como una pestaña más de la sesión.
+        <EditorArchivoSesion
+          key={archivoActivo.id}
+          archivo={archivoActivo}
+          tipo={tipoArchivo}
+          filaPestanas={filaPestanas}
+          onGuardado={tipoArchivo === 'docx' ? recargarPestanas : undefined}
+        />
+      ) : archivoActivo ? (
+        // PDF, Excel y otros formatos: se muestran con su visor dentro de la hoja.
+        <>
+          {filaPestanas(
+            <div className="editor-sesion__guardado">
+              <span className="editor-sesion__estado">Archivo de Material</span>
+            </div>
+          )}
+          <VistaArchivoSesion key={archivoActivo.id} archivo={archivoActivo} />
+        </>
+      ) : cargando || !activa ? (
         <>
           <div className="editor-sesion__barra" />
           <div className="editor-sesion__hoja editor-sesion__hoja--cargando">
@@ -183,7 +259,7 @@ export function EditorSesion({ usuarioId, idSesion }: EditorSesionProps) {
           key={activa.idPestana}
           contenidoInicial={activa.contenido}
           onCambio={(html) => alCambiar(activa.idPestana, html)}
-          barraPestanas={barraPestanas}
+          barraPestanas={filaPestanas(guardadoSesion)}
         />
       )}
 
@@ -195,6 +271,8 @@ export function EditorSesion({ usuarioId, idSesion }: EditorSesionProps) {
           onCancelar={() => setPorEliminar(null)}
         />
       )}
+
+      {eligiendoArchivo && <ModalAbrirMaterial onElegir={abrirArchivo} onCerrar={() => setEligiendoArchivo(false)} />}
     </div>
   );
 }

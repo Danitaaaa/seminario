@@ -1,19 +1,39 @@
 import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { FileText, X } from 'lucide-react';
 import type { PestanaSesion } from '../../types/sesionesEstudio';
+import type { Archivo } from '../../types/nodo';
+import { MenuAgregarPestana } from './menuAgregarPestana';
 
 interface PestanasSesionProps {
   pestanas: PestanaSesion[];
   idActiva: number | null;
   onElegir: (idPestana: number) => void;
   onAgregar: () => void;
+  onAbrirArchivo: () => void;
+  // Archivos de Material abiertos como pestañas (no son parte del documento de la sesión).
+  archivos: Archivo[];
+  idArchivoActivo: number | null;
+  onElegirArchivo: (idArchivo: number) => void;
+  onCerrarArchivo: (idArchivo: number) => void;
   onRenombrar: (idPestana: number, titulo: string) => void;
   onEliminar: (pestana: PestanaSesion) => void;
 }
 
 // Barra de pestañas del editor (Pestaña 1, Pestaña 2...). Doble clic para renombrar,
-// la cruz de la pestaña activa para eliminarla y "+" para agregar otra.
-export function PestanasSesion({ pestanas, idActiva, onElegir, onAgregar, onRenombrar, onEliminar }: PestanasSesionProps) {
+// la cruz de la pestaña activa para eliminarla y "+" para crear otra o abrir un archivo de Material.
+export function PestanasSesion({
+  pestanas,
+  idActiva,
+  onElegir,
+  onAgregar,
+  onAbrirArchivo,
+  onRenombrar,
+  onEliminar,
+  archivos,
+  idArchivoActivo,
+  onElegirArchivo,
+  onCerrarArchivo,
+}: PestanasSesionProps) {
   const [editando, setEditando] = useState<number | null>(null);
   const [titulo, setTitulo] = useState('');
 
@@ -75,9 +95,38 @@ export function PestanasSesion({ pestanas, idActiva, onElegir, onAgregar, onReno
           </div>
         );
       })}
-      <button type="button" className="pestanas-sesion__agregar" aria-label="Agregar pestaña" title="Agregar pestaña" onClick={onAgregar}>
-        <Plus size={14} />
-      </button>
+      {archivos.map((archivo) => {
+        const activa = archivo.id === idArchivoActivo;
+        const nombre = `${archivo.nombre}${archivo.extension ? `.${archivo.extension}` : ''}`;
+        return (
+          <div
+            key={`archivo-${archivo.id}`}
+            className={`pestanas-sesion__pestana pestanas-sesion__pestana--archivo${activa ? ' pestanas-sesion__pestana--activa' : ''}`}
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activa}
+              className="pestanas-sesion__boton"
+              title={`${nombre} (abierto desde Material)`}
+              onClick={() => onElegirArchivo(archivo.id)}
+            >
+              <FileText size={12} aria-hidden="true" />
+              {nombre}
+            </button>
+            <button
+              type="button"
+              className="pestanas-sesion__cerrar"
+              aria-label={`Cerrar ${nombre}`}
+              title="Cerrar archivo"
+              onClick={() => onCerrarArchivo(archivo.id)}
+            >
+              <X size={12} />
+            </button>
+          </div>
+        );
+      })}
+      <MenuAgregarPestana onCrearPestana={onAgregar} onAbrirArchivo={onAbrirArchivo} />
     </div>
   );
 }
