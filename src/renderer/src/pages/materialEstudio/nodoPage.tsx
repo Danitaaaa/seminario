@@ -18,6 +18,7 @@ import { tipoVisor } from '../../components/visor/formatos';
 import { leerVistaListado, guardarVistaListado } from '../../utils/vistaListadoGuardada';
 import type { RolMiembro } from '../../types/proyectos';
 import { puede } from '../../permisos';
+import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
 
 const usuarioLogueado = 'Usuario';
 
@@ -39,6 +40,7 @@ interface NodoPageProps {
     titulo?: string;
     idActivo?: string;
     raiz?: Miga; // Carpeta desde la que arranca la navegación
+    idProyecto?: number; // Si está, el listado se actualiza solo con los cambios remotos de ese proyecto
     vistaInicial?: VistaListado;
     prefijoRuta?: ReactNode; // Antes de las migas (ej. "Proyectos /")
     subencabezado?: ReactNode; // Debajo de las migas (ej. avatares de colaboradores)
@@ -55,6 +57,7 @@ export function NodoPage({
     titulo = 'Material Estudio',
     idActivo = 'material',
     raiz = RAIZ_MATERIAL,
+    idProyecto,
     vistaInicial,
     prefijoRuta,
     subencabezado,
@@ -127,6 +130,12 @@ export function NodoPage({
     useEffect(() => {
         cargarContenido();
     }, [cargarContenido]);
+
+    // Cambios que llegan de otras PCs: se vuelve a listar la carpeta actual.
+    // Sin idProyecto (material de estudio personal) no hay nada que escuchar.
+    useCambiosRemotos(idProyecto, () => {
+        void cargarContenido();
+    });
 
     const limpiarTimerMiga = useCallback(() => {
         if (timerMiga.current) clearTimeout(timerMiga.current);

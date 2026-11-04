@@ -6,6 +6,7 @@ import { Categoria as CategoriaRegistro } from '../../types/categorias';
 import type { RolMiembro } from '../../types/proyectos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import { puede, rolDe } from '../../permisos';
+import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
 import '../../styles/eventos.css';
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
@@ -147,8 +148,16 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
     cargarCategorias();
   }, [usuarioId, idProyecto]);
 
-  async function cargarEventos(): Promise<void> {
-    setCargando(true);
+  // Cambios que llegan de otras PCs. En modo proyecto solo escucha ese proyecto;
+  // en /eventos escucha todos (muestra personales + los de mis proyectos).
+  // La recarga es silenciosa para que no parpadee el "Cargando...".
+  useCambiosRemotos(idProyecto ?? 'todos', () => {
+    cargarEventos(true).catch(console.error);
+    cargarCategorias().catch(console.error);
+  });
+
+  async function cargarEventos(silencioso = false): Promise<void> {
+    if (!silencioso) setCargando(true);
     try {
       const desde = fechaLocalISO(anio, mesIndex, 1, '00:00');
       const hasta = `${formatoFechaISO(anio, mesIndex, dias)}T23:59:59`;
@@ -160,7 +169,7 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
       });
       setEventos(resultado);
     } finally {
-      setCargando(false);
+      if (!silencioso) setCargando(false);
     }
   }
 
