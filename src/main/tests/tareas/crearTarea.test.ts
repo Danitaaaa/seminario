@@ -1,19 +1,20 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { CrearTarea } from '../../logicaPersistente/gestionDeTareas/crearTarea';
-import { crearPersistenciaFalsa, filaTarea } from './pruebasComunes';
+import { crearPersistenciaFalsa, filaTarea, UID_A } from './pruebasComunes';
 import { persistenciaPorSql, consultasA } from './persistenciaPorSql';
 import * as alcance from '../../logicaPersistente/gestionDeProyectos/alcance';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn(),
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn(),
 }));
 
-const exigirAccesoMock = alcance.exigirAcceso as jest.Mock;
-const registrarCambioMock = alcance.registrarCambioSiProyecto as jest.Mock;
+const exigirAccesoMock = alcance.exigirAcceso as Mock;
+const registrarCambioMock = alcance.registrarCambioSiProyecto as Mock;
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     exigirAccesoMock.mockResolvedValue(undefined);
     registrarCambioMock.mockResolvedValue(undefined);
 });
@@ -23,12 +24,15 @@ describe('CrearTarea', () => {
         it('crea la tarea con orden por usuario y prioridad "media" por defecto', async () => {
             const resp = crearPersistenciaFalsa([
                 [{ orden: 3 }],
-                [filaTarea({ id_tarea: 11, id_proyecto: null, titulo: 'Comprar', orden: 3, creada_por_global: 5 })],
+                [filaTarea({ id_tarea: 11, id_proyecto: null, id_usuario: 5, titulo: 'Comprar', orden: 3 })],
             ]);
             const t = await new CrearTarea(resp.persistencia).ejecutar({ idUsuario: 5, titulo: 'Comprar' });
 
-            expect(t).toMatchObject({ idTarea: 11, idProyecto: null, titulo: 'Comprar', orden: 3 });
-            expect(resp.ejecutar.mock.calls[0][1]).toEqual([5]);
+            expect(t).toMatchObject({ idTarea: 11, idProyecto: null, idUsuario: 5, titulo: 'Comprar', orden: 3 });
+            // El orden se calcula entre las tareas personales del usuario (sin proyecto ni asignado).
+            expect(resp.ejecutar.mock.calls[0][1]).toEqual([null, null, null, 5]);
+            // Y la tarea queda a nombre del usuario.
+            expect(resp.ejecutar.mock.calls[1][1].slice(0, 2)).toEqual([null, 5]);
             expect(resp.ejecutar.mock.calls[1][0]).toContain('INSERT INTO tareas');
         });
 
@@ -55,15 +59,16 @@ describe('CrearTarea', () => {
                 { cuando: /MAX\s*\(/i, filas: [{ orden: 1 }] },
                 { cuando: /^\s*INSERT INTO tareas/i, filas: [filaTarea({ id_proyecto: null, id_asignado_global: 8 })] },
             ]);
-            await expect(new CrearTarea(resp.persistencia).ejecutar({ idUsuario: 5, titulo: 'T', idAsignadoGlobal: 8 })).rejects.toThrow();
+            await expect(new CrearTarea(resp.persistencia).ejecutar({ idUsuario: 5, titulo: 'T', idAsignadoGlobal: UID_A }))
+                .rejects.toThrow(/personal no se puede asignar/);
             expect(consultasA(resp.ejecutar, /^\s*INSERT/i)).toHaveLength(0);
         });
     });
 
     describe('tarea de proyecto', () => {
-        function baseProyecto(esMiembro: boolean, idAsignadoGlobal: number | null, ordenSiguiente = 7) {
+        function baseProyecto(esMiembro: boolean, idAsignadoGlobal: string | null, ordenSiguiente = 7) {
             return persistenciaPorSql([
-                { cuando: /proyecto_miembros/i, filas: esMiembro ? [{ x: 1 }] : [] },
+                { cuando: /proyecto_miembros/i, filas: esMiembro ? [{ id_usuario: null, id_global_usuario: idAsignadoGlobal }] : [] },
                 { cuando: /MAX\s*\(/i, filas: [{ orden: ordenSiguiente }] },
                 {
                     cuando: /^\s*INSERT INTO tareas/i,
@@ -79,26 +84,26 @@ describe('CrearTarea', () => {
             const t = await new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: 10, titulo: 'T' });
             expect(t).toMatchObject({ idProyecto: 10, idAsignadoGlobal: null, orden: 5 });
             const [orden] = consultasA(ejecutar, /MAX\s*\(/i);
-            // "Sin asignar" = id_asignado_global nulo: vale `IS NULL` o la comparación null-safe con el parámetro.
-            expect(orden[0]).toMatch(/id_asignado_global\s+(IS\s+NULL|IS\s+NOT\s+DISTINCT\s+FROM\s+\$2)/i);
-            expect(orden[1].filter((v: unknown) => v !== null)).toEqual([10]);
+            // "Sin asignar" = sin asignado local ni global (comparación null-safe con los parámetros).
+            expect(orden[0]).toMatch(/id_asignado_global\s+IS\s+NOT\s+DISTINCT\s+FROM\s+\$3/i);
+            expect(orden[1]).toEqual([10, null, null, null]);
             expect(registrarCambioMock).toHaveBeenCalledWith(tx, 10, 'tarea', 20, 'crear', { titulo: 'T', idAsignadoGlobal: null });
         });
 
         it('86: asignada a un miembro queda al final de la columna de ese miembro', async () => {
-            const { persistencia, ejecutar, tx } = baseProyecto(true, 8, 7);
-            const t = await new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: 10, titulo: 'T', idAsignadoGlobal: 8 });
-            expect(t).toMatchObject({ idAsignadoGlobal: 8, orden: 7 });
+            const { persistencia, ejecutar, tx } = baseProyecto(true, UID_A, 7);
+            const t = await new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: 10, titulo: 'T', idAsignadoGlobal: UID_A });
+            expect(t).toMatchObject({ idAsignadoGlobal: UID_A, orden: 7 });
             const [orden] = consultasA(ejecutar, /MAX\s*\(/i);
-            expect(orden[1]).toEqual([10, 8]);
+            expect(orden[1]).toEqual([10, null, UID_A, null]);
             const [insert] = consultasA(ejecutar, /^\s*INSERT INTO tareas/i);
-            expect(insert[1]).toEqual(expect.arrayContaining([10, 8, 7]));
-            expect(registrarCambioMock).toHaveBeenCalledWith(tx, 10, 'tarea', 20, 'crear', { titulo: 'T', idAsignadoGlobal: 8 });
+            expect(insert[1]).toEqual(expect.arrayContaining([10, UID_A, 7]));
+            expect(registrarCambioMock).toHaveBeenCalledWith(tx, 10, 'tarea', 20, 'crear', { titulo: 'T', idAsignadoGlobal: UID_A });
         });
 
         it('no se puede asignar a quien no es miembro activo: no inserta ni registra', async () => {
-            const { persistencia, ejecutar } = baseProyecto(false, 8);
-            await expect(new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: 10, titulo: 'T', idAsignadoGlobal: 8 }))
+            const { persistencia, ejecutar } = baseProyecto(false, UID_A);
+            await expect(new CrearTarea(persistencia).ejecutar({ idUsuario: 5, idProyecto: 10, titulo: 'T', idAsignadoGlobal: UID_A }))
                 .rejects.toThrow();
             expect(consultasA(ejecutar, /^\s*INSERT/i)).toHaveLength(0);
             expect(registrarCambioMock).not.toHaveBeenCalled();

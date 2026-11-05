@@ -74,6 +74,7 @@ declare global {
       abrirExterno: (datos: { id: number }) => Promise<void>;
       abrirEnDrive: (datos: { id: number }) => Promise<void>;
       traerVersionDrive: (datos: { id: number }) => Promise<void>;
+      cancelarDrive: () => Promise<void>;
       aplicacionesDisponibles: (datos: { id: number }) => Promise<AplicacionExterna[]>;
       abrirConAplicacion: (datos: { id: number; aplicacionId: string }) => Promise<void>;
       elegirAplicacion: (datos: { id: number }) => Promise<void>;
@@ -218,6 +219,7 @@ declare global {
       listarConflictos: (datos: unknown) => Promise<Resultado<unknown>>;
       obtenerConflicto: (clave: unknown) => Promise<Resultado<unknown>>;
       resolverConflicto: (datos: unknown) => Promise<Resultado<{ version: number }>>;
+      claveEdicion: (datos: { entidad: 'archivo' | 'evento' | 'meta'; id: number }) => Promise<Resultado<{ idProyecto: number; idGlobal: string } | null>>;
       iniciarSincronizacion: (datos: { idUsuario: number; password?: string }) => Promise<Resultado<void>>;
       alEventoSincronizacion: (cb: (evento: unknown) => void) => () => void;
     };

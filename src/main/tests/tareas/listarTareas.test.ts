@@ -1,18 +1,19 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { ListarTareas } from '../../logicaPersistente/gestionDeTareas/listarTareas';
 import { crearPersistenciaFalsa, filaTarea } from './pruebasComunes';
 import * as alcance from '../../logicaPersistente/gestionDeProyectos/alcance';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn(),
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn(),
 }));
 
-const exigirAcceso = alcance.exigirAcceso as jest.Mock;
-const filtroAlcance = alcance.filtroAlcance as jest.Mock;
+const exigirAcceso = alcance.exigirAcceso as Mock;
+const filtroAlcance = alcance.filtroAlcance as Mock;
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     exigirAcceso.mockResolvedValue(undefined);
     filtroAlcance.mockImplementation((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);

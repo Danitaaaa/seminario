@@ -1,19 +1,20 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { AlternarTarea } from '../../logicaPersistente/gestionDeTareas/alternarTarea';
 import { crearPersistenciaFalsa, filaTarea } from './pruebasComunes';
 import { consultasA } from './persistenciaPorSql';
 import * as alcance from '../../logicaPersistente/gestionDeProyectos/alcance';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn(),
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn(),
 }));
 
-const exigirAccesoMock = alcance.exigirAcceso as jest.Mock;
-const registrarCambioMock = alcance.registrarCambioSiProyecto as jest.Mock;
+const exigirAccesoMock = alcance.exigirAcceso as Mock;
+const registrarCambioMock = alcance.registrarCambioSiProyecto as Mock;
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     exigirAccesoMock.mockResolvedValue(undefined);
     registrarCambioMock.mockResolvedValue(undefined);
 });
@@ -23,12 +24,12 @@ describe('AlternarTarea', () => {
         it('invierte el estado si no viene `completada` (pendiente -> hecha)', async () => {
             const { persistencia, ejecutar } = crearPersistenciaFalsa([
                 [filaTarea({ id_asignado_global: 8, completada: false })],
-                [filaTarea({ id_asignado_global: 8, completada: true, completada_por_global: 5 })],
+                [filaTarea({ id_asignado_global: 8, completada: true })],
             ]);
             const t = await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5 });
             expect(t.completada).toBe(true);
             expect(ejecutar.mock.calls[1][0]).toContain('UPDATE tareas');
-            expect(ejecutar.mock.calls[1][1]).toEqual([1, true, 5]);
+            expect(ejecutar.mock.calls[1][1]).toEqual([1, true]);
         });
 
         it('invierte el estado si no viene `completada` (hecha -> pendiente)', async () => {
@@ -47,32 +48,30 @@ describe('AlternarTarea', () => {
                 [filaTarea({ id_asignado_global: 8, completada: true })],
             ]);
             await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, completada: true });
-            expect(ejecutar.mock.calls[1][1]).toEqual([1, true, 5]);
+            expect(ejecutar.mock.calls[1][1]).toEqual([1, true]);
         });
 
-        it('al marcar como hecha registra quién y cuándo la completó', async () => {
+        it('al marcar como hecha registra cuándo la completó', async () => {
             const { persistencia, ejecutar } = crearPersistenciaFalsa([
                 [filaTarea({ id_asignado_global: 8 })],
-                [filaTarea({ id_asignado_global: 8, completada: true, completada_por_global: 5 })],
+                [filaTarea({ id_asignado_global: 8, completada: true })],
             ]);
             await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, completada: true });
             const sql = ejecutar.mock.calls[1][0];
-            expect(sql).toMatch(/completada_por_global/);
-            expect(sql).toMatch(/fecha_completada/);
-            expect(ejecutar.mock.calls[1][1][2]).toBe(5);
+            expect(sql).toMatch(/fecha_completada = CASE WHEN \$2::boolean THEN NOW\(\) ELSE NULL END/);
         });
 
-        it('al desmarcar vuelve a pendiente y borra la persona y la fecha de cumplimiento', async () => {
+        it('al desmarcar vuelve a pendiente y borra la fecha de cumplimiento', async () => {
             const { persistencia, ejecutar } = crearPersistenciaFalsa([
-                [filaTarea({ id_asignado_global: 8, completada: true, completada_por_global: 5, fecha_completada: new Date('2026-02-01') })],
-                [filaTarea({ id_asignado_global: 8, completada: false, completada_por_global: null, fecha_completada: null })],
+                [filaTarea({ id_asignado_global: 8, completada: true, fecha_completada: new Date('2026-02-01') })],
+                [filaTarea({ id_asignado_global: 8, completada: false, fecha_completada: null })],
             ]);
             const t = await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, completada: false });
             expect(t.completada).toBe(false);
             const [sql, valores] = ejecutar.mock.calls[1];
             expect(valores[1]).toBe(false);
-            expect(sql).toMatch(/completada_por_global/);
-            expect(sql).toMatch(/fecha_completada/);
+            expect(sql).toMatch(/fecha_completada = CASE WHEN \$2::boolean THEN NOW\(\) ELSE NULL END/);
+            expect(t.fechaCompletada).toBeNull();
         });
 
         it('si la tarea ya está en el estado pedido no escribe ni registra nada', async () => {
@@ -83,12 +82,13 @@ describe('AlternarTarea', () => {
             expect(registrarCambioMock).not.toHaveBeenCalled();
         });
 
-        it('quien marca puede ser distinto del asignado (queda registrado quién la completó)', async () => {
+        it('quien marca puede ser distinto del asignado', async () => {
             const { persistencia, ejecutar } = crearPersistenciaFalsa([
-                [filaTarea({ id_asignado_global: 8 })], [filaTarea({ id_asignado_global: 8, completada: true, completada_por_global: 5 })],
+                [filaTarea({ id_asignado_global: 8 })], [filaTarea({ id_asignado_global: 8, completada: true })],
             ]);
-            await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, completada: true });
-            expect(ejecutar.mock.calls[1][1][2]).toBe(5);
+            const t = await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, completada: true });
+            expect(t.completada).toBe(true);
+            expect(consultasA(ejecutar, /UPDATE tareas/)).toHaveLength(1);
         });
     });
 
@@ -119,13 +119,13 @@ describe('AlternarTarea', () => {
     });
 
     describe('permisos (test 104 y regla "Solo lectura: marcar tarea como hecha")', () => {
-        it('valida acceso con proyecto y creador de la tarea actual, permitiendo a todos los roles incluido lector', async () => {
+        it('valida acceso con el proyecto de la tarea y la acción "tarea.alternar" (permitida a todos los roles, incluido lector)', async () => {
             const { persistencia } = crearPersistenciaFalsa([
-                [filaTarea({ id_proyecto: 10, creada_por_global: 77, id_asignado_global: 8 })],
-                [filaTarea({ id_proyecto: 10, creada_por_global: 77, id_asignado_global: 8, completada: true })],
+                [filaTarea({ id_proyecto: 10, id_asignado_global: 8 })],
+                [filaTarea({ id_proyecto: 10, id_asignado_global: 8, completada: true })],
             ]);
             await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5 });
-            expect(exigirAccesoMock).toHaveBeenCalledWith(persistencia, 10, 77, 5, 'tarea.alternar');
+            expect(exigirAccesoMock).toHaveBeenCalledWith(persistencia, 10, null, 5, 'tarea.alternar');
         });
 
         it('si no tiene acceso propaga el error y no modifica ni registra nada', async () => {
@@ -137,10 +137,10 @@ describe('AlternarTarea', () => {
             expect(registrarCambioMock).not.toHaveBeenCalled();
         });
 
-        it('tarea personal: valida con idProyecto null y el creador de la tarea', async () => {
+        it('tarea personal: valida con idProyecto null y el dueño de la tarea', async () => {
             const { persistencia } = crearPersistenciaFalsa([
-                [filaTarea({ id_proyecto: null, creada_por_global: 5, id_asignado_global: null })],
-                [filaTarea({ id_proyecto: null, creada_por_global: 5, completada: true })],
+                [filaTarea({ id_proyecto: null, id_usuario: 5, id_asignado_global: null })],
+                [filaTarea({ id_proyecto: null, id_usuario: 5, completada: true })],
             ]);
             await new AlternarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5 });
             expect(exigirAccesoMock.mock.calls[0][1]).toBeNull();

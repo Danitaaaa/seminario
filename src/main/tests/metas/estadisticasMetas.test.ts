@@ -1,21 +1,22 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { EstadisticasMetasProyecto } from '../../logicaPersistente/gestionDeMetas/estadisticasMetas';
 import { exigirAcceso, filtroAlcance } from '../../logicaPersistente/gestionDeProyectos/alcance';
 import { crearPersistenciaFalsa } from './utilsTest';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `id_proyecto IS NULL AND id_usuario = $${valores.length}`;
     }),
 }), { virtual: true });
 
-const acceso = exigirAcceso as jest.Mock;
-const filtro = filtroAlcance as jest.Mock;
+const acceso = exigirAcceso as Mock;
+const filtro = filtroAlcance as Mock;
 
 describe('EstadisticasMetasProyecto', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it('exige acceso de lectura (cualquier rol)', async () => {
         const { persistencia } = crearPersistenciaFalsa([[], []]);
@@ -31,27 +32,25 @@ describe('EstadisticasMetasProyecto', () => {
         expect(ejecutar).not.toHaveBeenCalled();
     });
 
-    it('mapea resultados por mes y por miembro', async () => {
+    it('mapea los resultados por mes', async () => {
         const porMes = [
             { mes: '2026-09', total: 5, completadas: 3, trasladadas: 1 },
             { mes: '2026-10', total: 2, completadas: 2, trasladadas: 0 },
         ];
-        const porMiembro = [{ id_usuario: 7, completadas: 4 }, { id_usuario: 8, completadas: 1 }];
-        const { persistencia } = crearPersistenciaFalsa([porMes, porMiembro]);
+        const { persistencia } = crearPersistenciaFalsa([porMes]);
         const r = await new EstadisticasMetasProyecto(persistencia).ejecutar({ idUsuario: 7, idProyecto: 3 });
         expect(r).toEqual({
             porMes: [
                 { mes: '2026-09', total: 5, completadas: 3, trasladadas: 1 },
                 { mes: '2026-10', total: 2, completadas: 2, trasladadas: 0 },
             ],
-            porMiembro: [{ idUsuario: 7, completadas: 4 }, { idUsuario: 8, completadas: 1 }],
         });
     });
 
-    it('sin datos devuelve listas vacías', async () => {
-        const { persistencia } = crearPersistenciaFalsa([[], []]);
+    it('sin datos devuelve la lista vacía', async () => {
+        const { persistencia } = crearPersistenciaFalsa([[]]);
         await expect(new EstadisticasMetasProyecto(persistencia).ejecutar({ idUsuario: 7 }))
-            .resolves.toEqual({ porMes: [], porMiembro: [] });
+            .resolves.toEqual({ porMes: [] });
     });
 
     it('sin rango solo aplica el filtro de alcance', async () => {
@@ -96,18 +95,14 @@ describe('EstadisticasMetasProyecto', () => {
         await new EstadisticasMetasProyecto(persistencia).ejecutar({ idUsuario: 7 });
         expect(acceso).toHaveBeenCalledWith(persistencia, null, 7, 7, 'meta.listar');
         expect(filtro).toHaveBeenCalledWith(expect.any(Array), null, 7);
-        expect(ejecutar.mock.calls[0][0]).toContain('creada_por_global = $1');
+        expect(ejecutar.mock.calls[0][0]).toContain('id_proyecto IS NULL AND id_usuario = $1');
     });
 
-    it('ejecuta primero la consulta por mes y luego la de miembros, con los mismos valores', async () => {
-        const { persistencia, ejecutar } = crearPersistenciaFalsa([[], []]);
+    it('hace una sola consulta, agrupada por mes', async () => {
+        const { persistencia, ejecutar } = crearPersistenciaFalsa([[]]);
         await new EstadisticasMetasProyecto(persistencia).ejecutar({ idUsuario: 7, idProyecto: 3, desde: '2026-01' });
-        expect(ejecutar).toHaveBeenCalledTimes(2);
-        const [sqlMes, valoresMes] = ejecutar.mock.calls[0];
-        const [sqlMiembro, valoresMiembro] = ejecutar.mock.calls[1];
-        expect(sqlMes).toContain('GROUP BY mes ORDER BY mes');
-        expect(sqlMiembro).toContain('GROUP BY completada_por_global ORDER BY completadas DESC');
-        expect(valoresMiembro).toEqual(valoresMes);
+        expect(ejecutar).toHaveBeenCalledTimes(1);
+        expect(ejecutar.mock.calls[0][0]).toContain('GROUP BY mes ORDER BY mes');
     });
 
     it('la consulta por mes excluye trasladadas del total y las informa aparte', async () => {
@@ -119,13 +114,6 @@ describe('EstadisticasMetasProyecto', () => {
         expect(sql).toContain('COUNT(*) FILTER (WHERE trasladada)');
         expect(sql).toContain('NOT m.completada AND EXISTS');
         expect(sql).toContain('t.id_meta_origen = m.id_meta');
-    });
-
-    it('la consulta por miembro solo cuenta completadas con responsable', async () => {
-        const { persistencia, ejecutar } = crearPersistenciaFalsa([[], []]);
-        await new EstadisticasMetasProyecto(persistencia).ejecutar({ idUsuario: 7 });
-        const sql: string = ejecutar.mock.calls[1][0];
-        expect(sql).toContain('AND completada AND completada_por_global IS NOT NULL');
     });
 
     it('rechaza rangos con formato inválido sin consultar', async () => {

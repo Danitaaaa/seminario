@@ -112,7 +112,7 @@ export function mensajeDeError(err: unknown, generico: string): string {
 
 // Para quien tiene el plan en PDF o en foto: lo pega en cualquier IA junto con el plan
 // y lo que le devuelve ya viene en el formato que entiende el lector de Syntra.
-export const PROMPT_PLAN = `Te adjunto el plan de estudios de mi carrera o curso. Puede ser de cualquier universidad, instituto o academia, y venir en tabla, lista, PDF o foto. Pasámelo a texto plano con este formato exacto, sin agregar nada más (ni explicaciones, ni títulos, ni comillas, ni tablas):
+export const PROMPT_PLAN = `Te adjunto el plan de estudios de mi carrera o curso. Puede ser de cualquier universidad, instituto o academia, y venir en tabla, lista, PDF escaneado, foto o captura. Pasámelo a texto plano con este formato exacto, sin agregar nada más (ni explicaciones, ni títulos, ni comillas, ni tablas):
 
 1er año
 Primer cuatrimestre
@@ -125,27 +125,47 @@ Nombre de la materia
 2do año
 ...
 
+La respuesta empieza directo con "1er año" (sin el nombre de la carrera ni otra línea antes).
+
+Antes de empezar:
+- Usá solo la tabla o lista de materias del plan. Ignorá resoluciones, contenidos mínimos, perfiles, cargas horarias, matrices de competencias, tablas de equivalencias, planes viejos o de transición y notas al pie.
+- Si en el archivo hay más de una carrera o título, o la carrera tiene orientaciones, líneas, menciones o especialidades que se eligen, y no te dije cuál, preguntame cuál antes de responder. Después pasá solo las materias comunes y las de la que elegí.
+- Si el plan está en varias imágenes y te falta alguna (por ejemplo dice "1 de 3"), avisame.
+- Leé la tabla con cuidado: en las tablas con celdas combinadas, el año de la izquierda abarca varias filas; fijate en qué año cae cada materia. Si los cuatrimestres están en dos columnas, una al lado de la otra, primero pasá todas las de la columna del primer cuatrimestre y después las del segundo. Dos materias que están en la misma fila de columnas distintas son materias separadas, no correlativas.
+
 Reglas para los años:
 - Antes de las materias de cada año poné una línea con el año: "1er año", "2do año", "3er año", "4to año", "5to año", "6to año".
 - Si el plan habla de "nivel", "curso", "ciclo" o "etapa" en vez de año, convertilo a año en orden (Nivel I = 1er año, Ciclo básico de 2 años = 1er y 2do año, etc.). Si no se puede saber, usá el orden en que aparecen.
-- Si una materia no tiene año claro (por ejemplo, electivas que se cursan en cualquier momento), ponela al final bajo "Sin año".
+- Si los semestres o cuatrimestres están numerados de corrido (1 a 10), cada dos son un año: 1 y 2 = 1er año, 3 y 4 = 2do año, y así. El impar es el primer cuatrimestre y el par el segundo.
+- Si las materias están agrupadas en bloques, módulos o columnas que no son años (Bloque A, Bloque B, Campo de la formación general...), ignorá esos grupos y ordená todo por año.
+- Si una materia no tiene año claro, ponela al final bajo "Sin año".
 - Respetá el año y el período que dice el plan para cada materia. No los cambies ni los deduzcas por las correlativas ni por el orden en que aparecen en otra tabla.
 
 Reglas para los períodos:
 - Si el plan dice cuatrimestre o semestre, poné "Primer cuatrimestre", "Segundo cuatrimestre" o "Anual" antes de esas materias (semestre = cuatrimestre).
+- Abreviaturas: "A" = Anual, "1C" = Primer cuatrimestre, "2C" = Segundo cuatrimestre. Si dice "1C-2C" o "2C-1C" (se dicta en los dos), usá el primero que aparece.
+- Si el período no está escrito pero hay columnas de horas por cuatrimestre: con horas en los dos es Anual, con horas en uno solo es ese cuatrimestre.
+- Si el plan dice que todo el cursado es anual, poné "Anual" en cada año. Si el período está junto al formato ("Asignatura anual", "Seminario cuatrimestral"), usalo.
 - Si es bimestral, trimestral o por módulos, o no dice nada, no pongas ninguna línea de período.
 
 Reglas para las materias:
-- Una materia por línea, con el nombre completo tal como figura en el plan, sin abreviar.
-- Sin números de orden, códigos, horas, créditos, viñetas, barras invertidas ni punto final.
-- Incluí electivas, optativas, prácticas, talleres, seminarios, tesis y proyecto final como materias. Si el plan solo dice "Electiva I", "Electiva II", dejalas así.
-- No incluyas títulos de secciones, áreas, totales, cargas horarias, títulos intermedios ni notas al pie.
-- No repitas materias: si una aparece dos veces, dejá solo la primera.
+- Una materia por línea, con el nombre completo. Si en el plan el nombre ocupa dos renglones, juntalo en uno.
+- Escribí los nombres con mayúscula solo al principio y en los nombres propios (no todo en mayúsculas), con sus tildes, y sin abreviar ("Práct. Gral." = "Práctica General").
+- Sin números de orden, códigos, horas, créditos, formato (asignatura, taller, seminario), marcas como "(Int)", "(M)", "(S)" o asteriscos, viñetas, barras invertidas ni punto final.
+- Incluí prácticas, talleres, seminarios, tesis, trabajo final y proyecto final como materias.
+- Electivas y optativas: si el plan trae una lista larga para elegir, no copies la lista. Poné "Electiva 1", "Electiva 2"... (u "Optativa 1"...) en el año que corresponde, tantas como pida el plan; si no dice cuántas, poné una sola.
+- Si una materia se elige entre dos ("Latín II (o Filosofía del Lenguaje II)"), es una sola materia: dejala en una sola línea, "Latín II o Filosofía del Lenguaje II".
+- Si una materia genérica se repite (Seminario electivo, Seminario optativo, Electiva, Optativa), numeralas en orden en todo el plan: "Seminario Electivo 1", "Seminario Electivo 2".
+- Si otra materia aparece igual en varios años (por ejemplo "Práctica Profesionalizante" en 2do, 3er y 4to año), agregale el año entre paréntesis: "Práctica Profesionalizante (2do año)", "Práctica Profesionalizante (3er año)".
+- No incluyas títulos de secciones, áreas, totales ni títulos intermedios.
 
 Reglas para las correlativas:
-- Si el plan dice qué materias hay que tener para cursar o rendir otra, ponelas en la misma línea de esa materia, después de " | ", separadas con ";".
-- Escribí cada correlativa con el nombre completo, igual a como la escribiste en su propia línea. Si el plan las indica con número o código, buscá a qué materia corresponde y poné su nombre.
+- La barra " | " es solo para correlativas. Nunca la uses para poner dos materias en la misma línea.
+- Si el plan dice qué materias hay que tener para cursar o rendir otra (en una columna o tabla de correlatividades), ponelas en la misma línea de esa materia, después de " | ", separadas con ";".
+- Escribí cada correlativa con el nombre EXACTO con el que la escribiste en su propia línea (incluido el año entre paréntesis si se lo agregaste). Si el plan la abrevia o la escribe distinto, buscá a qué materia corresponde.
+- Si el plan las indica con número de orden, buscá a qué materia corresponde cada número y poné su nombre. "1-4" o "1-2-4" son esas materias sueltas; "1 a 6" es de la 1 a la 6. Un guion solo ("-", "–") es que no tiene.
 - Si el plan separa correlativas "regularizadas" y "aprobadas", o "para cursar" y "para rendir", ponelas todas juntas, sin aclarar cuál es cuál.
+- Si una regla dice "todas las materias anteriores" o similar, no la pongas como correlativa.
 - Si una materia no tiene correlativas o el plan no las dice, no pongas la barra.
 
 No resumas ni inventes materias ni correlativas: si algo no se lee bien, copialo como está.`;

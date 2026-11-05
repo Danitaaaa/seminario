@@ -1,19 +1,20 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { EliminarTarea } from '../../logicaPersistente/gestionDeTareas/eliminarTarea';
 import { crearPersistenciaFalsa, filaTarea } from './pruebasComunes';
 import { consultasA } from './persistenciaPorSql';
 import * as alcance from '../../logicaPersistente/gestionDeProyectos/alcance';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn(),
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn(),
 }));
 
-const exigirAccesoMock = alcance.exigirAcceso as jest.Mock;
-const registrarCambioMock = alcance.registrarCambioSiProyecto as jest.Mock;
+const exigirAccesoMock = alcance.exigirAcceso as Mock;
+const registrarCambioMock = alcance.registrarCambioSiProyecto as Mock;
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     exigirAccesoMock.mockResolvedValue(undefined);
     registrarCambioMock.mockResolvedValue(undefined);
 });
@@ -40,7 +41,7 @@ describe('EliminarTarea', () => {
 
         it('una tarea personal se elimina y se delega el registro con idProyecto null', async () => {
             const { persistencia, tx } = crearPersistenciaFalsa([
-                [filaTarea({ id_tarea: 4, id_proyecto: null, titulo: 'Mía', creada_por_global: 5 })], [{ id_global: 'g-4' }],
+                [filaTarea({ id_tarea: 4, id_proyecto: null, titulo: 'Mía', id_usuario: 5 })], [{ id_global: 'g-4' }],
             ]);
             await new EliminarTarea(persistencia).ejecutar({ idTarea: 4, idUsuario: 5 });
             expect(registrarCambioMock).toHaveBeenCalledWith(tx, null, 'tarea', 4, 'eliminar',
@@ -56,12 +57,12 @@ describe('EliminarTarea', () => {
             expect(roles).toBe('tarea.eliminar');
         });
 
-        it('valida contra el proyecto y el creador de la tarea (un editor puede borrar la de otro miembro)', async () => {
+        it('en un proyecto valida por rol, no por quién la creó (un editor puede borrar la de otro miembro)', async () => {
             const { persistencia } = crearPersistenciaFalsa([
-                [filaTarea({ id_proyecto: 10, creada_por_global: 77 })], [{ id_global: 'g-1' }],
+                [filaTarea({ id_proyecto: 10 })], [{ id_global: 'g-1' }],
             ]);
             await new EliminarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5 });
-            expect(exigirAccesoMock).toHaveBeenCalledWith(persistencia, 10, 77, 5, 'tarea.eliminar');
+            expect(exigirAccesoMock).toHaveBeenCalledWith(persistencia, 10, null, 5, 'tarea.eliminar');
         });
 
         it('si no tiene acceso propaga el error y no elimina ni registra nada', async () => {
@@ -75,7 +76,7 @@ describe('EliminarTarea', () => {
 
         it('tarea personal: valida con idProyecto null', async () => {
             const { persistencia } = crearPersistenciaFalsa([
-                [filaTarea({ id_proyecto: null, creada_por_global: 5 })], [{ id_global: 'g-1' }],
+                [filaTarea({ id_proyecto: null, id_usuario: 5 })], [{ id_global: 'g-1' }],
             ]);
             await new EliminarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5 });
             expect(exigirAccesoMock.mock.calls[0][1]).toBeNull();

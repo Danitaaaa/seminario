@@ -1,21 +1,22 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { AlternarMeta } from '../../logicaPersistente/gestionDeMetas/alternarMeta';
 import { exigirAcceso, registrarCambioSiProyecto } from '../../logicaPersistente/gestionDeProyectos/alcance';
 import { crearPersistenciaFalsa, filaMeta } from './utilsTest';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `id_proyecto IS NULL AND id_usuario = $${valores.length}`;
     }),
 }), { virtual: true });
 
-const acceso = exigirAcceso as jest.Mock;
-const registrar = registrarCambioSiProyecto as jest.Mock;
+const acceso = exigirAcceso as Mock;
+const registrar = registrarCambioSiProyecto as Mock;
 
 describe('AlternarMeta', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it('lanza "Meta inexistente" si no existe', async () => {
         const { persistencia } = crearPersistenciaFalsa([[]]);
@@ -23,7 +24,7 @@ describe('AlternarMeta', () => {
     });
 
     it('exige propietario o editor con el proyecto y creador de la meta', async () => {
-        const actual = filaMeta({ id_proyecto: 4, creada_por_global: 12 });
+        const actual = filaMeta({ id_proyecto: 4, id_usuario: 12 });
         const { persistencia } = crearPersistenciaFalsa([[actual]], [[actual]]);
         await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
         expect(acceso).toHaveBeenCalledWith(persistencia, 4, 12, 7, 'meta.alternar');
@@ -48,7 +49,7 @@ describe('AlternarMeta', () => {
         const { persistencia, txEjecutar } = crearPersistenciaFalsa(
             [[filaMeta({ completada: false })]], [[filaMeta({ completada: true })]]);
         const meta = await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
-        expect(txEjecutar.mock.calls[0][1]).toEqual([true, 7, 1]);
+        expect(txEjecutar.mock.calls[0][1]).toEqual([true, 1]);
         expect(meta.completada).toBe(true);
     });
 
@@ -56,7 +57,7 @@ describe('AlternarMeta', () => {
         const { persistencia, txEjecutar } = crearPersistenciaFalsa(
             [[filaMeta({ completada: true })]], [[filaMeta({ completada: false })]]);
         const meta = await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
-        expect(txEjecutar.mock.calls[0][1]).toEqual([false, 7, 1]);
+        expect(txEjecutar.mock.calls[0][1]).toEqual([false, 1]);
         expect(meta.completada).toBe(false);
     });
 
@@ -74,19 +75,18 @@ describe('AlternarMeta', () => {
         expect(txEjecutar.mock.calls[0][1][0]).toBe(false);
     });
 
-    it('el UPDATE setea fecha y usuario al completar y los limpia al desmarcar', async () => {
+    it('el UPDATE setea la fecha al completar y la limpia al desmarcar', async () => {
         const { persistencia, txEjecutar } = crearPersistenciaFalsa([[filaMeta()]], [[filaMeta()]]);
         await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
         const sql: string = txEjecutar.mock.calls[0][0];
-        expect(sql).toContain('fecha_completada = CASE WHEN $1 THEN NOW() ELSE NULL END');
-        expect(sql).toContain('completada_por_global = CASE WHEN $1 THEN $2::int ELSE NULL END');
-        expect(sql).toContain('WHERE id_meta = $3');
+        expect(sql).toContain('fecha_completada = CASE WHEN $1::boolean THEN NOW() ELSE NULL END');
+        expect(sql).toContain('WHERE id_meta = $2');
     });
 
-    it('guarda como "completada_por_global" al usuario que solicita (no al creador)', async () => {
-        const { persistencia, txEjecutar } = crearPersistenciaFalsa([[filaMeta({ creada_por_global: 12 })]], [[filaMeta()]]);
+    it('en una meta de proyecto cualquier editor la marca, aunque no la haya creado', async () => {
+        const { persistencia, txEjecutar } = crearPersistenciaFalsa([[filaMeta({ id_proyecto: 3, id_usuario: null })]], [[filaMeta()]]);
         await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
-        expect(txEjecutar.mock.calls[0][1][1]).toBe(7);
+        expect(txEjecutar).toHaveBeenCalledTimes(1);
     });
 
     it('registra el cambio "modificar" con el estado resultante', async () => {
@@ -128,7 +128,7 @@ describe('AlternarMeta', () => {
     });
 
     it('en una meta personal ajena el control de acceso recibe al creador real de la meta', async () => {
-        const { persistencia } = crearPersistenciaFalsa([[filaMeta({ id_proyecto: null, creada_por_global: 12 })]], [[filaMeta()]]);
+        const { persistencia } = crearPersistenciaFalsa([[filaMeta({ id_proyecto: null, id_usuario: 12 })]], [[filaMeta()]]);
         await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
         expect(acceso).toHaveBeenCalledWith(persistencia, null, 12, 7, 'meta.alternar');
     });

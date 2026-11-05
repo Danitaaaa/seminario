@@ -1,19 +1,20 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { ModificarTarea } from '../../logicaPersistente/gestionDeTareas/modificarTarea';
 import { crearPersistenciaFalsa, filaTarea } from './pruebasComunes';
 import { consultasA } from './persistenciaPorSql';
 import * as alcance from '../../logicaPersistente/gestionDeProyectos/alcance';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn(),
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn(),
 }));
 
-const exigirAcceso = alcance.exigirAcceso as jest.Mock;
-const registrarCambio = alcance.registrarCambioSiProyecto as jest.Mock;
+const exigirAcceso = alcance.exigirAcceso as Mock;
+const registrarCambio = alcance.registrarCambioSiProyecto as Mock;
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     exigirAcceso.mockResolvedValue(undefined);
     registrarCambio.mockResolvedValue(undefined);
 });
@@ -106,12 +107,12 @@ describe('ModificarTarea', () => {
             expect(roles).toBe('tarea.editar');
         });
 
-        it('90: valida contra el creador de la tarea, no contra quien modifica (un editor puede modificar la del propietario)', async () => {
+        it('90: en un proyecto valida por rol, no por quién la creó (un editor puede modificar la del propietario)', async () => {
             const { persistencia } = crearPersistenciaFalsa([
-                [filaTarea({ id_proyecto: 10, creada_por_global: 1 })], [filaTarea({ id_proyecto: 10, creada_por_global: 1 })],
+                [filaTarea({ id_proyecto: 10 })], [filaTarea({ id_proyecto: 10 })],
             ]);
             await new ModificarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, titulo: 'N' });
-            expect(exigirAcceso).toHaveBeenCalledWith(persistencia, 10, 1, 5, 'tarea.editar');
+            expect(exigirAcceso).toHaveBeenCalledWith(persistencia, 10, null, 5, 'tarea.editar');
         });
 
         it('si no tiene acceso propaga el error y no modifica ni registra nada', async () => {
@@ -125,7 +126,7 @@ describe('ModificarTarea', () => {
 
         it('tarea personal: valida con idProyecto null', async () => {
             const { persistencia } = crearPersistenciaFalsa([
-                [filaTarea({ id_proyecto: null, creada_por_global: 5 })], [filaTarea({ id_proyecto: null })],
+                [filaTarea({ id_proyecto: null, id_usuario: 5 })], [filaTarea({ id_proyecto: null })],
             ]);
             await new ModificarTarea(persistencia).ejecutar({ idTarea: 1, idUsuario: 5, titulo: 'N' });
             expect(exigirAcceso.mock.calls[0][1]).toBeNull();

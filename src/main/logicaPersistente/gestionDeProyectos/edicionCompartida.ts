@@ -311,13 +311,22 @@ export class EdicionCompartida {
 
     /* ===================== Conflictos ===================== */
 
-    async listarConflictos(entrada: unknown): Promise<{ entidad: EntidadEditable; idGlobal: string }[]> {
+    async listarConflictos(entrada: unknown): Promise<{ entidad: EntidadEditable; idGlobal: string; nombre: string | null }[]> {
         const dto = ProyectoUsuarioDTO.parse(entrada);
         await exigirPermiso(this.p, dto.idProyecto, dto.idUsuario, 'conflictos.listar');
+        // El nombre sale de la tabla de cada entidad, para mostrar en pantalla qué elemento tiene el conflicto.
         const filas = await this.p.ejecutar(
-            `SELECT entidad, id_global FROM estado_entidad_remota WHERE id_proyecto = $1 AND conflicto_remoto IS NOT NULL`,
+            `SELECT e.entidad, e.id_global,
+                    CASE e.entidad
+                      WHEN 'archivo' THEN (SELECT a.nombre || COALESCE('.' || a.extension, '') FROM archivos a WHERE a.id_global = e.id_global)
+                      WHEN 'tarea'   THEN (SELECT t.titulo FROM tareas t WHERE t.id_global = e.id_global)
+                      WHEN 'evento'  THEN (SELECT v.titulo FROM eventos v WHERE v.id_global = e.id_global)
+                      WHEN 'meta'    THEN (SELECT m.titulo FROM metas m WHERE m.id_global = e.id_global)
+                    END AS nombre
+             FROM estado_entidad_remota e
+             WHERE e.id_proyecto = $1 AND e.conflicto_remoto IS NOT NULL`,
             [dto.idProyecto]);
-        return filas.map(f => ({ entidad: f.entidad, idGlobal: f.id_global }));
+        return filas.map(f => ({ entidad: f.entidad, idGlobal: f.id_global, nombre: f.nombre ?? null }));
     }
 
     /**

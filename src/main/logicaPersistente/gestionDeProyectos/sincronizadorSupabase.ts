@@ -164,7 +164,8 @@ export class SincronizadorSupabase implements ISincronizador, IBloqueador, IAvis
             mail: String(m.mail).toLowerCase(),
             rol: m.rol,
             idGlobal: m.idGlobal ?? m.id_usuario_global ?? null,
-            activo: !!m.activo,
+            // Si el servidor no manda "activo", se deduce de la fecha de baja (sin baja = activo).
+            activo: m.activo !== undefined && m.activo !== null ? !!m.activo : !(m.fechaBaja ?? m.baja_en),
             pendiente: !!m.pendiente,
             fechaUnion: fecha(m.fechaUnion ?? m.unido_en),
             fechaBaja: fecha(m.fechaBaja ?? m.baja_en),

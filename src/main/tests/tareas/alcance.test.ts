@@ -1,16 +1,17 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { exigirAcceso, registrarCambioSiProyecto, filtroAlcance } from '../../logicaPersistente/gestionDeProyectos/alcance';
 import * as permisos from '../../logicaPersistente/gestionDeProyectos/permisos';
 import { IPersistenciaProyectos } from '../../logicaPersistente/gestionDeProyectos/interfacesSincronizacion';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/permisos');
+vi.mock('../../logicaPersistente/gestionDeProyectos/permisos');
 
-const exigirPermiso = permisos.exigirPermiso as jest.Mock;
-const registrarCambio = permisos.registrarCambio as jest.Mock;
+const exigirPermiso = permisos.exigirPermiso as Mock;
+const registrarCambio = permisos.registrarCambio as Mock;
 
 const persistencia = {} as IPersistenciaProyectos;
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     exigirPermiso.mockResolvedValue('editor');
     registrarCambio.mockResolvedValue(undefined);
 });
@@ -57,7 +58,7 @@ describe('exigirAcceso', () => {
 });
 
 describe('registrarCambioSiProyecto', () => {
-    const tx = { ejecutar: jest.fn() };
+    const tx = { ejecutar: vi.fn() };
     const txAny = tx as never;
 
     beforeEach(() => {
@@ -125,7 +126,7 @@ describe('filtroAlcance', () => {
 
     it.each([[null], [undefined]])('idProyecto=%p: filtra tareas personales del usuario', idProyecto => {
         const valores: unknown[] = [];
-        expect(filtroAlcance(valores, idProyecto, 5)).toBe('id_proyecto IS NULL AND creada_por_global = $1');
+        expect(filtroAlcance(valores, idProyecto, 5)).toBe('id_proyecto IS NULL AND id_usuario = $1');
         expect(valores).toEqual([5]);
     });
 });

@@ -1,8 +1,9 @@
+import { describe, it, expect, vi } from 'vitest';
 import { obtenerRolActivo, exigirPermiso, registrarCambio } from '../../logicaPersistente/gestionDeProyectos/permisos';
 import { IPersistenciaProyectos } from '../../logicaPersistente/gestionDeProyectos/interfacesSincronizacion';
 
 function persistenciaFalsa() {
-    const ejecutar = jest.fn();
+    const ejecutar = vi.fn();
     const p = { ejecutar };
     return { p, ejecutar };
 }

@@ -1,21 +1,22 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { ModificarMeta } from '../../logicaPersistente/gestionDeMetas/modificarMeta';
 import { exigirAcceso, registrarCambioSiProyecto } from '../../logicaPersistente/gestionDeProyectos/alcance';
 import { crearPersistenciaFalsa, filaMeta } from './utilsTest';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `id_proyecto IS NULL AND id_usuario = $${valores.length}`;
     }),
 }), { virtual: true });
 
-const acceso = exigirAcceso as jest.Mock;
-const registrar = registrarCambioSiProyecto as jest.Mock;
+const acceso = exigirAcceso as Mock;
+const registrar = registrarCambioSiProyecto as Mock;
 
 describe('ModificarMeta', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it('lanza "Meta inexistente" si la meta no existe', async () => {
         const { persistencia, transaccion } = crearPersistenciaFalsa([[]]);
@@ -26,7 +27,7 @@ describe('ModificarMeta', () => {
     });
 
     it('exige propietario o editor usando proyecto y creador de la meta existente', async () => {
-        const actual = filaMeta({ id_proyecto: 4, creada_por_global: 12 });
+        const actual = filaMeta({ id_proyecto: 4, id_usuario: 12 });
         const { persistencia } = crearPersistenciaFalsa([[actual]], [[actual]]);
         await new ModificarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7, titulo: 'X' });
         expect(acceso).toHaveBeenCalledWith(persistencia, 4, 12, 7, 'meta.editar');

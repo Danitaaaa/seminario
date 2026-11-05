@@ -1,10 +1,11 @@
+import { vi } from 'vitest';
 import { IPersistenciaProyectos } from '../../logicaPersistente/gestionDeProyectos/interfacesSincronizacion';
 
 export function crearPersistenciaFalsa(lecturas: any[][] = [], escrituras: any[][] = []) {
-    const ejecutar = jest.fn(async (_sql: string, _valores?: unknown[]) => lecturas.shift() ?? []);
-    const txEjecutar = jest.fn(async (_sql: string, _valores?: unknown[]) => escrituras.shift() ?? []);
+    const ejecutar = vi.fn(async (_sql: string, _valores?: unknown[]) => lecturas.shift() ?? []);
+    const txEjecutar = vi.fn(async (_sql: string, _valores?: unknown[]) => escrituras.shift() ?? []);
     const tx = { ejecutar: txEjecutar };
-    const transaccion = jest.fn(async (fn: (tx: any) => Promise<any>) => fn(tx));
+    const transaccion = vi.fn(async (fn: (tx: any) => Promise<any>) => fn(tx));
     return {
         persistencia: { ejecutar, transaccion } as unknown as IPersistenciaProyectos,
         ejecutar,
@@ -26,9 +27,8 @@ export function filaMeta(o: Record<string, any> = {}) {
         fecha_limite_texto: null,
         completada: false,
         fecha_completada: null,
-        completada_por_global: null,
         orden: 1,
-        creada_por_global: 7,
+        id_usuario: 7,          // dueño (metas personales)
         fecha_creacion: new Date('2026-10-01T12:00:00Z'),
         trasladada_a: null,
         id_meta_origen: null,

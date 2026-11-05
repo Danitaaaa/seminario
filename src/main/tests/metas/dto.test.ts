@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import {
     MesSchema, CrearMetaDTOSchema, ListarMetasDTOSchema, ModificarMetaDTOSchema,
     AlternarMetaDTOSchema, EliminarMetaDTOSchema, CopiarMetasDTOSchema, EstadisticasMetasDTOSchema,

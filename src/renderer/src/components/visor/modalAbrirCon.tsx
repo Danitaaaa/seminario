@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Archivo } from '../../types/nodo';
 import type { AplicacionExterna } from '../../types/archivo';
-import { OPCIONES_ABRIR_CON, abrirCon, type DestinoExterno } from './abrirCon';
+import { OPCIONES_ABRIR_CON, abrirCon, esMultimedia, type DestinoExterno } from './abrirCon';
 import '../../styles/abrirCon.css';
 
 interface ModalAbrirConProps {
@@ -16,11 +16,14 @@ const mensajeDe = (e: unknown) =>
     ? e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '')
     : 'No se pudo abrir el archivo.';
 
-// Cartel "Abrir con": Microsoft / Google arriba, traer la versión de Drive y, abajo, las apps del sistema.
+// Cartel "Abrir con": Microsoft / Google arriba (o la app predeterminada si es una foto, video o audio),
+// traer la versión de Drive y, abajo, las apps del sistema.
 export function ModalAbrirCon({ archivo, onCerrar, onError }: ModalAbrirConProps) {
   const [aplicaciones, setAplicaciones] = useState<AplicacionExterna[] | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [confirmandoTraer, setConfirmandoTraer] = useState(false);
+  const multimedia = esMultimedia(archivo.extension ?? '');
+  const cancelado = useRef(false);
 
   useEffect(() => {
     window.api.aplicacionesDisponibles({ id: archivo.id })
@@ -33,9 +36,16 @@ export function ModalAbrirCon({ archivo, onCerrar, onError }: ModalAbrirConProps
     accion()
       .then(onCerrar)
       .catch((e) => {
-        onError(mensajeDe(e));
+        if (!cancelado.current) onError(mensajeDe(e));
         onCerrar();
       });
+  };
+
+  // Si se cerró la pestaña de Google o tarda demasiado, se deja de esperar.
+  const cancelar = () => {
+    cancelado.current = true;
+    window.api.cancelarDrive().catch(() => {});
+    onCerrar();
   };
 
   const elegir = (destino: DestinoExterno) =>
@@ -51,7 +61,13 @@ export function ModalAbrirCon({ archivo, onCerrar, onError }: ModalAbrirConProps
         <p className="abrir-con-modal__archivo">{archivo.nombre}.{archivo.extension}</p>
 
         {ocupado ? (
-          <p className="abrir-con-modal__aviso">{ocupado}</p>
+          <>
+            <p className="abrir-con-modal__aviso">{ocupado}</p>
+            <p className="abrir-con-modal__archivo">Si se abrió Google en el navegador, iniciá sesión ahí.</p>
+            <div className="abrir-con-modal__acciones">
+              <button type="button" className="abrir-con-modal__cerrar" onClick={cancelar}>Cancelar</button>
+            </div>
+          </>
         ) : confirmandoTraer ? (
           <>
             <p className="abrir-con-modal__aviso">
@@ -68,17 +84,28 @@ export function ModalAbrirCon({ archivo, onCerrar, onError }: ModalAbrirConProps
           </>
         ) : (
           <>
-            <div className="abrir-con__opciones">
-              {OPCIONES_ABRIR_CON.map((o) => (
-                <button key={o.destino} type="button" className="abrir-con__opcion" onClick={() => elegir(o.destino)}>
-                  <strong>{o.etiqueta}</strong>
-                  <span>{o.detalle}</span>
+            {multimedia ? (
+              // Imágenes, videos y audios: la app que usa el sistema (Fotos, Reproductor multimedia...).
+              <button type="button" className="abrir-con__opcion"
+                onClick={() => ejecutar(() => window.api.abrirExterno({ id: archivo.id }))}>
+                <strong>Aplicación predeterminada</strong>
+                <span>La que usa tu computadora para este tipo de archivo (por ejemplo, Fotos)</span>
+              </button>
+            ) : (
+              <>
+                <div className="abrir-con__opciones">
+                  {OPCIONES_ABRIR_CON.map((o) => (
+                    <button key={o.destino} type="button" className="abrir-con__opcion" onClick={() => elegir(o.destino)}>
+                      <strong>{o.etiqueta}</strong>
+                      <span>{o.detalle}</span>
+                    </button>
+                  ))}
+                </div>
+                <button type="button" className="abrir-con__otra" onClick={() => setConfirmandoTraer(true)}>
+                  Traer versión de Google Drive…
                 </button>
-              ))}
-            </div>
-            <button type="button" className="abrir-con__otra" onClick={() => setConfirmandoTraer(true)}>
-              Traer versión de Google Drive…
-            </button>
+              </>
+            )}
 
             <p className="abrir-con__subtitulo">Otras aplicaciones</p>
             <div className="abrir-con__lista">

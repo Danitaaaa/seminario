@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 // Reproduce el bug: al listar, las tareas sin asignar aparecen para miembros que no son propietarios.
 // (Bug exploratorio Nº 7 y tests 85, 86, 93, 94 del módulo de proyectos.)
 // Usa alcance.ts y permisos.ts REALES: el rol del usuario que lista viene de la base falsa,

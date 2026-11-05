@@ -42,7 +42,12 @@ export async function mailDelMiembro(
 // la validación local (resolverAsignado, permisos) vea a todos los integrantes.
 // No encola nada en cola_sincronizacion: es información que ya viene del servidor.
 // Requiere la migración que permite id_usuario NULL y agrega la columna mail.
-export async function aplicarMiembrosRemotos(tx: Tx, idProyecto: number, remotos: MiembroRemoto[]): Promise<void> {
+// Devuelve true si cambió algo (alta, baja o rol), para avisarle a la interfaz.
+export async function aplicarMiembrosRemotos(tx: Tx, idProyecto: number, remotos: MiembroRemoto[]): Promise<boolean> {
+    const foto = async () => JSON.stringify(await tx.ejecutar(
+        `SELECT id_proyecto_miembro, rol, fecha_baja FROM proyecto_miembros
+         WHERE id_proyecto = $1 ORDER BY id_proyecto_miembro`, [idProyecto]));
+    const antes = await foto();
     for (const m of remotos) {
         if (m.pendiente) continue; // todavía no se unió
         const mail = m.mail.trim().toLowerCase();
@@ -82,4 +87,5 @@ export async function aplicarMiembrosRemotos(tx: Tx, idProyecto: number, remotos
             );
         }
     }
+    return (await foto()) !== antes;
 }

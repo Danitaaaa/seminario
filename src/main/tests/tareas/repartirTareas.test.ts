@@ -1,32 +1,35 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { RepartirTareas } from '../../logicaPersistente/gestionDeTareas/repartirTareas';
 import { crearPersistenciaFalsa, filaTarea, Respuesta } from './pruebasComunes';
 import { consultasA } from './persistenciaPorSql';
 import * as permisos from '../../logicaPersistente/gestionDeProyectos/permisos';
 import * as alcance from '../../logicaPersistente/gestionDeProyectos/alcance';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/permisos');
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance');
+vi.mock('../../logicaPersistente/gestionDeProyectos/permisos');
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance');
 
-const exigirRolMock = permisos.exigirPermiso as jest.Mock;
-const registrarCambioMock = alcance.registrarCambioSiProyecto as jest.Mock;
+const exigirRolMock = permisos.exigirPermiso as Mock;
+const registrarCambioMock = alcance.registrarCambioSiProyecto as Mock;
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     exigirRolMock.mockResolvedValue(undefined);
     registrarCambioMock.mockResolvedValue(undefined);
 });
 
 const ID_PROYECTO = 10;
 
+// UPDATE tareas SET id_asignado = $2, id_asignado_global = $3, orden = $4 WHERE id_tarea = $1
 const respuestaUpdate: Respuesta = (_sql, p) => [
-    filaTarea({ id_tarea: p[0], id_asignado_global: p[1], orden: p[2] }),
+    filaTarea({ id_tarea: p[0], id_asignado: p[1], id_asignado_global: p[2], orden: p[3] }),
 ];
 const respuestaOrden = (n = 1): Respuesta => () => [{ orden: n }];
 
 function cola(miembros: number[], cargas: Array<[number, number]>, pendientes: number[]): Respuesta[] {
     const r: Respuesta[] = [
-        miembros.map(id => ({ id_usuario: id })),
-        cargas.map(([id, n]) => ({ id_asignado_global: id, n })),
+        // Proyecto compartido: cada integrante se identifica por su id global.
+        miembros.map(id => ({ id_usuario: null, id_global_usuario: id })),
+        cargas.map(([id, n]) => ({ id_asignado: null, id_asignado_global: id, n })),
         pendientes.map(id => ({ id_tarea: id })),
     ];
     for (const _ of pendientes) r.push(respuestaOrden(), respuestaUpdate);
@@ -36,9 +39,9 @@ function cola(miembros: number[], cargas: Array<[number, number]>, pendientes: n
 const ejecutarCaso = (p: any) =>
     new RepartirTareas(p).ejecutar({ idProyecto: ID_PROYECTO, idUsuario: 5 });
 
-const asignaciones = (ejecutar: jest.Mock) =>
+const asignaciones = (ejecutar: Mock) =>
     consultasA(ejecutar, /^\s*UPDATE tareas/i).map(([, p]) => ({
-        idTarea: (p as number[])[0], idAsignadoGlobal: (p as number[])[1],
+        idTarea: (p as number[])[0], idAsignadoGlobal: (p as number[])[2],
     }));
 
 const conteo = (a: Array<{ idAsignadoGlobal: number }>) =>
@@ -132,7 +135,7 @@ describe('RepartirTareas', () => {
             await ejecutarCaso(persistencia);
             expect(consultasA(ejecutar, /MAX\s*\(/i)).toHaveLength(2);
             for (const [, p] of consultasA(ejecutar, /^\s*UPDATE tareas/i)) {
-                expect((p as number[])[2]).toBe(1);            // orden devuelto por la consulta falsa
+                expect((p as number[])[3]).toBe(1);            // orden devuelto por la consulta falsa
             }
         });
     });

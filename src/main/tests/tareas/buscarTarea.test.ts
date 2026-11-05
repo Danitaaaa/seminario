@@ -1,19 +1,20 @@
+import { describe, it, expect, vi } from 'vitest';
 import {
-    consultar, buscarTarea, buscarTareaEnTx, exigirAsignable, siguienteOrden, Tx,
+    consultar, buscarTarea, buscarTareaEnTx, columnaDeDto, estaSinAsignar, resolverAsignado, siguienteOrden,
+    SIN_ASIGNAR, Tx,
 } from '../../logicaPersistente/gestionDeTareas/buscarTarea';
-import { crearPersistenciaFalsa, filaTarea } from './pruebasComunes';
+import { crearPersistenciaFalsa, filaTarea, UID_A } from './pruebasComunes';
 
 function txConTransaccion(txObj: any) {
     return {
         ...txObj,
-        transaccion: jest.fn(),
+        transaccion: vi.fn(),
     } as unknown as Tx;
 }
 
-// La columna "Sin asignar" puede consultarse con `IS NULL` o con una comparación null-safe contra el
-// parámetro ($2 = null). Lo que importa es el resultado, no la forma exacta del SQL.
-const COLUMNA_SIN_ASIGNAR = /id_asignado_global\s+(IS\s+NULL|IS\s+NOT\s+DISTINCT\s+FROM\s+\$2)/i;
-const COLUMNA_DEL_MIEMBRO = /id_asignado_global\s*(=|IS\s+NOT\s+DISTINCT\s+FROM)\s*\$2/i;
+// La columna se compara null-safe contra los parámetros: $2 = asignado local, $3 = asignado global.
+const COLUMNA_LOCAL = /id_asignado\s+IS\s+NOT\s+DISTINCT\s+FROM\s+\$2/i;
+const COLUMNA_GLOBAL = /id_asignado_global\s+IS\s+NOT\s+DISTINCT\s+FROM\s+\$3/i;
 
 describe('consultar', () => {
     it('delega en tx.ejecutar con sql y parámetros y devuelve las filas', async () => {
@@ -48,7 +49,7 @@ describe('buscarTareaEnTx', () => {
     });
 
     it('conserva el idAsignadoGlobal nulo de una tarea sin asignar', async () => {
-        const { tx } = crearPersistenciaFalsa([[filaTarea({ id_asignado_global: null, creada_por_global: 1 })]]);
+        const { tx } = crearPersistenciaFalsa([[filaTarea({ id_asignado_global: null })]]);
         const t = await buscarTareaEnTx(txConTransaccion(tx), 1);
         expect(t.idAsignadoGlobal).toBeNull();
     });
@@ -62,11 +63,11 @@ describe('buscarTareaEnTx', () => {
 describe('buscarTarea (con persistencia)', () => {
     it('abre una transacción y devuelve la tarea materializada', async () => {
         const { persistencia, transaccion } = crearPersistenciaFalsa([
-            [filaTarea({ id_tarea: 7, id_proyecto: null, creada_por_global: 3 })],
+            [filaTarea({ id_tarea: 7, id_proyecto: null, id_usuario: 3 })],
         ]);
         const t = await buscarTarea(persistencia, 7);
         expect(transaccion).toHaveBeenCalledTimes(1);
-        expect(t).toMatchObject({ idTarea: 7, idProyecto: null, creadaPor: 3 });
+        expect(t).toMatchObject({ idTarea: 7, idProyecto: null, idUsuario: 3 });
     });
 
     it('lanza si la tarea no existe', async () => {
@@ -75,82 +76,108 @@ describe('buscarTarea (con persistencia)', () => {
     });
 });
 
-describe('exigirAsignable', () => {
-    it('no lanza si es un integrante activo del proyecto', async () => {
-        const { tx } = crearPersistenciaFalsa([[{ '?column?': 1 }]]);
-        await expect(exigirAsignable(txConTransaccion(tx), 10, 8)).resolves.toBeUndefined();
+describe('columnas del tablero', () => {
+    it('columnaDeDto normaliza los ausentes a null', () => {
+        expect(columnaDeDto(undefined, undefined)).toEqual(SIN_ASIGNAR);
+        expect(columnaDeDto(null, UID_A)).toEqual({ local: null, global: UID_A });
+        expect(columnaDeDto(4, null)).toEqual({ local: 4, global: null });
     });
 
-    it('consulta por proyecto y usuario, solo membresías sin fecha de baja', async () => {
-        const { tx, ejecutar } = crearPersistenciaFalsa([[{ x: 1 }]]);
-        await exigirAsignable(txConTransaccion(tx), 10, 8);
+    it('estaSinAsignar solo es true sin asignado local ni global', () => {
+        expect(estaSinAsignar(SIN_ASIGNAR)).toBe(true);
+        expect(estaSinAsignar({ local: 4, global: null })).toBe(false);
+        expect(estaSinAsignar({ local: null, global: UID_A })).toBe(false);
+    });
+});
+
+describe('resolverAsignado', () => {
+    it('"Sin asignar" no consulta la base', async () => {
+        const { tx, ejecutar } = crearPersistenciaFalsa([]);
+        await expect(resolverAsignado(txConTransaccion(tx), 10, SIN_ASIGNAR)).resolves.toEqual(SIN_ASIGNAR);
+        expect(ejecutar).not.toHaveBeenCalled();
+    });
+
+    it('consulta solo integrantes activos con permiso de edición del proyecto', async () => {
+        const { tx, ejecutar } = crearPersistenciaFalsa([[{ id_usuario: 8, id_global_usuario: UID_A }]]);
+        await resolverAsignado(txConTransaccion(tx), 10, { local: null, global: UID_A });
         const [sql, params] = ejecutar.mock.calls[0];
         expect(sql).toContain('proyecto_miembros');
         expect(sql).toMatch(/fecha_baja IS NULL/i);
-        expect(params).toEqual([10, 8]);
+        expect(sql).toMatch(/rol IN \('propietario', 'editor'\)/);
+        expect(params).toEqual([10, null, UID_A]);
     });
 
-    it('lanza si no es integrante activo (o fue dado de baja)', async () => {
-        const { tx } = crearPersistenciaFalsa([[]]);
-        await expect(exigirAsignable(txConTransaccion(tx), 10, 99)).rejects.toThrow(/integrantes activos/i);
+    it('si el integrante tiene id global se usa ese (proyecto compartido)', async () => {
+        const { tx } = crearPersistenciaFalsa([[{ id_usuario: 8, id_global_usuario: UID_A }]]);
+        await expect(resolverAsignado(txConTransaccion(tx), 10, { local: 8, global: null }))
+            .resolves.toEqual({ local: null, global: UID_A });
+    });
+
+    it('sin id global se usa el id local (proyecto personal)', async () => {
+        const { tx } = crearPersistenciaFalsa([[{ id_usuario: 8, id_global_usuario: null }]]);
+        await expect(resolverAsignado(txConTransaccion(tx), 10, { local: 8, global: null }))
+            .resolves.toEqual({ local: 8, global: null });
+    });
+
+    it('acepta a un miembro que solo está en el servidor si el proyecto está sincronizado', async () => {
+        const { tx } = crearPersistenciaFalsa([[], [{ id_remoto: 'R1' }]]);
+        await expect(resolverAsignado(txConTransaccion(tx), 10, { local: null, global: UID_A }))
+            .resolves.toEqual({ local: null, global: UID_A });
+    });
+
+    it('lanza si no es integrante activo (o fue dado de baja) y el proyecto no está sincronizado', async () => {
+        const { tx } = crearPersistenciaFalsa([[], [{ id_remoto: null }]]);
+        await expect(resolverAsignado(txConTransaccion(tx), 10, { local: null, global: UID_A }))
+            .rejects.toThrow(/integrantes activos/i);
     });
 
     it('propaga errores de la base', async () => {
         const { tx } = crearPersistenciaFalsa([new Error('db caída')]);
-        await expect(exigirAsignable(txConTransaccion(tx), 10, 8)).rejects.toThrow('db caída');
+        await expect(resolverAsignado(txConTransaccion(tx), 10, { local: 8, global: null })).rejects.toThrow('db caída');
     });
 });
 
 describe('siguienteOrden', () => {
-    it('tarea personal: usa el usuario creador y suma 1 al máximo', async () => {
+    it('tarea personal: usa el dueño y suma 1 al máximo', async () => {
         const { tx, ejecutar } = crearPersistenciaFalsa([[{ orden: 4 }]]);
-        const txCompleto = txConTransaccion(tx);
-        const orden = await siguienteOrden(txCompleto, null, null, 9);
+        const orden = await siguienteOrden(txConTransaccion(tx), null, SIN_ASIGNAR, 9);
         expect(orden).toBe(4);
-        expect(ejecutar.mock.calls[0][0]).toContain('id_proyecto IS NULL AND creada_por_global = $1');
-        expect(ejecutar.mock.calls[0][1]).toEqual([9]);
-    });
-
-    it('tarea personal sin usuario: lanza en lugar de calcular un orden ambiguo', async () => {
-        const { tx, ejecutar } = crearPersistenciaFalsa([[{ orden: 1 }]]);
-        await expect(siguienteOrden(txConTransaccion(tx), null, null)).rejects.toThrow(/usuario/i);
-        expect(ejecutar).not.toHaveBeenCalled();
+        const [sql, params] = ejecutar.mock.calls[0];
+        expect(sql).toMatch(/id_usuario\s+IS\s+NOT\s+DISTINCT\s+FROM\s+\$4/i);
+        expect(params).toEqual([null, null, null, 9]);
     });
 
     it('tarea de proyecto asignada: calcula el orden dentro de la columna del miembro', async () => {
         const { tx, ejecutar } = crearPersistenciaFalsa([[{ orden: 6 }]]);
-        const orden = await siguienteOrden(txConTransaccion(tx), 10, 8, 5);
+        const orden = await siguienteOrden(txConTransaccion(tx), 10, { local: null, global: UID_A });
         expect(orden).toBe(6);
-        expect(ejecutar.mock.calls[0][1]).toEqual([10, 8]);
-        expect(ejecutar.mock.calls[0][0]).toMatch(/id_proyecto\s*=\s*\$1/);
-        expect(ejecutar.mock.calls[0][0]).toMatch(COLUMNA_DEL_MIEMBRO);
+        const [sql, params] = ejecutar.mock.calls[0];
+        expect(params).toEqual([10, null, UID_A, null]);
+        expect(sql).toMatch(/id_proyecto\s+IS\s+NOT\s+DISTINCT\s+FROM\s+\$1/i);
+        expect(sql).toMatch(COLUMNA_LOCAL);
+        expect(sql).toMatch(COLUMNA_GLOBAL);
     });
 
     it('tarea de proyecto sin asignar: calcula el orden dentro de la columna "Sin asignar"', async () => {
         const { tx, ejecutar } = crearPersistenciaFalsa([[{ orden: 3 }]]);
-        const orden = await siguienteOrden(txConTransaccion(tx), 10, null, 5);
+        const orden = await siguienteOrden(txConTransaccion(tx), 10, SIN_ASIGNAR);
         expect(orden).toBe(3);
-        const [sql, params] = ejecutar.mock.calls[0];
-        expect(sql).toMatch(/id_proyecto\s*=\s*\$1/);
-        expect(sql).toMatch(COLUMNA_SIN_ASIGNAR);
-        expect(params[0]).toBe(10);
-        expect(params.filter(p => p !== null)).toEqual([10]);   // el único valor no nulo es el proyecto
+        expect(ejecutar.mock.calls[0][1]).toEqual([10, null, null, null]); // el único valor no nulo es el proyecto
     });
 
-    it('en un proyecto no depende de quién crea (el creador no entra en la consulta)', async () => {
+    it('en un proyecto no depende de quién crea (sin dueño en la consulta)', async () => {
         const { tx, ejecutar } = crearPersistenciaFalsa([[{ orden: 2 }]]);
-        await siguienteOrden(txConTransaccion(tx), 10, null, 5);
-        expect(ejecutar.mock.calls[0][0]).not.toMatch(/creada_por_global/i);
-        expect(ejecutar.mock.calls[0][1]).not.toContain(5);
+        await siguienteOrden(txConTransaccion(tx), 10, SIN_ASIGNAR);
+        expect(ejecutar.mock.calls[0][1][3]).toBeNull();
     });
 
     it('devuelve un número aunque la base entregue el máximo como texto', async () => {
         const { tx } = crearPersistenciaFalsa([[{ orden: '5' }]]);
-        await expect(siguienteOrden(txConTransaccion(tx), 10, 8, 5)).resolves.toBe(5);
+        await expect(siguienteOrden(txConTransaccion(tx), 10, { local: null, global: UID_A })).resolves.toBe(5);
     });
 
     it('propaga errores de la base', async () => {
         const { tx } = crearPersistenciaFalsa([new Error('db caída')]);
-        await expect(siguienteOrden(txConTransaccion(tx), 10, 8, 5)).rejects.toThrow('db caída');
+        await expect(siguienteOrden(txConTransaccion(tx), 10, SIN_ASIGNAR)).rejects.toThrow('db caída');
     });
 });

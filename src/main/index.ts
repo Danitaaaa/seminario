@@ -45,7 +45,7 @@ import path from 'path';
 // Google Drive
 import { AlmacenTokensDrive } from './logicaNoPersistente/drive/almacenTokensDrive';
 import { cifradorElectron } from './logicaNoPersistente/drive/cifradorElectron';
-import { OAuthDrive } from './logicaNoPersistente/drive/oauthDrive';
+import { OAuthDrive, conCuenta } from './logicaNoPersistente/drive/oauthDrive';
 import { DriveCliente } from './logicaNoPersistente/drive/driveCliente';
 import { DriveServicio } from './logicaNoPersistente/drive/driveServicio';
 import { registerDriveIpc } from './ipc/drive.ipc';
@@ -197,6 +197,7 @@ import {
 import { ManejadorCategoria } from './logicaPersistente/gestionDeCategorias/manejadorCategoria';
 import { ManejadorNodo, ManejadorArchivo } from './logicaPersistente/gestionDeProyectos/manejadoresContenido';
 import { Edicion } from './administracionDePersistencia/edicion';
+import { ClaveEdicion } from './logicaPersistente/gestionDeProyectos/claveEdicion';
 import { registerEdicionIpc } from './ipc/edicion.ipc'; // ajustá si tu archivo se llama distinto
 import {
   fijarSesionSync,
@@ -347,7 +348,11 @@ function wireDependencies(): ProcesoSesionEstudio {
     new DriveCliente(() => oauth.obtenerAccessToken()),
     archivos,
     almacenamiento,
-    (url) => shell.openExternal(url),
+    // Abre el documento con la misma cuenta de Google con la que se dio el permiso.
+    async (url) => {
+      if (!oauth.cuenta()) await oauth.obtenerAccessToken().catch(() => {});
+      await shell.openExternal(conCuenta(url, oauth.cuenta()));
+    },
   );
   
 
@@ -568,7 +573,7 @@ function wireDependencies(): ProcesoSesionEstudio {
   ));
 
   // Gestion de edicion y conflictos
-  edicion = new Edicion(sync.edicion, sync.coordinador, sync.unirseAProyecto);
+  edicion = new Edicion(sync.edicion, sync.coordinador, sync.unirseAProyecto, new ClaveEdicion(persistencia));
   detenerSincronizacion = () => sync.coordinador.detener();
   registerEdicionIpc(edicion);
 
@@ -615,7 +620,7 @@ function wireDependencies(): ProcesoSesionEstudio {
     sesionesEstudio.importarDesdeMaterial(idArchivo, html)
   );
   // Lo mismo al traer la versión de Google Drive: si es el Word de una sesión, la sesión se actualiza.
-  registerDriveIpc(driveServicio, async (idArchivo) => {
+  registerDriveIpc(driveServicio, () => oauth.cancelar(), async (idArchivo) => {
     const archivo = await archivos.obtener({ id: idArchivo });
     if (archivo.extension.toLowerCase() !== 'docx') return;
     const html = await documentoSesion.leerHtml(almacenamiento.rutaCompleta(archivo.rutaFisica));

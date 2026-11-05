@@ -76,3 +76,7 @@
 @media (max-width: 720px) {
   .conflicto-columnas { grid-template-columns: 1fr; }
 }
+
+/* Aviso de conflictos de un proyecto (Material, Calendario, Metas) */
+.conflictos-proyecto { flex-wrap: wrap; margin-bottom: 12px; }
+.conflictos-proyecto__lista { display: flex; flex-wrap: wrap; gap: 6px; }

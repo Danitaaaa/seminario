@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { obtenerUsuarioId } from '../../lib/sesion';
 
 /* ---------- Tipos ---------- */
 
@@ -97,6 +98,34 @@ export function useEdicionCompartida(clave: ClaveEdicion | null) {
     }, [api]);
 
     return { estado, puedeEditar: estado.fase === 'edicion' || estado.fase === 'local', guardar, reintentar: iniciar };
+}
+
+/* ---------- Edición de un archivo, evento o meta por su id local ---------- */
+
+/**
+ * Averigua si el elemento es de un proyecto compartido y, si lo es, toma el bloqueo mientras
+ * está abierto (igual que useEdicionCompartida). `buscando` = todavía no se sabe: no dejar editar.
+ * id null = no hay nada abierto.
+ */
+export function useEdicionDeElemento(entidad: 'archivo' | 'evento' | 'meta', id: number | null) {
+    const [clave, setClave] = useState<ClaveEdicion | null | undefined>(id === null ? null : undefined);
+    useEffect(() => {
+        if (id === null) { setClave(null); return; }
+        let activo = true;
+        const idUsuario = obtenerUsuarioId();
+        setClave(undefined);
+        window.api
+            .claveEdicion({ entidad, id })
+            .then((r) => {
+                if (!activo) return;
+                setClave(r.ok && r.datos && idUsuario !== null ? { ...r.datos, idUsuario, entidad } : null);
+            })
+            .catch(() => activo && setClave(null));
+        return () => { activo = false; };
+    }, [entidad, id]);
+    const edicion = useEdicionCompartida(clave ?? null);
+    const buscando = clave === undefined;
+    return { ...edicion, clave: clave ?? null, puedeEditar: !buscando && edicion.puedeEditar };
 }
 
 /* ---------- Quién está editando CADA elemento de una lista (solo consulta) ---------- */

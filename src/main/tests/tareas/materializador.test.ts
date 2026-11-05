@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from 'vitest';
 // Se prueba el materializador real, directamente (materializarTarea / COLUMNAS_TAREA) y una vez a través
 // de buscarTareaEnTx para comprobar que el caso de uso lo aplica.
 import { materializarTarea, COLUMNAS_TAREA } from '../../logicaPersistente/gestionDeTareas/materializador';
@@ -14,17 +15,18 @@ describe('Materializador de Tareas', () => {
     it('convierte las columnas de la base a las propiedades de la tarea', () => {
         const t = materializar({
             id_tarea: 42, id_global: 'g-42', id_proyecto: 10, titulo: 'X', prioridad: 'alta', orden: 3,
-            completada: true, creada_por_global: 7, fecha_creacion: new Date('2026-01-01T00:00:00Z'),
+            completada: true, fecha_completada: new Date('2026-02-01T00:00:00Z'), id_asignado: null,
+            fecha_inicio: '2026-01-10', fecha_creacion: new Date('2026-01-01T00:00:00Z'),
         });
         expect(t).toMatchObject({
-            idTarea: 42, idGlobal: 'g-42', idProyecto: 10, titulo: 'X', prioridad: 'alta', orden: 3,
-            completada: true, creadaPor: 7,
+            idTarea: 42, idGlobal: 'g-42', idProyecto: 10, idUsuario: null, titulo: 'X', prioridad: 'alta', orden: 3,
+            completada: true, idAsignado: null, fechaInicio: '2026-01-10',
         });
         expect(t.fechaCreacion).toEqual(new Date('2026-01-01T00:00:00Z'));
     });
 
     it('a través de buscarTareaEnTx devuelve la fila de la base convertida a Tarea', async () => {
-        const tx = { ejecutar: jest.fn().mockResolvedValue([filaTarea({ id_tarea: 42, titulo: 'X' })]) } as unknown as Tx;
+        const tx = { ejecutar: vi.fn().mockResolvedValue([filaTarea({ id_tarea: 42, titulo: 'X' })]) } as unknown as Tx;
         const t = await buscarTareaEnTx(tx, 42);
         expect(t).toMatchObject({ idTarea: 42, titulo: 'X' });
     });
@@ -42,14 +44,12 @@ describe('Materializador de Tareas', () => {
             expect(materializar({ id_asignado_global: 8 }).idAsignadoGlobal).toBe(8);
         });
 
-        it.each([
-            ['propietario', 1], ['otro miembro', 8],
-        ])('sin asignar no se atribuye a %s ni al creador', (_quien, creador) => {
-            expect(materializar({ id_asignado_global: null, creada_por_global: creador }).idAsignadoGlobal).toBeNull();
+        it('sin asignar no se atribuye al dueño de la tarea', () => {
+            expect(materializar({ id_asignado_global: null, id_usuario: 1 }).idAsignadoGlobal).toBeNull();
         });
 
-        it('el asignado no se pisa con el creador', () => {
-            expect(materializar({ id_asignado_global: 8, creada_por_global: 1 }).idAsignadoGlobal).toBe(8);
+        it('el asignado no se pisa con el dueño', () => {
+            expect(materializar({ id_asignado_global: 8, id_usuario: 1 }).idAsignadoGlobal).toBe(8);
         });
 
         it('id_asignado_global 0 no se confunde con "sin asignar"', () => {
@@ -81,24 +81,21 @@ describe('Materializador de Tareas', () => {
     });
 
     describe('estado de cumplimiento (tests 101 y 102)', () => {
-        it('tarea hecha conserva quién y cuándo la completó', () => {
+        it('tarea hecha conserva cuándo la completó', () => {
             const fecha = new Date('2026-02-01T00:00:00Z');
-            const t = materializar({ completada: true, completada_por_global: 5, fecha_completada: fecha });
+            const t = materializar({ completada: true, fecha_completada: fecha });
             expect(t.completada).toBe(true);
-            expect(t.completadaPor).toBe(5);
             expect(t.fechaCompletada).toEqual(fecha);
         });
 
-        it('tarea pendiente no trae persona ni fecha de cumplimiento', () => {
-            const t = materializar({ completada: false, completada_por_global: null, fecha_completada: null });
+        it('tarea pendiente no trae fecha de cumplimiento', () => {
+            const t = materializar({ completada: false, fecha_completada: null });
             expect(t.completada).toBe(false);
-            expect(t.completadaPor).toBeNull();
             expect(t.fechaCompletada).toBeNull();
         });
 
-        it('persona y fecha de cumplimiento ausentes se normalizan a null', () => {
-            const t = materializar({ completada: false }, ['completada_por_global', 'fecha_completada']);
-            expect(t.completadaPor).toBeNull();
+        it('fecha de cumplimiento ausente se normaliza a null', () => {
+            const t = materializar({ completada: false }, ['fecha_completada']);
             expect(t.fechaCompletada).toBeNull();
         });
     });

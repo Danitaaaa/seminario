@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { obtenerFilaMeta } from '../../logicaPersistente/gestionDeMetas/buscarMeta';
 import { COLUMNAS_META } from '../../logicaPersistente/gestionDeMetas/materializador';
 import { crearPersistenciaFalsa, filaMeta } from './utilsTest';

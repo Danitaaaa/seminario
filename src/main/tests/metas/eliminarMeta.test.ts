@@ -1,21 +1,22 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { EliminarMeta } from '../../logicaPersistente/gestionDeMetas/eliminarMeta';
 import { exigirAcceso, registrarCambioSiProyecto } from '../../logicaPersistente/gestionDeProyectos/alcance';
 import { crearPersistenciaFalsa, filaMeta } from './utilsTest';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `id_proyecto IS NULL AND id_usuario = $${valores.length}`;
     }),
 }), { virtual: true });
 
-const acceso = exigirAcceso as jest.Mock;
-const registrar = registrarCambioSiProyecto as jest.Mock;
+const acceso = exigirAcceso as Mock;
+const registrar = registrarCambioSiProyecto as Mock;
 
 describe('EliminarMeta', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it('lanza "Meta inexistente" si no existe', async () => {
         const { persistencia, transaccion } = crearPersistenciaFalsa([[]]);
@@ -25,7 +26,7 @@ describe('EliminarMeta', () => {
 
     // Spec (reglas de permisos + caso 110): propietario y editor pueden eliminar metas; el lector no.
     it('exige propietario o editor (el lector no puede eliminar)', async () => {
-        const actual = filaMeta({ id_proyecto: 4, creada_por_global: 12 });
+        const actual = filaMeta({ id_proyecto: 4, id_usuario: 12 });
         const { persistencia } = crearPersistenciaFalsa([[actual]], [[{ id_global: 'g' }]]);
         await new EliminarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
         expect(acceso).toHaveBeenCalledWith(persistencia, 4, 12, 7, 'meta.eliminar');

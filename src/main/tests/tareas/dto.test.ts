@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import {
     FechaSchema,
     PrioridadSchema,
@@ -59,9 +60,9 @@ describe('CrearTareaDTOSchema', () => {
     });
     it('acepta todos los campos', () => {
         const r = CrearTareaDTOSchema.parse({
-            ...base, idProyecto: 3, descripcion: 'd', prioridad: 'alta', fechaLimite: '2026-12-01', idAsignadoGlobal: 7,
+            ...base, idProyecto: 3, descripcion: 'd', prioridad: 'alta', fechaLimite: '2026-12-01', idAsignadoGlobal: '11111111-1111-4111-8111-111111111111',
         });
-        expect(r).toMatchObject({ idProyecto: 3, descripcion: 'd', prioridad: 'alta', fechaLimite: '2026-12-01', idAsignadoGlobal: 7 });
+        expect(r).toMatchObject({ idProyecto: 3, descripcion: 'd', prioridad: 'alta', fechaLimite: '2026-12-01', idAsignadoGlobal: '11111111-1111-4111-8111-111111111111' });
     });
     it('acepta null en idProyecto, descripcion, fechaLimite e idAsignadoGlobal', () => {
         expect(CrearTareaDTOSchema.safeParse({
@@ -198,20 +199,23 @@ describe('AlternarTareaDTOSchema', () => {
 });
 
 describe('AsignarTareaDTOSchema', () => {
-    it('idAsignadoGlobal puede ser entero o null', () => {
-        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: 3 }).success).toBe(true);
+    it('idAsignadoGlobal puede ser un id global (UUID) o null', () => {
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: '11111111-1111-4111-8111-111111111111' }).success).toBe(true);
         expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: null }).success).toBe(true);
     });
-    it('idAsignadoGlobal es obligatorio (undefined no vale)', () => {
-        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1 }).success).toBe(false);
+    it('sin ningún asignado significa "Sin asignar"', () => {
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1 }).success).toBe(true);
     });
-    it('idAsignadoGlobal debe ser entero', () => {
+    it('idAsignadoGlobal debe ser un UUID', () => {
         expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: 'x' }).success).toBe(false);
-        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: 1.5 }).success).toBe(false);
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignadoGlobal: 3 }).success).toBe(false);
+    });
+    it('no admite asignado local y global a la vez', () => {
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idUsuario: 1, idAsignado: 4, idAsignadoGlobal: '11111111-1111-4111-8111-111111111111' }).success).toBe(false);
     });
     it('exige idTarea e idUsuario', () => {
-        expect(AsignarTareaDTOSchema.safeParse({ idUsuario: 1, idAsignadoGlobal: 3 }).success).toBe(false);
-        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idAsignadoGlobal: 3 }).success).toBe(false);
+        expect(AsignarTareaDTOSchema.safeParse({ idUsuario: 1, idAsignadoGlobal: '11111111-1111-4111-8111-111111111111' }).success).toBe(false);
+        expect(AsignarTareaDTOSchema.safeParse({ idTarea: 1, idAsignadoGlobal: '11111111-1111-4111-8111-111111111111' }).success).toBe(false);
     });
 });
 

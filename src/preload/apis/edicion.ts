@@ -8,6 +8,7 @@ export const edicionApi = {
     listarConflictos: (datos: unknown) => ipcRenderer.invoke('edicion:listarConflictos', datos),
     obtenerConflicto: (clave: unknown) => ipcRenderer.invoke('edicion:obtenerConflicto', clave),
     resolverConflicto: (datos: unknown) => ipcRenderer.invoke('edicion:resolverConflicto', datos),
+    claveEdicion: (datos: { entidad: 'archivo' | 'evento' | 'meta'; id: number }) => ipcRenderer.invoke('edicion:clave', datos),
     iniciarSincronizacion: (datos: { idUsuario: number }) => ipcRenderer.invoke('sincronizacion:iniciar', datos),
 
     /** Eventos en vivo del main (bloqueos, cambios recibidos, conexión). Devuelve la función para desuscribirse. */

@@ -8,6 +8,8 @@ import type { RolMiembro } from '../../types/proyectos';
 import { puede } from '../../permisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
+import { conBloqueoDe } from '../../utils/conBloqueo';
+import { ConflictosProyecto } from '../proyectos/conflictosProyecto';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -90,6 +92,20 @@ export function MetasMensuales({ idProyecto, rol }: MetasMensualesProps) {
     }
   }
 
+  // Cambios sobre una meta existente: en un proyecto compartido toman el bloqueo un instante,
+  // así no se pisan con lo que esté editando otro miembro.
+  async function conBloqueoMeta(meta: Meta, accion: () => Promise<unknown>, mensaje: string): Promise<void> {
+    try {
+      const r = await conBloqueoDe('meta', meta.idMeta, ID_USUARIO_ACTUAL, async () => { await accion(); return true; });
+      setError(r.ok ? null : r.motivo);
+    } catch (e) {
+      console.error(mensaje, e);
+      setError(mensaje);
+    } finally {
+      await cargar();
+    }
+  }
+
   async function agregar(): Promise<void> {
     const titulo = nuevoTitulo.trim();
     if (!titulo) return;
@@ -104,7 +120,8 @@ export function MetasMensuales({ idProyecto, rol }: MetasMensualesProps) {
     if (!puedeAlternar || meta.trasladadaA) return;
     // Actualización optimista: se refleja al instante y se reconcilia al recargar
     setMetas((prev) => prev.map((m) => (m.idMeta === meta.idMeta ? { ...m, completada: !m.completada } : m)));
-    await ejecutar(
+    await conBloqueoMeta(
+      meta,
       () => window.api.alternarMeta({ idMeta: meta.idMeta, idUsuario: ID_USUARIO_ACTUAL }),
       'No se pudo actualizar la meta.',
     );
@@ -114,7 +131,8 @@ export function MetasMensuales({ idProyecto, rol }: MetasMensualesProps) {
     const titulo = tituloEditado.trim();
     setEditandoId(null);
     if (!titulo || titulo === meta.titulo) return;
-    await ejecutar(
+    await conBloqueoMeta(
+      meta,
       () => window.api.modificarMeta({ idMeta: meta.idMeta, idUsuario: ID_USUARIO_ACTUAL, titulo }),
       'No se pudo renombrar la meta.',
     );
@@ -160,6 +178,8 @@ export function MetasMensuales({ idProyecto, rol }: MetasMensualesProps) {
           <ChevronRight size={16} />
         </button>
       </div>
+
+      <ConflictosProyecto idProyecto={idProyecto} entidad="meta" onResuelto={() => void cargar()} />
 
       <div style={estiloResumen}>
         <span>

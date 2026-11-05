@@ -20,6 +20,7 @@ export function registerEdicionIpc(edicion: Edicion): void {
     canal('edicion:listarConflictos', d => edicion.listarConflictos(d));
     canal('edicion:obtenerConflicto', d => edicion.obtenerConflicto(d));
     canal('edicion:resolverConflicto', d => edicion.resolverConflicto(d));
+    canal('edicion:clave', d => edicion.claveDe(d));
 
     // El renderer manda { idUsuario, password? } al iniciar sesión. La contraseña se usa solo para
     // conectar con el servidor de sincronización y no se pasa más adelante.

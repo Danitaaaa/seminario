@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { COLUMNAS_META, mesAFecha, materializarMeta } from '../../logicaPersistente/gestionDeMetas/materializador';
 import { filaMeta } from './utilsTest';
 
@@ -25,12 +26,12 @@ it('mapea todas las columnas a la entidad Meta', () => {
     const fecha = new Date('2026-10-05T10:00:00Z');
     const fila = filaMeta({
         id_meta: 10, id_proyecto: 3, titulo: 'T', descripcion: 'D', mes_texto: '2026-11',
-        completada: true, fecha_completada: fecha, completada_por_global: 9, orden: 4, creada_por_global: 8,
+        completada: true, fecha_completada: fecha, orden: 4, id_usuario: 8,
         trasladada_a: '2026-12', id_meta_origen: 2,
     });
     expect(materializarMeta(fila)).toEqual({
         idMeta: 10, idProyecto: 3, titulo: 'T', descripcion: 'D', mes: '2026-11',
-        completada: true, fechaCompletada: fecha, completadaPor: 9, orden: 4, creadaPor: 8,
+        completada: true, fechaCompletada: fecha, orden: 4,
         fechaCreacion: fila.fecha_creacion, fechaLimite: null, trasladadaA: '2026-12', idMetaOrigen: 2,
     });
 });
@@ -45,14 +46,12 @@ it('mapea todas las columnas a la entidad Meta', () => {
         delete fila.id_proyecto;
         delete fila.descripcion;
         delete fila.fecha_completada;
-        delete fila.completada_por_global;
         delete fila.trasladada_a;
         delete fila.id_meta_origen;
         const meta = materializarMeta(fila);
         expect(meta.idProyecto).toBeNull();
         expect(meta.descripcion).toBeNull();
         expect(meta.fechaCompletada).toBeNull();
-        expect(meta.completadaPor).toBeNull();
         expect(meta.trasladadaA).toBeNull();
         expect(meta.idMetaOrigen).toBeNull();
     });

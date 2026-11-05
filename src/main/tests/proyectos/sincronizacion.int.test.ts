@@ -34,7 +34,10 @@ function crearClienteCloud(mail: string, nombre: string, idCliente: string) {
     );
 }
 
-describe('Integración Cloud: Sincronización, Bloqueos y Miembros', () => {
+// Solo corre si están las variables del proyecto de Supabase (.env); sin ellas se saltea en vez de fallar.
+const HAY_NUBE = Boolean(process.env.MAIN_VITE_SUPABASE_URL && process.env.MAIN_VITE_SUPABASE_ANON_KEY);
+
+describe.skipIf(!HAY_NUBE)('Integración Cloud: Sincronización, Bloqueos y Miembros', () => {
     let syncPropietario: SincronizadorSupabase;
     let syncEditor: SincronizadorSupabase;
 

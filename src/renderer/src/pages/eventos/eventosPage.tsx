@@ -7,6 +7,9 @@ import type { RolMiembro } from '../../types/proyectos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import { puede, rolDe } from '../../permisos';
 import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
+import { useEdicionDeElemento } from '../../hooks/useEdicionCompartida';
+import { BannerEdicion } from '../../components/proyectos/bannerEdicion';
+import { ConflictosProyecto } from '../../components/proyectos/conflictosProyecto';
 import '../../styles/eventos.css';
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
@@ -99,6 +102,8 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   const [formNotificacionesActivas, setFormNotificacionesActivas] = useState(false);
   const [formRecordatorios, setFormRecordatorios] = useState<Recordatorio[]>([]);
   const [errorForm, setErrorForm] = useState<string | null>(null);
+  // Editar un evento de un proyecto compartido toma el bloqueo mientras el formulario está abierto.
+  const edicionEvento = useEdicionDeElemento('evento', modalAbierto && editandoId !== null && editandoId > 0 ? editandoId : null);
 
   const { inicio, dias } = useMemo(() => primerDiaYCantidad(anio, mesIndex), [anio, mesIndex]);
 
@@ -367,6 +372,10 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
       setErrorForm('Tu rol en este proyecto no permite hacer esto.');
       return;
     }
+    if (editandoId !== null && !edicionEvento.puedeEditar) {
+      setErrorForm('Ahora no se puede editar este evento: mirá el aviso de arriba.');
+      return;
+    }
     if (!formTitulo.trim()) {
       setErrorForm('El nombre del evento es obligatorio.');
       return;
@@ -392,6 +401,8 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
           recordatorios: formNotificacionesActivas ? formRecordatorios : [],
         };
         await window.api.modificarEvento(cambios);
+        // Sube la versión nueva al resto del proyecto (si es personal no hace nada).
+        if (edicionEvento.clave) await edicionEvento.guardar();
       } else {
         const nuevoEvento: CrearEventoInput = {
           usuarioId,
@@ -474,6 +485,8 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
                 )}
               </div>
             </div>
+
+            <ConflictosProyecto idProyecto={idProyecto} entidad="evento" onResuelto={() => void cargarEventos()} />
 
             <div className="eventos-grilla">
               {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((letra, i) => (
@@ -657,6 +670,9 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
             <div className="eventos-overlay">
               <div className="eventos-modal">
                 <h3 className="eventos-modal-titulo">{editandoId !== null ? 'Editar Evento' : 'Nuevo Evento'}</h3>
+                {editandoId !== null && edicionEvento.clave && (
+                  <BannerEdicion estado={edicionEvento.estado} onReintentar={() => void edicionEvento.reintentar()} />
+                )}
                 {idProyecto && nombreProyecto && editandoId === null && (
                   <p className="eventos-texto-secundario">Se registrará en el proyecto «{nombreProyecto}».</p>
                 )}
@@ -763,7 +779,8 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
 
                 <div className="eventos-modal-acciones">
                   <button className="eventos-boton-cancelar" onClick={() => setModalAbierto(false)}>Cancelar</button>
-                  <button className="eventos-boton-guardar" onClick={guardarEvento}>
+                  <button className="eventos-boton-guardar" onClick={guardarEvento}
+                    disabled={editandoId !== null && !edicionEvento.puedeEditar}>
                     {editandoId !== null ? 'Guardar cambios' : '+'}
                   </button>
                 </div>

@@ -5,6 +5,10 @@ import { materializarCambio } from './materializador';
 import { exigirPermiso } from './permisos';
 import { ErrorSincronizacion } from './erroresSincronizacion';
 import { esEditable, type ResumenSubida, type EdicionCompartida } from './edicionCompartida';
+import { aplicarMiembrosRemotos } from './miembrosRemotos';
+
+// Cada cuánto se vuelven a pedir los miembros al servidor (roles cambiados desde otra compu).
+const REVISAR_MIEMBROS_MS = 15_000;
 
 export interface ResultadoSincronizacion {
     enviados: number;
@@ -24,10 +28,13 @@ export class SincronizarProyecto {
         private sincronizador: ISincronizador,
         private edicion: Edicion,
         private ultimaRevisionIds = new Map<number, number>(),
+        private ultimaRevisionMiembros = new Map<number, number>(),
     ) {}
 
     async ejecutar(entrada: SincronizarProyectoDTO): Promise<ResultadoSincronizacion> {
         const dto = SincronizarProyectoDTOSchema.parse(entrada);
+        // Antes de mirar el rol: si lo cambiaron desde otra compu, acá ya se usa el nuevo.
+        const miembrosCambiaron = await this.actualizarMiembros(dto.idProyecto);
         // Los lectores también sincronizan, pero solo reciben.
         const rol = await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuario, 'proyecto.sincronizar');
         const puedeEnviar = rol !== 'lector';
@@ -104,7 +111,32 @@ export class SincronizarProyecto {
             `UPDATE proyectos SET ultima_sincronizacion = NOW(), version_servidor = GREATEST(version_servidor, $1)
              WHERE id_proyecto = $2`, [versionFinal, dto.idProyecto]);
 
-        return { enviados, recibidos: remotos.cambios.length, versionServidor: versionFinal, ediciones };
+        // Un cambio de miembros cuenta como recibido: así la interfaz recarga roles y columnas.
+        const recibidos = remotos.cambios.length + (miembrosCambiaron ? 1 : 0);
+        return { enviados, recibidos, versionServidor: versionFinal, ediciones };
+    }
+
+    /**
+     * Copia a proyecto_miembros los miembros y roles del servidor (la fuente de verdad).
+     * Antes solo se hacía al abrir la lista de miembros, así que un rol cambiado desde otra compu
+     * no llegaba a esta base y los permisos locales quedaban viejos. Si falla, no corta la sincronización.
+     */
+    private async actualizarMiembros(idProyecto: number): Promise<boolean> {
+        const ahora = Date.now();
+        if (ahora - (this.ultimaRevisionMiembros.get(idProyecto) ?? 0) < REVISAR_MIEMBROS_MS) return false;
+        try {
+            const [p] = await this.persistencia.ejecutar<{ id_remoto: string | null }>(
+                `SELECT id_remoto FROM proyectos WHERE id_proyecto = $1`, [idProyecto]);
+            if (!p?.id_remoto) return false;
+            if (!this.sincronizador.estaConectado()) await this.sincronizador.conectar();
+            const remotos = await this.sincronizador.listarMiembrosRemotos(p.id_remoto);
+            this.ultimaRevisionMiembros.set(idProyecto, ahora);
+            if (remotos.length === 0) return false; // lista vacía = respuesta rara: no se da de baja a nadie
+            return await this.persistencia.transaccion(tx => aplicarMiembrosRemotos(tx, idProyecto, remotos));
+        } catch (e) {
+            console.warn('[sync] no se pudieron actualizar los miembros:', e);
+            return false;
+        }
     }
 
     // Altas/bajas de miembros: se reintentan desde la cola hasta que el servidor las acepta (es idempotente).

@@ -1,4 +1,5 @@
 import type { Sincronizacion } from '../logicaPersistente/gestionDeProyectos/componerSincronizacion';
+import type { ClaveEdicion } from '../logicaPersistente/gestionDeProyectos/claveEdicion';
 
 type UnirseDatos = Parameters<Sincronizacion['unirseAProyecto']['ejecutar']>[0];
 
@@ -11,6 +12,7 @@ export class Edicion {
         private readonly servicio: Sincronizacion['edicion'],
         private readonly coordinador: Sincronizacion['coordinador'],
         private readonly unirseAProyecto: Sincronizacion['unirseAProyecto'],
+        private readonly claveEdicion: ClaveEdicion,
     ) {}
 
     iniciar(datos: unknown) { return this.servicio.iniciar(datos); }
@@ -20,6 +22,8 @@ export class Edicion {
     listarConflictos(datos: unknown) { return this.servicio.listarConflictos(datos); }
     obtenerConflicto(datos: unknown) { return this.servicio.obtenerConflicto(datos); }
     resolverConflicto(datos: unknown) { return this.servicio.resolverConflicto(datos); }
+    /** Proyecto e id global de un archivo, evento o meta (null si es personal), para tomar el bloqueo al abrirlo. */
+    claveDe(datos: unknown) { return this.claveEdicion.ejecutar(datos); }
 
     /** Se llama al iniciar sesión: arranca la sincronización de los proyectos del usuario. */
     iniciarSincronizacion(datos: { idUsuario: number }) { return this.coordinador.iniciar(datos.idUsuario); }

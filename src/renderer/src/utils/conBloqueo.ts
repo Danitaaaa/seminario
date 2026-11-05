@@ -21,6 +21,19 @@ const TEXTO_LECTURA: Record<MotivoLectura, string> = {
  * toma el bloqueo, hace el cambio local, sube la versión y suelta el bloqueo.
  * Si el proyecto no está compartido, solo ejecuta el cambio local.
  */
+/**
+ * Igual que conBloqueo, pero para un archivo, evento o meta del que solo se tiene el id local:
+ * averigua si es de un proyecto compartido y, si no lo es, ejecuta el cambio sin bloqueo.
+ */
+export async function conBloqueoDe(
+    entidad: 'archivo' | 'evento' | 'meta', id: number, idUsuario: number, accionLocal: () => Promise<boolean>,
+): Promise<ResultadoRapido> {
+    const r = await window.api.claveEdicion({ entidad, id });
+    if (!r.ok) return { ok: false, motivo: r.mensaje };
+    if (!r.datos) return (await accionLocal()) ? { ok: true } : { ok: false, motivo: 'No se pudo guardar el cambio.' };
+    return conBloqueo({ ...r.datos, idUsuario, entidad }, accionLocal);
+}
+
 export async function conBloqueo(clave: ClaveEdicion, accionLocal: () => Promise<boolean>): Promise<ResultadoRapido> {
     const api = window.api as unknown as ApiRapida;
 

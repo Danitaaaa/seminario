@@ -80,9 +80,19 @@ export class DriveCliente {
   async descargarComoOffice(driveId: string, extension: string): Promise<Buffer> {
     const ext = this.extensionSoportada(extension);
     const mime = encodeURIComponent(MIME_EXPORTACION[ext]);
-    const url = `${BASE_API}/drive/v3/files/${encodeURIComponent(driveId)}/export?mimeType=${mime}`;
-    const respuesta = await this.pedir(url);
-    return Buffer.from(await respuesta.arrayBuffer());
+    const archivo = `${BASE_API}/drive/v3/files/${encodeURIComponent(driveId)}`;
+    try {
+      const respuesta = await this.pedir(`${archivo}/export?mimeType=${mime}`);
+      return Buffer.from(await respuesta.arrayBuffer());
+    } catch (error) {
+      // La exportación directa tiene un límite de 10 MB; los enlaces de exportación del archivo no.
+      if (!(error instanceof Error && /too large to be exported/i.test(error.message))) throw error;
+      const datos = await (await this.pedir(`${archivo}?fields=exportLinks`)).json() as { exportLinks?: Record<string, string> };
+      const enlace = datos.exportLinks?.[MIME_EXPORTACION[ext]];
+      if (!enlace) throw new Error('El archivo es demasiado grande para traerlo desde Google Drive.');
+      const respuesta = await this.pedir(enlace);
+      return Buffer.from(await respuesta.arrayBuffer());
+    }
   }
 
   private extensionSoportada(extension: string): string {

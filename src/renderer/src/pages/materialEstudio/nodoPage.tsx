@@ -26,6 +26,7 @@ import { leerVistaListado, guardarVistaListado } from '../../utils/vistaListadoG
 import type { RolMiembro } from '../../types/proyectos';
 import { puede } from '../../permisos';
 import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
+import { ConflictosProyecto } from '../../components/proyectos/conflictosProyecto';
 
 const usuarioLogueado = 'Usuario';
 
@@ -447,6 +448,8 @@ export function NodoPage({
                         </div>
 
                         {subencabezado}
+
+                        <ConflictosProyecto idProyecto={idProyecto} entidad="archivo" onResuelto={() => void cargarContenido()} />
 
                         {conMaterias && materias.length > 0 && (
                             <div className="nodos-filtro-materia">

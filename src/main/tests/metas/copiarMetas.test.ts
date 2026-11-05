@@ -1,21 +1,22 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { CopiarMetas } from '../../logicaPersistente/gestionDeMetas/copiarMetas';
 import { exigirAcceso, registrarCambioSiProyecto } from '../../logicaPersistente/gestionDeProyectos/alcance';
 import { crearPersistenciaFalsa, filaMeta } from './utilsTest';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `id_proyecto IS NULL AND id_usuario = $${valores.length}`;
     }),
 }), { virtual: true });
 
-const acceso = exigirAcceso as jest.Mock;
-const registrar = registrarCambioSiProyecto as jest.Mock;
+const acceso = exigirAcceso as Mock;
+const registrar = registrarCambioSiProyecto as Mock;
 
 describe('CopiarMetas', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     const entrada = { 
         idUsuario: 7, 
@@ -60,7 +61,7 @@ describe('CopiarMetas', () => {
     it('copia solo pendientes cuando soloPendientes = true', async () => {
         const { persistencia, txEjecutar } = crearPersistenciaFalsa([], [[]]);
         await new CopiarMetas(persistencia).ejecutar({ ...entrada, idProyecto: 3 });
-        expect(txEjecutar.mock.calls[0][1]).toEqual([3, '2026-09-01', '2026-10-01', true, 7]);
+        expect(txEjecutar.mock.calls[0][1]).toEqual([3, '2026-09-01', '2026-10-01', true, null]);
     });
 
     it('si se omite soloPendientes, el DTO aplica el valor por defecto true', async () => {
@@ -83,7 +84,7 @@ describe('CopiarMetas', () => {
         expect(sql).toContain('INSERT INTO metas');
         expect(sql).toContain('id_meta_origen');
         expect(sql).toContain('o.mes = $2::date');
-        expect(sql).toContain('$4::boolean = FALSE OR o.completada = FALSE');
+        expect(sql).toContain('$4::boolean = FALSE OR NOT o.completada');
         expect(sql).toContain('NOT EXISTS (SELECT 1 FROM metas d WHERE d.id_meta_origen = o.id_meta)');
         expect(sql).toContain('d.titulo = o.titulo');
         expect(sql).toContain('ROW_NUMBER() OVER (ORDER BY o.orden, o.id_meta)');
@@ -91,12 +92,13 @@ describe('CopiarMetas', () => {
         expect(sql).toContain('RETURNING');
     });
 
-    it('en metas personales restringe por creador en origen y destino', async () => {
+    it('en metas personales restringe por dueño en origen y destino', async () => {
         const { persistencia, txEjecutar } = crearPersistenciaFalsa([], [[]]);
         await new CopiarMetas(persistencia).ejecutar(entrada);
         const sql: string = txEjecutar.mock.calls[0][0];
-        expect(sql).toContain('o.creada_por_global = $5::int');
-        expect(sql).toContain('d.creada_por_global = $5::int');
+        expect(sql).toContain('o.id_usuario IS NOT DISTINCT FROM $5::int');
+        expect(sql).toContain('d.id_usuario IS NOT DISTINCT FROM $5::int');
+        expect(txEjecutar.mock.calls[0][1][4]).toBe(7);
     });
 
     it('devuelve las metas copiadas materializadas', async () => {

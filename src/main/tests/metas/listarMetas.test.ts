@@ -1,22 +1,23 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { ListarMetas } from '../../logicaPersistente/gestionDeMetas/listarMetas';
 import { exigirAcceso, filtroAlcance } from '../../logicaPersistente/gestionDeProyectos/alcance';
 import { COLUMNAS_META } from '../../logicaPersistente/gestionDeMetas/materializador';
 import { crearPersistenciaFalsa, filaMeta } from './utilsTest';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `id_proyecto IS NULL AND id_usuario = $${valores.length}`;
     }),
 }), { virtual: true });
 
-const acceso = exigirAcceso as jest.Mock;
-const filtro = filtroAlcance as jest.Mock;
+const acceso = exigirAcceso as Mock;
+const filtro = filtroAlcance as Mock;
 
 describe('ListarMetas', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it('exige acceso de lectura (cualquier rol)', async () => {
         const { persistencia } = crearPersistenciaFalsa([[]]);
@@ -46,7 +47,7 @@ describe('ListarMetas', () => {
         const { persistencia, ejecutar } = crearPersistenciaFalsa([[]]);
         await new ListarMetas(persistencia).ejecutar({ idUsuario: 7, mes: '2026-10' });
         const [sql, valores] = ejecutar.mock.calls[0];
-        expect(sql).toContain('creada_por_global = $1');
+        expect(sql).toContain('id_proyecto IS NULL AND id_usuario = $1');
         expect(valores).toEqual([7, '2026-10-01']);
     });
 

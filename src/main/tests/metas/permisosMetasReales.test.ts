@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, type Mock } from 'vitest';
 /**
  * Integración liviana: NO se mockea alcance.ts ni permisos.ts.
  * Se ejercitan exigirAcceso → exigirPermiso → obtenerRolActivo y registrarCambioSiProyecto → registrarCambio
@@ -29,7 +30,6 @@ function entorno(rol: Rol | null, fila: Record<string, any>, filasEscritura: unk
         { cuando: /INSERT INTO cola_sincronizacion/, filas: [] },
         { cuando: /UPDATE proyectos SET version = version \+ 1/, filas: [] },
         { cuando: /GROUP BY mes ORDER BY mes/, filas: [] },
-        { cuando: /GROUP BY completada_por_global ORDER BY completadas DESC/, filas: [] },
         {
             cuando: /SELECT id_global FROM metas/,
             filas: (_sql, params) => {
@@ -45,9 +45,9 @@ function entorno(rol: Rol | null, fila: Record<string, any>, filasEscritura: unk
     return persistenciaPorSql(reglas);
 }
 
-const filaProyecto = (o: Record<string, any> = {}) => filaMeta({ id_proyecto: 3, creada_por_global: 12, ...o });
+const filaProyecto = (o: Record<string, any> = {}) => filaMeta({ id_proyecto: 3, id_usuario: 12, ...o });
 
-function cambiosEnCola(ejecutar: jest.Mock) {
+function cambiosEnCola(ejecutar: Mock) {
     return consultasA(ejecutar, COLA).map(([, v]) => {
         const [idProyecto, entidad, idEntidad, operacion, payload] = v as any[];
         return { idProyecto, entidad, idEntidad, operacion, payload: payload ? JSON.parse(payload) : null };
@@ -94,7 +94,7 @@ describe('Metas de proyecto con permisos reales', () => {
         it('ver estadísticas', async () => {
             const { persistencia } = entorno('lector', filaProyecto());
             await expect(new EstadisticasMetasProyecto(persistencia).ejecutar({ idUsuario: 7, idProyecto: 3 }))
-                .resolves.toEqual({ porMes: [], porMiembro: [] });
+                .resolves.toEqual({ porMes: [] });
         });
     });
 
@@ -180,7 +180,7 @@ describe('Metas de proyecto con permisos reales', () => {
 
 describe('Metas personales con permisos reales', () => {
     it('el creador opera sin consultar membresías y no se encola nada para sincronizar', async () => {
-        const fila = filaMeta({ id_proyecto: null, creada_por_global: 7 });
+        const fila = filaMeta({ id_proyecto: null, id_usuario: 7 });
         const { persistencia, ejecutar } = entorno(null, fila, [filaMeta({ completada: true })]);
         const meta = await new AlternarMeta(persistencia).ejecutar({ idMeta: 1, idUsuario: 7 });
         expect(meta.completada).toBe(true);
@@ -191,7 +191,7 @@ describe('Metas personales con permisos reales', () => {
     });
 
     it('otro usuario no puede marcar, modificar ni eliminar una meta personal ajena', async () => {
-        const ajena = filaMeta({ id_proyecto: null, creada_por_global: 12 });
+        const ajena = filaMeta({ id_proyecto: null, id_usuario: 12 });
         for (const operar of [
             (p: any) => new AlternarMeta(p).ejecutar({ idMeta: 1, idUsuario: 7 }),
             (p: any) => new ModificarMeta(p).ejecutar({ idMeta: 1, idUsuario: 7, titulo: 'X' }),

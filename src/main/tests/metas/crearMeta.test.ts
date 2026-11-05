@@ -1,21 +1,22 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { CrearMeta } from '../../logicaPersistente/gestionDeMetas/crearMeta';
 import { exigirAcceso, registrarCambioSiProyecto } from '../../logicaPersistente/gestionDeProyectos/alcance';
 import { crearPersistenciaFalsa, filaMeta } from './utilsTest';
 
-jest.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
-    exigirAcceso: jest.fn(),
-    registrarCambioSiProyecto: jest.fn(),
-    filtroAlcance: jest.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
+vi.mock('../../logicaPersistente/gestionDeProyectos/alcance', () => ({
+    exigirAcceso: vi.fn(),
+    registrarCambioSiProyecto: vi.fn(),
+    filtroAlcance: vi.fn((valores: unknown[], idProyecto: number | null, idUsuario: number) => {
         valores.push(idProyecto ?? idUsuario);
-        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `creada_por_global = $${valores.length}`;
+        return idProyecto !== null ? `id_proyecto = $${valores.length}` : `id_proyecto IS NULL AND id_usuario = $${valores.length}`;
     }),
 }), { virtual: true });
 
-const acceso = exigirAcceso as jest.Mock;
-const registrar = registrarCambioSiProyecto as jest.Mock;
+const acceso = exigirAcceso as Mock;
+const registrar = registrarCambioSiProyecto as Mock;
 
 describe('CrearMeta', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     // Entrada específica y correcta para CrearMeta
     const entrada = { idUsuario: 7, titulo: 'Correr 10k', mes: '2026-10' };
@@ -44,7 +45,8 @@ it('inserta con los parámetros correctos', async () => {
         const [sql, valores] = txEjecutar.mock.calls[0];
         expect(sql).toContain('INSERT INTO metas');
         expect(sql).toContain('RETURNING');
-        expect(valores).toEqual([5, 'Correr 10k', 'Desc', '2026-10-01', 7, null]);
+        // Meta de proyecto: no tiene dueño.
+        expect(valores).toEqual([5, 'Correr 10k', 'Desc', '2026-10-01', null, null]);
     });
 
     it('guarda idProyecto null y descripción null cuando se omiten', async () => {
@@ -66,7 +68,7 @@ it('inserta con los parámetros correctos', async () => {
         expect(sql).toContain('COALESCE(MAX(m.orden), 0) + 1');
         expect(sql).toContain('m.id_proyecto IS NOT DISTINCT FROM $1::int');
         expect(sql).toContain('m.mes = $4::date');
-        expect(sql).toContain('($1::int IS NOT NULL OR m.creada_por_global = $5::int)');
+        expect(sql).toContain('m.id_usuario IS NOT DISTINCT FROM $5::int');
     });
 
     it('aplica trim al título antes de insertar', async () => {

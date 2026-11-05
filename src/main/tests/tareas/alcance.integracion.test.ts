@@ -1,8 +1,9 @@
+import { describe, it, expect, vi } from 'vitest';
 // Prueba alcance.ts junto con permisos.ts reales (sin mocks), solo con una base falsa.
 import { exigirAcceso, registrarCambioSiProyecto } from '../../logicaPersistente/gestionDeProyectos/alcance';
 
 function baseFalsa() {
-    const ejecutar = jest.fn();
+    const ejecutar = vi.fn();
     const p = { ejecutar };
     return { p, ejecutar };
 }

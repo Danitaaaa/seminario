@@ -7,6 +7,9 @@ import { VisorDocx } from './visorDocx';
 import { VisorExcel } from './visorExcel';
 import { VisorTexto } from './visorTexto';
 import { MenuAbrirCon } from './menuAbrirCon';
+import { BannerEdicion } from '../proyectos/bannerEdicion';
+import { ModalConflicto } from '../proyectos/modalConflicto';
+import { useEdicionDeElemento } from '../../hooks/useEdicionCompartida';
 import '../../styles/visor.css';
 
 interface VisorArchivoProps {
@@ -23,35 +26,59 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
   const [contenido, setContenido] = useState<Uint8Array | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [recarga, setRecarga] = useState(0);
+  const [resolviendo, setResolviendo] = useState(false);
   const tipo = tipoVisor(archivo.extension);
+
+  // Archivo de un proyecto compartido: mientras está abierto se toma el bloqueo, así nadie más lo
+  // edita al mismo tiempo. En el material personal no hay bloqueos.
+  const { clave, estado, puedeEditar, guardar: subirEdicion, reintentar } = useEdicionDeElemento('archivo', archivo.id);
+  const sinEdicion = soloLectura || !puedeEditar;
 
   useEffect(() => {
     window.api
       .leerArchivo({ id: archivo.id })
       .then((r) => setContenido(r.contenido))
       .catch((e) => setError(mensaje(e, 'No se pudo abrir el archivo.')));
-  }, [archivo.id]);
+  }, [archivo.id, recarga]);
+
+  const motivoSinEdicion = () =>
+    soloLectura ? 'Tu rol en este proyecto es de solo lectura.' : 'Ahora no se puede editar este archivo: mirá el aviso de arriba.';
+
+  // Después de guardar en esta compu, se sube la versión para el resto del proyecto.
+  const alGuardar = async () => {
+    setAviso('Cambios guardados.');
+    onGuardado();
+    if (clave) await subirEdicion();
+  };
 
   const guardarBytes = async (bytes: Uint8Array) => {
-    if (soloLectura) return setError('Tu rol en este proyecto es de solo lectura.');
+    if (sinEdicion) return setError(motivoSinEdicion());
     try {
       await window.api.guardarArchivo({ id: archivo.id, contenido: bytes });
-      setAviso('Cambios guardados.');
-      onGuardado();
+      await alGuardar();
     } catch (e) {
       setError(mensaje(e, 'No se pudo guardar.'));
     }
   };
 
   const guardarDocx = async (html: string) => {
-    if (soloLectura) return setError('Tu rol en este proyecto es de solo lectura.');
+    if (sinEdicion) return setError(motivoSinEdicion());
     try {
       await window.api.guardarDocx({ id: archivo.id, html });
-      setAviso('Cambios guardados.');
-      onGuardado();
+      await alGuardar();
     } catch (e) {
       setError(mensaje(e, 'No se pudo guardar.'));
     }
+  };
+
+  // Resuelto el conflicto: se muestra la versión que quedó y se vuelve a pedir el bloqueo.
+  const alResolver = () => {
+    setResolviendo(false);
+    setContenido(null);
+    setRecarga((n) => n + 1);
+    onGuardado();
+    void reintentar();
   };
 
   return (
@@ -66,6 +93,9 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
         </header>
 
         {soloLectura && <p className="visor__aviso">Solo lectura: tu rol no permite modificar este archivo.</p>}
+        {clave && (
+          <BannerEdicion estado={estado} onReintentar={() => void reintentar()} onResolverConflicto={() => setResolviendo(true)} />
+        )}
         {error && <CartelError mensaje={error} onCerrar={() => setError(null)} />}
         {aviso && (
           <p className="visor__aviso" onClick={() => setAviso(null)}>{aviso}</p>
@@ -73,12 +103,16 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
 
         <div className="visor__cuerpo">
           {!contenido && !error && <p className="visor__cargando">Cargando…</p>}
-          {contenido && tipo === 'pdf' && <VisorPdf contenido={contenido} onGuardar={guardarBytes} soloLectura={soloLectura} />}
-          {contenido && tipo === 'docx' && <VisorDocx contenido={contenido} onGuardar={guardarDocx} soloLectura={soloLectura} />}
-          {contenido && tipo === 'xlsx' && <VisorExcel contenido={contenido} onGuardar={guardarBytes} soloLectura={soloLectura} />}
-          {contenido && tipo === 'texto' && <VisorTexto contenido={contenido} onGuardar={guardarBytes} soloLectura={soloLectura} />}
+          {contenido && tipo === 'pdf' && <VisorPdf contenido={contenido} onGuardar={guardarBytes} soloLectura={sinEdicion} />}
+          {contenido && tipo === 'docx' && <VisorDocx contenido={contenido} onGuardar={guardarDocx} soloLectura={sinEdicion} />}
+          {contenido && tipo === 'xlsx' && <VisorExcel contenido={contenido} onGuardar={guardarBytes} soloLectura={sinEdicion} />}
+          {contenido && tipo === 'texto' && <VisorTexto contenido={contenido} onGuardar={guardarBytes} soloLectura={sinEdicion} />}
         </div>
       </div>
+
+      {resolviendo && clave && (
+        <ModalConflicto clave={clave} onCerrar={() => setResolviendo(false)} onResuelto={alResolver} />
+      )}
     </div>
   );
 }
