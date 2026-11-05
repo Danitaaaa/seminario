@@ -1,33 +1,38 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Folder, Layers, Plus, Timer } from 'lucide-react';
+import { ArrowLeft, Brain, ClipboardList, Folder, Layers, Pencil, Plus, Timer, X } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
 import { ModalNota } from '../../components/cuadernos/modalNota';
+import { ModalCuaderno } from '../../components/cuadernos/modalCuaderno';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import type { Cuaderno, DatosNota, Nota } from '../../types/cuadernos';
+import type { Deck } from '../../types/flashcards';
 import type { Cuatrimestre, EstadoMateria } from '../../types/materias';
 import { NOMBRE_ESTADO, cuatrimestreCorto, mensajeDeError, nombreAnio } from '../materias/utilidadesMaterias';
 import { CORTO_TIPO, NOMBRE_ESTADO_NOTA, fechaCorta, formatoNota, promedio } from './utilidadesCuadernos';
 import '../../styles/materias.css';
 import '../../styles/cuadernos.css';
 
-// El cuaderno de una materia: sus notas y todo lo que tiene asociado en Material, Flashcards y Sesiones.
+// Un cuaderno: sus notas y todo lo que tiene su materia en Material, Flashcards y Sesiones.
 export function CuadernoPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
-  const idMateria = Number(useParams().idMateria);
+  const idCuaderno = Number(useParams().idCuaderno);
   const navigate = useNavigate();
   const avisos = usarAvisos();
   const [cuaderno, setCuaderno] = useState<Cuaderno | null>(null);
   const [editando, setEditando] = useState<Nota | 'nueva' | null>(null);
+  const [editandoCuaderno, setEditandoCuaderno] = useState(false);
+  const [confirmarBorrado, setConfirmarBorrado] = useState(false);
+  const [misMazos, setMisMazos] = useState<Deck[]>([]);
   const [error, setError] = useState('');
 
   async function cargar(): Promise<void> {
     try {
-      setCuaderno(await window.api.obtenerCuaderno({ usuarioId, idMateria }));
+      setCuaderno(await window.api.obtenerCuaderno({ usuarioId, idCuaderno }));
     } catch (e) {
       setError(mensajeDeError(e, 'No se pudo cargar el cuaderno.'));
     }
@@ -35,11 +40,34 @@ export function CuadernoPage() {
 
   useEffect(() => {
     void cargar();
-  }, [idMateria]);
+  }, [idCuaderno]);
+
+  useEffect(() => {
+    window.api.listarDecks(usuarioId).then(setMisMazos).catch(() => setMisMazos([]));
+  }, []);
+
+  // Mazos agregados a mano. Los de la materia o de sus sesiones salen solos.
+  async function agregarMazo(idDeck: number): Promise<void> {
+    try {
+      await window.api.agregarMazoCuaderno({ usuarioId, idCuaderno, idDeck });
+      await cargar();
+    } catch (e) {
+      avisos.error(mensajeDeError(e, 'No se pudo agregar el mazo.'));
+    }
+  }
+
+  async function quitarMazo(idDeck: number): Promise<void> {
+    try {
+      await window.api.quitarMazoCuaderno({ usuarioId, idCuaderno, idDeck });
+      await cargar();
+    } catch (e) {
+      avisos.error(mensajeDeError(e, 'No se pudo sacar el mazo.'));
+    }
+  }
 
   async function guardarNota(datos: DatosNota): Promise<boolean> {
     try {
-      if (editando === 'nueva') await window.api.crearNota({ usuarioId, idMateria, ...datos });
+      if (editando === 'nueva') await window.api.crearNota({ usuarioId, idCuaderno, ...datos });
       else if (editando) await window.api.modificarNota({ usuarioId, idNota: editando.idNota, ...datos });
       avisos.exito(editando === 'nueva' ? 'Se cargó la nota.' : 'Se guardaron los cambios.');
       await cargar();
@@ -61,7 +89,35 @@ export function CuadernoPage() {
     }
   }
 
+  async function guardarCuaderno(datos: { nombre: string; idMateria: number }): Promise<boolean> {
+    try {
+      await window.api.modificarCuaderno({ usuarioId, idCuaderno, ...datos });
+      avisos.exito('Se guardaron los cambios.');
+      await cargar();
+      return true;
+    } catch (e) {
+      avisos.error(mensajeDeError(e, 'No se pudo guardar el cuaderno.'));
+      return false;
+    }
+  }
+
+  async function eliminarCuaderno(): Promise<void> {
+    try {
+      await window.api.eliminarCuaderno({ usuarioId, idCuaderno });
+      avisos.exito('Se eliminó el cuaderno.');
+      navigate('/cuadernos');
+    } catch (e) {
+      avisos.error(mensajeDeError(e, 'No se pudo eliminar el cuaderno.'));
+      setConfirmarBorrado(false);
+    }
+  }
+
+  // Abre Material directo en la carpeta de la materia.
+  const abrirCarpeta = (c: { idNodo: number; nombre: string }) =>
+    navigate(`/material?carpeta=${c.idNodo}&nombre=${encodeURIComponent(c.nombre)}`);
+
   const r = cuaderno?.resumen;
+  const materia = r?.materia;
   const cursado = cuaderno?.notas.filter((n) => n.tipo !== 'final') ?? [];
   const finales = cuaderno?.notas.filter((n) => n.tipo === 'final') ?? [];
   const promedioCursado = promedio(cursado);
@@ -74,23 +130,27 @@ export function CuadernoPage() {
         </button>
         {error && <CartelError mensaje={error} onCerrar={() => setError('')} />}
 
-        {r && cuaderno && (
+        {r && materia && cuaderno && (
           <>
             <header className="cuadernos-encabezado">
               <div>
                 <span className="materias-detalle">
-                  {[r.anio && nombreAnio(r.anio), cuatrimestreCorto(r.cuatrimestre as Cuatrimestre | null), NOMBRE_ESTADO[r.estado as EstadoMateria]].filter(Boolean).join(' · ')}
+                  {[materia.nombre !== r.nombre ? materia.nombre : null, materia.anio && nombreAnio(materia.anio), cuatrimestreCorto(materia.cuatrimestre as Cuatrimestre | null),
+                    NOMBRE_ESTADO[materia.estado as EstadoMateria]].filter(Boolean).join(' · ')}
                 </span>
                 <h1>{r.nombre}</h1>
               </div>
-              <Boton onClick={() => setEditando('nueva')}><Plus size={16} /> Cargar nota</Boton>
+              <div className="materias-botones">
+                <Boton variante="contorno" onClick={() => setEditandoCuaderno(true)}><Pencil size={16} /> Editar</Boton>
+                <Boton onClick={() => setEditando('nueva')}><Plus size={16} /> Cargar nota</Boton>
+              </div>
             </header>
 
             <TablaNotas titulo="Cursado" notas={cursado} onEditar={setEditando}
               extra={promedioCursado !== null ? <>Promedio de cursado: <strong>{formatoNota(promedioCursado)}</strong></> : null}
               vacio="Todavía no cargaste parciales ni trabajos." />
             <TablaNotas titulo="Finales" notas={finales} onEditar={setEditando}
-              extra={r.estado === 'regular' || r.estado === 'cursando' ? 'Se habilita al regularizar' : null}
+              extra={materia.estado === 'regular' || materia.estado === 'cursando' ? 'Se habilita al regularizar' : null}
               vacio="Todavía no rendiste el final de esta materia." />
 
             <div className="cuaderno-vinculos">
@@ -99,26 +159,66 @@ export function CuadernoPage() {
                 {cuaderno.carpetas.length === 0 && <p className="materias-ayuda">No hay carpetas asociadas a esta materia. Asocialas desde Material, editando la carpeta.</p>}
                 <ul>
                   {cuaderno.carpetas.map((c) => (
-                    <li key={c.idNodo}><Folder size={16} aria-hidden="true" /> {c.nombre} <small>{c.elementos} elementos</small></li>
+                    <li key={c.idNodo}>
+                      <button type="button" className="materias-link" onClick={() => abrirCarpeta(c)}>
+                        <Folder size={16} aria-hidden="true" /> {c.nombre}
+                      </button>
+                      <small>{c.elementos} elementos</small>
+                    </li>
                   ))}
                 </ul>
-                <Boton variante="contorno" onClick={() => navigate('/material')}>Ir a Material</Boton>
+                <Boton variante="contorno" onClick={() => (cuaderno.carpetas.length === 1 ? abrirCarpeta(cuaderno.carpetas[0]) : navigate('/material'))}>
+                  {cuaderno.carpetas.length === 1 ? 'Abrir carpeta' : 'Ir a Material'}
+                </Boton>
               </section>
 
-              <section className="cuaderno-tarjeta">
-                <h3>Flashcards</h3>
-                {cuaderno.mazos.length === 0 && <p className="materias-ayuda">No hay mazos de esta materia.</p>}
+              <section className="cuaderno-tarjeta cuaderno-tarjeta--metodos">
+                <h3>Métodos de estudio</h3>
+                {cuaderno.metodos.length > 0 && (
+                  <div className="cuaderno-metodos-usados" aria-label="Métodos usados en tus sesiones">
+                    <span>En tus sesiones:</span>
+                    {cuaderno.metodos.map((m) => (
+                      <span key={m.nombre} className="cuaderno-metodo-chip">
+                        {m.nombre} · {m.sesiones} {m.sesiones === 1 ? 'sesión' : 'sesiones'}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <h4><Layers size={16} aria-hidden="true" /> Flashcards</h4>
+                {cuaderno.mazos.length === 0 && <p className="materias-ayuda">Todavía no hay mazos. Los que uses en una sesión de esta materia aparecen solos, o agregalos acá.</p>}
                 <ul>
                   {cuaderno.mazos.map((m) => (
                     <li key={m.idDeck}>
                       <button type="button" className="materias-link" onClick={() => navigate(`/flashcards/${m.idDeck}`)}>
                         <Layers size={16} aria-hidden="true" /> {m.nombre}
                       </button>
-                      <small>{m.flashcards} tarjetas</small>
+                      <small>
+                        {m.flashcards} tarjetas
+                        {m.aMano && (
+                          <button type="button" className="cuaderno-quitar" aria-label={`Sacar ${m.nombre} del cuaderno`} title="Sacar del cuaderno" onClick={() => void quitarMazo(m.idDeck)}>
+                            <X size={14} />
+                          </button>
+                        )}
+                      </small>
                     </li>
                   ))}
                 </ul>
-                <Boton variante="contorno" onClick={() => navigate('/flashcards')}>Ver flashcards</Boton>
+                {misMazos.some((d) => !cuaderno.mazos.some((m) => m.idDeck === d.idDeck)) && (
+                  <select className="cuaderno-agregar" value="" aria-label="Agregar un mazo al cuaderno"
+                    onChange={(e) => e.target.value && void agregarMazo(Number(e.target.value))}>
+                    <option value="">+ Agregar mazo…</option>
+                    {misMazos.filter((d) => !cuaderno.mazos.some((m) => m.idDeck === d.idDeck)).map((d) => (
+                      <option key={d.idDeck} value={d.idDeck}>{d.nombre}</option>
+                    ))}
+                  </select>
+                )}
+                {/* Cuestionarios y mapas mentales todavía no existen: cuando estén, se listan acá igual que los mazos. */}
+                <h4><ClipboardList size={16} aria-hidden="true" /> Cuestionarios <small className="cuaderno-pronto">Próximamente</small></h4>
+                <h4><Brain size={16} aria-hidden="true" /> Mapas mentales <small className="cuaderno-pronto">Próximamente</small></h4>
+                <div className="materias-botones">
+                  <Boton variante="contorno" onClick={() => navigate('/flashcards')}>Ver flashcards</Boton>
+                  <Boton variante="contorno" onClick={() => navigate('/metodos')}>Todos los métodos</Boton>
+                </div>
               </section>
 
               <section className="cuaderno-tarjeta">
@@ -140,6 +240,29 @@ export function CuadernoPage() {
           </>
         )}
       </div>
+
+      {editandoCuaderno && r && (
+        <ModalCuaderno
+          cuaderno={r}
+          usadas={[]}
+          onGuardar={guardarCuaderno}
+          onEliminar={() => { setEditandoCuaderno(false); setConfirmarBorrado(true); }}
+          onCerrar={() => setEditandoCuaderno(false)}
+        />
+      )}
+
+      {confirmarBorrado && r && (
+        <div className="materias-fondo-modal">
+          <div className="materias-modal" role="alertdialog" aria-modal="true" aria-labelledby="titulo-borrar-cuaderno">
+            <h2 id="titulo-borrar-cuaderno">Eliminar cuaderno</h2>
+            <p>Se va a eliminar "{r.nombre}" con sus notas. La materia, sus carpetas, mazos y sesiones no se tocan.</p>
+            <div className="materias-acciones">
+              <Boton variante="contorno" onClick={() => setConfirmarBorrado(false)}>Cancelar</Boton>
+              <Boton onClick={() => void eliminarCuaderno()}>Eliminar</Boton>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editando && (
         <ModalNota

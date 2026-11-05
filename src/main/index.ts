@@ -104,9 +104,14 @@ import { GuardarCorrelativas } from './logicaPersistente/gestionDeMaterias/guard
 import { Materias } from './administracionDePersistencia/materias';
 import { ListarCuadernos } from './logicaPersistente/gestionDeCuadernos/listarCuadernos';
 import { ObtenerCuaderno } from './logicaPersistente/gestionDeCuadernos/obtenerCuaderno';
+import { CrearCuaderno } from './logicaPersistente/gestionDeCuadernos/crearCuaderno';
+import { ModificarCuaderno } from './logicaPersistente/gestionDeCuadernos/modificarCuaderno';
+import { EliminarCuaderno } from './logicaPersistente/gestionDeCuadernos/eliminarCuaderno';
 import { CrearNota } from './logicaPersistente/gestionDeCuadernos/crearNota';
 import { ModificarNota } from './logicaPersistente/gestionDeCuadernos/modificarNota';
 import { EliminarNota } from './logicaPersistente/gestionDeCuadernos/eliminarNota';
+import { AgregarMazo } from './logicaPersistente/gestionDeCuadernos/agregarMazo';
+import { QuitarMazo } from './logicaPersistente/gestionDeCuadernos/quitarMazo';
 import { Cuadernos } from './administracionDePersistencia/cuadernos';
 import { registerCuadernosIpc } from './ipc/cuadernos.ipc';
 import { registerMateriasIpc } from './ipc/materias.ipc';
@@ -396,11 +401,13 @@ function wireDependencies(): ProcesoSesionEstudio {
   );
   registerMateriasIpc(materias);
 
-  // Gestion de cuadernos (uno por materia) y sus notas
+  // Gestion de cuadernos (los crea el usuario y les asocia una materia) y sus notas
   const listarCuadernos = new ListarCuadernos(persistencia);
   const cuadernos = new Cuadernos(
     listarCuadernos, new ObtenerCuaderno(persistencia, listarCuadernos),
-    new CrearNota(persistencia), new ModificarNota(persistencia), new EliminarNota(persistencia)
+    new CrearCuaderno(persistencia), new ModificarCuaderno(persistencia), new EliminarCuaderno(persistencia),
+    new CrearNota(persistencia), new ModificarNota(persistencia), new EliminarNota(persistencia),
+    new AgregarMazo(persistencia), new QuitarMazo(persistencia)
   );
   registerCuadernosIpc(cuadernos);
 

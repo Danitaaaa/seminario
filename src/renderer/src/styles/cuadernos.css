@@ -1,20 +1,24 @@
 /* Cuadernos (uno por materia) y sus notas. Todo sale de la paleta, así sigue al modo oscuro. */
 
 /* Tonos de tapas y lomos: el texto va en --color-surface, que contrasta en claro y en oscuro. */
-.cuaderno-tono-0 { background: var(--color-storm); color: var(--color-surface); }
+.cuaderno-tono-0 { background: var(--color-primary); color: var(--color-surface); }
 .cuaderno-tono-1 { background: var(--color-steel); color: var(--color-surface); }
 .cuaderno-tono-2 { background: var(--color-text); color: var(--color-surface); }
 .cuaderno-tono-3 { background: var(--color-frost-blue); color: var(--color-text); }
 
-/* Mini estante en Material */
+/* Mini estante en Material.
+   Usa los colores de la barra lateral: son oscuros en todas las paletas y también en modo oscuro.
+   Los libros son mezclas del texto de la barra lateral con su fondo, así siempre contrastan. */
 .mini-estante {
+  --estante-fondo: var(--color-lateral-fondo);
+  --estante-texto: var(--color-lateral-texto);
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 16px;
   border-radius: 14px;
-  background: var(--color-text);
-  color: var(--color-surface);
+  background: var(--estante-fondo);
+  color: var(--estante-texto);
 }
 .mini-estante button { font: inherit; cursor: pointer; }
 .mini-estante__cabecera {
@@ -24,24 +28,31 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--color-frost-blue);
+  color: color-mix(in srgb, var(--estante-texto) 75%, var(--estante-fondo));
   font-size: 0.875rem;
   text-align: left;
 }
 .mini-estante__cabecera svg { margin-left: auto; }
-.mini-estante__punto { width: 8px; height: 8px; border-radius: 50%; background: var(--color-frost-blue); }
+.mini-estante__punto { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .mini-estante__estante {
   display: flex;
+  overflow: hidden;
   height: 110px;
   align-items: flex-end;
   gap: 4px;
   padding: 10px 10px 0;
   border: 0;
-  border-bottom: 4px solid var(--color-steel);
+  border-bottom: 4px solid color-mix(in srgb, var(--estante-texto) 35%, var(--estante-fondo));
   border-radius: 8px 8px 2px 2px;
-  background: color-mix(in srgb, var(--color-storm) 55%, var(--color-text));
+  background: color-mix(in srgb, var(--estante-texto) 8%, var(--estante-fondo));
 }
-.mini-estante__lomo { flex: 0 0 12px; border-radius: 2px 2px 0 0; outline: 1px solid color-mix(in srgb, var(--color-surface) 25%, transparent); }
+.mini-estante__lomo { flex: 1 1 0; min-width: 4px; max-width: 14px; border-radius: 2px 2px 0 0; }
+.mini-estante .cuaderno-tono-0 { background: color-mix(in srgb, var(--estante-texto) 90%, var(--estante-fondo)); }
+.mini-estante .cuaderno-tono-1 { background: color-mix(in srgb, var(--estante-texto) 55%, var(--estante-fondo)); }
+.mini-estante .cuaderno-tono-2 { background: var(--color-frost-blue); }
+.mini-estante .cuaderno-tono-3 { background: color-mix(in srgb, var(--estante-texto) 72%, var(--estante-fondo)); }
+.mini-estante__lomo--muestra { border: 1px dashed color-mix(in srgb, var(--estante-texto) 45%, var(--estante-fondo)); background: transparent; }
+.mini-estante__mas { align-self: center; margin-left: auto; padding-right: 4px; color: color-mix(in srgb, var(--estante-texto) 60%, var(--estante-fondo)); font-size: 1.6rem; line-height: 1; }
 .mini-estante__destacado {
   display: flex;
   align-items: center;
@@ -52,18 +63,16 @@
   color: inherit;
   text-align: left;
 }
-.mini-estante__destacado strong { display: block; }
-.mini-estante__destacado small { color: var(--color-frost-blue); }
-.mini-estante__tapa { flex: none; width: 46px; height: 46px; border-radius: 8px; }
-.mini-estante__progreso { height: 4px; border-radius: 999px; background: var(--color-steel); overflow: hidden; }
-.mini-estante__progreso span { display: block; height: 100%; background: var(--color-surface); }
+.mini-estante__destacado small { color: color-mix(in srgb, var(--estante-texto) 75%, var(--estante-fondo)); }
+.mini-estante__progreso { height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--estante-texto) 25%, var(--estante-fondo)); overflow: hidden; }
+.mini-estante__progreso span { display: block; height: 100%; background: var(--estante-texto); }
 .mini-estante__vacio { margin: 0; font-size: 0.9rem; line-height: 1.4; }
 .mini-estante__ver {
   padding: 10px;
   border: 0;
   border-radius: 999px;
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: var(--estante-texto);
+  color: var(--estante-fondo);
   font-weight: 700;
 }
 
@@ -195,3 +204,33 @@
   .cuaderno-nota__fecha,
   .cuaderno-estado { display: none; }
 }
+
+/* Estante vacío: lomos de muestra y uno para crear */
+.cuadernos-ayuda { margin: 0; max-width: 70ch; color: var(--color-text-light); }
+.cuaderno-lomo--muestra { border: 2px dashed var(--color-frost-blue); background: transparent; cursor: default; }
+.cuaderno-lomo--muestra:hover { transform: none; }
+.cuaderno-lomo--nuevo { border: 2px dashed var(--color-steel); background: var(--color-frost-suave); color: var(--color-storm); }
+.cuaderno-lomo--nuevo:hover { border-style: solid; background: var(--color-frost-claro); }
+
+/* Agregar y sacar mazos del cuaderno */
+.cuaderno-tarjeta li small { display: inline-flex; align-items: center; gap: 4px; }
+.cuaderno-quitar { display: inline-flex; padding: 2px; border: 0; border-radius: 6px; background: transparent; color: var(--color-steel); cursor: pointer; }
+.cuaderno-quitar:hover { background: var(--color-frost-suave); color: var(--color-error); }
+.cuaderno-agregar {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px dashed var(--color-frost-blue);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-steel);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Métodos de estudio del cuaderno */
+.cuaderno-tarjeta h4 { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; color: var(--color-steel); font-size: 0.85rem; font-weight: 700; }
+.cuaderno-pronto { margin-left: auto; padding: 2px 8px; border: 1px dashed var(--color-frost-blue); border-radius: 999px; color: var(--color-steel); font-size: 0.72rem; font-weight: 600; }
+.cuaderno-metodos-usados { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--color-steel); font-size: 0.8rem; }
+.cuaderno-metodo-chip { padding: 3px 10px; border: 1px solid var(--color-frost-blue); border-radius: 999px; background: var(--color-frost-claro); color: var(--color-text); }
+.cuaderno-tarjeta .materias-botones { margin-top: auto; flex-wrap: wrap; }
+.cuaderno-tarjeta .materias-botones .app-boton { margin-top: 0; }

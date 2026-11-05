@@ -12,9 +12,9 @@ export class ModificarNota {
     const filas = await this.persistencia.ejecutar(
       `UPDATE nota n
           SET tipo = $3, nombre = $4, fecha = $5, nota = $6, estado = $7
-         FROM materia m JOIN formacion f ON f.id_formacion = m.id_formacion
-        WHERE n.id_nota = $1 AND m.id_materia = n.id_materia AND f.id_usuario = $2
-       RETURNING n.id_nota, n.id_materia, n.tipo, n.nombre, to_char(n.fecha, 'YYYY-MM-DD') AS fecha, n.nota, n.estado`,
+         FROM cuaderno c
+        WHERE n.id_nota = $1 AND c.id_cuaderno = n.id_cuaderno AND c.id_usuario = $2
+       RETURNING n.id_nota, n.id_cuaderno, n.tipo, n.nombre, to_char(n.fecha, 'YYYY-MM-DD') AS fecha, n.nota, n.estado`,
       [datos.idNota, datos.usuarioId, datos.tipo, datos.nombre, datos.fecha, datos.nota,
         datos.estado ?? estadoPorNota(datos.nota)]
     );

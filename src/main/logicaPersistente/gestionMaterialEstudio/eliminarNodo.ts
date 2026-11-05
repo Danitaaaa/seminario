@@ -23,7 +23,7 @@ export class EliminarNodo {
         } catch (error: any) {
             // 23503 = foreign_key_violation (el código anterior tenía un espacio: "23503 ")
             if (error.code === '23001' || error.code === '23503') {
-                throw new Error('No se puede eliminar: la carpeta contiene elementos.');
+                throw new Error('La carpeta tiene archivos o subcarpetas. Vaciala o mové lo de adentro antes de eliminarla.');
             }
             throw error;
         }

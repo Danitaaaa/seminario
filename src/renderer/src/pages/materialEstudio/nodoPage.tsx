@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { MouseEvent, DragEvent, ReactNode } from 'react';
 import { claveNodo, type Nodo, type Archivo } from '../../types/nodo';
 import type { Direccion, OrdenarPor, VistaListado } from '../../types/vistaNodos';
@@ -93,7 +94,12 @@ export function NodoPage({
     const timerMiga = useRef<ReturnType<typeof setTimeout> | null>(null);
     const migaEnEspera = useRef<number | null>(null);
 
-    const [ruta, setRuta] = useState<Miga[]>([raiz]);
+    // Se puede abrir directo en una carpeta: /material?carpeta=12&nombre=DDS (lo usa el cuaderno).
+    const [parametros] = useSearchParams();
+    const carpetaInicial = Number(parametros.get('carpeta'));
+    const [ruta, setRuta] = useState<Miga[]>(
+        carpetaInicial ? [raiz, { id: carpetaInicial, nombre: parametros.get('nombre') ?? 'Carpeta' }] : [raiz]
+    );
     const idPadreActual = ruta[ruta.length - 1].id;
 
     const [errorMover, setErrorMover] = useState<string | null>(null);

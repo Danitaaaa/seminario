@@ -394,13 +394,12 @@
 .materias-progreso__punto--libre { background: var(--color-frost-claro); }
 .materias-progreso__punto--no_cursada { background: transparent; border: 1px dashed var(--color-frost-blue); }
 
-/* Estados: los mismos tonos en la barra, las pastillas y el tablero.
-   El texto sobre los tonos oscuros es --color-surface, así contrasta también en modo oscuro. */
-.materias-estado--aprobada { background: var(--color-storm); color: var(--color-surface); }
-.materias-estado--regular { background: var(--color-steel); color: var(--color-surface); }
-.materias-estado--cursando { background: var(--color-frost-blue); color: var(--color-text); }
-.materias-estado--libre { background: var(--color-frost-claro); color: var(--color-text); }
-.materias-estado--no_cursada { background: transparent; color: var(--color-steel); border: 1px dashed var(--color-frost-blue); }
+/* Estados: pastilla en formularios, revisión del plan y modal de materia (colores originales). */
+.materias-estado--aprobada { background: color-mix(in srgb, var(--color-success) 16%, var(--color-surface)); color: color-mix(in srgb, var(--color-success) 75%, var(--color-text)); }
+.materias-estado--regular { background: color-mix(in srgb, var(--color-warning) 20%, var(--color-surface)); color: color-mix(in srgb, var(--color-warning) 55%, var(--color-text)); }
+.materias-estado--cursando { background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface)); color: var(--color-primary); }
+.materias-estado--libre { background: var(--color-frost-suave); color: var(--color-steel); }
+.materias-estado--no_cursada { background: transparent; color: var(--color-text-secondary); border: 1px dashed var(--color-frost-blue); }
 
 /* Tablero por estado */
 .materias-tablero { display: flex; flex-direction: column; gap: 14px; }
@@ -529,3 +528,52 @@
 }
 .materias-vistas button:hover { color: var(--color-text); }
 .materias-vistas .materias-vistas--activa { border-bottom-color: var(--color-storm); color: var(--color-text); font-weight: 700; }
+
+/* Plan de estudios por año (secciones por año y cuatrimestre) */
+/* Filtros */
+.materias-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espacio-sm); color: var(--color-text-secondary); }
+
+.materias-chip {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--color-frost-claro);
+  border-radius: 999px;
+  background: var(--color-surface);
+  font: inherit;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.materias-chip--activo { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-white); }
+
+/* Listado por año */
+.materias-anio { display: flex; flex-direction: column; gap: var(--espacio-md); }
+.materias-anio h2 { font-size: 1.75rem; }
+.materias-grupo { display: flex; flex-direction: column; gap: 10px; }
+
+.materias-grupo__titulo {
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-light);
+}
+
+.materias-grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+
+.materias-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.materias-tarjeta__cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--espacio-sm); }
+.materias-tarjeta__cabecera strong { font-size: 1.0625rem; line-height: 1.25; }
+.materias-tarjeta__cabecera > div { display: flex; flex: none; }
+
+
+/* Elegir cómo ver el plan: por estado o por año */
+.materias-plan-barra { display: flex; justify-content: flex-end; }

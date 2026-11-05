@@ -63,7 +63,7 @@ export default function App() {
         <Route path="/horarios" element={<HorariosPage />} />
         <Route path="/materias" element={<MateriasPage />} />
         <Route path="/cuadernos" element={<CuadernosPage />} />
-        <Route path="/cuadernos/:idMateria" element={<CuadernoPage />} />
+        <Route path="/cuadernos/:idCuaderno" element={<CuadernoPage />} />
         <Route path="/materias/formacion" element={<FormacionPage />} />
         <Route path="/materias/formacion/:idFormacion" element={<FormacionPage />} />
         <Route path="/materias/plan/:idFormacion" element={<CargarPlanPage />} />

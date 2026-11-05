@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { BookOpen, GraduationCap } from 'lucide-react';
 import type { OpcionMateria } from '../../types/materias';
+import { Desplegable } from '../comunes/desplegable';
 
 type FiltroEstado = 'cursando' | 'aprobada' | 'todas';
 type Grupo = { nombre: string; materias: OpcionMateria[] };
@@ -52,24 +53,16 @@ export function FiltroMateria({ materias, valor, onCambiar }: FiltroMateriaProps
 
   return (
     <div className="filtro-materia">
-      <label className="filtro-materia__select">
-        <GraduationCap size={16} aria-hidden="true" />
-        <select value={formacion} aria-label="Formación" onChange={(e) => elegirFormacion(e.target.value)}>
-          <option value="">Todas las formaciones</option>
-          {formaciones.map((f) => <option key={f} value={f}>{f}</option>)}
-        </select>
-      </label>
-      <label className="filtro-materia__select">
-        <BookOpen size={16} aria-hidden="true" />
-        <select value={valor} aria-label="Materia" onChange={(e) => onCambiar(e.target.value === '' ? '' : Number(e.target.value))}>
-          <option value="">Todas las materias</option>
-          {agrupar(visibles, formacion !== '').map((g) => (
-            <optgroup key={g.nombre} label={g.nombre}>
-              {g.materias.map((m) => <option key={m.idMateria} value={m.idMateria}>{m.nombre}</option>)}
-            </optgroup>
-          ))}
-        </select>
-      </label>
+      <Desplegable etiqueta="Formación" valor={formacion} onCambiar={elegirFormacion}
+        icono={<GraduationCap size={16} aria-hidden="true" />}
+        opciones={[{ valor: '', nombre: 'Todas las formaciones' }, ...formaciones.map((f) => ({ valor: f, nombre: f }))]} />
+      <Desplegable etiqueta="Materia" valor={String(valor)} onCambiar={(v) => onCambiar(v === '' ? '' : Number(v))}
+        icono={<BookOpen size={16} aria-hidden="true" />}
+        opciones={[
+          { valor: '', nombre: 'Todas las materias' },
+          ...agrupar(visibles, formacion !== '').flatMap((g) =>
+            g.materias.map((m) => ({ valor: String(m.idMateria), nombre: m.nombre, grupo: g.nombre }))),
+        ]} />
       <div className="filtro-materia__chips" role="group" aria-label="Estado de la materia">
         {FILTROS_ESTADO.map((f) => (
           <button key={f.valor} type="button" aria-pressed={estado === f.valor}

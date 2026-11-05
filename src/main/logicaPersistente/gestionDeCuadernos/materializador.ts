@@ -3,7 +3,7 @@ import { Nota, ResumenCuaderno } from './entidades';
 export function materializarNota(fila: any): Nota {
   return {
     idNota: fila.id_nota,
-    idMateria: fila.id_materia,
+    idCuaderno: fila.id_cuaderno,
     tipo: fila.tipo,
     nombre: fila.nombre,
     fecha: fila.fecha ?? null, // ya viene como texto (to_char)
@@ -14,12 +14,16 @@ export function materializarNota(fila: any): Nota {
 
 export function materializarResumen(fila: any): ResumenCuaderno {
   return {
-    idMateria: fila.id_materia,
-    nombre: fila.nombre,
-    formacion: fila.formacion,
-    anio: fila.anio ?? null,
-    cuatrimestre: fila.cuatrimestre ?? null,
-    estado: fila.estado,
+    idCuaderno: fila.id_cuaderno,
+    nombre: fila.cuaderno,
+    materia: {
+      idMateria: fila.id_materia,
+      nombre: fila.nombre,
+      formacion: fila.formacion,
+      anio: fila.anio ?? null,
+      cuatrimestre: fila.cuatrimestre ?? null,
+      estado: fila.estado,
+    },
     archivos: fila.archivos,
     flashcards: fila.flashcards,
     notasTotal: fila.notas_total,

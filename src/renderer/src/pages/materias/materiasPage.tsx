@@ -7,6 +7,7 @@ import { CartelError } from '../../components/comunes/cartelError';
 import { ModalMateria } from '../../components/materias/modalMateria';
 import { ProgresoFormacion } from '../../components/materias/progresoFormacion';
 import { VistaTablero } from '../../components/materias/vistaTablero';
+import { VistaPorAnio } from '../../components/materias/vistaPorAnio';
 import { VistaCorrelativas } from '../../components/materias/vistaCorrelativas';
 import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { usarAvisos } from '../../hooks/usarAvisos';
@@ -16,6 +17,7 @@ import { NOMBRE_TIPO, ORGANIZACIONES, mensajeDeError, textoDuracion } from './ut
 import '../../styles/materias.css';
 
 type Vista = 'plan' | 'correlativas';
+type VistaPlan = 'estado' | 'anio';
 
 const VISTAS: { valor: Vista; nombre: string }[] = [
   { valor: 'plan', nombre: 'Plan de estudios' },
@@ -32,6 +34,7 @@ export function MateriasPage() {
   const [materias, setMaterias] = useState<MateriaFormacion[]>([]);
   const [correlativas, setCorrelativas] = useState<Correlativa[]>([]);
   const [vista, setVista] = usarPreferencia<Vista>('materias-vista', 'plan');
+  const [vistaPlan, setVistaPlan] = usarPreferencia<VistaPlan>('materias-vista-plan', 'estado');
   const [editando, setEditando] = useState<MateriaFormacion | 'nueva' | null>(parametros.get('nueva') ? 'nueva' : null);
   const [porEliminar, setPorEliminar] = useState<MateriaFormacion | Formacion | null>(null);
   const [error, setError] = useState('');
@@ -200,7 +203,19 @@ export function MateriasPage() {
                   ))}
                 </div>
 
-                {vista === 'plan' && <VistaTablero materias={materias} onEditar={setEditando} onCambiarEstado={(m, e) => void cambiarEstado(m, e)} />}
+                {vista === 'plan' && (
+                  <>
+                    <div className="materias-plan-barra">
+                      <div className="materias-segmento" role="group" aria-label="Ver el plan">
+                        <button type="button" aria-pressed={vistaPlan === 'estado'} className={vistaPlan === 'estado' ? 'materias-segmento--activo' : ''} onClick={() => setVistaPlan('estado')}>Por estado</button>
+                        <button type="button" aria-pressed={vistaPlan === 'anio'} className={vistaPlan === 'anio' ? 'materias-segmento--activo' : ''} onClick={() => setVistaPlan('anio')}>Por año</button>
+                      </div>
+                    </div>
+                    {vistaPlan === 'estado'
+                      ? <VistaTablero materias={materias} onEditar={setEditando} onCambiarEstado={(m, e) => void cambiarEstado(m, e)} />
+                      : <VistaPorAnio materias={materias} onEditar={setEditando} onEliminar={setPorEliminar} />}
+                  </>
+                )}
                 {vista === 'correlativas' && <VistaCorrelativas materias={materias} correlativas={correlativas} onGuardar={guardarCorrelativas} />}
               </>
             )}

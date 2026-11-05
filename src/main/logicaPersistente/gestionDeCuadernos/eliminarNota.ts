@@ -7,9 +7,8 @@ export class EliminarNota {
 
   async ejecutar(datos: NotaDTO): Promise<void> {
     const filas = await this.persistencia.ejecutar(
-      `DELETE FROM nota n
-        USING materia m, formacion f
-        WHERE n.id_nota = $1 AND m.id_materia = n.id_materia AND f.id_formacion = m.id_formacion AND f.id_usuario = $2
+      `DELETE FROM nota n USING cuaderno c
+        WHERE n.id_nota = $1 AND c.id_cuaderno = n.id_cuaderno AND c.id_usuario = $2
        RETURNING n.id_nota`,
       [datos.idNota, datos.usuarioId]
     );

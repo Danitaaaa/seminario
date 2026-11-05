@@ -35,8 +35,8 @@ export function promedio(notas: Nota[]): number | null {
   return con.length ? con.reduce((s, n) => s + n.nota!, 0) / con.length : null;
 }
 
-// Cada cuaderno toma uno de los tonos de la paleta, siempre el mismo para la misma materia.
-export const tonoDe = (idMateria: number) => idMateria % 4;
+// Cada cuaderno toma uno de los tonos de la paleta, siempre el mismo.
+export const tonoDe = (idCuaderno: number) => idCuaderno % 4;
 
 // Alto del lomo en el estante (entre 70 y 100 %), fijo para cada materia.
 export function altoLomo(nombre: string): number {
@@ -45,12 +45,10 @@ export function altoLomo(nombre: string): number {
   return 70 + (h % 31);
 }
 
+// Alturas (en %) de los lomos que simulan el estante cuando todavía está vacío.
+export const LOMOS_DE_MUESTRA = [78, 92, 70, 86, 96, 74, 88, 80];
+
 export const progresoNotas = (c: ResumenCuaderno) => (c.notasTotal ? c.notasCargadas / c.notasTotal : 0);
 
-export function agruparCuadernos(cuadernos: ResumenCuaderno[]) {
-  return {
-    cursando: cuadernos.filter((c) => c.estado === 'cursando'),
-    estante: cuadernos.filter((c) => c.estado === 'aprobada' || c.estado === 'regular'),
-    proximamente: cuadernos.filter((c) => c.estado === 'no_cursada' || c.estado === 'libre'),
-  };
-}
+// Los cuadernos de materias que se están cursando.
+export const cuadernosCursando = (cuadernos: ResumenCuaderno[]) => cuadernos.filter((c) => c.materia.estado === 'cursando');

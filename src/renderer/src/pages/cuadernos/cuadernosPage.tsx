@@ -1,35 +1,31 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
-import { ModalMateria } from '../../components/materias/modalMateria';
+import { ModalCuaderno } from '../../components/cuadernos/modalCuaderno';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import type { ResumenCuaderno } from '../../types/cuadernos';
-import type { Formacion } from '../../types/materias';
 import { mensajeDeError, nombreAnio } from '../materias/utilidadesMaterias';
-import { agruparCuadernos, altoLomo, fechaCorta, progresoNotas, tonoDe } from './utilidadesCuadernos';
+import { LOMOS_DE_MUESTRA, altoLomo, fechaCorta, progresoNotas, tonoDe } from './utilidadesCuadernos';
+import '../../styles/materias.css';
 import '../../styles/cuadernos.css';
 
-const MAXIMO_PROXIMAS = 8;
-
-// "Mis cuadernos": uno por materia. Arriba las que se cursan, abajo el estante con las aprobadas y regulares.
+// "Mis cuadernos": todos los que creó el usuario, como tapas arriba y como libros en el estante.
 export function CuadernosPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
   const navigate = useNavigate();
   const avisos = usarAvisos();
   const [cuadernos, setCuadernos] = useState<ResumenCuaderno[] | null>(null);
-  const [formaciones, setFormaciones] = useState<Formacion[]>([]);
-  const [creando, setCreando] = useState(false);
+  const [parametros] = useSearchParams();
+  const [creando, setCreando] = useState(parametros.get('nuevo') === '1');
   const [error, setError] = useState('');
 
   async function cargar(): Promise<void> {
     try {
-      const [lista, fs] = await Promise.all([window.api.listarCuadernos({ usuarioId }), window.api.listarFormaciones({ usuarioId })]);
-      setCuadernos(lista);
-      setFormaciones(fs);
+      setCuadernos(await window.api.listarCuadernos({ usuarioId }));
     } catch (e) {
       setCuadernos([]);
       setError(mensajeDeError(e, 'No se pudieron cargar los cuadernos.'));
@@ -40,89 +36,89 @@ export function CuadernosPage() {
     void cargar();
   }, []);
 
-  const variasFormaciones = new Set((cuadernos ?? []).map((c) => c.formacion)).size > 1;
-  const { cursando, estante, proximamente } = agruparCuadernos(cuadernos ?? []);
-  const abrir = (c: ResumenCuaderno) => navigate(`/cuadernos/${c.idMateria}`);
+  async function crear(datos: { nombre: string; idMateria: number }): Promise<boolean> {
+    try {
+      const { idCuaderno } = await window.api.crearCuaderno({ usuarioId, ...datos });
+      avisos.exito('Se creó el cuaderno.');
+      navigate(`/cuadernos/${idCuaderno}`);
+      return true;
+    } catch (e) {
+      avisos.error(mensajeDeError(e, 'No se pudo crear el cuaderno.'));
+      return false;
+    }
+  }
+
+  const lista = cuadernos ?? [];
+  const variasFormaciones = new Set(lista.map((c) => c.materia.formacion)).size > 1;
+  const abrir = (c: ResumenCuaderno) => navigate(`/cuadernos/${c.idCuaderno}`);
+
+  const tapa = (c: ResumenCuaderno) => (
+    <button key={c.idCuaderno} type="button" className={`cuaderno-tapa cuaderno-tono-${tonoDe(c.idCuaderno)}`} onClick={() => abrir(c)}>
+      <span className="cuaderno-tapa__anio">
+        {[c.materia.anio ? nombreAnio(c.materia.anio) : null, variasFormaciones ? c.materia.formacion : null].filter(Boolean).join(' · ')}
+      </span>
+      <strong className="cuaderno-tapa__nombre">{c.nombre}</strong>
+      <span className="cuaderno-tapa__pie">
+        {c.proximo && <span>{c.proximo.nombre} · {fechaCorta(c.proximo.fecha)}</span>}
+        {c.notasTotal > 0 && <span className="cuaderno-tapa__barra"><span style={{ width: `${progresoNotas(c) * 100}%` }} /></span>}
+        <small>{[`${c.archivos} ${c.archivos === 1 ? 'archivo' : 'archivos'}`, c.flashcards ? `${c.flashcards} flashcards` : null].filter(Boolean).join(' · ')}</small>
+      </span>
+    </button>
+  );
 
   return (
     <PlantillaLayout idActivo="material" usuario={{ nombre: 'Usuario' }}>
       <div className="cuadernos-pagina">
+        <button type="button" className="materias-link cuaderno-volver" onClick={() => navigate('/material')}>
+          <ArrowLeft size={16} /> Volver a Material
+        </button>
         {error && <CartelError mensaje={error} onCerrar={() => setError('')} />}
 
         <header className="cuadernos-encabezado">
           <h1>Mis cuadernos</h1>
-          <Boton onClick={() => (formaciones.length ? setCreando(true) : navigate('/materias/formacion'))}>
-            <Plus size={16} /> Nueva materia
-          </Boton>
+          <Boton onClick={() => setCreando(true)}><Plus size={16} /> Nuevo cuaderno</Boton>
         </header>
 
         {cuadernos && cuadernos.length === 0 && (
-          <section className="materias-vacio">
-            <h2>Todavía no tenés cuadernos</h2>
-            <p>Cada materia que cargues tiene su cuaderno, con su material, sus flashcards y sus notas.</p>
-            <Boton onClick={() => navigate('/materias')}>Cargar materias</Boton>
-          </section>
+          <p className="cuadernos-ayuda">Creá un cuaderno, ponele un nombre y asocialo a una materia: ahí se juntan sus carpetas de Material, sus flashcards, sus sesiones y tus notas.</p>
         )}
 
-        {cursando.length > 0 && (
+        {lista.length > 0 && (
           <section className="cuadernos-seccion">
-            <h2>Cursando ahora</h2>
-            <div className="cuadernos-tapas">
-              {cursando.map((c) => (
-                <button key={c.idMateria} type="button" className={`cuaderno-tapa cuaderno-tono-${tonoDe(c.idMateria)}`} onClick={() => abrir(c)}>
-                  <span className="cuaderno-tapa__anio">{[c.anio ? nombreAnio(c.anio) : null, variasFormaciones ? c.formacion : null].filter(Boolean).join(' · ')}</span>
-                  <strong className="cuaderno-tapa__nombre">{c.nombre}</strong>
-                  <span className="cuaderno-tapa__pie">
-                    <span>{c.proximo ? `${c.proximo.nombre} · ${fechaCorta(c.proximo.fecha)}` : 'Sin fechas cargadas'}</span>
-                    <span className="cuaderno-tapa__barra"><span style={{ width: `${progresoNotas(c) * 100}%` }} /></span>
-                    <small>{[`${c.archivos} ${c.archivos === 1 ? 'archivo' : 'archivos'}`, c.flashcards ? `${c.flashcards} flashcards` : null].filter(Boolean).join(' · ')}</small>
-                  </span>
-                </button>
-              ))}
-            </div>
+            <div className="cuadernos-tapas">{lista.map(tapa)}</div>
           </section>
         )}
 
-        {estante.length > 0 && (
+        {cuadernos && (
           <section className="cuadernos-seccion">
             <div className="cuadernos-seccion__titulo">
-              <h2>Estante · aprobadas y regulares</h2>
+              <h2>Estante</h2>
               <button type="button" className="materias-link" onClick={() => navigate('/materias')}>Ver plan completo</button>
             </div>
             <div className="cuadernos-estante">
-              {estante.map((c) => (
-                <button key={c.idMateria} type="button" className={`cuaderno-lomo cuaderno-tono-${tonoDe(c.idMateria)}`}
+              {/* Sin cuadernos en el estante, se simula con lomos de muestra. */}
+              {lista.length === 0 && LOMOS_DE_MUESTRA.map((alto, i) => (
+                <span key={i} className="cuaderno-lomo cuaderno-lomo--muestra" style={{ height: `${alto * 2.6}px` }} aria-hidden="true" />
+              ))}
+              {lista.map((c) => (
+                <button key={c.idCuaderno} type="button" className={`cuaderno-lomo cuaderno-tono-${tonoDe(c.idCuaderno)}`}
                   style={{ height: `${altoLomo(c.nombre) * 2.6}px` }} onClick={() => abrir(c)} title={c.nombre}>
-                  <span>{c.nombre}{c.estado === 'regular' ? ' (regular)' : ''}</span>
+                  <span>{c.nombre}{c.materia.estado === 'regular' ? ' (regular)' : ''}</span>
                 </button>
               ))}
+              {lista.length === 0 && (
+                <button type="button" className="cuaderno-lomo cuaderno-lomo--nuevo" style={{ height: '220px' }} onClick={() => setCreando(true)} title="Nuevo cuaderno">
+                  <span>+ Nuevo cuaderno</span>
+                </button>
+              )}
             </div>
           </section>
         )}
 
-        {proximamente.length > 0 && (
-          <section className="cuadernos-proximas">
-            <span>Próximamente ({proximamente.length} sin cursar):</span>
-            {proximamente.slice(0, MAXIMO_PROXIMAS).map((c) => (
-              <button key={c.idMateria} type="button" className="cuadernos-proxima" onClick={() => abrir(c)}>{c.nombre}</button>
-            ))}
-            {proximamente.length > MAXIMO_PROXIMAS && <span>y {proximamente.length - MAXIMO_PROXIMAS} más</span>}
-          </section>
-        )}
       </div>
 
-      {creando && formaciones.length > 0 && (
-        <ModalMateria
-          usuarioId={usuarioId}
-          formaciones={formaciones}
-          idFormacion={formaciones[0].idFormacion}
-          onCerrar={() => setCreando(false)}
-          onGuardada={() => {
-            setCreando(false);
-            avisos.exito('Se creó la materia con su cuaderno.');
-            void cargar();
-          }}
-        />
+      {creando && (
+        <ModalCuaderno usadas={lista.map((c) => c.materia.idMateria)} onGuardar={crear} onCerrar={() => setCreando(false)} />
       )}
     </PlantillaLayout>
   );

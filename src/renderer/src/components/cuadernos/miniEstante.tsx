@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import { usarPreferencia } from '../../hooks/usarPreferencia';
 import type { ResumenCuaderno } from '../../types/cuadernos';
-import { agruparCuadernos, altoLomo, fechaCorta, progresoNotas, tonoDe } from '../../pages/cuadernos/utilidadesCuadernos';
+import { LOMOS_DE_MUESTRA, altoLomo, cuadernosCursando, fechaCorta, progresoNotas, tonoDe } from '../../pages/cuadernos/utilidadesCuadernos';
 import '../../styles/cuadernos.css';
 
 // Tarjeta al costado de Material con el estante en chiquito; lleva a "Mis cuadernos".
@@ -20,16 +20,25 @@ export function MiniEstante() {
   }, []);
 
   if (!cuadernos) return null;
+
+  // Sin cuadernos: estante simulado que invita a crear el primero.
   if (cuadernos.length === 0) {
     return (
       <aside className="mini-estante">
         <span className="mini-estante__cabecera"><span className="mini-estante__punto" aria-hidden="true" /> Mis cuadernos</span>
-        <p className="mini-estante__vacio">Cargá tus materias y cada una tiene su cuaderno, con su material, flashcards y notas.</p>
-        <button type="button" className="mini-estante__ver" onClick={() => navigate('/materias')}>Cargar materias</button>
+        <button type="button" className="mini-estante__estante" onClick={() => navigate('/cuadernos?nuevo=1')} aria-label="Crear un cuaderno">
+          {LOMOS_DE_MUESTRA.map((alto, i) => (
+            <span key={i} className="mini-estante__lomo mini-estante__lomo--muestra" style={{ height: `${alto}%` }} />
+          ))}
+          <span className="mini-estante__mas" aria-hidden="true">+</span>
+        </button>
+        <p className="mini-estante__vacio">Creá un cuaderno por materia y juntá ahí su material, flashcards y notas.</p>
+        <button type="button" className="mini-estante__ver" onClick={() => navigate('/cuadernos?nuevo=1')}>Crear cuaderno</button>
       </aside>
     );
   }
-  const { cursando, estante } = agruparCuadernos(cuadernos);
+
+  const cursando = cuadernosCursando(cuadernos);
   const destacado = cursando.find((c) => c.proximo) ?? cursando[0];
 
   return (
@@ -42,24 +51,19 @@ export function MiniEstante() {
 
       {abierto && (
         <>
-          {estante.length > 0 && (
-            <button type="button" className="mini-estante__estante" onClick={() => navigate('/cuadernos')} aria-label="Ver el estante">
-              {estante.slice(0, 18).map((c) => (
-                <span key={c.idMateria} className={`mini-estante__lomo cuaderno-tono-${tonoDe(c.idMateria)}`} style={{ height: `${altoLomo(c.nombre)}%` }} title={c.nombre} />
-              ))}
-            </button>
-          )}
+          <button type="button" className="mini-estante__estante" onClick={() => navigate('/cuadernos')} aria-label="Ver el estante">
+            {/* Todos los cuadernos, como libros en el estante. */}
+            {cuadernos.slice(0, 18).map((c) => (
+              <span key={c.idCuaderno} className={`mini-estante__lomo cuaderno-tono-${tonoDe(c.idCuaderno)}`} style={{ height: `${altoLomo(c.nombre)}%` }} title={c.nombre} />
+            ))}
+          </button>
 
-          {destacado && (
-            <button type="button" className="mini-estante__destacado" onClick={() => navigate(`/cuadernos/${destacado.idMateria}`)}>
-              <span className={`mini-estante__tapa cuaderno-tono-${tonoDe(destacado.idMateria)}`} aria-hidden="true" />
-              <span>
-                <strong>{destacado.nombre}</strong>
-                <small>{destacado.proximo ? `Próximo: ${destacado.proximo.nombre} · ${fechaCorta(destacado.proximo.fecha)}` : 'Sin fechas cargadas'}</small>
-              </span>
+          {destacado?.proximo && (
+            <button type="button" className="mini-estante__destacado" onClick={() => navigate(`/cuadernos/${destacado.idCuaderno}`)}>
+              <small>Próximo: {destacado.proximo.nombre} · {fechaCorta(destacado.proximo.fecha)}</small>
             </button>
           )}
-          {destacado && (
+          {destacado && destacado.notasTotal > 0 && (
             <span className="mini-estante__progreso" aria-hidden="true">
               <span style={{ width: `${progresoNotas(destacado) * 100}%` }} />
             </span>

@@ -34,6 +34,8 @@ export const CUATRIMESTRES: { valor: Cuatrimestre; nombre: string }[] = [
   { valor: 'anual', nombre: 'Anual' },
 ];
 
+const NOMBRE_CUATRI = Object.fromEntries(CUATRIMESTRES.map((c) => [c.valor, c.nombre])) as Record<Cuatrimestre, string>;
+
 export interface MomentoCursado {
   anioActual: number | null;
   cuatrimestreActual: 'primero' | 'segundo' | null;
@@ -81,6 +83,26 @@ export function materiasPorAnio(materias: MateriaFormacion[]): { anio: number | 
     .map(([anio, lista]) => ({ anio, materias: lista }));
 }
 
+export interface GrupoAnio {
+  titulo: string;
+  grupos: { titulo: string; materias: MateriaFormacion[] }[];
+}
+
+// Arma "Año 1 › 1er cuatrimestre › materias" a partir de la lista ya ordenada por el backend.
+export function agruparPorAnio(materias: MateriaFormacion[]): GrupoAnio[] {
+  const anios: GrupoAnio[] = [];
+  for (const m of materias) {
+    const tituloAnio = m.anio ? `Año ${m.anio}` : 'Sin año';
+    let anio = anios.find((a) => a.titulo === tituloAnio);
+    if (!anio) anios.push((anio = { titulo: tituloAnio, grupos: [] }));
+    const tituloGrupo = m.cuatrimestre ? NOMBRE_CUATRI[m.cuatrimestre] : 'Sin cuatrimestre';
+    let grupo = anio.grupos.find((g) => g.titulo === tituloGrupo);
+    if (!grupo) anio.grupos.push((grupo = { titulo: tituloGrupo, materias: [] }));
+    grupo.materias.push(m);
+  }
+  return anios;
+}
+
 // Electron envuelve el error como "Error invoking remote method '...': Error: <mensaje>".
 export function mensajeDeError(err: unknown, generico: string): string {
   const texto = err instanceof Error ? err.message : String(err);
@@ -107,6 +129,7 @@ Reglas para los años:
 - Antes de las materias de cada año poné una línea con el año: "1er año", "2do año", "3er año", "4to año", "5to año", "6to año".
 - Si el plan habla de "nivel", "curso", "ciclo" o "etapa" en vez de año, convertilo a año en orden (Nivel I = 1er año, Ciclo básico de 2 años = 1er y 2do año, etc.). Si no se puede saber, usá el orden en que aparecen.
 - Si una materia no tiene año claro (por ejemplo, electivas que se cursan en cualquier momento), ponela al final bajo "Sin año".
+- Respetá el año y el período que dice el plan para cada materia. No los cambies ni los deduzcas por las correlativas ni por el orden en que aparecen en otra tabla.
 
 Reglas para los períodos:
 - Si el plan dice cuatrimestre o semestre, poné "Primer cuatrimestre", "Segundo cuatrimestre" o "Anual" antes de esas materias (semestre = cuatrimestre).

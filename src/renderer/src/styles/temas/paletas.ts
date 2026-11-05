@@ -37,7 +37,7 @@ export const PALETAS: Paleta[] = [
     { lateral: "#1E3A4C", lateralTexto: "#FFFFFF", activo: "#12283A", fondo: "#F4FAF8", superficie: "#FFFFFF", suave: "#D6F0E8", borde: "#D3E6E0", primario: "#2A8C7A", primarioClaro: "#7CC4B5", acento: "#F28C8C", texto: "#10232C", textoSecundario: "#4E6670" },
     { lateral: "#08141B", lateralTexto: "#D6F0E8", activo: "#1A4A42", fondo: "#0B1A20", superficie: "#12252D", suave: "#173038", borde: "#24434D", primario: "#2E9C87", primarioClaro: "#6FD6C0", acento: "#F28C8C", texto: "#E3F4EF", textoSecundario: "#A3C2BB" }),
 
-  paleta("rosa-empolvado", "Rosa empolvado",
+  paleta("rosa-empolvado", "Ludmila",
     { lateral: "#6B3E4E", lateralTexto: "#FFFFFF", activo: "#4E2A37", fondo: "#FBF6F7", superficie: "#FFFFFF", suave: "#F2DDE3", borde: "#ECDCE1", primario: "#9C5A6E", primarioClaro: "#C895A4", acento: "#7A9E9A", texto: "#2E1A21", textoSecundario: "#6E5560" },
     { lateral: "#1A0F13", lateralTexto: "#F2DDE3", activo: "#4E2A37", fondo: "#1E1216", superficie: "#2A1A20", suave: "#33212A", borde: "#4A3039", primario: "#A8657A", primarioClaro: "#E0A3B4", acento: "#8FBAB5", texto: "#F5E6EA", textoSecundario: "#C8AFB7" }),
 
