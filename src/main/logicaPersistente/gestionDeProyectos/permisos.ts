@@ -16,6 +16,26 @@ export async function obtenerRolActivo(
     return filas[0]?.rol ?? null;
 }
 
+// Un lector solo puede tildar las tareas que tiene asignadas: ¿esta tarea es del usuario?
+export async function tareaAsignadaA(
+    p: IPersistenciaProyectos, idUsuario: string | number,
+    tarea: { idTarea: number } | { idProyecto: number; idGlobal: string },
+): Promise<boolean> {
+    const [donde, valor] = 'idTarea' in tarea
+        ? ['t.id_tarea = $2', tarea.idTarea]
+        : ['t.id_global = $2::uuid AND t.id_proyecto = $3', tarea.idGlobal];
+    const params = 'idTarea' in tarea ? [idUsuario, valor] : [idUsuario, valor, tarea.idProyecto];
+    const filas = await p.ejecutar(
+        `SELECT 1 FROM tareas t
+         JOIN proyecto_miembros m ON m.id_proyecto = t.id_proyecto AND m.id_usuario = $1 AND m.fecha_baja IS NULL
+         WHERE ${donde}
+           AND (t.id_asignado = m.id_usuario
+                OR (m.id_global_usuario IS NOT NULL AND t.id_asignado_global = m.id_global_usuario))`,
+        params,
+    );
+    return filas.length > 0;
+}
+
 // Interno (sin export): los roles ya no se pasan desde los casos de uso.
 async function exigirRolInterno(
     p: IPersistenciaProyectos, idProyecto: number, idUsuario: string | number, permitidos: readonly RolMiembro[],

@@ -8,7 +8,7 @@ import {
     ErrorBloqueoOcupado, ErrorBloqueoPerdido, ErrorPermiso, ErrorServidorNoDisponible, ErrorSinConexion,
     ErrorSincronizacion, ErrorVersionDesactualizada,
 } from './erroresSincronizacion';
-import { exigirPermiso, obtenerRolActivo } from './permisos';
+import { exigirPermiso, obtenerRolActivo, tareaAsignadaA } from './permisos';
 
 /* ---------------- Tipos públicos ---------------- */
 
@@ -119,7 +119,7 @@ export class EdicionCompartida {
         if (local.conflicto) return soloLectura('conflicto');
         await this.asegurarConexion();
 
-        if (rol === 'lector') return soloLectura('lector', await this.infoRemota(idRemoto, clave).catch(() => ({})));
+        if (rol === 'lector' && !(await this.lectorPuede(dto))) return soloLectura('lector', await this.infoRemota(idRemoto, clave).catch(() => ({})));
         if (!this.sync.estaConectado()) return this.sinConexion(local, soloLectura);
 
         let est;
@@ -154,7 +154,10 @@ export class EdicionCompartida {
      */
     async guardar(entrada: unknown): Promise<ResultadoGuardado> {
         const dto = ClaveDTO.parse(entrada);
-        await exigirPermiso(this.p, dto.idProyecto, dto.idUsuario, 'archivo.editarContenido');
+        const rol = await obtenerRolActivo(this.p, dto.idProyecto, dto.idUsuario);
+        if (rol === 'lector' ? !(await this.lectorPuede(dto)) : !rol) {
+            await exigirPermiso(this.p, dto.idProyecto, dto.idUsuario, 'archivo.editarContenido'); // tira el error de permiso
+        }
         const idRemoto = await this.idRemoto(dto.idProyecto);
         if (!idRemoto) return { resultado: 'local' };
 
@@ -403,6 +406,12 @@ export class EdicionCompartida {
     /* ===================== Internos ===================== */
 
     private k = (idProyecto: number, c: ClaveEntidad) => `${idProyecto}:${c.entidad}:${c.idGlobal}`;
+
+    // El lector solo puede tocar (tildar) las tareas que tiene asignadas.
+    private async lectorPuede(dto: { idProyecto: number; idUsuario: string | number; entidad: string; idGlobal: string }): Promise<boolean> {
+        return dto.entidad === 'tarea'
+            && tareaAsignadaA(this.p, dto.idUsuario, { idProyecto: dto.idProyecto, idGlobal: dto.idGlobal });
+    }
 
     private async idRemoto(idProyecto: number): Promise<string | null> {
         const f = await this.p.ejecutar(`SELECT id_remoto FROM proyectos WHERE id_proyecto = $1`, [idProyecto]);

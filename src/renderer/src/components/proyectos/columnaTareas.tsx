@@ -69,6 +69,7 @@ export function ColumnaTareas({
         rol={rol}
         bloqueadaPor={bloqueos.get(t.idGlobal)}
         arrastrando={idArrastrada === t.idTarea}
+        esMia={!!miembro?.esYo}
         {...acciones}
       />
     );

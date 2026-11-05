@@ -4,6 +4,7 @@ import { COLUMNAS_TAREA, materializarTarea } from './materializador';
 import { buscarTarea, consultar } from './buscarTarea';
 import { IPersistenciaProyectos } from '../gestionDeProyectos/interfacesSincronizacion';
 import { exigirAcceso, registrarCambioSiProyecto } from '../gestionDeProyectos/alcance';
+import { obtenerRolActivo, tareaAsignadaA } from '../gestionDeProyectos/permisos';
 
 export class AlternarTarea {
     constructor(private persistencia: IPersistenciaProyectos) {}
@@ -13,6 +14,12 @@ export class AlternarTarea {
         const actual = await buscarTarea(this.persistencia, dto.idTarea);
         await exigirAcceso(this.persistencia, actual.idProyecto, actual.idUsuario, dto.idUsuario,
             'tarea.alternar');
+        // El lector solo tilda las suyas; propietario y editores, cualquiera.
+        if (actual.idProyecto !== null
+            && await obtenerRolActivo(this.persistencia, actual.idProyecto, dto.idUsuario) === 'lector'
+            && !await tareaAsignadaA(this.persistencia, dto.idUsuario, { idTarea: dto.idTarea })) {
+            throw new Error('Solo podés marcar las tareas que tenés asignadas');
+        }
 
         const completada = dto.completada ?? !actual.completada;
         if (completada === actual.completada) return actual;

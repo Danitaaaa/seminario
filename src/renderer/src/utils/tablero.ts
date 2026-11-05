@@ -38,7 +38,7 @@ export function armarColumnas(miembros: Miembro[], idGlobalActual: string | null
   const esActual = (id: string) => idGlobalActual !== null && id === idGlobalActual;
 
   const tablero = miembros
-    .filter((m): m is MiembroConIdGlobal => m.activo && m.rol !== 'lector' && m.idGlobalUsuario != null)
+    .filter((m): m is MiembroConIdGlobal => m.activo && m.idGlobalUsuario != null)
     .map(aMiembroTablero);
 
   // "Vos" primero; el resto conserva el orden original.

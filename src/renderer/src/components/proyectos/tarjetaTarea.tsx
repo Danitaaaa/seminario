@@ -25,6 +25,7 @@ interface Props extends AccionesTarjeta {
   tarea: Tarea;
   rol: RolMiembro | null;
   arrastrando: boolean;
+  esMia?: boolean; // está en mi columna: un lector solo puede tildar estas
   bloqueadaPor?: string; // nombre de quien la está editando
 }
 
@@ -32,6 +33,7 @@ export function TarjetaTarea({
   tarea,
   rol,
   arrastrando,
+  esMia = false,
   bloqueadaPor,
   onAlternar,
   onEditar,
@@ -87,7 +89,7 @@ export function TarjetaTarea({
           type="checkbox"
           className="tarea-tarjeta__check"
           checked={tarea.completada}
-          disabled={!puede(rol, 'tarea.alternar') || bloqueada}
+          disabled={!puede(rol, 'tarea.alternar') || (rol === 'lector' && !esMia) || bloqueada}
           onChange={() => onAlternar(tarea)}
           aria-label={`Marcar como ${tarea.completada ? 'pendiente' : 'hecha'}: ${tarea.titulo}`}
         />
