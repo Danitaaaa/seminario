@@ -7,13 +7,22 @@ import { CartelError } from '../../components/comunes/cartelError';
 import { ModalMateria } from '../../components/materias/modalMateria';
 import { ProgresoFormacion } from '../../components/materias/progresoFormacion';
 import { VistaTablero } from '../../components/materias/vistaTablero';
+import { VistaCorrelativas } from '../../components/materias/vistaCorrelativas';
+import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
-import type { EstadoMateria, Formacion, MateriaFormacion } from '../../types/materias';
+import type { Correlativa, EstadoMateria, Formacion, MateriaFormacion } from '../../types/materias';
 import { NOMBRE_TIPO, ORGANIZACIONES, mensajeDeError, textoDuracion } from './utilidadesMaterias';
 import '../../styles/materias.css';
 
-// Pestaña "Materias": formaciones del usuario y sus materias, en un tablero por estado.
+type Vista = 'plan' | 'correlativas';
+
+const VISTAS: { valor: Vista; nombre: string }[] = [
+  { valor: 'plan', nombre: 'Plan de estudios' },
+  { valor: 'correlativas', nombre: 'Correlatividades' },
+];
+
+// Pestaña "Materias": formaciones del usuario y sus materias (tablero por estado y correlatividades).
 export function MateriasPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
   const navigate = useNavigate();
@@ -21,6 +30,8 @@ export function MateriasPage() {
   const [parametros, setParametros] = useSearchParams();
   const [formaciones, setFormaciones] = useState<Formacion[] | null>(null);
   const [materias, setMaterias] = useState<MateriaFormacion[]>([]);
+  const [correlativas, setCorrelativas] = useState<Correlativa[]>([]);
+  const [vista, setVista] = usarPreferencia<Vista>('materias-vista', 'plan');
   const [editando, setEditando] = useState<MateriaFormacion | 'nueva' | null>(parametros.get('nueva') ? 'nueva' : null);
   const [porEliminar, setPorEliminar] = useState<MateriaFormacion | Formacion | null>(null);
   const [error, setError] = useState('');
@@ -35,7 +46,11 @@ export function MateriasPage() {
   }, []);
 
   useEffect(() => {
-    if (!formacion) return setMaterias([]);
+    if (!formacion) {
+      setMaterias([]);
+      setCorrelativas([]);
+      return;
+    }
     cargarMaterias(formacion.idFormacion);
   }, [formacion?.idFormacion]);
 
@@ -45,7 +60,15 @@ export function MateriasPage() {
     } catch (e) {
       setError(mensajeDeError(e, 'No se pudieron cargar las materias.'));
     }
+    // Aparte: si fallan las correlativas, las materias se ven igual.
+    try {
+      setCorrelativas(await window.api.listarCorrelativas({ usuarioId, idFormacion }));
+    } catch (e) {
+      setCorrelativas([]);
+      setError(mensajeDeError(e, 'No se pudieron cargar las correlativas.'));
+    }
   }
+
 
   async function eliminar(): Promise<void> {
     if (!porEliminar) return;
@@ -53,6 +76,7 @@ export function MateriasPage() {
       if ('idMateria' in porEliminar) {
         await window.api.eliminarMateriaFormacion({ usuarioId, idMateria: porEliminar.idMateria });
         setMaterias((ms) => ms.filter((m) => m.idMateria !== porEliminar.idMateria));
+        setCorrelativas((cs) => cs.filter((c) => c.idMateria !== porEliminar.idMateria && c.idRequisito !== porEliminar.idMateria));
         avisos.exito('Se eliminó la materia.');
       } else {
         await window.api.eliminarFormacion({ usuarioId, idFormacion: porEliminar.idFormacion });
@@ -85,6 +109,18 @@ export function MateriasPage() {
     } catch (e) {
       reemplazar(materia);
       avisos.error(mensajeDeError(e, 'No se pudo cambiar el estado.'));
+    }
+  }
+
+  async function guardarCorrelativas(idMateria: number, requisitos: number[]): Promise<boolean> {
+    try {
+      const nuevas = await window.api.guardarCorrelativas({ usuarioId, idMateria, requisitos });
+      setCorrelativas((cs) => [...cs.filter((c) => c.idMateria !== idMateria), ...nuevas]);
+      avisos.exito('Se guardaron las correlativas.');
+      return true;
+    } catch (e) {
+      avisos.error(mensajeDeError(e, 'No se pudieron guardar las correlativas.'));
+      return false;
     }
   }
 
@@ -155,7 +191,17 @@ export function MateriasPage() {
               <>
                 <ProgresoFormacion materias={materias} />
 
-                <VistaTablero materias={materias} onEditar={setEditando} onCambiarEstado={(m, e) => void cambiarEstado(m, e)} />
+                <div className="materias-vistas" role="tablist" aria-label="Vista">
+                  {VISTAS.map((v) => (
+                    <button key={v.valor} type="button" role="tab" aria-selected={vista === v.valor}
+                      className={vista === v.valor ? 'materias-vistas--activa' : ''} onClick={() => setVista(v.valor)}>
+                      {v.nombre}
+                    </button>
+                  ))}
+                </div>
+
+                {vista === 'plan' && <VistaTablero materias={materias} onEditar={setEditando} onCambiarEstado={(m, e) => void cambiarEstado(m, e)} />}
+                {vista === 'correlativas' && <VistaCorrelativas materias={materias} correlativas={correlativas} onGuardar={guardarCorrelativas} />}
               </>
             )}
           </>

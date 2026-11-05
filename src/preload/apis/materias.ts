@@ -10,5 +10,7 @@ export const materiasApi = {
   modificarMateriaFormacion: (datos: unknown) => ipcRenderer.invoke('materias:modificar', datos),
   eliminarMateriaFormacion: (datos: unknown) => ipcRenderer.invoke('materias:eliminar', datos),
   listarMateriasUsuario: (datos: unknown) => ipcRenderer.invoke('materias:delUsuario', datos),
+  listarCorrelativas: (datos: unknown) => ipcRenderer.invoke('materias:correlativas', datos),
+  guardarCorrelativas: (datos: unknown) => ipcRenderer.invoke('materias:guardarCorrelativas', datos),
   leerPlanEstudios: (datos: unknown) => ipcRenderer.invoke('materias:leerPlan', datos),
 };

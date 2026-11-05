@@ -1,4 +1,4 @@
-import { Formacion, MateriaFormacion } from './entidades';
+import { Correlativa, Formacion, MateriaFormacion } from './entidades';
 
 export function materializarFormacion(fila: any): Formacion {
   return {
@@ -23,4 +23,8 @@ export function materializarMateria(fila: any): MateriaFormacion {
     cuatrimestre: fila.cuatrimestre ?? null,
     estado: fila.estado,
   };
+}
+
+export function materializarCorrelativa(fila: any): Correlativa {
+  return { idMateria: fila.id_materia, idRequisito: fila.id_requisito };
 }

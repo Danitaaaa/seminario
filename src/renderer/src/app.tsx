@@ -14,6 +14,9 @@ import { Proximamente } from "./pages/proximamente/proximamente";
 import { EventosPage } from "./pages/eventos/eventosPage";
 import { HorariosPage } from "./pages/horarios/horariosPage";
 import { MateriasPage } from "./pages/materias/materiasPage";
+import { CuadernosPage } from "./pages/cuadernos/cuadernosPage";
+import { CuadernoPage } from "./pages/cuadernos/cuadernoPage";
+import { MiniEstante } from "./components/cuadernos/miniEstante";
 import { FormacionPage } from "./pages/materias/formacionPage";
 import { CargarPlanPage } from "./pages/materias/cargarPlanPage";
 import { PerfilPage } from "./pages/perfil/perfilPage";
@@ -55,10 +58,12 @@ export default function App() {
         <Route path="/verificar-codigo" element={<VerificarCodigoPage />} />
         <Route path="/cambioPassword" element={<CambiarPasswordPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/material" element={<NodoPage />} />
+        <Route path="/material" element={<NodoPage lateral={<MiniEstante />} />} />
         <Route path="/eventos" element={<EventosPage />} />
         <Route path="/horarios" element={<HorariosPage />} />
         <Route path="/materias" element={<MateriasPage />} />
+        <Route path="/cuadernos" element={<CuadernosPage />} />
+        <Route path="/cuadernos/:idMateria" element={<CuadernoPage />} />
         <Route path="/materias/formacion" element={<FormacionPage />} />
         <Route path="/materias/formacion/:idFormacion" element={<FormacionPage />} />
         <Route path="/materias/plan/:idFormacion" element={<CargarPlanPage />} />

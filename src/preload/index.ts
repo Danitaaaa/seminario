@@ -6,6 +6,7 @@ import { eventosApi } from './apis/eventos';
 import { categoriasApi } from './apis/categorias';
 import { horariosApi } from './apis/horarios';
 import { materiasApi } from './apis/materias';
+import { cuadernosApi } from './apis/cuadernos';
 import { enlacesApi } from './apis/enlaces';
 import { driveApi } from './apis/drive';
 import { metasApi } from './apis/metas';
@@ -29,6 +30,7 @@ contextBridge.exposeInMainWorld('api', {
   ...categoriasApi,
   ...horariosApi,
   ...materiasApi,
+  ...cuadernosApi,
   ...enlacesApi,
   ...driveApi,
   ...metasApi,

@@ -6,6 +6,7 @@ import { Card } from '../../components/ui/card/card';
 import { Title } from '../../components/ui/title/title';
 import { CartelError } from '../../components/comunes/cartelError';
 import  RegistrarRostro from '../registrarRostro/registrarRostro';
+import { enterParaAvanzar } from '../../utils/enterParaAvanzar';
 
 
 export function RegistrarUsuarioPage() {
@@ -95,6 +96,8 @@ export function RegistrarUsuarioPage() {
                     <>
                 <Title>Registrarse</Title>
 
+                {/* Enter pasa al siguiente campo vacío; con todo completo, registra. */}
+                <div style={{ display: 'contents' }} onKeyDown={enterParaAvanzar(() => { if (!registrando) void registrar(); })}>
                 <div className="registro-row">
                     <Input
                         placeholder="Nombre"
@@ -140,6 +143,7 @@ export function RegistrarUsuarioPage() {
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
                     />
+                </div>
                 </div>
 
                 <div className="login-actions registro-actions">

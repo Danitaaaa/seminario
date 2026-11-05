@@ -15,6 +15,8 @@ import { obtenerUsuarioId } from '../../../lib/sesion';
 import { ModalConfirmarEliminar } from '../../components/nodos/modalConfirmarEliminar';
 import '../../styles/nodos.css';
 import { CartelError } from '../../components/comunes/cartelError';
+import { usarAvisos } from '../../hooks/usarAvisos';
+import type { ResultadoImportacion } from '../../types/nodo';
 import { ArchivosPage } from './archivosPage';
 import { VisorArchivo } from '../../components/visor/visorArchivo';
 import { ModalAbrirCon } from '../../components/visor/modalAbrirCon';
@@ -98,6 +100,9 @@ export function NodoPage({
     const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
     const [errorListar, setErrorListar] = useState<string | null>(null);
     const [mostrarSubida, setMostrarSubida] = useState(false);
+    const [subiendo, setSubiendo] = useState(false);
+    const [soltandoAfuera, setSoltandoAfuera] = useState(false); // archivos del explorador encima del listado
+    const avisos = usarAvisos();
     const [archivoAbierto, setArchivoAbierto] = useState<Archivo | null>(null);
     const [archivoAbrirCon, setArchivoAbrirCon] = useState<Archivo | null>(null);
     const [errorAbrir, setErrorAbrir] = useState<string | null>(null);
@@ -322,6 +327,54 @@ export function NodoPage({
         setMostrarSubida(true);
     };
 
+    const puedeImportar = puede(rol, 'archivo.subir') && puede(rol, 'carpeta.crear');
+
+    // Sube con la función que le pasen y avisa cuánto entró.
+    async function importar(subir: () => Promise<ResultadoImportacion | null>) {
+        setSubiendo(true);
+        try {
+            const r = await subir();
+            if (!r) return;
+            const partes = [
+                r.carpetas && `${r.carpetas} ${r.carpetas === 1 ? 'carpeta' : 'carpetas'}`,
+                r.archivos && `${r.archivos} ${r.archivos === 1 ? 'archivo' : 'archivos'}`,
+            ].filter(Boolean);
+            avisos.exito(partes.length ? `Se subieron ${partes.join(' y ')}.` : 'No había nada para subir.');
+            if (r.salteados) avisos.info(`Se saltearon ${r.salteados} ocultos o sin extensión.`);
+            await cargarContenido();
+        } catch (e) {
+            avisos.error(e instanceof Error ? e.message.split('Error: ').pop()! : 'No se pudo subir.');
+        } finally {
+            setSubiendo(false);
+        }
+    }
+
+    const subirCarpeta = () => {
+        if (!puedeImportar) return;
+        setMenuAgregarAbierto(false);
+        void importar(() => window.api.subirCarpeta({ idPadre: idPadreActual }));
+    };
+
+    // Soltar archivos o carpetas del explorador. Los arrastres internos (mover nodos) no traen "Files".
+    const traeArchivos = (e: DragEvent) => e.dataTransfer.types.includes('Files');
+    const propsSoltarAfuera = puedeImportar ? {
+        onDragOver: (e: DragEvent) => {
+            if (!traeArchivos(e)) return;
+            e.preventDefault();
+            setSoltandoAfuera(true);
+        },
+        onDragLeave: (e: DragEvent) => {
+            if (!e.currentTarget.contains(e.relatedTarget as globalThis.Node | null)) setSoltandoAfuera(false);
+        },
+        onDrop: (e: DragEvent) => {
+            if (!traeArchivos(e)) return;
+            e.preventDefault();
+            setSoltandoAfuera(false);
+            const rutas = Array.from(e.dataTransfer.files).map((f) => window.api.rutaDeArchivo(f)).filter(Boolean);
+            if (rutas.length) void importar(() => window.api.importarRutas({ idPadre: idPadreActual, rutas }));
+        },
+    } : {};
+
     const propsListado = {
         nodos,
         seleccionados,
@@ -369,7 +422,8 @@ export function NodoPage({
             ) : (
                 <div className={lateral ? 'nodos-pagina nodos-pagina--con-lateral' : 'nodos-pagina'}>
                     <div
-                        className="nodos-modulo"
+                        className={`nodos-modulo${soltandoAfuera ? ' nodos-modulo--soltar' : ''}`}
+                        {...propsSoltarAfuera}
                         onClick={(e) => {
                             if (e.target === e.currentTarget) setSeleccionados(new Set());
                         }}
@@ -410,6 +464,7 @@ export function NodoPage({
                             menuAgregarAbierto={menuAgregarAbierto}
                             onToggleMenuAgregar={() => setMenuAgregarAbierto((v) => !v)}
                             onSubirArchivo={subirArchivo}
+                            onSubirCarpeta={subirCarpeta}
                             onCrearCarpeta={() => {
                                 setMenuAgregarAbierto(false);
                                 setModal({ tipo: 'crear' });
@@ -420,6 +475,7 @@ export function NodoPage({
                             }}
                             haySeleccion={nodosSeleccionados.some(puedeEliminarNodo)}
                         />
+                        {subiendo && <p className="nodos-subiendo" role="status">Subiendo…</p>}
                         {vista === 'lista' ? (
                             <TablaNodos {...propsListado} />
                         ) : (

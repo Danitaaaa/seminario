@@ -1,5 +1,5 @@
 import { Archivo, AplicacionExterna } from './archivo';
-import { Nodo } from './nodo';
+import { Nodo, ResultadoImportacion } from './nodo';
 import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput } from './eventos';
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
@@ -38,10 +38,11 @@ type Resultado<T> =
 import type { SesionesEstudioApi } from './sesionesEstudio';
 import type { SpotifyApi } from './spotify';
 import type { MateriasApi } from './materias';
+import type { CuadernosApi } from './cuadernos';
 
 declare global {
   interface Window {
-    api: SesionesEstudioApi & SpotifyApi & MateriasApi & {
+    api: SesionesEstudioApi & SpotifyApi & MateriasApi & CuadernosApi & {
       // Gestion de material de estudio
       crearNodo: (datos: { nombre: string; idPadre: number | null }) => Promise<Nodo>;
       modificarNodo: (datos: { id: number; nombre: string; idMateria?: number | null }) => Promise<Nodo>;
@@ -61,6 +62,9 @@ declare global {
         rutaFisica: string;
         tamanio: number;
       } | null>;
+      subirCarpeta: (datos: { idPadre: number }) => Promise<ResultadoImportacion | null>;
+      importarRutas: (datos: { idPadre: number; rutas: string[] }) => Promise<ResultadoImportacion>;
+      rutaDeArchivo: (archivo: File) => string;
       modificarArchivo: (datos: { id: number; nombre: string }) => Promise<Archivo>;
       eliminarArchivo: (datos: { id: number }) => Promise<void>;
       moverArchivos: (datos: { ids: number[]; idPadre: number }) => Promise<Archivo[]>;

@@ -15,7 +15,13 @@ import {
   GuardarContenidoDTOSchema,
   GuardarDocxDTOSchema,
   AbrirConAplicacionDTOSchema,
+  CrearArchivoDTO,
+  ImportarRutasDTOSchema,
+  ListarContenidoDTOSchema,
+  SubirCarpetaDTOSchema,
 } from '../logicaPersistente/gestionMaterialEstudio/dto';
+import { Nodos } from '../administracionDePersistencia/nodo';
+import { importarRutas, type DestinoImportacion } from '../logicaNoPersistente/importarMaterial/importarRutas';
 import { Almacenamiento } from '../persistencia/almacenamiento';
 import {
   listarAplicaciones,
@@ -32,8 +38,43 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
   // Se llama después de guardar un Word desde el visor (lo usa Sesión de estudio para traer los cambios).
   type AlGuardarDocx = (idArchivo: number, html: string) => Promise<unknown>;
 
+  // Copia el archivo elegido a la carpeta de material de la app (nunca toca el original) y lo registra.
+  async function copiarYCrear(archivos: Archivos, datos: CrearArchivoDTO) {
+    // La extensión forma parte del nombre físico: solo alfanumérica, para evitar rutas raras.
+    if (!/^[a-zA-Z0-9]+$/.test(datos.extension)) {
+      throw new Error('Extensión inválida');
+    }
+
+    fs.mkdirSync(CARPETA_MATERIAL, { recursive: true });
+    const nombreFisico = `${crypto.randomUUID()}.${datos.extension}`;
+    const rutaCopia = path.join(CARPETA_MATERIAL, nombreFisico);
+    fs.copyFileSync(datos.rutaFisica, rutaCopia);
+
+    try {
+      // El tamaño se toma de la copia real, no de lo que manda el renderer.
+      const tamanio = fs.statSync(rutaCopia).size;
+      return await archivos.crear({ ...datos, rutaFisica: rutaCopia, tamanio });
+    } catch (error) {
+      // Si falla el INSERT (por ejemplo nombre duplicado), no dejar la copia huérfana.
+      fs.unlink(rutaCopia, () => {});
+      throw error;
+    }
+  }
+
   export function registerArchivosIpc(
-  archivos: Archivos, almacenamiento: Almacenamiento, alGuardarDocx?: AlGuardarDocx): void {
+  archivos: Archivos, almacenamiento: Almacenamiento, nodos: Nodos, alGuardarDocx?: AlGuardarDocx): void {
+  // Para subir carpetas: crea subcarpetas y archivos con las mismas fachadas (y permisos) de siempre.
+  const destino: DestinoImportacion = {
+    nombresEn: async (idPadre) => {
+      const lista = await nodos.listar(ListarContenidoDTOSchema.parse({ idPadre }));
+      return new Set(lista.map((n) => (n.tipo === 'carpeta' ? n.nombre : `${n.nombre}.${n.extension}`).toLowerCase()));
+    },
+    crearCarpeta: async (nombre, idPadre) => (await nodos.crear({ nombre, idPadre })).id,
+    crearArchivo: async (rutaFisica, nombre, extension, idPadre) => {
+      await copiarYCrear(archivos, { nombre, extension, rutaFisica, idPadre });
+    },
+  };
+
   ipcMain.handle('archivos:buscar', async (_event, datos: unknown) => {
     const validado = BuscadorArchivoDTOSchema.parse(datos);
     return archivos.buscar(validado);
@@ -49,28 +90,21 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
 
 
   ipcMain.handle('archivos:crear', async (_event, datos: unknown) => {
-    const validado = CrearArchivoDTOSchema.parse(datos);
+    return copiarYCrear(archivos, CrearArchivoDTOSchema.parse(datos));
+  });
 
-    // La extensión forma parte del nombre físico: solo alfanumérica, para evitar rutas raras.
-    if (!/^[a-zA-Z0-9]+$/.test(validado.extension)) {
-      throw new Error('Extensión inválida');
-    }
+  // Abre el selector de carpetas del SO y sube las elegidas con todo lo que tienen adentro.
+  ipcMain.handle('archivos:subirCarpeta', async (_event, datos: unknown) => {
+    const { idPadre } = SubirCarpetaDTOSchema.parse(datos);
+    const resultado = await dialog.showOpenDialog({ properties: ['openDirectory', 'multiSelections'] });
+    if (resultado.canceled || resultado.filePaths.length === 0) return null;
+    return importarRutas(resultado.filePaths, idPadre, destino);
+  });
 
-    // Copia el archivo elegido a la carpeta de material de la app; nunca toca el original.
-    fs.mkdirSync(CARPETA_MATERIAL, { recursive: true });
-    const nombreFisico = `${crypto.randomUUID()}.${validado.extension}`;
-    const rutaCopia = path.join(CARPETA_MATERIAL, nombreFisico);
-    fs.copyFileSync(validado.rutaFisica, rutaCopia);
-
-    try {
-      // El tamaño se toma de la copia real, no de lo que manda el renderer.
-      const tamanio = fs.statSync(rutaCopia).size;
-      return await archivos.crear({ ...validado, rutaFisica: rutaCopia, tamanio });
-    } catch (error) {
-      // Si falla el INSERT (por ejemplo nombre duplicado), no dejar la copia huérfana.
-      fs.unlink(rutaCopia, () => {});
-      throw error;
-    }
+  // Carpetas y archivos arrastrados desde el explorador.
+  ipcMain.handle('archivos:importar', async (_event, datos: unknown) => {
+    const { idPadre, rutas } = ImportarRutasDTOSchema.parse(datos);
+    return importarRutas(rutas, idPadre, destino);
   });
 
   ipcMain.handle('archivos:modificar', async (_event, datos: unknown) => {

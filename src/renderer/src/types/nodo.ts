@@ -21,3 +21,10 @@ export interface Archivo extends NodoBase {
 export type Nodo = Carpeta | Archivo;
 
 export const claveNodo = (n: Nodo) => `${n.tipo}-${n.id}`;
+
+// Lo que se subió al importar una carpeta o lo arrastrado desde el explorador.
+export interface ResultadoImportacion {
+  carpetas: number;
+  archivos: number;
+  salteados: number;
+}

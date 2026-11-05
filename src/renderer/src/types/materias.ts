@@ -47,6 +47,12 @@ export interface MateriaLeida {
   nombre: string;
   anio: number | null;
   cuatrimestre: Cuatrimestre | null;
+  correlativas: string[];
+}
+
+export interface Correlativa {
+  idMateria: number;
+  idRequisito: number;
 }
 
 export interface OpcionMateria {
@@ -64,9 +70,11 @@ export interface MateriasApi {
   modificarFormacion(datos: { usuarioId: number; idFormacion: number } & DatosFormacion): Promise<Formacion>;
   eliminarFormacion(datos: { usuarioId: number; idFormacion: number }): Promise<{ ok: boolean }>;
   listarMateriasFormacion(datos: { usuarioId: number; idFormacion: number }): Promise<MateriaFormacion[]>;
-  crearMaterias(datos: { usuarioId: number; idFormacion: number; materias: DatosMateria[] }): Promise<MateriaFormacion[]>;
+  crearMaterias(datos: { usuarioId: number; idFormacion: number; materias: (DatosMateria & { correlativas?: string[] })[] }): Promise<MateriaFormacion[]>;
   modificarMateriaFormacion(datos: { usuarioId: number; idMateria: number } & DatosMateria): Promise<MateriaFormacion>;
   eliminarMateriaFormacion(datos: { usuarioId: number; idMateria: number }): Promise<{ ok: boolean }>;
   listarMateriasUsuario(datos: { usuarioId: number }): Promise<OpcionMateria[]>;
+  listarCorrelativas(datos: { usuarioId: number; idFormacion: number }): Promise<Correlativa[]>;
+  guardarCorrelativas(datos: { usuarioId: number; idMateria: number; requisitos: number[] }): Promise<Correlativa[]>;
   leerPlanEstudios(datos: { texto: string }): Promise<MateriaLeida[]>;
 }

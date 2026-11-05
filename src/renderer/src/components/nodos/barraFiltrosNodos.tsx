@@ -35,6 +35,7 @@ interface BarraFiltrosNodosProps {
     menuAgregarAbierto: boolean;
     onToggleMenuAgregar: () => void;
     onSubirArchivo: () => void;
+    onSubirCarpeta: () => void;
     onCrearCarpeta: () => void;
     onEliminarSeleccion: () => void;
     haySeleccion?: boolean;
@@ -47,7 +48,7 @@ interface BarraFiltrosNodosProps {
 export function BarraFiltrosNodos({
     ordenActivo, direccion, onOrdenar,
     vista, onCambiarVista,
-    menuAgregarAbierto, onToggleMenuAgregar, onSubirArchivo, onCrearCarpeta,
+    menuAgregarAbierto, onToggleMenuAgregar, onSubirArchivo, onSubirCarpeta, onCrearCarpeta,
     onEliminarSeleccion, haySeleccion = false, rol = 'propietario',
 }: BarraFiltrosNodosProps) {
     const contenedorMenuRef = useRef<HTMLDivElement>(null);
@@ -81,6 +82,7 @@ export function BarraFiltrosNodos({
                         <MenuAgregar
                             abierto={menuAgregarAbierto}
                             onSubirArchivo={onSubirArchivo}
+                            onSubirCarpeta={onSubirCarpeta}
                             onCrearCarpeta={onCrearCarpeta}
                             rol={rol}
                         />

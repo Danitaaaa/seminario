@@ -456,3 +456,76 @@
 .materias-ficha--libre { background: var(--color-frost-claro); color: var(--color-text); }
 .materias-ficha--no_cursada { border: 1px dashed var(--color-frost-blue); background: var(--color-surface); color: var(--color-steel); }
 .materias-ficha--arrastrando { opacity: 0.4; }
+
+/* Pestaña Correlatividades: mapa del plan */
+.materias-mapa { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+.materias-mapa__plan { display: flex; flex-direction: column; gap: 12px; }
+.materias-mapa__leyenda { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 18px; margin: 0; padding: 0; list-style: none; color: var(--color-text-secondary); font-size: 0.875rem; }
+.materias-mapa__leyenda li { display: inline-flex; align-items: center; gap: 6px; }
+.materias-mapa__muestra { display: inline-block; width: 14px; height: 14px; border-radius: 4px; }
+.materias-mapa__anios { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: start; }
+.materias-mapa__columna { display: flex; flex-direction: column; gap: 8px; }
+.materias-mapa__columna h3 { margin: 0 0 2px; color: var(--color-steel); font-size: 0.9rem; font-weight: 400; text-align: center; }
+.materias-mapa__materia {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-frost-claro);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+.materias-mapa__materia:hover { border-color: var(--color-frost-blue); }
+.materias-mapa__estado { padding: 1px 8px; border-radius: 999px; background: var(--color-frost-suave); color: var(--color-steel); font-size: 0.75rem; }
+.materias-mapa__materia--elegida { border-color: var(--color-storm); background: var(--color-storm); color: var(--color-surface); }
+.materias-mapa__materia--elegida .materias-mapa__estado { background: var(--color-steel); color: var(--color-surface); }
+.materias-mapa__materia--necesita { border-color: var(--color-frost-blue); background: var(--color-frost-blue); color: var(--color-text); }
+.materias-mapa__materia--necesita .materias-mapa__estado { background: var(--color-surface); color: var(--color-text); }
+.materias-mapa__materia--habilita { border: 2px solid var(--color-steel); color: var(--color-text); }
+
+.materias-mapa__panel {
+  position: sticky;
+  top: var(--espacio-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--espacio-md);
+  border-radius: 14px;
+  background: var(--color-frost-suave);
+}
+.materias-mapa__panel h4 { margin: 6px 0 0; color: var(--color-text); }
+.materias-mapa__meta { color: var(--color-steel); font-size: 0.875rem; }
+.materias-mapa__nombre { margin: 0; font-size: 1.6rem; line-height: 1.2; color: var(--color-text); }
+.materias-mapa__aviso { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--color-storm); color: var(--color-surface); }
+.materias-mapa__lista { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.materias-mapa__lista li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--color-frost-claro); color: var(--color-text); }
+.materias-mapa__lista li span:last-child:not(:first-child) { color: var(--color-steel); font-size: 0.875rem; }
+.materias-mapa__lista li .materias-mapa__ok { color: var(--color-storm); }
+.materias-mapa__panel .materias-acciones { justify-content: flex-start; margin-top: 6px; }
+
+@media (max-width: 900px) {
+  .materias-mapa { grid-template-columns: 1fr; }
+  .materias-mapa__panel { position: static; }
+}
+
+/* Pestañas de Materias (Plan de estudios / Correlatividades) */
+.materias-vistas { display: flex; gap: 4px; border-bottom: 1px solid var(--color-frost-claro); }
+.materias-vistas button {
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--color-steel);
+  font: inherit;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.materias-vistas button:hover { color: var(--color-text); }
+.materias-vistas .materias-vistas--activa { border-bottom-color: var(--color-storm); color: var(--color-text); font-weight: 700; }

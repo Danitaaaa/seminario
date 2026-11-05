@@ -17,7 +17,11 @@ interface Fila {
   anio: string;
   cuatrimestre: Cuatrimestre | '';
   estado: EstadoMateria;
+  correlativas: string; // nombres separados con ";"
 }
+
+const separar = (texto: string) => texto.split(';').map((t) => t.trim()).filter(Boolean);
+const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 
 const EJEMPLO = 'Primer año\nPrimer cuatrimestre\nÁlgebra y Geometría Analítica\nAnálisis Matemático I\nAnual\nAlgoritmos y Estructuras de Datos\n\nSegundo año\n...';
 
@@ -54,6 +58,7 @@ export function CargarPlanPage() {
       setFilas(leidas.map((m, i) => ({
         clave: i, incluir: true, nombre: m.nombre, anio: m.anio ? String(m.anio) : '',
         cuatrimestre: m.cuatrimestre ?? '', estado: estadoInicial(m.anio, m.cuatrimestre, momento, estadoCursadas),
+        correlativas: m.correlativas.join('; '),
       })));
     } catch (e) {
       setError(mensajeDeError(e, 'No se pudo leer el plan.'));
@@ -92,6 +97,10 @@ export function CargarPlanPage() {
   const elegidas = filas?.filter((f) => f.incluir) ?? [];
   const dudosas = filas?.filter((f) => f.incluir && !f.anio).length ?? 0;
   const noCursadas = elegidas.filter((f) => f.estado === 'no_cursada').length;
+  // Correlativas que no coinciden con ninguna materia de la lista: no se van a guardar.
+  const nombres = new Set(elegidas.map((f) => normalizar(f.nombre)));
+  const sueltas = (f: Fila) => separar(f.correlativas).filter((c) => !nombres.has(normalizar(c)));
+  const sinCoincidir = elegidas.reduce((n, f) => n + sueltas(f).length, 0);
 
   async function agregar(): Promise<void> {
     if (elegidas.some((f) => !f.nombre.trim())) return setError('Hay materias sin nombre.');
@@ -102,6 +111,7 @@ export function CargarPlanPage() {
         usuarioId, idFormacion,
         materias: elegidas.map((f) => ({
           nombre: f.nombre.trim(), anio: f.anio ? Number(f.anio) : null, cuatrimestre: f.cuatrimestre || null, estado: f.estado,
+          correlativas: separar(f.correlativas),
         })),
       });
       avisos.exito(`Se agregaron ${creadas.length} materias.`);
@@ -175,6 +185,13 @@ export function CargarPlanPage() {
               </div>
             )}
 
+            {sinCoincidir > 0 && (
+              <div className="materias-alerta" role="status">
+                <TriangleAlert size={20} />
+                {sinCoincidir === 1 ? '1 correlativa no coincide' : `${sinCoincidir} correlativas no coinciden`} con ninguna materia de la lista y no se va a guardar. Corregí el nombre o borrala.
+              </div>
+            )}
+
             <div className="materias-tabla">
               <table>
                 <thead>
@@ -185,6 +202,7 @@ export function CargarPlanPage() {
                     <th scope="col">Año</th>
                     <th scope="col">Cuatrimestre</th>
                     <th scope="col">Estado</th>
+                    <th scope="col">Correlativas</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -196,7 +214,7 @@ export function CargarPlanPage() {
                       <Fragment key={f.clave}>
                       {nuevoAnio && (
                         <tr className="materias-tabla__anio">
-                          <td colSpan={5}>{f.anio ? `${f.anio}° año` : 'Sin año'} <small>{cantidad} {cantidad === 1 ? 'materia' : 'materias'}</small></td>
+                          <td colSpan={6}>{f.anio ? `${f.anio}° año` : 'Sin año'} <small>{cantidad} {cantidad === 1 ? 'materia' : 'materias'}</small></td>
                         </tr>
                       )}
                       <tr className={`${f.incluir ? '' : 'materias-fila--fuera'} ${falta ? 'materias-fila--dudosa' : ''}`}>
@@ -215,6 +233,12 @@ export function CargarPlanPage() {
                             {ESTADOS.map((e) => <option key={e.valor} value={e.valor}>{e.nombre}</option>)}
                           </select>
                         </td>
+                        <td>
+                          <input value={f.correlativas} placeholder="Ninguna" aria-label={`Correlativas de ${f.nombre}`}
+                            title={sueltas(f).length ? `No coinciden: ${sueltas(f).join(', ')}` : 'Separalas con ;'}
+                            className={f.incluir && sueltas(f).length ? 'materias-falta' : ''}
+                            onChange={(e) => cambiar(f.clave, { correlativas: e.target.value })} />
+                        </td>
                       </tr>
                       </Fragment>
                     );
@@ -227,7 +251,7 @@ export function CargarPlanPage() {
 
             <div className="materias-acciones materias-acciones--separadas">
               <button type="button" className="materias-link" onClick={() => setFilas([...filas, {
-                clave: Date.now(), incluir: true, nombre: '', anio: '', cuatrimestre: '', estado: estadoCursadas,
+                clave: Date.now(), incluir: true, nombre: '', anio: '', cuatrimestre: '', estado: estadoCursadas, correlativas: '',
               }])}><Plus size={16} /> Agregar una que falte</button>
               <div className="materias-botones">
                 <Boton variante="contorno" onClick={() => setFilas(null)}>Volver al texto</Boton>

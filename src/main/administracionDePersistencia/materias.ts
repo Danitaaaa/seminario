@@ -7,9 +7,11 @@ import { CrearMaterias } from '../logicaPersistente/gestionDeMaterias/crearMater
 import { ModificarMateria } from '../logicaPersistente/gestionDeMaterias/modificarMateria';
 import { EliminarMateria } from '../logicaPersistente/gestionDeMaterias/eliminarMateria';
 import { ListarMateriasUsuario, OpcionMateria } from '../logicaPersistente/gestionDeMaterias/listarMateriasUsuario';
-import { Formacion, MateriaFormacion } from '../logicaPersistente/gestionDeMaterias/entidades';
+import { ListarCorrelativas } from '../logicaPersistente/gestionDeMaterias/listarCorrelativas';
+import { GuardarCorrelativas } from '../logicaPersistente/gestionDeMaterias/guardarCorrelativas';
+import { Correlativa, Formacion, MateriaFormacion } from '../logicaPersistente/gestionDeMaterias/entidades';
 import {
-  CrearFormacionDTO, CrearMateriasDTO, FormacionDTO, LeerPlanDTO, MateriaDTO,
+  CrearFormacionDTO, CrearMateriasDTO, FormacionDTO, GuardarCorrelativasDTO, LeerPlanDTO, MateriaDTO,
   ModificarFormacionDTO, ModificarMateriaDTO, UsuarioDTO,
 } from '../logicaPersistente/gestionDeMaterias/dto';
 import { leerPlanEstudios, MateriaLeida } from '../logicaNoPersistente/lectorPlanEstudios/leerPlanEstudios';
@@ -24,7 +26,9 @@ export class Materias {
     private readonly crearMaterias: CrearMaterias,
     private readonly modificarMateria: ModificarMateria,
     private readonly eliminarMateria: EliminarMateria,
-    private readonly listarMateriasUsuario: ListarMateriasUsuario
+    private readonly listarMateriasUsuario: ListarMateriasUsuario,
+    private readonly listarCorrelativas: ListarCorrelativas,
+    private readonly guardarCorrelativas: GuardarCorrelativas
   ) {}
 
   formaciones(datos: UsuarioDTO): Promise<Formacion[]> { return this.listarFormaciones.ejecutar(datos); }
@@ -37,6 +41,9 @@ export class Materias {
   editarMateria(datos: ModificarMateriaDTO): Promise<MateriaFormacion> { return this.modificarMateria.ejecutar(datos); }
   borrarMateria(datos: MateriaDTO): Promise<void> { return this.eliminarMateria.ejecutar(datos); }
   todasLasMaterias(datos: UsuarioDTO): Promise<OpcionMateria[]> { return this.listarMateriasUsuario.ejecutar(datos); }
+
+  correlativas(datos: FormacionDTO): Promise<Correlativa[]> { return this.listarCorrelativas.ejecutar(datos); }
+  editarCorrelativas(datos: GuardarCorrelativasDTO): Promise<Correlativa[]> { return this.guardarCorrelativas.ejecutar(datos); }
 
   leerPlan(datos: LeerPlanDTO): MateriaLeida[] { return leerPlanEstudios(datos.texto); }
 }

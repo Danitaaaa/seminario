@@ -1,0 +1,197 @@
+/* Cuadernos (uno por materia) y sus notas. Todo sale de la paleta, así sigue al modo oscuro. */
+
+/* Tonos de tapas y lomos: el texto va en --color-surface, que contrasta en claro y en oscuro. */
+.cuaderno-tono-0 { background: var(--color-storm); color: var(--color-surface); }
+.cuaderno-tono-1 { background: var(--color-steel); color: var(--color-surface); }
+.cuaderno-tono-2 { background: var(--color-text); color: var(--color-surface); }
+.cuaderno-tono-3 { background: var(--color-frost-blue); color: var(--color-text); }
+
+/* Mini estante en Material */
+.mini-estante {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--color-text);
+  color: var(--color-surface);
+}
+.mini-estante button { font: inherit; cursor: pointer; }
+.mini-estante__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-frost-blue);
+  font-size: 0.875rem;
+  text-align: left;
+}
+.mini-estante__cabecera svg { margin-left: auto; }
+.mini-estante__punto { width: 8px; height: 8px; border-radius: 50%; background: var(--color-frost-blue); }
+.mini-estante__estante {
+  display: flex;
+  height: 110px;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 10px 10px 0;
+  border: 0;
+  border-bottom: 4px solid var(--color-steel);
+  border-radius: 8px 8px 2px 2px;
+  background: color-mix(in srgb, var(--color-storm) 55%, var(--color-text));
+}
+.mini-estante__lomo { flex: 0 0 12px; border-radius: 2px 2px 0 0; outline: 1px solid color-mix(in srgb, var(--color-surface) 25%, transparent); }
+.mini-estante__destacado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+.mini-estante__destacado strong { display: block; }
+.mini-estante__destacado small { color: var(--color-frost-blue); }
+.mini-estante__tapa { flex: none; width: 46px; height: 46px; border-radius: 8px; }
+.mini-estante__progreso { height: 4px; border-radius: 999px; background: var(--color-steel); overflow: hidden; }
+.mini-estante__progreso span { display: block; height: 100%; background: var(--color-surface); }
+.mini-estante__vacio { margin: 0; font-size: 0.9rem; line-height: 1.4; }
+.mini-estante__ver {
+  padding: 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+/* Mis cuadernos */
+.cuadernos-pagina { display: flex; flex-direction: column; gap: var(--espacio-lg, 24px); }
+.cuadernos-encabezado { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.cuadernos-encabezado h1 { margin: 0; font-size: 2.25rem; color: var(--color-text); }
+.cuadernos-encabezado .app-boton { display: inline-flex; align-items: center; gap: 6px; }
+.cuadernos-seccion { display: flex; flex-direction: column; gap: 12px; }
+.cuadernos-seccion h2 { margin: 0; font-size: 1.35rem; color: var(--color-text); }
+.cuadernos-seccion__titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+.cuadernos-tapas { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+.cuaderno-tapa {
+  display: flex;
+  min-height: 240px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 22px 18px 34px;
+  border: 0;
+  border-radius: 6px 16px 16px 6px;
+  box-shadow: inset 10px 0 0 color-mix(in srgb, var(--color-surface) 12%, transparent), var(--sombra-card);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cuaderno-tapa:hover { filter: brightness(1.08); }
+.cuaderno-tapa__anio { font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; }
+.cuaderno-tapa__nombre { font-size: 1.45rem; line-height: 1.2; }
+.cuaderno-tapa__pie { display: flex; flex-direction: column; gap: 6px; margin-top: auto; font-size: 0.875rem; }
+.cuaderno-tapa__pie small { opacity: 0.85; }
+.cuaderno-tapa__barra { height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--color-surface) 30%, transparent); overflow: hidden; }
+.cuaderno-tapa__barra span { display: block; height: 100%; background: currentColor; }
+
+.cuadernos-estante {
+  display: flex;
+  min-height: 280px;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 0 16px;
+  overflow-x: auto;
+  border-bottom: 10px solid var(--color-steel);
+}
+.cuaderno-lomo {
+  display: flex;
+  flex: 0 0 52px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 4px 4px 0 0;
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.cuaderno-lomo:hover { transform: translateY(-6px); }
+.cuaderno-lomo span {
+  max-height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.cuadernos-proximas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--color-text); }
+.cuadernos-proxima {
+  padding: 6px 14px;
+  border: 1px dashed var(--color-frost-blue);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-steel);
+  font: inherit;
+  cursor: pointer;
+}
+.cuadernos-proxima:hover { border-style: solid; color: var(--color-text); }
+
+/* Cuaderno de una materia */
+.cuaderno-volver { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; }
+.cuadernos-encabezado .materias-detalle { color: var(--color-steel); }
+
+.cuaderno-notas { overflow: hidden; border: 1px solid var(--color-frost-claro); border-radius: 14px; background: var(--color-surface); }
+.cuaderno-notas__titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--color-frost-claro); }
+.cuaderno-notas__titulo h2 { margin: 0; font-size: 1.25rem; color: var(--color-text); }
+.cuaderno-notas__titulo span { color: var(--color-steel); font-size: 0.9rem; }
+.cuaderno-notas__vacio { margin: 0; padding: 16px 20px; color: var(--color-text-light); }
+.cuaderno-nota {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 110px minmax(0, 1fr) 70px 130px 50px;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  border: 0;
+  border-top: 1px solid var(--color-frost-suave);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cuaderno-nota:first-of-type { border-top: 0; }
+.cuaderno-nota:hover { background: var(--color-frost-suave); }
+.cuaderno-nota__tipo { padding: 3px 10px; border-radius: 999px; background: var(--color-frost-claro); color: var(--color-text); font-size: 0.8125rem; text-align: center; }
+.cuaderno-nota__tipo--final { background: var(--color-storm); color: var(--color-surface); }
+.cuaderno-nota__fecha { color: var(--color-steel); font-size: 0.875rem; }
+.cuaderno-nota__valor { font-size: 1.5rem; font-weight: 700; text-align: right; }
+.cuaderno-nota__valor--aprobado { color: var(--color-success); }
+.cuaderno-nota__valor--desaprobado { color: var(--color-error); }
+
+/* Estados de nota: aprobado en verde, desaprobado en rojo, como se pidió. */
+.cuaderno-estado { justify-self: start; padding: 3px 12px; border-radius: 999px; font-size: 0.8125rem; }
+.cuaderno-estado--aprobado { background: color-mix(in srgb, var(--color-success) 16%, var(--color-surface)); color: var(--color-success); }
+.cuaderno-estado--desaprobado { background: var(--color-error-bg); color: var(--color-error-texto); }
+.cuaderno-estado--sin_definir { background: var(--color-frost-suave); color: var(--color-steel); }
+.cuaderno-estado--pendiente { border: 1px solid var(--color-frost-blue); color: var(--color-steel); }
+
+.cuaderno-vinculos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.cuaderno-tarjeta { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border-radius: 14px; background: var(--color-surface); box-shadow: var(--sombra-card); }
+.cuaderno-tarjeta h3 { margin: 0; color: var(--color-text); }
+.cuaderno-tarjeta ul { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.cuaderno-tarjeta li { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--color-text); }
+.cuaderno-tarjeta li small { color: var(--color-steel); }
+.cuaderno-tarjeta .materias-link { display: inline-flex; align-items: center; gap: 6px; padding: 0; }
+.cuaderno-tarjeta .app-boton { align-self: flex-start; margin-top: auto; }
+
+@media (max-width: 800px) {
+  .cuaderno-nota { grid-template-columns: 90px minmax(0, 1fr) 50px; }
+  .cuaderno-nota__fecha,
+  .cuaderno-estado { display: none; }
+}

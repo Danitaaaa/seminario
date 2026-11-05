@@ -69,6 +69,18 @@ export const cuatrimestreDeHoy = (): 'primero' | 'segundo' => (new Date().getMon
 const CUATRI_CORTO: Record<Cuatrimestre, string> = { primero: '1C', segundo: '2C', anual: 'Anual' };
 export const cuatrimestreCorto = (c: Cuatrimestre | null): string => (c ? CUATRI_CORTO[c] : '');
 
+const ORDINALES = ['1er', '2do', '3er', '4to', '5to', '6to', '7mo', '8vo', '9no', '10mo'];
+export const nombreAnio = (anio: number | null): string => (anio ? `${ORDINALES[anio - 1]} año` : 'Sin año');
+
+// Agrupa las materias por año, de menor a mayor; las que no tienen año van al final.
+export function materiasPorAnio(materias: MateriaFormacion[]): { anio: number | null; materias: MateriaFormacion[] }[] {
+  const grupos = new Map<number | null, MateriaFormacion[]>();
+  for (const m of materias) grupos.set(m.anio, [...(grupos.get(m.anio) ?? []), m]);
+  return [...grupos.entries()]
+    .sort(([a], [b]) => (a ?? 99) - (b ?? 99))
+    .map(([anio, lista]) => ({ anio, materias: lista }));
+}
+
 // Electron envuelve el error como "Error invoking remote method '...': Error: <mensaje>".
 export function mensajeDeError(err: unknown, generico: string): string {
   const texto = err instanceof Error ? err.message : String(err);
@@ -78,12 +90,12 @@ export function mensajeDeError(err: unknown, generico: string): string {
 
 // Para quien tiene el plan en PDF o en foto: lo pega en cualquier IA junto con el plan
 // y lo que le devuelve ya viene en el formato que entiende el lector de Syntra.
-export const PROMPT_PLAN = `Te adjunto el plan de estudios de mi carrera. Pasámelo a texto plano con este formato exacto, sin agregar nada más:
+export const PROMPT_PLAN = `Te adjunto el plan de estudios de mi carrera o curso. Puede ser de cualquier universidad, instituto o academia, y venir en tabla, lista, PDF o foto. Pasámelo a texto plano con este formato exacto, sin agregar nada más (ni explicaciones, ni títulos, ni comillas, ni tablas):
 
 1er año
 Primer cuatrimestre
 Nombre de la materia
-Nombre de la materia
+Nombre de la materia | Correlativa; Otra correlativa
 Segundo cuatrimestre
 Nombre de la materia
 Anual
@@ -91,12 +103,26 @@ Nombre de la materia
 2do año
 ...
 
-Reglas:
-- Una materia por línea, con el nombre completo tal como figura en el plan.
-- Sin números, códigos, horas, correlativas, viñetas ni punto final.
-- Antes de las materias de cada año, una línea con el año ("1er año", "2do año"...).
-- Si el plan dice el cuatrimestre, poné "Primer cuatrimestre", "Segundo cuatrimestre" o "Anual" antes de esas materias. Si no lo dice, no pongas ninguno.
-- Incluí electivas, prácticas y proyecto final como si fueran materias.
-- No incluyas títulos de secciones, totales ni notas al pie.
-- Si una materia no tiene año claro, ponela al final bajo "Sin año".
-- No resumas ni inventes materias: si algo no se lee bien, copialo como está.`;
+Reglas para los años:
+- Antes de las materias de cada año poné una línea con el año: "1er año", "2do año", "3er año", "4to año", "5to año", "6to año".
+- Si el plan habla de "nivel", "curso", "ciclo" o "etapa" en vez de año, convertilo a año en orden (Nivel I = 1er año, Ciclo básico de 2 años = 1er y 2do año, etc.). Si no se puede saber, usá el orden en que aparecen.
+- Si una materia no tiene año claro (por ejemplo, electivas que se cursan en cualquier momento), ponela al final bajo "Sin año".
+
+Reglas para los períodos:
+- Si el plan dice cuatrimestre o semestre, poné "Primer cuatrimestre", "Segundo cuatrimestre" o "Anual" antes de esas materias (semestre = cuatrimestre).
+- Si es bimestral, trimestral o por módulos, o no dice nada, no pongas ninguna línea de período.
+
+Reglas para las materias:
+- Una materia por línea, con el nombre completo tal como figura en el plan, sin abreviar.
+- Sin números de orden, códigos, horas, créditos, viñetas, barras invertidas ni punto final.
+- Incluí electivas, optativas, prácticas, talleres, seminarios, tesis y proyecto final como materias. Si el plan solo dice "Electiva I", "Electiva II", dejalas así.
+- No incluyas títulos de secciones, áreas, totales, cargas horarias, títulos intermedios ni notas al pie.
+- No repitas materias: si una aparece dos veces, dejá solo la primera.
+
+Reglas para las correlativas:
+- Si el plan dice qué materias hay que tener para cursar o rendir otra, ponelas en la misma línea de esa materia, después de " | ", separadas con ";".
+- Escribí cada correlativa con el nombre completo, igual a como la escribiste en su propia línea. Si el plan las indica con número o código, buscá a qué materia corresponde y poné su nombre.
+- Si el plan separa correlativas "regularizadas" y "aprobadas", o "para cursar" y "para rendir", ponelas todas juntas, sin aclarar cuál es cuál.
+- Si una materia no tiene correlativas o el plan no las dice, no pongas la barra.
+
+No resumas ni inventes materias ni correlativas: si algo no se lee bien, copialo como está.`;

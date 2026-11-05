@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, webUtils } from 'electron';
 
 export const archivosApi = {
   listarArchivos: () => ipcRenderer.invoke('archivos:listar'),
@@ -15,4 +15,8 @@ export const archivosApi = {
   abrirConAplicacion: (datos: unknown) => ipcRenderer.invoke('archivos:abrirConAplicacion', datos),
   elegirAplicacion: (datos: unknown) => ipcRenderer.invoke('archivos:elegirAplicacion', datos),
   seleccionarArchivo: () => ipcRenderer.invoke('archivos:seleccionar'),
+  subirCarpeta: (datos: unknown) => ipcRenderer.invoke('archivos:subirCarpeta', datos),
+  importarRutas: (datos: unknown) => ipcRenderer.invoke('archivos:importar', datos),
+  // Ruta en disco de un archivo o carpeta arrastrado (Electron ya no la pone en File.path).
+  rutaDeArchivo: (archivo: File) => webUtils.getPathForFile(archivo),
 };

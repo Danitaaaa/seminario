@@ -2,7 +2,7 @@ import { ipcMain } from 'electron';
 import type { ZodType } from 'zod';
 import { Materias } from '../administracionDePersistencia/materias';
 import {
-  crearFormacionSchema, crearMateriasSchema, formacionSchema, leerPlanSchema, materiaSchema,
+  crearFormacionSchema, crearMateriasSchema, formacionSchema, guardarCorrelativasSchema, leerPlanSchema, materiaSchema,
   modificarFormacionSchema, modificarMateriaSchema, usuarioSchema,
 } from '../logicaPersistente/gestionDeMaterias/dto';
 
@@ -30,6 +30,9 @@ export function registerMateriasIpc(materias: Materias): void {
   });
 
   ipcMain.handle('materias:delUsuario', (_e, d: unknown) => materias.todasLasMaterias(validar(usuarioSchema, d)));
+
+  ipcMain.handle('materias:correlativas', (_e, d: unknown) => materias.correlativas(validar(formacionSchema, d)));
+  ipcMain.handle('materias:guardarCorrelativas', (_e, d: unknown) => materias.editarCorrelativas(validar(guardarCorrelativasSchema, d)));
 
   ipcMain.handle('materias:leerPlan', (_e, d: unknown) => materias.leerPlan(validar(leerPlanSchema, d)));
 }

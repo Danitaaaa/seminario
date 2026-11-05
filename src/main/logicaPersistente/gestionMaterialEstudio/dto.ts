@@ -56,6 +56,15 @@ export const CrearArchivoDTOSchema = z.object({
 });
 export type CrearArchivoDTO = z.infer<typeof CrearArchivoDTOSchema>;
 
+// Subir una carpeta elegida con el selector del sistema.
+export const SubirCarpetaDTOSchema = z.object({ idPadre: z.number().int() });
+
+// Subir carpetas o archivos arrastrados desde el explorador.
+export const ImportarRutasDTOSchema = z.object({
+    idPadre: z.number().int(),
+    rutas: z.array(z.string().min(1)).min(1).max(100),
+});
+
 export const ModificarArchivoDTOSchema = z.object({
     id: z.number().int(),
     nombre: z.string().min(1).max(255),

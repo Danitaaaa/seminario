@@ -99,7 +99,16 @@ import { CrearMaterias } from './logicaPersistente/gestionDeMaterias/crearMateri
 import { ModificarMateria } from './logicaPersistente/gestionDeMaterias/modificarMateria';
 import { EliminarMateria } from './logicaPersistente/gestionDeMaterias/eliminarMateria';
 import { ListarMateriasUsuario } from './logicaPersistente/gestionDeMaterias/listarMateriasUsuario';
+import { ListarCorrelativas } from './logicaPersistente/gestionDeMaterias/listarCorrelativas';
+import { GuardarCorrelativas } from './logicaPersistente/gestionDeMaterias/guardarCorrelativas';
 import { Materias } from './administracionDePersistencia/materias';
+import { ListarCuadernos } from './logicaPersistente/gestionDeCuadernos/listarCuadernos';
+import { ObtenerCuaderno } from './logicaPersistente/gestionDeCuadernos/obtenerCuaderno';
+import { CrearNota } from './logicaPersistente/gestionDeCuadernos/crearNota';
+import { ModificarNota } from './logicaPersistente/gestionDeCuadernos/modificarNota';
+import { EliminarNota } from './logicaPersistente/gestionDeCuadernos/eliminarNota';
+import { Cuadernos } from './administracionDePersistencia/cuadernos';
+import { registerCuadernosIpc } from './ipc/cuadernos.ipc';
 import { registerMateriasIpc } from './ipc/materias.ipc';
 import { registerEnlacesIpc } from './ipc/enlaces.ipc';
 import { VerificarPassword } from './logicaPersistente/gestionDeUsuarios/verificarPassword';
@@ -382,9 +391,18 @@ function wireDependencies(): ProcesoSesionEstudio {
     new ModificarFormacion(persistencia), new EliminarFormacion(persistencia),
     new ListarMaterias(persistencia), new CrearMaterias(persistencia),
     new ModificarMateria(persistencia), new EliminarMateria(persistencia),
-    new ListarMateriasUsuario(persistencia)
+    new ListarMateriasUsuario(persistencia),
+    new ListarCorrelativas(persistencia), new GuardarCorrelativas(persistencia)
   );
   registerMateriasIpc(materias);
+
+  // Gestion de cuadernos (uno por materia) y sus notas
+  const listarCuadernos = new ListarCuadernos(persistencia);
+  const cuadernos = new Cuadernos(
+    listarCuadernos, new ObtenerCuaderno(persistencia, listarCuadernos),
+    new CrearNota(persistencia), new ModificarNota(persistencia), new EliminarNota(persistencia)
+  );
+  registerCuadernosIpc(cuadernos);
 
   // Gestion de metas
   const metas = new Metas(
@@ -586,7 +604,7 @@ function wireDependencies(): ProcesoSesionEstudio {
     importarDesdeMaterial: new ImportarContenidoDesdeMaterial(persistencia),
   });
   // Se registra acá porque al guardar un Word desde Material avisa a Sesión de estudio.
-  registerArchivosIpc(archivos, almacenamiento, (idArchivo, html) =>
+  registerArchivosIpc(archivos, almacenamiento, nodos, (idArchivo, html) =>
     sesionesEstudio.importarDesdeMaterial(idArchivo, html)
   );
   // Lo mismo al traer la versión de Google Drive: si es el Word de una sesión, la sesión se actualiza.

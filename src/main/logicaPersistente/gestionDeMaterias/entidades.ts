@@ -25,3 +25,9 @@ export interface MateriaFormacion {
   cuatrimestre: Cuatrimestre | null;
   estado: EstadoMateria;
 }
+
+// La materia `idMateria` necesita tener `idRequisito` para cursarse.
+export interface Correlativa {
+  idMateria: number;
+  idRequisito: number;
+}

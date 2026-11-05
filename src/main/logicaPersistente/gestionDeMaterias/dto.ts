@@ -46,7 +46,10 @@ const datosMateria = z.object({
 export const crearMateriasSchema = z.object({
   usuarioId: id,
   idFormacion: id,
-  materias: z.array(datosMateria).min(1, 'No hay materias para agregar.').max(200),
+  materias: z.array(datosMateria.extend({
+    // Nombres de las materias que necesita, de la misma carga o ya cargadas en la formación.
+    correlativas: z.array(z.string().trim().min(1).max(100)).max(30).default([]),
+  })).min(1, 'No hay materias para agregar.').max(200),
 });
 export type CrearMateriasDTO = z.infer<typeof crearMateriasSchema>;
 
@@ -55,6 +58,14 @@ export type ModificarMateriaDTO = z.infer<typeof modificarMateriaSchema>;
 
 export const materiaSchema = z.object({ usuarioId: id, idMateria: id });
 export type MateriaDTO = z.infer<typeof materiaSchema>;
+
+// Reemplaza todas las correlativas de una materia por las que se mandan.
+export const guardarCorrelativasSchema = z.object({
+  usuarioId: id,
+  idMateria: id,
+  requisitos: z.array(id).max(50, 'Son demasiadas correlativas.'),
+});
+export type GuardarCorrelativasDTO = z.infer<typeof guardarCorrelativasSchema>;
 
 export const leerPlanSchema = z.object({
   texto: z.string().trim().min(1, 'Pegá el texto del plan.').max(50000, 'El texto es demasiado largo.'),

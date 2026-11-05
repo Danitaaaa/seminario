@@ -7,13 +7,14 @@ import type { RolMiembro } from '../../types/proyectos';
 interface MenuAgregarProps {
     abierto: boolean;
     onSubirArchivo: () => void;
+    onSubirCarpeta: () => void;
     onCrearCarpeta: () => void;
     rol?: RolMiembro | null; // por defecto 'propietario' (material personal)
 }
 
 // Solo se ocupa de mostrar las opciones permitidas cuando está abierto; quién controla
 // el estado "abierto" y qué hace cada acción es responsabilidad del componente padre.
-export function MenuAgregar({ abierto, onSubirArchivo, onCrearCarpeta, rol = 'propietario' }: MenuAgregarProps) {
+export function MenuAgregar({ abierto, onSubirArchivo, onSubirCarpeta, onCrearCarpeta, rol = 'propietario' }: MenuAgregarProps) {
     const puedeSubir = puede(rol, 'archivo.subir');
     const puedeCarpeta = puede(rol, 'carpeta.crear');
     if (!abierto || (!puedeSubir && !puedeCarpeta)) return null;
@@ -24,6 +25,12 @@ export function MenuAgregar({ abierto, onSubirArchivo, onCrearCarpeta, rol = 'pr
                 <button type="button" className="menu-agregar__opcion" onClick={onSubirArchivo}>
                     <Icono src={iconoUpload} tamaño={18} />
                     <span>Subir archivo</span>
+                </button>
+            )}
+            {puedeSubir && puedeCarpeta && (
+                <button type="button" className="menu-agregar__opcion" onClick={onSubirCarpeta}>
+                    <Icono src={iconoUpload} tamaño={18} />
+                    <span>Subir carpeta</span>
                 </button>
             )}
             {puedeCarpeta && (
