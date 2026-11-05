@@ -22,6 +22,11 @@ export function VisorDocx({ contenido, onGuardar, soloLectura = false }: VisorDo
     onUpdate: () => setModificado(true),
   });
 
+  // El permiso puede llegar después de crear el editor (se averigua si el archivo es de un proyecto).
+  useEffect(() => {
+    editor?.setEditable(!soloLectura);
+  }, [editor, soloLectura]);
+
   useEffect(() => {
     if (!editor) return;
     const buffer = contenido.buffer.slice(contenido.byteOffset, contenido.byteOffset + contenido.byteLength) as ArrayBuffer;

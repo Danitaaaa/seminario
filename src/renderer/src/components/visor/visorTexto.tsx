@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { BarraEditor } from './barraEditor';
@@ -25,6 +25,11 @@ export function VisorTexto({ contenido, onGuardar, soloLectura = false }: VisorT
     editable: !soloLectura,
     onUpdate: () => setModificado(true),
   });
+
+  // El permiso puede llegar después de crear el editor (se averigua si el archivo es de un proyecto).
+  useEffect(() => {
+    editor?.setEditable(!soloLectura);
+  }, [editor, soloLectura]);
 
   const guardar = async () => {
     if (!editor || soloLectura) return;
