@@ -19,7 +19,7 @@ describe('exigirAcceso + exigirPermiso (integración)', () => {
     it('proyecto: un editor activo pasa', async () => {
         const { p, ejecutar } = baseFalsa();
         ejecutar.mockResolvedValueOnce([{ rol: 'editor' }]);
-        await expect(exigirAcceso(p as any, 10, 5, 6, 'tarea.crear')).resolves.toBeUndefined();
+        await expect(exigirAcceso(p as any, 10, 5, 6, 'tarea.crear')).resolves.toBe('editor');
         expect(ejecutar.mock.calls[0][1]).toEqual([10, 6]);
     });
 
@@ -28,13 +28,13 @@ describe('exigirAcceso + exigirPermiso (integración)', () => {
         ejecutar.mockResolvedValue([{ rol: 'lector' }]);
         await expect(exigirAcceso(p as any, 10, 5, 6, 'tarea.crear'))
             .rejects.toThrow('No tenés permisos para esta operación');
-        await expect(exigirAcceso(p as any, 10, 5, 6, 'tarea.listar')).resolves.toBeUndefined();
+        await expect(exigirAcceso(p as any, 10, 5, 6, 'tarea.listar')).resolves.toBe('lector');
     });
 
     it('proyecto: un lector sí puede marcar una tarea como hecha', async () => {
         const { p, ejecutar } = baseFalsa();
         ejecutar.mockResolvedValue([{ rol: 'lector' }]);
-        await expect(exigirAcceso(p as any, 10, 5, 6, 'tarea.alternar')).resolves.toBeUndefined();
+        await expect(exigirAcceso(p as any, 10, 5, 6, 'tarea.alternar')).resolves.toBe('lector');
     });
 
     it('proyecto: quien no es miembro (o fue dado de baja) es rechazado', async () => {

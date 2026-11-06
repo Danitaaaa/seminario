@@ -1,6 +1,7 @@
 import { IPersistenciaProyectos } from './interfacesSincronizacion';
 import { exigirPermiso, registrarCambio } from './permisos';
 import type { Accion } from './reglasPermisos';
+import type { RolMiembro } from './entidades';
 
 type Tx = Parameters<typeof registrarCambio>[0];
 type Entidad = Parameters<typeof registrarCambio>[2];
@@ -16,14 +17,14 @@ export async function exigirAcceso(
     idDueno: string | number | null | undefined,
     idUsuario: string | number,
     accion: Accion,
-): Promise<void> {
+): Promise<RolMiembro | null> {
     if (idProyecto == null) {
         if (idDueno == null || String(idDueno) !== String(idUsuario)) {
             throw new Error('No tenés permiso sobre este elemento personal');
         }
-        return;
+        return null;
     }
-    await exigirPermiso(persistencia, idProyecto, idUsuario, accion);
+    return exigirPermiso(persistencia, idProyecto, idUsuario, accion);
 }
 
 // Tabla y PK de las entidades con id_global que se registran por este camino.

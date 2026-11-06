@@ -97,13 +97,13 @@ describe('resolverAsignado', () => {
         expect(ejecutar).not.toHaveBeenCalled();
     });
 
-    it('consulta solo integrantes activos con permiso de edición del proyecto', async () => {
+    it('consulta integrantes activos del proyecto, de cualquier rol (también lectores)', async () => {
         const { tx, ejecutar } = crearPersistenciaFalsa([[{ id_usuario: 8, id_global_usuario: UID_A }]]);
         await resolverAsignado(txConTransaccion(tx), 10, { local: null, global: UID_A });
         const [sql, params] = ejecutar.mock.calls[0];
         expect(sql).toContain('proyecto_miembros');
         expect(sql).toMatch(/fecha_baja IS NULL/i);
-        expect(sql).toMatch(/rol IN \('propietario', 'editor'\)/);
+        expect(sql).not.toMatch(/rol IN/);
         expect(params).toEqual([10, null, UID_A]);
     });
 

@@ -19,7 +19,7 @@ beforeEach(() => {
 describe('exigirAcceso', () => {
     describe('elemento personal (sin proyecto)', () => {
         it.each([[null], [undefined]])('idProyecto=%p: el creador puede operar y no se consulta el rol', async idProyecto => {
-            await expect(exigirAcceso(persistencia, idProyecto, 5, 5, 'proyecto.eliminar')).resolves.toBeUndefined();
+            await expect(exigirAcceso(persistencia, idProyecto, 5, 5, 'proyecto.eliminar')).resolves.toBeNull();
             expect(exigirPermiso).not.toHaveBeenCalled();
         });
 
@@ -30,7 +30,7 @@ describe('exigirAcceso', () => {
         });
 
         it('la acción es irrelevante: el creador siempre puede, aunque sea una acción de lectura', async () => {
-            await expect(exigirAcceso(persistencia, null, 5, 5, 'tarea.listar')).resolves.toBeUndefined();
+            await expect(exigirAcceso(persistencia, null, 5, 5, 'tarea.listar')).resolves.toBeNull();
         });
     });
 
@@ -41,7 +41,7 @@ describe('exigirAcceso', () => {
         });
 
         it('ignora idCreador: no hace falta ser el creador si el rol alcanza', async () => {
-            await expect(exigirAcceso(persistencia, 10, 5, 6, 'tarea.crear')).resolves.toBeUndefined();
+            await expect(exigirAcceso(persistencia, 10, 5, 6, 'tarea.crear')).resolves.toBe('editor');
         });
 
         it('propaga el rechazo de exigirPermiso', async () => {
