@@ -95,6 +95,8 @@ export interface SnapshotSesionEnCurso {
   segundosTranscurridos: number;
   segundosPlanificados: number;
   tiempoPlanificadoCumplido: boolean;
+  // Práctica activa sin cumplir el tiempo: no se puede salir de la sesión ni cerrar la app.
+  salidaBloqueada: boolean;
   pomodoro: EstadoPomodoro;
 }
 
@@ -177,4 +179,5 @@ export interface SesionesEstudioApi {
     snapshot: SnapshotSesionEnCurso | null;
   }>;
   onTickSesionEstudio(callback: (snapshot: SnapshotSesionEnCurso) => void): () => void;
+  onSalidaBloqueadaSesion(callback: (snapshot: SnapshotSesionEnCurso | null) => void): () => void;
 }

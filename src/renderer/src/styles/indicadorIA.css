@@ -1,0 +1,92 @@
+/* src/renderer/src/styles/indicadorIA.css */
+.indicador-ia {
+  /* Sale de la paleta activa: se ve con los colores de cualquier estilo que elija el usuario. */
+  --ia-color: var(--color-primary);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 22px 12px;
+  text-align: center;
+}
+
+.indicador-ia__orbita {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  color: var(--ia-color);
+}
+
+.indicador-ia__anillo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--ia-color) 18%, transparent);
+  border-top-color: var(--ia-color);
+  animation: indicador-ia-girar 1s linear infinite;
+}
+
+.indicador-ia__chispa {
+  animation: indicador-ia-latir 1.4s ease-in-out infinite;
+}
+
+.indicador-ia__mensaje {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.indicador-ia__puntos span {
+  display: inline-block;
+  animation: indicador-ia-parpadear 1.2s ease-in-out infinite;
+}
+.indicador-ia__puntos span:nth-child(2) { animation-delay: 0.2s; }
+.indicador-ia__puntos span:nth-child(3) { animation-delay: 0.4s; }
+
+.indicador-ia__detalle {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+.indicador-ia__barra {
+  position: relative;
+  width: min(260px, 80%);
+  height: 4px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ia-color) 15%, transparent);
+}
+.indicador-ia__barra span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  border-radius: 999px;
+  background: var(--ia-color);
+  animation: indicador-ia-barra 1.4s ease-in-out infinite;
+}
+
+@keyframes indicador-ia-girar { to { transform: rotate(360deg); } }
+@keyframes indicador-ia-latir {
+  0%, 100% { transform: scale(0.85); opacity: 0.7; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+@keyframes indicador-ia-parpadear {
+  0%, 80%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
+}
+@keyframes indicador-ia-barra {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(260%); }
+}
+
+/* Quien pidió menos movimiento en su sistema ve algo quieto. */
+@media (prefers-reduced-motion: reduce) {
+  .indicador-ia__anillo,
+  .indicador-ia__chispa,
+  .indicador-ia__puntos span,
+  .indicador-ia__barra span { animation: none; }
+  .indicador-ia__barra span { width: 100%; opacity: 0.5; }
+}

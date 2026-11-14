@@ -239,6 +239,11 @@
   box-shadow: 0 24px 70px rgb(25 35 52 / 24%);
 }
 
+/* Con maxHeight + overflow en el modal, los hijos no se comprimen: el modal scrollea entero */
+.modal > * {
+  flex-shrink: 0;
+}
+
 .modal h2 {
   margin: 0 0 5px;
   color: var(--color-text);
@@ -252,6 +257,8 @@
 }
 
 .modal input,
+.modal select,
+.modal textarea,
 .createForm input,
 .createForm textarea {
   width: 100%;
@@ -263,7 +270,18 @@
   font: inherit;
 }
 
+.modal select {
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+
+.modal textarea {
+  resize: vertical;
+}
+
 .modal input:focus,
+.modal select:focus,
+.modal textarea:focus,
 .createForm input:focus,
 .createForm textarea:focus {
   border-color: var(--color-primary-light);

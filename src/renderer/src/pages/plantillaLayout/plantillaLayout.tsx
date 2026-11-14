@@ -7,6 +7,7 @@ import { BarraLateral } from "../../components/layout/barraLateral";
 import { BarraSuperior } from "../../components/layout/barraSuperior";
 import { PanelAyuda } from "../../components/layout/panelAyuda";
 import { cerrarSesion } from "../../../lib/sesion";
+import { usarBloqueoSesion } from "../../components/sesionEstudio/bloqueoPracticaActiva";
 
 interface PlantillaLayoutProps {
   titulo?: string; // si no se pasa, la pantalla pone su propio título (ej. el saludo del inicio)
@@ -27,10 +28,13 @@ export function PlantillaLayout({
   const navigate = useNavigate();
 
   // Si la pantalla no maneja la navegación, se va a la ruta del ítem.
-  const navegar = onNavegar ?? ((id: string) => {
+  // Práctica activa: durante la sesión no se navega ni se cierra sesión (se avisa por qué).
+  const { bloqueo, avisarBloqueo } = usarBloqueoSesion();
+  const navegarItem = onNavegar ?? ((id: string) => {
     if (id === 'cerrar-sesion') cerrarSesion();
     navigate(rutaDe(id));
   });
+  const navegar = (id: string) => (bloqueo ? avisarBloqueo() : navegarItem(id));
 
   // La ayuda es igual en todas las pantallas; el resto de las acciones las maneja cada pantalla.
   const accionar = (id: string) => (id === 'ayuda' ? setMostrarAyuda(true) : onAccion?.(id));

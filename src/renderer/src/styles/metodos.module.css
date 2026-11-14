@@ -129,19 +129,14 @@
   color: var(--color-primary);
 }
 
-.blue {
-  background: var(--color-frost-claro);
-  color: var(--color-secondary);
-}
-
-.lavender {
-  background: var(--color-frost-claro);
-  color: var(--color-accent);
-}
-
+/* Todos los íconos de métodos usan el color principal de la estética que eligió el usuario
+   (secondary y accent no siempre combinan con todas las paletas). Se dejan las clases por si
+   más adelante se quiere diferenciar cada método. */
+.blue,
+.lavender,
 .slate {
   background: var(--color-frost-claro);
-  color: var(--color-text-secondary);
+  color: var(--color-primary);
 }
 
 .methodCopy,

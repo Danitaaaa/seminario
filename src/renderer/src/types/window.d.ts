@@ -39,10 +39,14 @@ import type { SesionesEstudioApi } from './sesionesEstudio';
 import type { SpotifyApi } from './spotify';
 import type { MateriasApi } from './materias';
 import type { CuadernosApi } from './cuadernos';
+import type { MaterialIAApi } from './ia';
+import type { ChatIAApi } from './chatIA';
+// Flashcards con IA, guía de preguntas y plan de estudios con IA (src/preload/apis/materialIA.ts).
+import type { MaterialIAExtraApi } from '../../../preload/apis/materialIA';
 
 declare global {
   interface Window {
-    api: SesionesEstudioApi & SpotifyApi & MateriasApi & CuadernosApi & {
+    api: SesionesEstudioApi & SpotifyApi & MateriasApi & CuadernosApi & MaterialIAApi & MaterialIAExtraApi & ChatIAApi & {
       // Gestion de material de estudio
       crearNodo: (datos: { nombre: string; idPadre: number | null }) => Promise<Nodo>;
       modificarNodo: (datos: { id: number; nombre: string; idMateria?: number | null }) => Promise<Nodo>;

@@ -123,6 +123,17 @@
   gap: 10px;
 }
 
+/* La hoja va centrada y, si es más alta que el recuadro, se desplaza adentro sin salirse del visor. */
+.visor-pdf__documento {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 12px 0;
+}
+
 .visor-pdf__pagina {
   position: relative;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);

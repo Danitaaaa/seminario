@@ -1,6 +1,6 @@
 import {
   Home, Library, BookOpen, CalendarClock, List, Briefcase, CalendarRange,
-  CalendarDays, MessageCircle, Settings, LogOut, ChartColumn,
+  CalendarDays, Sparkles, Settings, LogOut, ChartColumn,
   CircleHelp, GraduationCap,
 } from "lucide-react";
 import type { AccionSuperior, ItemNavegacion } from '../types/layout';
@@ -17,7 +17,7 @@ export const itemsPrincipales: ItemNavegacion[] = [
   { id: "cronograma", etiqueta: "Cronograma", icono: CalendarRange },
   { id: "calendario", etiqueta: "Calendario", icono: CalendarDays },
   { id: "estadisticas", etiqueta: "Estadísticas", icono: ChartColumn},
-  { id: "chat", etiqueta: "Chat", icono: MessageCircle },
+  { id: "chat", etiqueta: "IA", icono: Sparkles },
 ];
 
 export const itemsInferiores: ItemNavegacion[] = [
@@ -42,6 +42,7 @@ const rutasPorItem: Record<string, string> = {
   metodos: '/metodos',
   proyectos: '/proyectos',
   estadisticas: '/estadisticas',
+  chat: '/chat',
   'cerrar-sesion': '/',
   ajustes: '/ajustes',
 };

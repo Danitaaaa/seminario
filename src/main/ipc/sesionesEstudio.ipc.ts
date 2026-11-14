@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import { ZodType } from 'zod';
 import { SesionesEstudio } from '../administracionDePersistencia/sesionesEstudio';
 import { ProcesoSesionEstudio } from '../logicaNoPersistente/procesoSesionEstudio/procesoSesionEstudio';
+import { MENSAJE_SALIDA_BLOQUEADA } from '../logicaNoPersistente/procesoSesionEstudio/practicaActiva';
 import { SesionEstudio } from '../logicaPersistente/gestionDeSesionEstudio/entidades';
 import {
   actualizarObjetivoSchema,
@@ -81,8 +82,15 @@ export function registerSesionesEstudioIpc(
   accionSobreSesion('sesionesEstudio:pausar', (u, id) => sesiones.pausar(u, id));
   accionSobreSesion('sesionesEstudio:reanudar', (u, id) => sesiones.reanudar(u, id));
 
+  // Práctica activa: hasta cumplir el tiempo no se puede finalizar, eliminar ni cambiarle
+  // la duración o los métodos (sería otra forma de salir antes).
+  const exigirSalidaPermitida = (idSesion: number) => {
+    if (proceso.salidaBloqueada(idSesion)) throw new Error(MENSAJE_SALIDA_BLOQUEADA);
+  };
+
   ipcMain.handle('sesionesEstudio:finalizar', async (_event, datos: unknown) => {
     const { usuarioId, datos: { idSesion } } = validar(idSesionSchema, datos);
+    exigirSalidaPermitida(idSesion);
     const sesion = await sesiones.finalizar(usuarioId, idSesion);
     proceso.dejarDeSeguir();
     return aTransportable(sesion);
@@ -90,11 +98,13 @@ export function registerSesionesEstudioIpc(
 
   ipcMain.handle('sesionesEstudio:modificar', async (_event, datos: unknown) => {
     const { usuarioId, datos: validado } = validar(modificarSesionEstudioSchema, datos);
+    if (validado.duracion !== undefined || validado.idsMetodosEstudio !== undefined) exigirSalidaPermitida(validado.idSesion);
     return seguir(await sesiones.modificar(usuarioId, validado));
   });
 
   ipcMain.handle('sesionesEstudio:eliminar', async (_event, datos: unknown) => {
     const { usuarioId, datos: { idSesion } } = validar(idSesionSchema, datos);
+    exigirSalidaPermitida(idSesion);
     await sesiones.eliminar(usuarioId, idSesion);
   });
 

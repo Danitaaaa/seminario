@@ -23,6 +23,8 @@ import { sesionesEstudioApi } from './apis/sesionesEstudio';
 import { spotifyApi } from './apis/spotify';
 import { vozApi } from './apis/voz';
 
+import { iaApi } from './apis/ia';
+import { materialIAExtraApi } from './apis/materialIA';
 
 contextBridge.exposeInMainWorld('api', {
   ...nodosApi,
@@ -48,4 +50,6 @@ contextBridge.exposeInMainWorld('api', {
   ...sesionesEstudioApi,
   ...spotifyApi,
   ...vozApi,
+  ...iaApi,
+  ...materialIAExtraApi
 });

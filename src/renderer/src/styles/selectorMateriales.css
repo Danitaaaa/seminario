@@ -1,0 +1,96 @@
+/* Elegir archivos de Material para la IA: usa las clases de "Abrir desde Material" (sesionesEstudio.css)
+   y suma la casilla de cada archivo. Funciona con cualquier paleta: solo usa variables del tema. */
+
+.selector-material {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Los modales de flashcards y guía estiran todos los <input> y les ponen borde: acá el buscador
+   ya tiene su propio borde, así que el input va limpio. */
+.selector-material .abrir-material__buscador input {
+  width: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.selector-material .abrir-material__buscador:focus-within {
+  border-color: var(--color-primary);
+}
+
+.selector-material__contador {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--tamano-sm);
+}
+
+.selector-material__lista {
+  max-height: 280px;
+}
+
+.selector-material__todos {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 10px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.selector-material__todos:hover:not(:disabled) {
+  background: var(--color-frost-suave, var(--color-background));
+  color: var(--color-text);
+}
+
+.selector-material__casilla {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+  color: var(--color-white);
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.selector-material__casilla--tildada {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.selector-material__archivo--elegido,
+button.selector-material__archivo--elegido:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.selector-material__archivo:focus-visible,
+.selector-material__todos:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.selector-material__ubicacion {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--tamano-xs);
+  text-overflow: ellipsis;
+}
+
+.selector-material button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

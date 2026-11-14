@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events';
 import { SesionesEstudio } from '../../administracionDePersistencia/sesionesEstudio';
 import { SesionEstudio } from '../../logicaPersistente/gestionDeSesionEstudio/entidades';
 import { calcularEstadoPomodoro, EstadoPomodoro } from './pomodoro';
+import { tienePracticaActiva } from './practicaActiva';
 
 // Canal por el que el main avisa al renderer cada segundo.
 export const CANAL_TICK_SESION = 'sesionEstudio:tick';
@@ -17,6 +18,8 @@ export interface SnapshotSesionEnCurso {
   segundosTranscurridos: number;
   segundosPlanificados: number;
   tiempoPlanificadoCumplido: boolean;
+  // Práctica activa sin cumplir el tiempo: no se puede salir de la sesión ni cerrar la app.
+  salidaBloqueada: boolean;
   pomodoro: EstadoPomodoro;
 }
 
@@ -99,13 +102,15 @@ export class ProcesoSesionEstudio extends EventEmitter {
       Math.floor((hasta - new Date(sesion.fechaInicio).getTime()) / 1000) - sesion.segundosPausados
     );
     const segundosPlanificados = sesion.duracion * 60;
+    const tiempoPlanificadoCumplido = segundosTranscurridos >= segundosPlanificados;
 
     return {
       idSesion: sesion.idSesion,
       pausada: sesion.pausada,
       segundosTranscurridos,
       segundosPlanificados,
-      tiempoPlanificadoCumplido: segundosTranscurridos >= segundosPlanificados,
+      tiempoPlanificadoCumplido,
+      salidaBloqueada: !tiempoPlanificadoCumplido && tienePracticaActiva(sesion.metodosEstudio),
       pomodoro: calcularEstadoPomodoro(
         {
           pomodoroMin: sesion.pomodoroMin,
@@ -116,6 +121,14 @@ export class ProcesoSesionEstudio extends EventEmitter {
         ahora
       ),
     };
+  }
+
+  // ¿La sesión seguida es de Práctica activa y todavía no cumplió el tiempo?
+  // Sin idSesion: cualquier sesión (para cerrar la app). Con idSesion: solo esa (para finalizarla o editarla).
+  salidaBloqueada(idSesion?: number): boolean {
+    const snapshot = this.obtenerSnapshot();
+    if (!snapshot?.salidaBloqueada) return false;
+    return idSesion === undefined || snapshot.idSesion === idSesion;
   }
 
   // Cada segundo calcula el snapshot y lo envía al renderer. Si el Pomodoro llegó a cero,

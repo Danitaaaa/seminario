@@ -659,6 +659,40 @@
   outline-offset: 2px;
 }
 
+/* Práctica activa: aviso mientras no se puede salir de la sesión, y modales de aviso. */
+.sesion__aviso.sesion__aviso--bloqueo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: color-mix(in srgb, var(--color-warning) 14%, var(--color-surface));
+  color: var(--color-text);
+}
+
+.sesion__aviso--bloqueo svg {
+  flex-shrink: 0;
+  color: var(--color-warning);
+}
+
+.practica-activa__icono {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-warning) 18%, var(--color-surface));
+  color: var(--color-warning);
+}
+
+.practica-activa__no-mostrar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
 .sesion__aviso {
   margin: 0;
   padding: 8px 14px;

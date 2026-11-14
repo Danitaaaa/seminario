@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Search, X } from 'lucide-react';
 import type { Archivo, Nodo } from '../../types/nodo';
+
 import type { Materia } from '../../types/sesionesEstudio';
 import { resolverIconoNodo } from '../../utils/iconoNodo';
 import { Icono } from '../comunes/icono';
@@ -11,10 +12,13 @@ const ID_RAIZ_MATERIAL = 1;
 // Carpeta donde se guardan los Word de las sesiones: no se ofrece para abrir.
 const CARPETA_SESIONES = 'Sesiones de estudio';
 
+
 type Miga = { id: number; nombre: string };
 
 interface ModalAbrirMaterialProps {
+
   materia?: Materia | null;
+
   onElegir: (archivo: Archivo) => void;
   onCerrar: () => void;
 }
@@ -40,17 +44,20 @@ export function ModalAbrirMaterial({ materia, onElegir, onCerrar }: ModalAbrirMa
     setNodos(null);
     setError(null);
     window.api
+
       .listarContenido({
         idPadre: idCarpeta,
         ordenarPor: 'nombre',
         direccion: 'ASC',
         idMateria: filtrarPorMateria ? materia?.idMateria : undefined,
       })
+
       .then((lista) => activo && setNodos(lista))
       .catch((e) => activo && setError(extraerMensajeError(e, 'No se pudo cargar el contenido de Material.')));
     return () => {
       activo = false;
     };
+
   }, [idCarpeta, filtrarPorMateria, materia?.idMateria]);
 
   useEffect(() => {
@@ -144,6 +151,7 @@ export function ModalAbrirMaterial({ materia, onElegir, onCerrar }: ModalAbrirMa
         {!error && nodos === null && <p className="abrir-material__mensaje">Cargando…</p>}
         {!error && nodos !== null && visibles.length === 0 && (
           <p className="abrir-material__mensaje">
+
             {busqueda.trim()
               ? 'No hay resultados para esa búsqueda.'
               : filtrarPorMateria

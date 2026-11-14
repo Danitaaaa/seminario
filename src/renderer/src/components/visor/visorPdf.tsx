@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, KeyboardEvent } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
@@ -12,17 +12,21 @@ interface VisorPdfProps {
   contenido: Uint8Array;
   onGuardar: (bytes: Uint8Array) => Promise<void>;
   soloLectura?: boolean;
+  // Ancho fijo de la página. Si no se pasa, el visor se ajusta solo al espacio que tiene.
   ancho?: number;
 }
 
-const ANCHO_PAGINA = 760;
+const ANCHO_PAGINA = 760; // tamaño de hoja normal (el mismo máximo que usa Sesión de estudio)
+const MARGEN_PAGINA = 48; // aire a los costados para que la sombra de la hoja no quede cortada
 const TAMANIO_TEXTO = 12; // en puntos del PDF
 
 type Borrador = { x: number; y: number; texto: string };
 
 // Muestra el PDF con react-pdf y lo edita con pdf-lib: rotar, eliminar páginas y escribir texto sobre la página.
-export function VisorPdf({ contenido, onGuardar, soloLectura = false, ancho = ANCHO_PAGINA }: VisorPdfProps) {
+
+export function VisorPdf({ contenido, onGuardar, soloLectura = false, ancho: anchoFijo }: VisorPdfProps) {
   const { confirmar } = usarAvisos();
+
   const [bytes, setBytes] = useState(contenido);
   const [paginas, setPaginas] = useState(0);
   const [actual, setActual] = useState(1);
@@ -31,6 +35,22 @@ export function VisorPdf({ contenido, onGuardar, soloLectura = false, ancho = AN
   const [escala, setEscala] = useState(1); // píxeles en pantalla por punto del PDF
   const [modificado, setModificado] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Sin ancho fijo, la hoja mide lo que entra en el recuadro (hasta el tamaño normal),
+  // así no se sale del visor. Se vuelve a medir si cambia el tamaño de la ventana.
+  const recuadro = useRef<HTMLDivElement>(null);
+  const [anchoMedido, setAnchoMedido] = useState(ANCHO_PAGINA);
+  useEffect(() => {
+    const elemento = recuadro.current;
+    if (anchoFijo !== undefined || !elemento) return;
+    const medir = () =>
+      setAnchoMedido(Math.max(280, Math.min(ANCHO_PAGINA, Math.floor(elemento.clientWidth - MARGEN_PAGINA))));
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(elemento);
+    return () => observador.disconnect();
+  }, [anchoFijo]);
+  const ancho = anchoFijo ?? anchoMedido;
 
   // pdf.js se queda con el buffer que recibe, por eso se le pasa una copia.
   const archivo = useMemo(() => ({ data: bytes.slice() }), [bytes]);
@@ -128,7 +148,7 @@ export function VisorPdf({ contenido, onGuardar, soloLectura = false, ancho = AN
 
       {error && <p className="visor__nota" onClick={() => setError(null)}>{error}</p>}
 
-      <div className="visor-pdf__documento">
+      <div className="visor-pdf__documento" ref={recuadro}>
         <Document
           file={archivo}
           onLoadSuccess={({ numPages }) => {

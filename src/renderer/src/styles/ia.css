@@ -1,0 +1,241 @@
+
+.ia-modal {
+  background: var(--color-background);
+  color: var(--color-text);
+  border-radius: 12px;
+  width: min(560px, 94vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  padding: 16px 20px;
+  box-shadow: 0 12px 32px rgba(30, 30, 30, 0.25);
+  font-family: var(--fuente-body);
+}
+
+.ia-modal--grande {
+  width: min(900px, 94vw);
+  height: 92vh;
+}
+
+/*Elegir tipo  */
+
+.ia-elegir {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espacio-md);
+}
+
+.ia-elegir__texto {
+  margin: 0;
+}
+
+.ia-elegir__opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-sm);
+}
+
+.ia-elegir__opcion {
+  padding: var(--espacio-sm) var(--espacio-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.ia-elegir__opcion--activa {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.ia-elegir__indicaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.ia-elegir__indicaciones textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  resize: vertical;
+}
+
+.ia-elegir__nota {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.ia-elegir__acciones {
+  display: flex;
+  gap: var(--espacio-sm);
+}
+
+/* Progreso */
+
+/* Mientras genera: la animación de indicadorIA.css (en el centro) y "Cancelar generación" abajo. */
+.ia-progreso {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+}
+
+.ia-progreso > .visor-boton {
+  align-self: flex-start;
+}
+
+/* Pantalla previa*/
+
+.ia-previa {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+}
+
+.ia-previa__origen {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.ia-previa__cuerpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: var(--espacio-xs);
+}
+
+.ia-previa__faltantes {
+  margin: 0;
+  padding-left: 18px;
+  font-size: var(--tamano-sm);
+  color: var(--color-error);
+}
+
+.ia-previa__pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espacio-sm);
+}
+
+/* Editores */
+
+.ia-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+}
+
+.ia-editor input:not([type='radio']),
+.ia-editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.ia-editor textarea {
+  resize: vertical;
+}
+
+.ia-editor__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--tamano-sm);
+}
+
+.ia-editor__subtitulo {
+  margin: var(--espacio-sm) 0 0;
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-bold);
+}
+
+.ia-editor__fila {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+}
+
+.ia-editor__bloque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+  margin: 0;
+  padding: var(--espacio-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+}
+
+.ia-editor__quitar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.ia-editor__quitar:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ia-editor__agregar,
+.ia-editor__quitar-bloque {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 2px 0;
+  font-size: var(--tamano-sm);
+}
+
+.ia-editor__quitar-bloque {
+  color: var(--color-error);
+}
+
+.ia-mapa,
+.ia-mapa ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+}
+
+.ia-mapa {
+  padding-left: 0;
+}
+
+.ia-mapa ul {
+  border-left: 2px solid var(--color-border);
+  margin-top: var(--espacio-xs);
+}
+
+.ia-mapa__raiz {
+  font-weight: var(--peso-bold);
+}

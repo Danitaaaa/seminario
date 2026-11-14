@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, FileText, ListTree, PanelRightClose } from 'lucide-react';
+import { ArrowLeft, BookOpen, FileText, ListTree, Lock, PanelRightClose } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { CartelError } from '../../components/comunes/cartelError';
 import { EditorSesion } from '../../components/sesionEstudio/editorSesion';
@@ -10,10 +10,12 @@ import { TarjetaLateral } from '../../components/sesionEstudio/tarjetaLateral';
 import { TarjetaProximaSesion } from '../../components/sesionEstudio/tarjetaProximaSesion';
 import { PanelMetodos } from '../../components/sesionEstudio/panelMetodos';
 import { ModalConfirmar } from '../../components/sesionEstudio/modalConfirmar';
+import { ModalAvisoPracticaActiva } from '../../components/sesionEstudio/modalAvisoPracticaActiva';
 import { ReproductorSpotify } from '../../components/spotify/reproductorSpotify';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { obtenerUsuarioId } from '../../../lib/sesion';
+import { tienePracticaActiva } from '../../utils/metodosEstudio';
 import type { FasePomodoro, SesionEstudio } from '../../types/sesionesEstudio';
 import { ETIQUETA_FASE, extraerMensajeError, formatearTiempo, segundosEstudiados } from './utilidades';
 import { useSesionEnCurso } from './useSesionEnCurso';
@@ -35,6 +37,9 @@ export function SesionEstudioPage() {
   const [cargandoProxima, setCargandoProxima] = useState(true);
   const [panelVisible, setPanelVisible] = usarPreferencia('sesion-panel-visible', true);
   const { snapshot, setSnapshot } = useSesionEnCurso(usuarioId);
+  // Práctica activa: aviso antes de iniciar (se puede ocultar para siempre) y bloqueo mientras dura.
+  const [avisoPracticaOculto, setAvisoPracticaOculto] = usarPreferencia(`aviso-practica-activa-oculto:${usuarioId}`, false);
+  const [respuestaAviso, setRespuestaAviso] = useState<((empezar: boolean) => void) | null>(null);
 
   // Abre la sesión (actualiza su último acceso en la base).
   const cargar = useCallback(async () => {
@@ -79,8 +84,22 @@ export function SesionEstudioPage() {
     }
   }
 
-  const iniciar = () =>
-    accion(() => window.api.iniciarSesionEstudio(usuarioId, idSesion), 'Se inició la sesión. ¡A estudiar!', 'No se pudo iniciar la sesión.');
+  // Si la sesión es de Práctica activa, antes de iniciarla se avisa que no se va a poder salir.
+  function confirmarPracticaActiva(): Promise<boolean> {
+    if (!sesion || !tienePracticaActiva(sesion.metodosEstudio) || avisoPracticaOculto) return Promise.resolve(true);
+    return new Promise((resolver) => setRespuestaAviso(() => resolver));
+  }
+
+  function responderAviso(empezar: boolean, noVolverAMostrar = false) {
+    if (empezar && noVolverAMostrar) setAvisoPracticaOculto(true);
+    respuestaAviso?.(empezar);
+    setRespuestaAviso(null);
+  }
+
+  async function iniciar(): Promise<SesionEstudio | null> {
+    if (!(await confirmarPracticaActiva())) return null;
+    return accion(() => window.api.iniciarSesionEstudio(usuarioId, idSesion), 'Se inició la sesión. ¡A estudiar!', 'No se pudo iniciar la sesión.');
+  }
   const pausar = () =>
     accion(() => window.api.pausarSesionEstudio(usuarioId, idSesion), 'Sesión pausada.', 'No se pudo pausar la sesión.');
   const reanudar = () =>
@@ -161,6 +180,9 @@ export function SesionEstudioPage() {
   const enCurso = sesion?.estado === 'en_curso';
   const puedeIniciar = sesion?.estado === 'sin_empezar' || sesion?.estado === 'atrasada';
   const snapshotPropio = snapshot && sesion && snapshot.idSesion === sesion.idSesion ? snapshot : null;
+  // Práctica activa sin cumplir el tiempo: no se puede volver a la lista ni finalizar.
+  const salidaBloqueada = enCurso && !!snapshotPropio?.salidaBloqueada;
+  const restante = snapshotPropio ? Math.max(0, snapshotPropio.segundosPlanificados - snapshotPropio.segundosTranscurridos) : 0;
 
   return (
     <PlantillaLayout titulo="Sesiones de estudio" idActivo="sesiones" usuario={{ nombre: 'Usuario' }}>
@@ -171,7 +193,14 @@ export function SesionEstudioPage() {
         {sesion && (
           <>
             <div className="sesion__cabecera">
-              <button type="button" className="sesion__volver" aria-label="Volver a la lista" title="Volver" onClick={() => navigate('/sesiones')}>
+              <button
+                type="button"
+                className="sesion__volver"
+                aria-label="Volver a la lista"
+                title={salidaBloqueada ? 'Práctica activa: vas a poder salir al completar el tiempo' : 'Volver'}
+                disabled={salidaBloqueada}
+                onClick={() => navigate('/sesiones')}
+              >
                 <ArrowLeft size={16} />
               </button>
               <span className="sesion__dato">
@@ -206,7 +235,8 @@ export function SesionEstudioPage() {
               <button
                 type="button"
                 className="sesion__boton sesion__boton--claro"
-                disabled={!enCurso || ocupado}
+                disabled={!enCurso || ocupado || salidaBloqueada}
+                title={salidaBloqueada ? 'Vas a poder finalizarla al completar el tiempo planificado' : undefined}
                 onClick={() => setConfirmarFin(true)}
               >
                 Finalizar sesión
@@ -223,6 +253,17 @@ export function SesionEstudioPage() {
                 </button>
               )}
             </div>
+
+            {salidaBloqueada && (
+              <p className="sesion__aviso sesion__aviso--bloqueo" role="status">
+                <Lock size={15} />
+                <span>
+                  <strong>Práctica activa:</strong> no podés salir de la sesión, cerrar sesión ni cerrar la app hasta
+                  completar los {sesion.duracion} minutos. Faltan {formatearTiempo(restante)}.
+                  {sesion.pausada && ' La sesión está pausada: el tiempo no avanza hasta que la reanudes.'}
+                </span>
+              </p>
+            )}
 
             {snapshotPropio?.tiempoPlanificadoCumplido && enCurso && (
               <p className="sesion__aviso">Cumpliste los {sesion.duracion} minutos planificados. Podés finalizar la sesión cuando quieras.</p>
@@ -289,6 +330,14 @@ export function SesionEstudioPage() {
           </>
         )}
       </div>
+
+      {respuestaAviso && sesion && (
+        <ModalAvisoPracticaActiva
+          duracion={sesion.duracion}
+          onEmpezar={(noVolverAMostrar) => responderAviso(true, noVolverAMostrar)}
+          onCancelar={() => responderAviso(false)}
+        />
+      )}
 
       {confirmarFin && sesion && (
         <ModalConfirmar

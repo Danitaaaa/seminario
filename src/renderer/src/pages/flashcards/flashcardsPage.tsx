@@ -1,5 +1,6 @@
+// src/renderer/src/pages/flashcards/flashcardsPage.tsx
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BookOpen, Check, ChevronRight, Pencil, RotateCcw, Search, SkipForward, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, ChevronRight, Pencil, RotateCcw, Search, SkipForward, Sparkles, Trash2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Button } from '../../components/ui/button/button';
@@ -7,8 +8,10 @@ import { CartelError } from '../../components/comunes/cartelError';
 import { TextoConFormulas } from '../../components/comunes/textoConFormulas';
 import { LARGO_PREGUNTA, LARGO_RESPUESTA, pegarConFormulas, tieneFormulas } from '../../utils/formulas';
 import { TarjetaFlashcard } from '../../components/flashcards/tarjetaFlashcard';
+import { ModalFlashcardsIA } from '../../components/materialIA/modalFlashcardsIA';
 import type { Deck, Flashcard } from '../../types/flashcards';
 import { ESTILOS_TARJETA, usarEstiloFlashcards, type EstiloTarjeta } from '../../hooks/usarEstiloFlashcards';
+import { usarArchivosMaterial } from '../../hooks/usarArchivosMaterial';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import styles from '../../styles/flashcards.module.css';
 import { hablar } from '../../voz/narrador';
@@ -40,6 +43,9 @@ export function FlashcardsPage() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
   const [errorFormulario, setErrorFormulario] = useState('');
+  // Generar flashcards con IA: los archivos de Material solo se cargan cuando se abre el modal.
+  const [modalIAAbierto, setModalIAAbierto] = useState(false);
+  const { archivos, cargando: cargandoArchivos } = usarArchivosMaterial(modalIAAbierto);
 
   const cargarMazos = useCallback(async () => {
     try {
@@ -182,12 +188,15 @@ export function FlashcardsPage() {
             <h2 className={styles.heading}>Tus mazos</h2>
             <p className={styles.description}>Organizá tus tarjetas y repasá a tu ritmo.</p>
           </div>
-          <Button onClick={() => {
-            setDeckEditando(null);
-            setNombre('');
-            setErrorFormulario('');
-            setModalAbierto(true);
-          }}>＋ Crear nuevo mazo</Button>
+          <div className={styles.actions}>
+            <Button variant="secondary" onClick={() => setModalIAAbierto(true)}><Sparkles size={17} /> Generar con IA</Button>
+            <Button onClick={() => {
+              setDeckEditando(null);
+              setNombre('');
+              setErrorFormulario('');
+              setModalAbierto(true);
+            }}>＋ Crear nuevo mazo</Button>
+          </div>
         </header>
         <label className={styles.search}>
           <Search size={19} aria-hidden="true" />
@@ -269,6 +278,14 @@ export function FlashcardsPage() {
             </div>
           </form>
         </div>
+      )}
+      {modalIAAbierto && (
+        <ModalFlashcardsIA
+          archivos={archivos}
+          cargandoArchivos={cargandoArchivos}
+          onCerrar={() => setModalIAAbierto(false)}
+          onGuardado={() => void cargarMazos()}
+        />
       )}
     </PlantillaLayout>
   );

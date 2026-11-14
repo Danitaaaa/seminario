@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, Brain, ChevronRight, ClipboardList, LayoutGrid, List, Maximize2, RotateCcw, type LucideIcon } from 'lucide-react';
+import { BookOpen, Brain, ChevronRight, ClipboardList, FileText, LayoutGrid, List, Maximize2, RotateCcw, ScrollText, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import styles from '../../styles/metodos.module.css';
@@ -28,8 +28,10 @@ export function MetodosPage() {
   const metodos = [
     { nombre: 'Flashcards', detalle: 'Aprendé con tarjetas de pregunta y respuesta.', icono: BookOpen, ruta: '/flashcards', color: 'indigo' },
     { nombre: 'Repetición Espaciada', detalle: 'Repasá cada tema en el momento indicado.', icono: RotateCcw, ruta: '/repeticion-espaciada', color: 'blue' },
-    { nombre: 'Cuestionarios', detalle: 'Poné a prueba lo que ya aprendiste.', icono: ClipboardList, ruta: '/proximamente/cuestionarios', color: 'lavender' },
-    { nombre: 'Mapas Mentales', detalle: 'Conectá ideas y organizá conceptos.', icono: Brain, ruta: '/proximamente/mapas-mentales', color: 'slate' },
+    { nombre: 'Resúmenes', detalle: 'Repasá lo importante de tu material.', icono: ScrollText, ruta: '/resumenes', color: 'indigo' },
+    { nombre: 'Cuestionarios', detalle: 'Poné a prueba lo que ya aprendiste.', icono: ClipboardList, ruta: '/cuestionarios', color: 'lavender' },
+    { nombre: 'Mapas Mentales', detalle: 'Conectá ideas y organizá conceptos.', icono: Brain, ruta: '/mapas-mentales', color: 'slate' },
+    { nombre: 'Guías de preguntas', detalle: 'Generá preguntas de repaso con IA a partir de tu material.', icono: FileText, ruta: '/guias-preguntas', color: 'blue' },
   ] as const;
 
   function cambiarVista(valor: Vista): void {

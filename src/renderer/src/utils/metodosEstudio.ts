@@ -13,3 +13,7 @@ export function claseDeMetodo(nombre: string): ClaseMetodo {
   if (n.includes('practica')) return 'practica-activa';
   return 'otro';
 }
+
+// Práctica activa: una vez iniciada, no se puede salir de la sesión hasta cumplir la duración.
+export const tienePracticaActiva = (metodos: ReadonlyArray<{ nombre: string }>) =>
+  metodos.some((m) => claseDeMetodo(m.nombre) === 'practica-activa');

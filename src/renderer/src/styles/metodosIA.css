@@ -1,0 +1,615 @@
+/* Métodos con IA: resúmenes, mapas mentales y cuestionarios. Usa las variables del tema (issue.ts). */
+
+/* ---- Listas ---- */
+
+.metodos-ia__boton-icono {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metodos-ia__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+}
+
+.metodos-ia__eliminar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.metodos-ia__eliminar:hover {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+/* ---- Encabezado de un material ---- */
+
+.metodos-ia__encabezado {
+  margin-bottom: var(--espacio-lg);
+}
+
+.metodos-ia__encabezado h2 {
+  margin: 0 0 6px;
+  font-size: 1.35rem;
+  color: var(--color-text);
+}
+
+.metodos-ia__encabezado p {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-light);
+}
+
+/* ---- Resumen ---- */
+
+.metodos-ia__documento {
+  max-width: 860px;
+  line-height: 1.6;
+}
+
+.metodos-ia__ideas {
+  padding: var(--espacio-md) var(--espacio-lg);
+  margin-bottom: var(--espacio-lg);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radio-sm);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+
+.metodos-ia__ideas h3,
+.metodos-ia__seccion h3 {
+  margin: 0 0 var(--espacio-sm);
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.metodos-ia__ideas ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.metodos-ia__seccion {
+  margin-bottom: var(--espacio-lg);
+}
+
+.metodos-ia__seccion p {
+  margin: 0 0 var(--espacio-sm);
+  color: var(--color-text);
+}
+
+/* ---- Mapa mental ---- */
+
+.metodos-ia__pagina-mapa {
+  height: 100%;
+}
+
+.metodos-ia__panel-mapa {
+  display: flex;
+  flex-direction: column;
+  min-height: 560px;
+  flex: 1;
+}
+
+.mapa-dibujo {
+  position: relative;
+  flex: 1;
+  min-height: 480px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--color-text) 10%, transparent) 1px, transparent 1px) 0 0 / 22px 22px,
+    var(--color-background);
+  overflow: hidden;
+}
+
+.mapa-dibujo__lienzo {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.mapa-dibujo__lienzo:active {
+  cursor: grabbing;
+}
+
+.mapa-dibujo__controles {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+}
+
+.mapa-dibujo__controles button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.mapa-dibujo__linea {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+
+.mapa-dibujo__nodo rect {
+  stroke-width: 2;
+}
+
+.mapa-dibujo__nodo text {
+  font-family: var(--fuente-body, inherit);
+  font-size: 13px;
+  fill: var(--color-text);
+  pointer-events: none;
+}
+
+/* Tema central */
+.mapa-dibujo__nodo.nivel-0 rect {
+  fill: var(--color-primary);
+  stroke: var(--color-primary-dark);
+}
+
+.mapa-dibujo__nodo.nivel-0 text {
+  fill: var(--color-white);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Ramas principales: fondo suave de su color */
+.mapa-dibujo__nodo.nivel-1 text {
+  font-weight: 600;
+}
+
+.mapa-dibujo__nodo.nivel-2 rect {
+  fill: var(--color-surface);
+}
+
+/* Un color por rama del tema central */
+.rama-0 { --rama: var(--color-primary); }
+.rama-1 { --rama: #4f8a8b; }
+.rama-2 { --rama: #c07a3e; }
+.rama-3 { --rama: #6b7fb8; }
+.rama-4 { --rama: #8a6bb0; }
+.rama-5 { --rama: #5f9a5a; }
+
+.mapa-dibujo__linea[class*='rama-'] {
+  stroke: var(--rama);
+}
+
+.mapa-dibujo__nodo[class*='rama-'] rect {
+  stroke: var(--rama);
+}
+
+.mapa-dibujo__nodo.nivel-1[class*='rama-'] rect {
+  fill: color-mix(in srgb, var(--rama) 18%, var(--color-surface));
+}
+
+.mapa-dibujo__vacio {
+  color: var(--color-text-secondary);
+}
+
+/* ---- Cuestionario ---- */
+
+.cuestionario__temas {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+.resolver {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  max-width: 820px;
+}
+
+.resolver__cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espacio-md);
+}
+
+.resolver__cabecera h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.resolver__cabecera span,
+.resolver__pendientes {
+  font-size: var(--tamano-sm);
+  color: var(--color-text-light);
+}
+
+.resolver__progreso {
+  width: 100%;
+  height: 8px;
+  accent-color: var(--color-primary);
+}
+
+.resolver__pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+  padding: var(--espacio-md) 0;
+}
+
+.resolver__tipo {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  color: var(--color-primary);
+  font-size: var(--tamano-xs);
+  font-weight: 600;
+}
+
+.resolver__enunciado {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.resolver__hueco {
+  display: inline-block;
+  min-width: 90px;
+  padding: 0 8px;
+  margin: 0 4px;
+  border-bottom: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+  text-align: center;
+}
+
+.resolver__hueco-escrito {
+  width: 220px;
+  margin: 0 4px;
+  padding: 2px 8px;
+  border: none;
+  border-bottom: 2px solid var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  color: var(--color-text);
+  font: inherit;
+  outline: none;
+}
+
+.resolver__opciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+}
+
+.resolver__opcion {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-md);
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.resolver__opcion:hover {
+  border-color: var(--color-primary);
+}
+
+.resolver__opcion--elegida {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+
+.resolver__letra {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: var(--tamano-sm);
+}
+
+.resolver__opcion--elegida .resolver__letra {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.resolver__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-md);
+  margin-top: var(--espacio-md);
+}
+
+/* ---- Resultado ---- */
+
+.cuestionario-resultado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-lg);
+}
+
+.cuestionario-resultado h3 {
+  margin: 0 0 var(--espacio-sm);
+  font-size: 1.05rem;
+}
+
+.cuestionario-resultado__nota {
+  display: flex;
+  align-items: baseline;
+  gap: var(--espacio-md);
+}
+
+.cuestionario-resultado__porcentaje {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.cuestionario-resultado__temas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cuestionario-resultado__temas li {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  padding: 10px 14px;
+  border-radius: var(--radio-md);
+  background: var(--color-error-bg);
+  color: var(--color-error-texto);
+}
+
+.cuestionario-resultado__temas span {
+  margin-left: auto;
+  font-size: var(--tamano-sm);
+}
+
+.cuestionario-resultado__sin-temas {
+  margin: 0;
+  color: var(--color-success);
+}
+
+.cuestionario-resultado__preguntas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  margin: 0;
+  padding-left: 20px;
+}
+
+.cuestionario-resultado__preguntas li {
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-left-width: 4px;
+  border-radius: var(--radio-md);
+}
+
+.cuestionario-resultado__preguntas li.es-correcta {
+  border-left-color: var(--color-success);
+}
+
+.cuestionario-resultado__preguntas li.es-incorrecta {
+  border-left-color: var(--color-error);
+}
+
+.cuestionario-resultado__titulo {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-sm);
+  font-weight: 600;
+}
+
+.es-correcta .cuestionario-resultado__titulo svg {
+  flex-shrink: 0;
+  color: var(--color-success);
+}
+
+.es-incorrecta .cuestionario-resultado__titulo svg {
+  flex-shrink: 0;
+  color: var(--color-error);
+}
+
+.cuestionario-resultado__preguntas p {
+  margin: 6px 0 0;
+  font-size: var(--tamano-sm);
+}
+
+.cuestionario-resultado__explicacion {
+  color: var(--color-text-secondary);
+}
+
+.cuestionario-resultado__preguntas small {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-text-light);
+}
+
+/* ---- Editar un mapa mental ---- */
+
+.metodos-ia__encabezado--con-accion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: var(--espacio-md);
+}
+
+.metodos-ia__encabezado--con-accion p {
+  grid-column: 1 / -1;
+}
+
+.metodos-ia__editar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.metodos-ia__editar:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.editor-mapa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+}
+
+.editor-mapa__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-md);
+}
+
+.editor-mapa__campo {
+  display: flex;
+  flex: 1 1 240px;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--color-text-secondary);
+  font-size: var(--tamano-xs);
+}
+
+.editor-mapa__campo--titulo {
+  flex-basis: 220px;
+}
+
+.editor-mapa__campo input {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+}
+
+.editor-mapa__campo input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.editor-mapa__campo input:disabled {
+  background: var(--color-background);
+}
+
+.editor-mapa__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor-mapa__separador {
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: var(--color-border);
+}
+
+.editor-mapa__boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.editor-mapa__boton:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+.editor-mapa__boton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.editor-mapa__boton--peligro:hover:not(:disabled) {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.editor-mapa__boton--primario {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.editor-mapa__boton--primario:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.editor-mapa__problema {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radio-sm);
+  background: var(--color-error-bg);
+  color: var(--color-error-texto);
+  font-size: var(--tamano-sm);
+}
+
+.editor-mapa__ayuda {
+  margin: 0;
+  color: var(--color-text-light);
+  font-size: var(--tamano-xs);
+}
+
+/* Al arrastrar no se selecciona el texto de las ideas. */
+.mapa-dibujo__lienzo {
+  user-select: none;
+}
+
+.mapa-dibujo__lienzo--editable .mapa-dibujo__nodo {
+  cursor: pointer;
+}
+
+.mapa-dibujo__nodo.mapa-dibujo__nodo--elegido rect {
+  stroke: var(--color-primary-dark);
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-primary) 55%, transparent));
+}

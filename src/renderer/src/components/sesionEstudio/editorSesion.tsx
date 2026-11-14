@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Check, CloudOff, Loader2 } from 'lucide-react';
-import type { Materia, PestanaSesion } from '../../types/sesionesEstudio';
+import type { PestanaSesion } from '../../types/sesionesEstudio';
 import type { Archivo } from '../../types/nodo';
 import { BarraEditorSesion } from './barraEditorSesion';
 import { PestanasSesion } from './pestanasSesion';
@@ -272,6 +272,7 @@ export function EditorSesion({ usuarioId, idSesion, materia }: EditorSesionProps
           onCancelar={() => setPorEliminar(null)}
         />
       )}
+
 
       {eligiendoArchivo && <ModalAbrirMaterial materia={materia} onElegir={abrirArchivo} onCerrar={() => setEligiendoArchivo(false)} />}
     </div>

@@ -2,6 +2,8 @@ import { ipcRenderer } from 'electron';
 
 // Canal por el que el main envía el estado de la sesión en curso cada segundo.
 const CANAL_TICK_SESION = 'sesionEstudio:tick';
+// Se intentó cerrar la app durante una sesión de Práctica activa (el main no la dejó cerrar).
+const CANAL_SALIDA_BLOQUEADA = 'sesionEstudio:salidaBloqueada';
 
 const conSesion = (canal: string) => (usuarioId: number, idSesion: number) =>
   ipcRenderer.invoke(canal, { usuarioId, idSesion });
@@ -49,5 +51,12 @@ export const sesionesEstudioApi = {
     const escuchar = (_evento: unknown, snapshot: unknown) => callback(snapshot);
     ipcRenderer.on(CANAL_TICK_SESION, escuchar);
     return () => ipcRenderer.removeListener(CANAL_TICK_SESION, escuchar);
+  },
+
+  // Práctica activa: el main avisa que bloqueó el cierre de la app. Devuelve la función para desuscribirse.
+  onSalidaBloqueadaSesion: (callback: (snapshot: unknown) => void): (() => void) => {
+    const escuchar = (_evento: unknown, snapshot: unknown) => callback(snapshot);
+    ipcRenderer.on(CANAL_SALIDA_BLOQUEADA, escuchar);
+    return () => ipcRenderer.removeListener(CANAL_SALIDA_BLOQUEADA, escuchar);
   },
 };

@@ -176,7 +176,7 @@ function coincide(correlativa: string, materia: MateriaLeida): boolean {
   return true;
 }
 
-function emparejarCorrelativas(materias: MateriaLeida[]): MateriaLeida[] {
+export function emparejarCorrelativas(materias: MateriaLeida[]): MateriaLeida[] {
   const exactos = new Map(materias.map((m) => [palabras(m.nombre).join(' '), m.nombre]));
   return materias.map((m) => ({
     ...m,
