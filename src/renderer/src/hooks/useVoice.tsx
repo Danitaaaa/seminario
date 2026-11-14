@@ -42,12 +42,6 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
     usarVozPropia(modoVoz !== false);
   }, [modoVoz]);
 
-  // Cada vez que se abre Syntra con modo voz: NVDA se despierta solo, se recuerda dormirlo.
-  useEffect(() => {
-    if (leerModoVoz() === true) {
-      hablar('Si tenés NVDA prendido, activá el modo silencioso con Insert más Shift más S.');
-    }
-  }, []);
 
   // Al entrar un usuario, la bienvenida avisa su elección.
   useEffect(() => {
@@ -67,7 +61,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
         event.repeat ||
         !event.ctrlKey ||
         !event.altKey ||
-        event.key.toLowerCase() !== 'v'
+        event.key.toLowerCase() !== 's'
       ) {
         return;
       }

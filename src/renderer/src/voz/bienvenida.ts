@@ -5,7 +5,7 @@ const INDICACIONES =
 
 let yaSaludo = false;
 
-// Avisa al VoiceProvider (cartel y Ctrl+Alt+V) la elección del usuario que entró.
+// Avisa al VoiceProvider (cartel y Ctrl+Alt+S) la elección del usuario que entró.
 export const EVENTO_MODO_VOZ = 'syntra:modoVoz';
 
 // Lo que se respondió en el cartel de bienvenida en esta compu (sin respuesta: con voz).
@@ -54,7 +54,7 @@ export async function darBienvenida(): Promise<void> {
   configurarLector(await window.api.lectorPantallaActivo().catch(() => hayLector()));
 
   // Primero: si este usuario usa Syntra con voz. La primera vez hereda lo que se respondió
-  // en el cartel de bienvenida, sin volver a preguntar. Ctrl+Alt+V lo cambia.
+  // en el cartel de bienvenida, sin volver a preguntar. Ctrl+Alt+S lo cambia.
   let modoVoz = leerEleccion(claveModoVoz());
   if (modoVoz === null) {
     modoVoz = modoDelEquipo();

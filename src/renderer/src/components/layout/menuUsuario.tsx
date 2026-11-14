@@ -24,7 +24,8 @@ export function MenuUsuario(_props: MenuUsuarioProps) {
         return;
       }
       window.api.obtenerPerfil({ id })
-        .then((perfil) => setNombre(perfil.nombre))
+        // Si eligió apodo, se muestra el apodo.
+        .then((perfil) => setNombre(perfil.apodo?.trim() || perfil.nombre))
         .catch(() => setNombre(""));
     };
 

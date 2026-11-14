@@ -21,6 +21,13 @@
   box-shadow: 0 12px 32px rgba(30, 30, 30, 0.25);
 }
 
+/* Agrandado: el visor ocupa toda la ventana, sin bordes */
+.visor--completo {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+}
+
 .visor__encabezado {
   display: flex;
   align-items: center;

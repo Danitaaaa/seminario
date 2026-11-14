@@ -40,6 +40,7 @@ import { ModalBienvenidaVoz } from "./components/comunes/modalBienvenidaVoz";
 import { EcoTeclado } from "./voz/ecoTeclado";
 import { AnunciarPantalla } from "./voz/anunciarPantalla";
 import { LectorFoco } from "./voz/lectorFoco";
+import { NavegacionFlechas } from "./voz/navegacionFlechas";
 
 
 export default function App() {
@@ -97,6 +98,7 @@ export default function App() {
       <AnunciarPantalla />
       <EcoTeclado activo />
       <LectorFoco />
+      <NavegacionFlechas />
     </ProveedorSpotify>
     </ProveedorAvisos>
   );

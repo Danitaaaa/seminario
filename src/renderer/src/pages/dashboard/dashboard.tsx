@@ -8,6 +8,8 @@ import { MiniCalendario } from '../../components/comunes/miniCalendario';
 import { MetasDashboard } from './metasDashboard';
 import { BannerInicio } from './bannerInicio';
 import { rutaDe } from '../navegacion';
+import { useVoice } from '../../hooks/useVoice';
+import { esSeccionSinVoz } from '../../voz/narrador';
 import '../../styles/dashboard.css';
 
 type Modulo = {
@@ -32,6 +34,7 @@ const MODULOS: Modulo[] = [
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const conVoz = useVoice().modoVoz === true;
 
   return (
     <PlantillaLayout idActivo="inicio" usuario={{ nombre: 'Usuario' }}>
@@ -39,7 +42,15 @@ export function Dashboard() {
       <div className="dashboard">
         <div className="dashboard__modulos">
           {MODULOS.map(({ titulo, descripcion, ruta, icono: Icono, tono }) => (
-            <button key={titulo} type="button" className="dashboard__tarjeta" onClick={() => navigate(ruta)}>
+            <button
+              key={titulo}
+              type="button"
+              className="dashboard__tarjeta"
+              onClick={() => navigate(ruta)}
+              // Con modo voz, las secciones sin voz no se alcanzan con el teclado.
+              tabIndex={conVoz && esSeccionSinVoz(ruta) ? -1 : undefined}
+              aria-hidden={(conVoz && esSeccionSinVoz(ruta)) || undefined}
+            >
               <div className={`dashboard__portada dashboard__portada--${tono}`}>
                 <Icono size={32} strokeWidth={1.75} aria-hidden="true" />
               </div>

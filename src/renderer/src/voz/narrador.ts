@@ -65,12 +65,16 @@ function leerModoVoz(): boolean {
   }
 }
 
+export function modoVozActivo(): boolean {
+  return modoVoz;
+}
+
 export function activarModoVoz(si: boolean): void {
   modoVoz = si;
 }
 
 // Secciones que no son accesibles por voz: ahí Syntra no lee nada.
-const SECCIONES_SIN_VOZ = ['/proyectos', '/estadisticas'];
+const SECCIONES_SIN_VOZ = ['/proyectos', '/estadisticas', '/cronograma', '/materias'];
 
 export function esSeccionSinVoz(ruta: string): boolean {
   return SECCIONES_SIN_VOZ.some((s) => ruta === s || ruta.startsWith(`${s}/`));

@@ -31,6 +31,18 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
   const [aviso, setAviso] = useState<string | null>(null);
   const [recarga, setRecarga] = useState(0);
   const [resolviendo, setResolviendo] = useState(false);
+  const [completo, setCompleto] = useState(false);
+
+  // Agrandar: el visor ocupa toda la ventana de Syntra. Escape (o el botón) lo achica.
+  const alternarCompleto = () => setCompleto((c) => !c);
+  useEffect(() => {
+    if (!completo) return;
+    const alTeclear = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setCompleto(false);
+    };
+    document.addEventListener('keydown', alTeclear);
+    return () => document.removeEventListener('keydown', alTeclear);
+  }, [completo]);
   const tipo = tipoVisor(archivo.extension);
 
   // Archivo de un proyecto compartido: mientras está abierto se toma el bloqueo, así nadie más lo
@@ -123,7 +135,7 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
 
   return (
     <div className="visor-overlay">
-      <div className="visor">
+      <div className={`visor${completo ? ' visor--completo' : ''}`}>
         <header className="visor__encabezado">
           <h3 className="visor__titulo">{archivo.nombre}.{archivo.extension}</h3>
           <div className="visor__acciones">
@@ -131,6 +143,9 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
               {lectura === 'leyendo' ? 'Pausar lectura' : lectura === 'pausada' ? 'Seguir leyendo' : 'Leer en voz alta'}
             </button>     
             <MenuAbrirCon archivo={archivo} onError={setError} />
+            <button className="visor-boton visor-boton--contorno" onClick={alternarCompleto}>
+              {completo ? 'Achicar' : 'Agrandar'}
+            </button>
             <button className="visor-boton visor-boton--contorno" onClick={onCerrar}>Cerrar</button>
           </div>
         </header>
