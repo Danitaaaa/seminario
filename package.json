@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@electron-toolkit/utils": "^3.0.0",
+    "@huggingface/transformers": "3.7.6",
     "@types/bcrypt": "^6.0.0",
     "@types/jest": "^30.0.0",
     "@types/katex": "^0.16.7",
@@ -75,7 +76,7 @@
   },
   "allowScripts": {
     "esbuild@0.21.5": true,
-    "electron@44.6.0": true,
+    "electron@45.2.3": true,
     "bcrypt@6.0.0": true,
     "esbuild@0.28.2": true,
     "@turbodocx/html-to-docx@1.23.1": true

@@ -19,6 +19,10 @@ export type ModificarCuadernoDTO = z.infer<typeof modificarCuadernoSchema>;
 export const mazoCuadernoSchema = z.object({ usuarioId: id, idCuaderno: id, idDeck: id });
 export type MazoCuadernoDTO = z.infer<typeof mazoCuadernoSchema>;
 
+// Cuestionario, mapa mental o resumen hecho con IA que se agrega (o se saca) del cuaderno.
+export const materialIACuadernoSchema = z.object({ usuarioId: id, idCuaderno: id, idMaterialIA: id });
+export type MaterialIACuadernoDTO = z.infer<typeof materialIACuadernoSchema>;
+
 const datosNota = z.object({
   tipo: z.enum(['parcial', 'recuperatorio', 'tp', 'final', 'otro'], { error: 'Elegí el tipo.' }),
   nombre,

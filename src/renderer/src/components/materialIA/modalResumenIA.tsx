@@ -9,11 +9,13 @@ import { nuevoTrabajoIA, type ArchivoMaterial } from '../../utils/apiMaterialIA'
 import { mensajeError } from '../../pages/metodos/utilidadesMetodosIA';
 import { EditorGuia } from './editorGuia';
 import { SelectorMateriales } from './selectorMateriales';
-import { ModalGenerando } from './modalGenerando';
+import { VentanaIA } from './segundoPlano';
+import { usarArchivosMaterial } from '../../hooks/usarArchivosMaterial';
 import styles from '../../styles/flashcards.module.css';
 
 interface Props {
-  archivos: ArchivoMaterial[];
+  // Si no se pasan, el modal carga los archivos de Material solo (así sirve abierto en segundo plano).
+  archivos?: ArchivoMaterial[];
   cargandoArchivos?: boolean;
   onCerrar: () => void;
   onGuardado?: (archivo: { id: number; nombre: string }) => void;
@@ -21,7 +23,10 @@ interface Props {
 
 type Paso = 'configurar' | 'generando' | 'corregir' | 'guardado';
 
-export function ModalResumenIA({ archivos, cargandoArchivos = false, onCerrar, onGuardado }: Props) {
+export function ModalResumenIA({ archivos: archivosProp, cargandoArchivos: cargandoProp = false, onCerrar, onGuardado }: Props) {
+  const propios = usarArchivosMaterial(!archivosProp);
+  const archivos = archivosProp ?? propios.archivos;
+  const cargandoArchivos = archivosProp ? cargandoProp : propios.cargando;
   const [paso, setPaso] = useState<Paso>('configurar');
   const [idsArchivos, setIdsArchivos] = useState<number[]>([]);
   const [indicaciones, setIndicaciones] = useState('');
@@ -43,13 +48,6 @@ export function ModalResumenIA({ archivos, cargandoArchivos = false, onCerrar, o
     trabajosGenerados.current = [];
   }
 
-  function cancelarGeneracion() {
-    corrida.current++;
-    void trabajo.current?.cancelar();
-    trabajo.current = null;
-    descartarPropuestas();
-    setPaso('configurar');
-  }
 
   async function generar() {
     if (!idsArchivos.length) return setError('Elegí al menos un archivo de Material.');
@@ -120,6 +118,18 @@ export function ModalResumenIA({ archivos, cargandoArchivos = false, onCerrar, o
   }
 
   return (
+    <VentanaIA
+      generando={paso === 'generando'}
+      listo={paso === 'corregir'}
+      que="el resumen"
+      mensaje="Generando el resumen"
+      detalle={
+        idsArchivos.length > 1
+          ? `Archivo ${Math.min(avance + 1, idsArchivos.length)} de ${idsArchivos.length} · puede tardar un poco`
+          : 'Puede tardar un poco según el tamaño del material.'
+      }
+      onCancelar={cerrar}
+    >
     <div className={styles.modalBackdrop}>
       <div
         className={styles.modal}
@@ -155,17 +165,6 @@ export function ModalResumenIA({ archivos, cargandoArchivos = false, onCerrar, o
           </>
         )}
 
-        {paso === 'generando' && (
-          <ModalGenerando
-            mensaje="Generando el resumen"
-            detalle={
-              idsArchivos.length > 1
-                ? `Archivo ${Math.min(avance + 1, idsArchivos.length)} de ${idsArchivos.length} · puede tardar un poco`
-                : 'Puede tardar un poco según el tamaño del material.'
-            }
-            onCancelar={cancelarGeneracion}
-          />
-        )}
 
         {paso === 'corregir' && (
           <>
@@ -193,5 +192,6 @@ export function ModalResumenIA({ archivos, cargandoArchivos = false, onCerrar, o
         )}
       </div>
     </div>
+    </VentanaIA>
   );
 }

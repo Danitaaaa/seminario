@@ -44,11 +44,17 @@ export const SISTEMA_MATERIAS =
 // ---------- Plan de estudios escaneado (lee imágenes) ----------
 // El pedido del usuario trae el formato exacto (PROMPT_PLAN de la pantalla). Acá solo las reglas fijas.
 export const SISTEMA_TRANSCRIPCION_PLAN =
-  'Pasás a texto planes de estudio que vienen como imágenes (PDF escaneado o foto). ' +
-  'Respondé solo con JSON que cumpla el esquema: el texto completo va en "texto". ' +
-  'Seguí EXACTAMENTE el formato que pide el usuario. Copiá los nombres de las materias tal como se leen en la imagen; ' +
-  'no inventes materias que no estén. No podés hacer preguntas: si hay varias carreras u orientaciones, ' +
-  'pasá las materias comunes y las de todas las orientaciones. Si no se puede leer ninguna materia, devolvé "texto" vacío.';
+  'Pasás a texto planes de estudio que vienen como imágenes (PDF escaneado o foto) o como texto sacado del archivo. ' +
+  'Respondé solo con JSON que cumpla el esquema. Seguí EXACTAMENTE el formato que pide el usuario. ' +
+  'Copiá los nombres de las materias tal como se leen; no inventes materias que no estén. ' +
+  'PREGUNTAS: solo si el pedido dice que me preguntes algo y la respuesta no está en <<<RESPUESTAS>>> ' +
+  '(por ejemplo, el archivo trae más de una carrera o título, o la carrera tiene orientaciones, menciones o especialidades que se eligen, ' +
+  'o faltan páginas), devolvé en "preguntas" cada duda (como mucho 4) con sus opciones concretas sacadas del plan ' +
+  '(los nombres de las carreras u orientaciones) y "texto" vacío. No preguntes nada que se resuelva con las reglas del pedido. ' +
+  'Si con las respuestas aparece otra duda (por ejemplo, la carrera elegida tiene orientaciones o líneas que se eligen), ' +
+  'preguntala igual que la anterior; no repitas lo que ya está respondido. ' +
+  'Si no hace falta preguntar o ya están todas las respuestas, "preguntas" va vacío y el plan completo va en "texto". ' +
+  'Si no se puede leer ninguna materia, "preguntas" y "texto" van vacíos.';
 
 export const SISTEMA_GUIA = `Sos un docente que prepara una guía de preguntas de estudio a partir del material que te dan.
   Devolvé preguntas abiertas que obliguen a comprender, no a copiar. Cada pregunta lleva su respuesta modelo, breve y fiel al material.
@@ -65,6 +71,8 @@ export const SISTEMA_CHAT =
   'Escribí texto plano: párrafos cortos separados por una línea en blanco y listas con "- " al principio; ' +
   'sin Markdown (nada de #, ** ni tablas). Las fórmulas van en LaTeX entre $…$ (o $$…$$ si van solas en una línea). ' +
   'Lo que está entre <<<HISTORIAL>>> y <<<FIN_HISTORIAL>>> es la conversación anterior, solo como contexto. ' +
+  'Si hay <<<ARCHIVOS>>>, son documentos que el usuario adjuntó: usalos para responder y, cuando sirva, ' +
+  'decí de qué archivo sale la información. ' +
   'Respondé el <<<MENSAJE>>> del usuario. Si no sabés algo o no estás seguro, decilo en lugar de inventar.';
 
 export interface MensajeHistorial {
@@ -76,7 +84,18 @@ export interface MensajeHistorial {
 const sinDelimitadores = (texto: string) => texto.replace(/<<<|>>>/g, '');
 
 /** Arma el pedido del chat: los últimos mensajes (hasta `maxCaracteres`) y la pregunta nueva. */
-export function armarChat(historial: MensajeHistorial[], mensaje: string, maxCaracteres = 12000): string {
+export interface DocumentoChat {
+  nombre: string;
+  texto: string;
+}
+
+/** Arma el pedido del chat: los últimos mensajes (hasta `maxCaracteres`), los archivos adjuntos y la pregunta nueva. */
+export function armarChat(
+  historial: MensajeHistorial[],
+  mensaje: string,
+  maxCaracteres = 12000,
+  documentos: DocumentoChat[] = [],
+): string {
   const elegidos: string[] = [];
   let usados = 0;
   for (let i = historial.length - 1; i >= 0; i--) {
@@ -86,7 +105,10 @@ export function armarChat(historial: MensajeHistorial[], mensaje: string, maxCar
     usados += linea.length;
   }
   const previo = elegidos.length ? elegidos.join('\n\n') : '(conversación nueva)';
-  return `<<<HISTORIAL>>>\n${previo}\n<<<FIN_HISTORIAL>>>\n\n<<<MENSAJE>>>\n${sinDelimitadores(mensaje)}\n<<<FIN_MENSAJE>>>`;
+  const archivos = documentos.length
+    ? `<<<ARCHIVOS>>>\n${documentos.map((d) => `[Archivo: ${sinDelimitadores(d.nombre)}]\n${sinDelimitadores(d.texto)}`).join('\n\n')}\n<<<FIN_ARCHIVOS>>>\n\n`
+    : '';
+  return `<<<HISTORIAL>>>\n${previo}\n<<<FIN_HISTORIAL>>>\n\n${archivos}<<<MENSAJE>>>\n${sinDelimitadores(mensaje)}\n<<<FIN_MENSAJE>>>`;
 }
 
 export function armarUsuario(material: string, preferencias?: string): string {

@@ -43,6 +43,7 @@ import { ActualizarContenidoArchivo } from './logicaPersistente/gestionMaterialE
 import { GuardarDriveId } from './logicaPersistente/gestionMaterialEstudio/guardarDriveId';
 import { Almacenamiento } from './persistencia/almacenamiento';
 import path from 'path';
+import { existsSync } from 'fs';
 
 // Google Drive
 import { AlmacenTokensDrive } from './logicaNoPersistente/drive/almacenTokensDrive';
@@ -81,7 +82,8 @@ import { ObtenerPerfil } from './logicaPersistente/gestionDeUsuarios/obtenerPerf
 import { ModificarPerfil } from './logicaPersistente/gestionDeUsuarios/modificarPerfil';
 import { CambiarPasswordActual } from './logicaPersistente/gestionDeUsuarios/cambiarPasswordActual';
 import { EliminarUsuario } from './logicaPersistente/gestionDeUsuarios/eliminarUsuario';
-import { ActualizarFotoPerfil, ObtenerFotoPerfil } from './logicaPersistente/gestionDeUsuarios/fotoPerfil';
+import { ActualizarFotoPerfil, ElegirAvatar, ObtenerFotoPerfil } from './logicaPersistente/gestionDeUsuarios/fotoPerfil';
+import { ElegirColorAvatar } from './logicaPersistente/gestionDeUsuarios/colorAvatar';
 
 // Gestion de horarios
 import { CrearHorario } from './logicaPersistente/gestionDeHorarios/crearHorario';
@@ -114,6 +116,7 @@ import { ModificarNota } from './logicaPersistente/gestionDeCuadernos/modificarN
 import { EliminarNota } from './logicaPersistente/gestionDeCuadernos/eliminarNota';
 import { AgregarMazo } from './logicaPersistente/gestionDeCuadernos/agregarMazo';
 import { QuitarMazo } from './logicaPersistente/gestionDeCuadernos/quitarMazo';
+import { AgregarMaterialIA, QuitarMaterialIA } from './logicaPersistente/gestionDeCuadernos/materialIACuaderno';
 import { Cuadernos } from './administracionDePersistencia/cuadernos';
 import { registerCuadernosIpc } from './ipc/cuadernos.ipc';
 import { registerMateriasIpc } from './ipc/materias.ipc';
@@ -155,6 +158,10 @@ import type { Notificacion } from './logicaPersistente/gestionDeNotificaciones/e
 import { Notificaciones } from './administracionDePersistencia/notificaciones';
 import { Notificador } from './logicaNoPersistente/notificaciones/notificador';
 import { VigiaNotificaciones } from './logicaNoPersistente/notificaciones/vigiaNotificaciones';
+import { Bienestar } from './administracionDePersistencia/bienestar';
+import { ObtenerCargaDelDia } from './logicaPersistente/gestionDeBienestar/cargaDelDia';
+import { CambiarBienestar, ObtenerBienestar } from './logicaPersistente/gestionDeBienestar/preferenciaBienestar';
+import { registerBienestarIpc } from './ipc/bienestar.ipc';
 import { registerNotificacionesIpc } from './ipc/notificaciones.ipc';
 
 // Gestion de proyectos
@@ -186,6 +193,8 @@ import { GuardarResumenIA } from './logicaPersistente/gestionDeMaterialIA/guarda
 import { ResumenProyectos } from './logicaPersistente/gestionDeEstadisticas/resumenProyectos';
 import { ResumenSesionesEstudio } from './logicaPersistente/gestionDeEstadisticas/resumenSesiones';
 import { ResumenDeMaterial } from './logicaPersistente/gestionDeEstadisticas/resumenMaterial';
+import { ResumenDeCuestionarios } from './logicaPersistente/gestionDeEstadisticas/resumenCuestionarios';
+import { ResumenDeFlashcards } from './logicaPersistente/gestionDeEstadisticas/resumenFlashcards';
 import { Estadisticas } from './administracionDePersistencia/estadisticas';
 import { registerEstadisticasIpc } from './ipc/estadisticas.ipc';
 // Gestion de edicion compartida y sincronizacion
@@ -272,6 +281,8 @@ import { registerSpotifyIpc } from './ipc/spotify.ipc';
 
 //comando de vox
 import { registerVozIpc } from './ipc/voz.ipc';
+import { registerDictadoIpc } from './ipc/dictado.ipc';
+import { ModeloDictado } from './logicaNoPersistente/dictado/modeloDictado';
 // Inteligencia artificial (router, proveedores, claves y cola) y Material con IA
 import { crearServiciosIA, type ServiciosIA } from './logicaNoPersistente/ia/index.js';
 import { registrarIpcIA } from './ipc/ia.ipc';
@@ -405,7 +416,8 @@ function wireDependencies(): ProcesoSesionEstudio {
     new CambiarPasswordActual(verificarPassword, persistencia), new EliminarUsuario(persistencia),
     new ObtenerFotoPerfil(persistencia),
     new ActualizarFotoPerfil(persistencia, path.join(app.getPath('userData'), 'fotosPerfil')),
-    verificarPassword, new ActualizarRostro(verificarPassword)
+    verificarPassword, new ActualizarRostro(verificarPassword), new ElegirAvatar(persistencia),
+    new ElegirColorAvatar(persistencia)
   );
 
   // Gestion de eventos
@@ -447,7 +459,8 @@ function wireDependencies(): ProcesoSesionEstudio {
     listarCuadernos, new ObtenerCuaderno(persistencia, listarCuadernos),
     new CrearCuaderno(persistencia), new ModificarCuaderno(persistencia), new EliminarCuaderno(persistencia),
     new CrearNota(persistencia), new ModificarNota(persistencia), new EliminarNota(persistencia),
-    new AgregarMazo(persistencia), new QuitarMazo(persistencia)
+    new AgregarMazo(persistencia), new QuitarMazo(persistencia),
+    new AgregarMaterialIA(persistencia), new QuitarMaterialIA(persistencia)
   );
   registerCuadernosIpc(cuadernos);
 
@@ -479,10 +492,14 @@ function wireDependencies(): ProcesoSesionEstudio {
   const notificador = new Notificador(
     notificaciones, mostrarEnSistema, () => mainWindow?.webContents.send('notificaciones:nuevas')
   );
+  // Bienestar: avisa si planificás o estudiás demasiado en el día (se desactiva en Ajustes).
+  const bienestar = new Bienestar(new ObtenerCargaDelDia(persistencia), new ObtenerBienestar(persistencia), new CambiarBienestar(persistencia));
+  registerBienestarIpc(bienestar);
   const vigia = new VigiaNotificaciones(
     {
       eventos: (usuarioId, desde) => eventos.listar({ usuarioId, desde }),
       metas: (usuarioId, dia) => metas.listar({ idUsuario: usuarioId, desde: dia, hasta: dia }),
+      bienestar: (usuarioId, ahora) => bienestar.cargaDeHoy(usuarioId, ahora),
     },
     notificador
   );
@@ -606,7 +623,8 @@ function wireDependencies(): ProcesoSesionEstudio {
 
   // Estadísticas
   registerEstadisticasIpc(new Estadisticas(
-    new ResumenProyectos(persistencia), new ResumenSesionesEstudio(persistencia), new ResumenDeMaterial(persistencia)
+    new ResumenProyectos(persistencia), new ResumenSesionesEstudio(persistencia), new ResumenDeMaterial(persistencia),
+    new ResumenDeCuestionarios(persistencia), new ResumenDeFlashcards(persistencia)
   ));
 
   // Gestion de edicion y conflictos
@@ -740,6 +758,8 @@ function wireDependencies(): ProcesoSesionEstudio {
     new GuardarIntercambioIA(persistencia),
     new RenombrarConversacionIA(persistencia),
     new EliminarConversacionIA(persistencia),
+    archivos,
+    almacenamiento,
   );
   registerChatIAIpc(chatIA);
   // Una sola cola para toda la IA: al cerrar se cancela todo lo que esté en curso.
@@ -794,9 +814,16 @@ app.whenReady().then(async () => {
   if (process.platform === 'win32') app.setAppUserModelId(is.dev ? process.execPath : 'com.syntra.app');
 
   const carpetaModelos = resolve(__dirname, '../renderer/models');
+  // Dictado con Whisper: el modelo se baja la primera vez a la carpeta de la app (no viene en el instalador).
+  const modeloDictado = new ModeloDictado(path.join(app.getPath('userData'), 'dictado'), (url, opciones) => net.fetch(url, opciones));
+  registerDictadoIpc(modeloDictado);
+
+  // modelos://local/... son los modelos que vienen con la app; modelos://dictado/... el de Whisper.
   protocol.handle('modelos', (request) => {
     const url = new URL(request.url);
-    if (url.hostname !== 'local') return new Response('', { status: 403 });
+    const carpetas: Record<string, string> = { local: carpetaModelos, dictado: modeloDictado.carpeta };
+    const carpetaBase = carpetas[url.hostname];
+    if (!carpetaBase) return new Response('', { status: 403 });
 
     let archivo: string;
     try {
@@ -805,11 +832,13 @@ app.whenReady().then(async () => {
       return new Response('', { status: 400 });
     }
 
-    const ruta = resolve(carpetaModelos, `.${archivo}`);
-    const rutaRelativa = relative(carpetaModelos, ruta);
+    const ruta = resolve(carpetaBase, `.${archivo}`);
+    const rutaRelativa = relative(carpetaBase, ruta);
     if (rutaRelativa.startsWith('..') || isAbsolute(rutaRelativa)) {
       return new Response('', { status: 403 });
     }
+    // transformers.js pide algunos archivos opcionales: tiene que recibir un 404, no un error de red.
+    if (!existsSync(ruta)) return new Response('', { status: 404 });
 
     return net.fetch(pathToFileURL(ruta).toString());
   });

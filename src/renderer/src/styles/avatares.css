@@ -1,0 +1,46 @@
+/* Los avatares toman los colores de la paleta: en claro el detalle es el fondo de la app,
+   en oscuro el texto del lateral, así se ven igual de bien en los dos modos. */
+:root {
+  --avatar-1: var(--color-background);
+  --avatar-2: var(--color-accent);
+  --avatar-3: var(--color-lateral-fondo);
+  --avatar-4: var(--color-primary-light);
+  --avatar-5: var(--color-primary-dark);
+  --avatar-6: var(--color-primary);
+}
+
+:root[data-modo="oscuro"] {
+  --avatar-1: var(--color-lateral-texto);
+}
+
+.avatar-syntra {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.elegir-avatar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.elegir-avatar__opcion {
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  aspect-ratio: 1;
+}
+
+.elegir-avatar__opcion:hover,
+.elegir-avatar__opcion:focus-visible {
+  border-color: var(--color-primary-light);
+  outline: none;
+}
+
+.elegir-avatar__opcion--elegido {
+  border-color: var(--color-primary);
+}

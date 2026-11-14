@@ -1,14 +1,16 @@
 import { Persistencia } from '../../persistencia/persistencia';
 import { MazoCuadernoDTO } from './dto';
 
-// Saca del cuaderno un mazo agregado a mano. El mazo no se borra.
+// Saca del cuaderno un mazo agregado a mano: le quita la materia. El mazo no se borra.
 export class QuitarMazo {
   constructor(private readonly persistencia: Persistencia) {}
 
   async ejecutar(datos: MazoCuadernoDTO): Promise<void> {
     await this.persistencia.ejecutar(
-      `DELETE FROM cuaderno_mazo cm USING cuaderno c
-        WHERE cm.id_cuaderno = $1 AND cm.id_deck = $3 AND c.id_cuaderno = cm.id_cuaderno AND c.id_usuario = $2`,
+      `UPDATE decks d SET id_materia = NULL
+         FROM cuaderno c
+        WHERE c.id_cuaderno = $1 AND c.id_usuario = $2 AND d.id_deck = $3 AND d.id_usuario = $2
+          AND d.id_materia = c.id_materia`,
       [datos.idCuaderno, datos.usuarioId, datos.idDeck]
     );
   }

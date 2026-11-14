@@ -1,6 +1,6 @@
 import { Persistencia } from '../../persistencia/persistencia';
 import { ResumenProyecto } from './entidades';
-import { ResumenProyectosDTO } from './dto';
+import { FORMATO_AGRUPAR, ResumenProyectosDTO } from './dto';
 import { materializarAporte, materializarResumenProyecto, materializarTareasMes } from './materializador';
 
 // Para cada proyecto del que el usuario es integrante: cómo van las tareas,
@@ -51,7 +51,7 @@ export class ResumenProyectos {
         [ids]
       ),
       this.persistencia.ejecutar(
-        `SELECT t.id_proyecto, to_char(${completada}, 'YYYY-MM') AS mes, COUNT(*)::int AS hechas
+        `SELECT t.id_proyecto, to_char(${completada}, '${FORMATO_AGRUPAR[datos.agrupar]}') AS mes, COUNT(*)::int AS hechas
            FROM tareas t
           WHERE t.id_proyecto = ANY($1::int[]) AND t.completada AND t.fecha_completada IS NOT NULL
             AND ${completada}::date >= $2::date

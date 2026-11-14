@@ -1,6 +1,6 @@
 // src/renderer/src/components/materialIA/modalGuiaPreguntas.tsx
 // Guía de preguntas con IA: elegir uno o varios archivos + indicaciones → la IA genera → se corrige en el editor
-// → se guarda como .docx en la carpeta "guia" de Material (se crea si no existe).
+// → se guarda como .docx en la carpeta "Guía de preguntas" de Material (se crea si no existe).
 // Con varios archivos se genera de a uno y se juntan en un solo documento, con un título por archivo.
 import { useRef, useState } from 'react';
 import { Button } from '../ui/button/button';
@@ -8,12 +8,13 @@ import { CartelError } from '../comunes/cartelError';
 import { api, nuevoTrabajoIA, type ArchivoMaterial } from '../../utils/apiMaterialIA';
 import { EditorGuia } from './editorGuia';
 import { SelectorMateriales } from './selectorMateriales';
-import { ModalGenerando } from './modalGenerando';
+import { VentanaIA } from './segundoPlano';
+import { usarArchivosMaterial } from '../../hooks/usarArchivosMaterial';
 import styles from '../../styles/flashcards.module.css';
 
 interface Props {
-  /** Archivos de Material entre los que se puede elegir (los que tengan texto: pdf, docx, txt…). */
-  archivos: ArchivoMaterial[];
+  // Si no se pasan, el modal carga los archivos de Material solo (así sirve abierto en segundo plano).
+  archivos?: ArchivoMaterial[];
   cargandoArchivos?: boolean;
   /** Si se abre desde un archivo concreto, ya viene elegido. */
   idArchivoInicial?: number;
@@ -25,7 +26,10 @@ type Paso = 'configurar' | 'generando' | 'corregir' | 'guardada';
 
 const escapar = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-export function ModalGuiaPreguntas({ archivos, cargandoArchivos = false, idArchivoInicial, onCerrar, onGuardada }: Props) {
+export function ModalGuiaPreguntas({ archivos: archivosProp, cargandoArchivos: cargandoProp = false, idArchivoInicial, onCerrar, onGuardada }: Props) {
+  const propios = usarArchivosMaterial(!archivosProp);
+  const archivos = archivosProp ?? propios.archivos;
+  const cargandoArchivos = archivosProp ? cargandoProp : propios.cargando;
   const [paso, setPaso] = useState<Paso>('configurar');
   const [idsArchivos, setIdsArchivos] = useState<number[]>(idArchivoInicial ? [idArchivoInicial] : []);
   const [cantidad, setCantidad] = useState(10);
@@ -53,19 +57,6 @@ export function ModalGuiaPreguntas({ archivos, cargandoArchivos = false, idArchi
     trabajosGenerados.current = [];
   }
 
-  // Botón "Cancelar generación": invalida la corrida, avisa al main y vuelve a configurar sin esperar respuesta.
-  function cancelarGeneracion() {
-    corrida.current++;
-    const t = trabajo.current;
-    trabajo.current = null;
-    try {
-      void Promise.resolve(t?.cancelar()).catch(() => undefined);
-    } catch {
-      /* nada */
-    }
-    descartarPropuestas();
-    setPaso('configurar');
-  }
 
   async function generar() {
     if (!idsArchivos.length) return setError('Elegí al menos un archivo de Material.');
@@ -150,6 +141,16 @@ export function ModalGuiaPreguntas({ archivos, cargandoArchivos = false, idArchi
   }
 
   return (
+    <VentanaIA
+      generando={paso === 'generando'}
+      listo={paso === 'corregir'}
+      que="la guía de preguntas"
+      mensaje="Generando la guía de preguntas"
+      detalle={idsArchivos.length > 1
+        ? `Archivo ${Math.min(avance + 1, idsArchivos.length)} de ${idsArchivos.length} · puede tardar un poco`
+        : 'Puede tardar un poco según el tamaño del material.'}
+      onCancelar={cerrar}
+    >
     <div className={styles.modalBackdrop}>
       <div
         className={styles.modal}
@@ -180,19 +181,10 @@ export function ModalGuiaPreguntas({ archivos, cargandoArchivos = false, idArchi
           </>
         )}
 
-        {paso === 'generando' && (
-          <ModalGenerando
-            mensaje="Generando la guía de preguntas"
-            detalle={idsArchivos.length > 1
-              ? `Archivo ${Math.min(avance + 1, idsArchivos.length)} de ${idsArchivos.length} · puede tardar un poco`
-              : 'Puede tardar un poco según el tamaño del material.'}
-            onCancelar={cancelarGeneracion}
-          />
-        )}
 
         {paso === 'corregir' && (
           <>
-            <p className={styles.description}>Revisá y corregí las preguntas y las respuestas del final. Al guardar se crea un Word en la carpeta "guia" de Material.</p>
+            <p className={styles.description}>Revisá y corregí las preguntas y las respuestas del final. Al guardar se crea un Word en la carpeta "Guía de preguntas" de Material.</p>
             <label htmlFor="guia-nombre">Nombre del documento</label>
             <input id="guia-nombre" value={nombre} maxLength={150} onChange={(e) => setNombre(e.target.value)} />
             <EditorGuia html={html} guardando={guardando} onGuardar={guardar} />
@@ -204,11 +196,12 @@ export function ModalGuiaPreguntas({ archivos, cargandoArchivos = false, idArchi
 
         {paso === 'guardada' && (
           <>
-            <p className={styles.notice} role="status">Listo: la guía se guardó en la carpeta "guia" de Material como documento Word.</p>
+            <p className={styles.notice} role="status">Listo: la guía se guardó en la carpeta "Guía de preguntas" de Material como documento Word.</p>
             <div className={styles.modalActions}><Button onClick={onCerrar}>Cerrar</Button></div>
           </>
         )}
       </div>
     </div>
+    </VentanaIA>
   );
 }

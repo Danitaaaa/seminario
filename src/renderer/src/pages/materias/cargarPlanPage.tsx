@@ -1,7 +1,7 @@
 // src/renderer/src/pages/materias/cargarPlanPage.tsx
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ClipboardPaste, FileUp, Plus, TriangleAlert } from 'lucide-react';
+import { ClipboardPaste, FileUp, Plus, Sparkles, TriangleAlert } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { usarAvisos } from '../../hooks/usarAvisos';
@@ -11,6 +11,7 @@ import { IndicadorIA } from '../../components/materialIA/indicadorIA';
 import { EXTENSIONES_IMAGEN, imagenesDePlan } from '../../utils/imagenesDePlan';
 import type { Cuatrimestre, EstadoMateria, Formacion } from '../../types/materias';
 import { CUATRIMESTRES, ESTADOS, PROMPT_PLAN, estadoInicial, mensajeDeError } from './utilidadesMaterias';
+import type { PreguntaPlanIA } from '../../../../preload/apis/materialIA';
 import { Pasos } from './formacionPage';
 import '../../styles/materias.css';
 
@@ -34,6 +35,13 @@ interface MateriaLeida {
 const separar = (texto: string) => texto.split(';').map((t) => t.trim()).filter(Boolean);
 const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 
+// Lo que se le mandó a la IA, para volver a pedírselo con las respuestas del usuario.
+interface PlanParaIA {
+  nombre: string;
+  imagenes?: string[];
+  textoPlan?: string;
+}
+
 const EJEMPLO = 'Primer año\nPrimer cuatrimestre\nÁlgebra y Geometría Analítica\nAnálisis Matemático I\nAnual\nAlgoritmos y Estructuras de Datos\n\nSegundo año\n...';
 
 export function CargarPlanPage() {
@@ -42,6 +50,7 @@ export function CargarPlanPage() {
   const avisos = usarAvisos();
   const idFormacion = Number(useParams().idFormacion);
   const [formacion, setFormacion] = useState<Formacion | null>(null);
+  const [formaciones, setFormaciones] = useState<Formacion[]>([]);
   const [texto, setTexto] = useState('');
   const [nombreArchivo, setNombreArchivo] = useState('');
   const [filas, setFilas] = useState<Fila[] | null>(null);
@@ -52,12 +61,21 @@ export function CargarPlanPage() {
   // Solo cuando ya la está leyendo la IA (para mostrar la animación de "Generando").
   const [leyendoConIA, setLeyendoConIA] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  // Preguntas de la IA cuando el plan tiene algo para elegir (varias carreras, orientaciones…).
+  const [preguntasIA, setPreguntasIA] = useState<PreguntaPlanIA[] | null>(null);
+  const [respuestasIA, setRespuestasIA] = useState<string[]>([]);
+  const planParaIA = useRef<PlanParaIA | null>(null);
+  // Lo que ya contestó en vueltas anteriores (como en un chat: primero la carrera, después la orientación…).
+  const [respondidas, setRespondidas] = useState<{ pregunta: string; respuesta: string }[]>([]);
   const trabajoIA = useRef<ReturnType<typeof nuevoTrabajoIA> | null>(null);
   const entradaArchivo = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     window.api.listarFormaciones({ usuarioId })
-      .then((fs) => setFormacion(fs.find((f) => f.idFormacion === idFormacion) ?? null))
+      .then((fs) => {
+        setFormaciones(fs);
+        setFormacion(fs.find((f) => f.idFormacion === idFormacion) ?? null);
+      })
       .catch((e) => setError(mensajeDeError(e, 'No se pudo cargar la formación.')));
   }, [idFormacion]);
 
@@ -88,51 +106,103 @@ export function CargarPlanPage() {
     }
   }
 
+  // La IA pasa el plan a texto con el prompt de siempre. Si el plan tiene algo para elegir
+  // (por ejemplo, varias carreras), primero devuelve las preguntas y se espera la respuesta del usuario.
+  // Devuelve false si no hubo IA disponible (para seguir sin ella).
+  async function leerConIA(plan: PlanParaIA, respuestas: { pregunta: string; respuesta: string }[] = []): Promise<boolean> {
+    setLeyendoConIA(true);
+    trabajoIA.current = nuevoTrabajoIA();
+    try {
+      const r = await apiIA().transcribirPlanIA({
+        trabajoId: trabajoIA.current.id, nombre: plan.nombre, prompt: PROMPT_PLAN,
+        imagenes: plan.imagenes, textoPlan: plan.textoPlan, respuestas,
+      });
+      if (!r.ok) {
+        // Con texto sacado del archivo, si la IA no está o falla, el texto queda tal cual en el cuadro.
+        if (plan.textoPlan) return false;
+        if (r.causa !== 'cancelado') setError(r.mensaje);
+        return true;
+      }
+      setNombreArchivo(plan.nombre);
+      if (r.preguntas.length) {
+        planParaIA.current = plan;
+        setRespondidas(respuestas);
+        setRespuestasIA([]);
+        setPreguntasIA(r.preguntas);
+        return true;
+      }
+      setPreguntasIA(null);
+      setTexto(r.texto);
+      avisos.exito('La IA pasó el plan a texto. Revisalo y tocá "Leer plan".');
+      return true;
+    } finally {
+      trabajoIA.current = null;
+      setLeyendoConIA(false);
+    }
+  }
+
   // Carga del archivo:
-  //  1. La app intenta sacar el texto sola (rápido, sin IA).
-  //  2. Si no puede (PDF escaneado o foto), la IA disponible lee las páginas como imágenes y el texto
-  //     aparece solo en el cuadro. Mientras la IA trabaja se ve la animación de "Generando" con Cancelar.
-  //  3. Después se revisa el texto y se toca "Leer plan".
+  //  1. La app saca el texto sola si puede (PDF con texto, Word) y se lo pasa a la IA para ordenarlo.
+  //     Si no hay ninguna IA disponible, el texto queda tal cual en el cuadro, como antes.
+  //  2. Si no hay texto (PDF escaneado o foto), la IA lee las páginas como imágenes.
+  //  3. Si la IA pregunta algo, se contesta y recién ahí aparece el texto. Después se revisa y se toca "Leer plan".
   async function cargarArchivo(archivo: File | undefined): Promise<void> {
     if (!archivo || ocupado) return;
     setError('');
+    setPreguntasIA(null);
+    setRespondidas([]);
     setLeyendoArchivo(true);
     try {
       const extension = archivo.name.split('.').pop()?.toLowerCase() ?? '';
       const ruta = window.api.rutaDeArchivo(archivo);
 
-      // 1. Sin IA (las fotos no tienen texto que leer: van directo a la IA).
       if (ruta && !EXTENSIONES_IMAGEN.includes(extension)) {
+        let extraido: { nombre: string; texto: string } | null = null;
         try {
-          const r = await apiIA().extraerTextoPlan({ ruta });
-          setNombreArchivo(r.nombre);
-          setTexto(r.texto);
-          return;
+          extraido = await apiIA().extraerTextoPlan({ ruta });
         } catch {
-          // Sin texto seleccionable: sigue con la IA.
+          // Sin texto seleccionable: sigue con las imágenes.
+        }
+        if (extraido) {
+          const conIA = await leerConIA({ nombre: extraido.nombre, textoPlan: extraido.texto });
+          if (!conIA) {
+            setNombreArchivo(extraido.nombre);
+            setTexto(extraido.texto);
+          }
+          return;
         }
       }
 
-      // 2. Con IA.
       setLeyendoConIA(true);
       const imagenes = await imagenesDePlan(archivo);
       if (imagenes.length === 0) {
+        setLeyendoConIA(false);
         return setError('No se pudo leer el archivo. Probá con un PDF, una foto del plan o pegá el texto a mano.');
       }
-      trabajoIA.current = nuevoTrabajoIA();
-      const r = await apiIA().transcribirPlanIA({ trabajoId: trabajoIA.current.id, nombre: archivo.name, prompt: PROMPT_PLAN, imagenes });
-      if (!r.ok) {
-        if (r.causa !== 'cancelado') setError(r.mensaje);
-        return;
-      }
-      setNombreArchivo(archivo.name);
-      setTexto(r.texto);
-      avisos.exito('La IA pasó el plan a texto. Revisalo y tocá "Leer plan".');
+      await leerConIA({ nombre: archivo.name, imagenes });
     } catch (e) {
       setError(mensajeDeError(e, 'No se pudo leer el archivo.'));
     } finally {
-      trabajoIA.current = null;
       setLeyendoConIA(false);
+      setLeyendoArchivo(false);
+    }
+  }
+
+  // El usuario eligió una opción: pasa a la siguiente pregunta o, si era la última, la IA transcribe.
+  async function responderIA(opcion: string): Promise<void> {
+    if (!preguntasIA || !planParaIA.current) return;
+    const respuestas = [...respuestasIA, opcion];
+    if (respuestas.length < preguntasIA.length) return setRespuestasIA(respuestas);
+    const plan = planParaIA.current;
+    const pares = [...respondidas, ...preguntasIA.map((p, i) => ({ pregunta: p.pregunta, respuesta: respuestas[i] }))];
+    setPreguntasIA(null);
+    setLeyendoArchivo(true);
+    setError('');
+    try {
+      await leerConIA(plan, pares);
+    } catch (e) {
+      setError(mensajeDeError(e, 'No se pudo leer el archivo.'));
+    } finally {
       setLeyendoArchivo(false);
     }
   }
@@ -200,6 +270,25 @@ export function CargarPlanPage() {
       <div className={`materias-pagina ${filas ? '' : 'materias-pagina--angosto'}`}>
         <Pasos actual={filas ? 3 : 2} />
 
+        {/* Bien a la vista en qué formación se cargan las materias, y se puede cambiar antes de empezar. */}
+        <div className="plan-destino">
+          <label>
+            Las materias se van a cargar en
+            <select
+              value={idFormacion}
+              disabled={ocupado || !!filas}
+              onChange={(e) => navigate(`/materias/plan/${e.target.value}`)}
+            >
+              {formaciones.map((f) => <option key={f.idFormacion} value={f.idFormacion}>{f.nombre}</option>)}
+            </select>
+          </label>
+          {!filas && (
+            <button type="button" className="materias-link" onClick={() => navigate('/materias/formacion')} disabled={ocupado}>
+              <Plus size={15} /> Crear otra formación
+            </button>
+          )}
+        </div>
+
         {!filas && (
           <section className="materias-panel">
             <div className="materias-resumen__datos">
@@ -219,10 +308,14 @@ export function CargarPlanPage() {
               <div>
                 <strong>Subí el archivo de tu plan</strong>
                 <span>PDF (también escaneado), Word (.docx), texto o una foto del plan. También podés arrastrarlo hasta acá.</span>
-                {nombreArchivo && <small>Archivo: {nombreArchivo}</small>}
+                {nombreArchivo && (
+                  <small>
+                    {preguntasIA ? `${nombreArchivo} · La IA lo leyó y necesita que confirmes un par de cosas antes de transcribirlo.` : `Archivo: ${nombreArchivo}`}
+                  </small>
+                )}
               </div>
               <Boton variante="contorno" onClick={() => entradaArchivo.current?.click()} disabled={ocupado}>
-                <FileUp size={16} /> {leyendoArchivo && !leyendoConIA ? 'Leyendo archivo…' : 'Elegir archivo'}
+                <FileUp size={16} /> {leyendoArchivo && !leyendoConIA ? 'Leyendo archivo…' : nombreArchivo ? 'Cambiar archivo' : 'Elegir archivo'}
               </Boton>
               <input
                 ref={entradaArchivo}
@@ -247,6 +340,34 @@ export function CargarPlanPage() {
                   <Boton variante="contorno" onClick={cancelarLecturaIA}>Cancelar generación</Boton>
                 </div>
               </>
+            )}
+
+            {preguntasIA && !leyendoConIA && (
+              <section className="plan-ia-ayuda" aria-live="polite">
+                <header className="plan-ia-ayuda__cabecera">
+                  <span>La IA necesita tu ayuda</span>
+                  <span>Pregunta {respuestasIA.length + 1} de {preguntasIA.length}</span>
+                </header>
+                {respondidas.length > 0 && (
+                  <p className="plan-ia-ayuda__elegido">
+                    Ya elegiste: {respondidas.map((r) => r.respuesta).join(' · ')}
+                  </p>
+                )}
+                <p className="plan-ia-ayuda__pregunta">
+                  <span className="plan-ia-ayuda__chispa" aria-hidden="true"><Sparkles size={16} /></span>
+                  {preguntasIA[respuestasIA.length].pregunta}
+                </p>
+                <div className="plan-ia-ayuda__opciones" role="radiogroup" aria-label={preguntasIA[respuestasIA.length].pregunta} data-voz-grupo>
+                  {preguntasIA[respuestasIA.length].opciones.map((opcion) => (
+                    <button key={opcion} type="button" role="radio" aria-checked={false} className="plan-ia-ayuda__opcion" onClick={() => void responderIA(opcion)}>
+                      <span className="plan-ia-ayuda__circulo" aria-hidden="true" /> {opcion}
+                    </button>
+                  ))}
+                </div>
+                {respuestasIA.length > 0 && (
+                  <button type="button" className="materias-link" onClick={() => setRespuestasIA((r) => r.slice(0, -1))}>Volver a la pregunta anterior</button>
+                )}
+              </section>
             )}
 
             <label className="materias-campo">O pegá el texto del plan
@@ -370,7 +491,7 @@ export function CargarPlanPage() {
               <div className="materias-botones">
                 <Boton variante="contorno" onClick={() => setFilas(null)}>Volver al texto</Boton>
                 <Boton onClick={() => void agregar()} disabled={elegidas.length === 0 || trabajando}>
-                  {trabajando ? 'Agregando…' : `Agregar ${elegidas.length} ${elegidas.length === 1 ? 'materia' : 'materias'}`}
+                  {trabajando ? 'Agregando…' : `Agregar ${elegidas.length} ${elegidas.length === 1 ? 'materia' : 'materias'}${formacion ? ` a ${formacion.nombre}` : ''}`}
                 </Boton>
               </div>
             </div>

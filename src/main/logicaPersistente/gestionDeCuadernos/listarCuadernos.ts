@@ -28,7 +28,7 @@ export class ListarCuadernos {
               (SELECT count(DISTINCT ar.id_archivo) FROM archivos ar JOIN arbol a ON ar.id_padre = a.id_nodo
                 WHERE a.id_materia = mis.id_materia)::int AS archivos,
               (SELECT count(*) FROM flashcards fl
-                WHERE fl.id_deck IN (${mazosDelCuaderno('$1', 'mis.nombre', 'mis.id_materia', 'mis.id_cuaderno')}))::int AS flashcards,
+                WHERE fl.id_deck IN (${mazosDelCuaderno('$1', 'mis.nombre', 'mis.id_materia')}))::int AS flashcards,
               (SELECT count(*) FROM nota n WHERE n.id_cuaderno = mis.id_cuaderno)::int AS notas_total,
               (SELECT count(*) FROM nota n WHERE n.id_cuaderno = mis.id_cuaderno AND n.estado <> 'pendiente')::int AS notas_cargadas,
               prox.nombre AS proximo_nombre,

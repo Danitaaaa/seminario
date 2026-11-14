@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type DragEvent, type FormEvent, type KeyboardEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Check, Copy, ImagePlus, MessageCircle, PanelLeft, PanelLeftClose, Pencil, SendHorizontal, Sparkles, Square, Trash2, X } from 'lucide-react';
+import {
+  Check, Copy, FileText, FileUp, FolderUp, ImagePlus, LoaderCircle, MessageCircle, Mic, PanelLeft, PanelLeftClose, Pencil,
+  Plus, Search, SendHorizontal, Sparkles, Square, Trash2, X,
+} from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { CartelError } from '../../components/comunes/cartelError';
 import { TextoConFormulas } from '../../components/comunes/textoConFormulas';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { nombreProveedorIA } from '../../types/ia';
-import type { ConversacionIA, MensajeIA } from '../../types/chatIA';
+import type { ConversacionIA, DocumentoChat, LecturaAdjuntos, MensajeIA } from '../../types/chatIA';
+import type { Archivo } from '../../types/nodo';
+import { ModalAbrirMaterial } from '../../components/sesionEstudio/modalAbrirMaterial';
+import { usarDictado } from '../../hooks/usarDictado';
 import { mensajeError } from '../metodos/utilidadesMetodosIA';
 import { TIPOS_IMAGEN_ACEPTADOS, imagenAJpeg, imagenComoSrc } from '../../utils/imagenes';
+import '../../styles/sesionesEstudio.css';
 import '../../styles/chatIA.css';
 
 const SUGERENCIAS = [
@@ -23,11 +30,18 @@ interface Pendiente {
   trabajoId: string;
   texto: string;
   imagenes: string[];
+  documentos: DocumentoChat[];
 }
 
 // Tienen que coincidir con gestionDeChatIA/dto.ts.
 const MAX_IMAGENES = 4;
+const MAX_DOCUMENTOS = 10;
 const LADO_MAXIMO_IMAGEN = 1280; // px: alcanza para leer texto de una captura y pesa poco
+
+// Si salís del chat y volvés, sigue la conversación que tenías abierta (y lo que estabas escribiendo).
+// Dura mientras la app está abierta; "Nueva conversación" lo limpia.
+let ultimaConversacion: number | null = null;
+let borrador = '';
 
 function formatearDia(fecha: string): string {
   const d = new Date(fecha);
@@ -51,7 +65,7 @@ export function ChatIAPage() {
   const [conversaciones, setConversaciones] = useState<ConversacionIA[]>([]);
   const [mensajes, setMensajes] = useState<MensajeIA[]>([]);
   const [cargando, setCargando] = useState(false);
-  const [texto, setTexto] = useState('');
+  const [texto, setTexto] = useState(borrador);
   const [pendiente, setPendiente] = useState<Pendiente | null>(null);
   const [error, setError] = useState('');
   const [renombrando, setRenombrando] = useState<{ id: number; titulo: string } | null>(null);
@@ -62,6 +76,21 @@ export function ChatIAPage() {
   const [preparandoImagen, setPreparandoImagen] = useState(false);
   const [imagenAmpliada, setImagenAmpliada] = useState<string | null>(null);
   const entradaImagenRef = useRef<HTMLInputElement>(null);
+  // Archivos (PDF, Word o texto) para el próximo mensaje: el main ya leyó su texto.
+  // Después de mandarlos, la IA los sigue teniendo en esa conversación mientras la app esté abierta.
+  const [documentos, setDocumentos] = useState<DocumentoChat[]>([]);
+  const [leyendoArchivos, setLeyendoArchivos] = useState(false);
+  const [menuAdjuntar, setMenuAdjuntar] = useState(false);
+  const [buscandoEnSyntra, setBuscandoEnSyntra] = useState(false);
+  const menuAdjuntarRef = useRef<HTMLDivElement>(null);
+  // Micrófono: lo dictado se suma al final de lo que ya está escrito.
+  const dictado = usarDictado(
+    (dicho) => {
+      setTexto((actual) => (actual.trim() ? `${actual.trimEnd()} ${dicho}` : dicho));
+      entradaRef.current?.focus();
+    },
+    setError,
+  );
 
   const montado = useRef(true);
   // Al crear una conversación ya tenemos sus mensajes: no hace falta volver a pedirlos al cambiar la ruta.
@@ -87,6 +116,19 @@ export function ChatIAPage() {
   useEffect(() => {
     void cargarLista();
   }, [cargarLista]);
+
+  // Al entrar a /chat se vuelve a la conversación que estaba abierta.
+  useEffect(() => {
+    if (idConversacion == null && ultimaConversacion != null) navigate(`/chat/${ultimaConversacion}`, { replace: true });
+  }, []);
+
+  useEffect(() => {
+    if (idConversacion != null) ultimaConversacion = idConversacion;
+  }, [idConversacion]);
+
+  useEffect(() => {
+    borrador = texto;
+  }, [texto]);
 
   // Abrir la conversación de la ruta (o una vacía en /chat).
   useEffect(() => {
@@ -133,6 +175,21 @@ export function ChatIAPage() {
     return () => window.removeEventListener('keydown', alPresionar);
   }, [historialAbierto, renombrando]);
 
+  // El menú de adjuntar se cierra con Escape o tocando afuera.
+  useEffect(() => {
+    if (!menuAdjuntar) return;
+    const alPresionar = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && setMenuAdjuntar(false);
+    const alTocar = (e: MouseEvent) => {
+      if (!menuAdjuntarRef.current?.contains(e.target as Node)) setMenuAdjuntar(false);
+    };
+    window.addEventListener('keydown', alPresionar);
+    window.addEventListener('mousedown', alTocar);
+    return () => {
+      window.removeEventListener('keydown', alPresionar);
+      window.removeEventListener('mousedown', alTocar);
+    };
+  }, [menuAdjuntar]);
+
   // Siempre se ve el último mensaje.
   useEffect(() => {
     finRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -172,6 +229,44 @@ export function ChatIAPage() {
     }
   }
 
+  function sumarDocumentos(nuevos: DocumentoChat[], avisos: string[] = []) {
+    const lugar = MAX_DOCUMENTOS - documentos.length;
+    const avisosFinales = [...avisos];
+    if (nuevos.length > lugar) avisosFinales.push(`Podés adjuntar hasta ${MAX_DOCUMENTOS} archivos por mensaje: se agregaron los primeros.`);
+    setDocumentos((actuales) => [...actuales, ...nuevos].slice(0, MAX_DOCUMENTOS));
+    if (avisosFinales.length) setError(avisosFinales.join(' '));
+  }
+
+  // Subir archivo o carpeta de la compu: el diálogo lo abre el main y devuelve el texto leído.
+  async function adjuntarDeLaCompu(carpeta: boolean) {
+    setMenuAdjuntar(false);
+    setLeyendoArchivos(true);
+    try {
+      const lectura: LecturaAdjuntos | null = await window.api.adjuntarArchivosChat({ carpeta });
+      if (lectura && montado.current) sumarDocumentos(lectura.documentos, lectura.avisos);
+    } catch (e) {
+      if (montado.current) setError(mensajeError(e, 'No se pudieron leer los archivos.'));
+    } finally {
+      if (montado.current) setLeyendoArchivos(false);
+      entradaRef.current?.focus();
+    }
+  }
+
+  // "Buscar en Syntra": un archivo de Material.
+  async function adjuntarDeMaterial(archivo: Archivo) {
+    setBuscandoEnSyntra(false);
+    setLeyendoArchivos(true);
+    try {
+      const documento = await window.api.adjuntarMaterialChat({ idArchivo: archivo.id });
+      if (montado.current) sumarDocumentos([documento]);
+    } catch (e) {
+      if (montado.current) setError(mensajeError(e, 'No se pudo leer el archivo.'));
+    } finally {
+      if (montado.current) setLeyendoArchivos(false);
+      entradaRef.current?.focus();
+    }
+  }
+
   // Ctrl+V de una captura en el cuadro de texto.
   function alPegar(evento: ClipboardEvent<HTMLTextAreaElement>) {
     const archivos = [...evento.clipboardData.files].filter((a) => a.type.startsWith('image/'));
@@ -189,17 +284,20 @@ export function ChatIAPage() {
   async function enviar(contenido = texto) {
     const pregunta = contenido.trim();
     const imagenes = adjuntos;
-    if ((!pregunta && imagenes.length === 0) || pendiente || preparandoImagen) return;
-    const trabajo: Pendiente = { trabajoId: crypto.randomUUID(), texto: pregunta, imagenes };
+    const docs = documentos;
+    if ((!pregunta && imagenes.length === 0 && docs.length === 0) || pendiente || preparandoImagen || leyendoArchivos) return;
+    const trabajo: Pendiente = { trabajoId: crypto.randomUUID(), texto: pregunta, imagenes, documentos: docs };
     setPendiente(trabajo);
     setTexto('');
     setAdjuntos([]);
+    setDocumentos([]);
     setError('');
 
-    // Si se cancela o falla, la pregunta y las imágenes vuelven al cuadro para editarlas o reenviarlas.
+    // Si se cancela o falla, la pregunta y los adjuntos vuelven al cuadro para editarlos o reenviarlos.
     const devolver = () => {
       setTexto(pregunta);
       setAdjuntos(imagenes);
+      setDocumentos(docs);
     };
 
     try {
@@ -208,7 +306,10 @@ export function ChatIAPage() {
         idConversacion,
         texto: pregunta,
         ...(imagenes.length ? { imagenes } : {}),
+        ...(docs.length ? { documentos: docs } : {}),
       });
+      // Aunque haya salido del chat mientras la IA respondía, al volver se abre esta conversación.
+      if (r.ok && idConversacion == null) ultimaConversacion = r.conversacion.idConversacion;
       if (!montado.current) return;
       if (!r.ok) {
         devolver();
@@ -270,6 +371,7 @@ export function ChatIAPage() {
     try {
       await window.api.eliminarConversacionIA({ idConversacion: conversacion.idConversacion });
       setConversaciones((lista) => lista.filter((c) => c.idConversacion !== conversacion.idConversacion));
+      if (conversacion.idConversacion === ultimaConversacion) ultimaConversacion = null;
       if (conversacion.idConversacion === idConversacion) navigate('/chat');
     } catch (e) {
       setError(mensajeError(e, 'No se pudo eliminar la conversación.'));
@@ -287,8 +389,10 @@ export function ChatIAPage() {
   }
 
   function nuevaConversacion() {
+    ultimaConversacion = null;
     setTexto('');
     setAdjuntos([]);
+    setDocumentos([]);
     setError('');
     setHistorialAbierto(false);
     if (idConversacion != null) navigate('/chat');
@@ -297,14 +401,23 @@ export function ChatIAPage() {
 
   function abrirConversacion(id: number) {
     setHistorialAbierto(false);
+    setDocumentos([]);
     navigate(`/chat/${id}`);
   }
 
   const ocupado = pendiente !== null;
   const vacia = !cargando && mensajes.length === 0 && !pendiente;
   // Los brillitos pasan del centro a la barra de arriba en cuanto se empieza a escribir.
-  const iniciada = !vacia || texto.trim().length > 0 || adjuntos.length > 0;
-  const puedeEnviar = (texto.trim().length > 0 || adjuntos.length > 0) && !preparandoImagen;
+  const iniciada = !vacia || texto.trim().length > 0 || adjuntos.length > 0 || documentos.length > 0;
+  const puedeEnviar = (texto.trim().length > 0 || adjuntos.length > 0 || documentos.length > 0) && !preparandoImagen && !leyendoArchivos;
+  const textoMicrofono = {
+    inactivo: 'Dictar con el micrófono',
+    preparando: dictado.progreso != null
+      ? `Descargando el dictado (solo la primera vez): ${Math.round(dictado.progreso * 100)}%`
+      : 'Preparando el dictado…',
+    grabando: 'Terminar de dictar',
+    transcribiendo: 'Pasando la voz a texto…',
+  }[dictado.estado];
 
   return (
     <PlantillaLayout titulo="IA" idActivo="chat" usuario={{ nombre: 'Usuario' }}>
@@ -312,14 +425,14 @@ export function ChatIAPage() {
         <div className="chat-ia__barra">
           <button
             type="button"
-            className="chat-ia__icono-boton"
+            className="chat-ia__icono-boton chat-ia__boton-conversaciones"
             onClick={() => setHistorialAbierto((v) => !v)}
             title={historialAbierto ? 'Ocultar conversaciones' : 'Ver conversaciones anteriores'}
-            aria-label={historialAbierto ? 'Ocultar conversaciones' : 'Ver conversaciones anteriores'}
             aria-expanded={historialAbierto}
             aria-controls="chat-ia-historial"
           >
             {historialAbierto ? <PanelLeftClose size={20} /> : <PanelLeft size={20} />}
+            <span>Conversaciones</span>
           </button>
           {iniciada && (
             <button
@@ -461,7 +574,9 @@ export function ChatIAPage() {
               <>
                 <div className="chat-ia__burbuja chat-ia__burbuja--usuario">
                   <ImagenesMensaje imagenes={pendiente.imagenes} onAmpliar={setImagenAmpliada} />
-                  {pendiente.texto}
+                  {[pendiente.texto, pendiente.documentos.length ? `📎 ${pendiente.documentos.map((d) => d.nombre).join(', ')}` : '']
+                    .filter(Boolean)
+                    .join('\n')}
                 </div>
                 <div className="chat-ia__respuesta chat-ia__respuesta--pensando" role="status">
                   <span className="chat-ia__puntos" aria-hidden="true"><i /><i /><i /></span>
@@ -472,8 +587,23 @@ export function ChatIAPage() {
             <div ref={finRef} />
           </div>
 
-          {(adjuntos.length > 0 || preparandoImagen) && (
-            <div className="chat-ia__adjuntos" aria-label="Imágenes para enviar">
+          {(adjuntos.length > 0 || preparandoImagen || documentos.length > 0 || leyendoArchivos) && (
+            <div className="chat-ia__adjuntos" aria-label="Adjuntos para enviar">
+              {documentos.map((d, i) => (
+                <span key={`${d.nombre}-${i}`} className="chat-ia__documento" title={d.nombre}>
+                  <FileText size={15} aria-hidden="true" />
+                  <span className="chat-ia__documento-nombre">{d.nombre}</span>
+                  <button
+                    type="button"
+                    onClick={() => setDocumentos((actuales) => actuales.filter((_, j) => j !== i))}
+                    title="Quitar archivo"
+                    aria-label={`Quitar ${d.nombre}`}
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+              {leyendoArchivos && <span className="chat-ia__documento chat-ia__adjunto--cargando" role="status">Leyendo archivos…</span>}
               {adjuntos.map((imagen, i) => (
                 <span key={i} className="chat-ia__adjunto">
                   <img src={imagenComoSrc(imagen)} alt={`Imagen ${i + 1} para enviar`} />
@@ -491,6 +621,16 @@ export function ChatIAPage() {
             </div>
           )}
 
+          {dictado.estado !== 'inactivo' && (
+            <p className="chat-ia__estado-dictado" aria-hidden="true">
+              {dictado.estado === 'grabando' ? <span className="chat-ia__punto-grabando" /> : <LoaderCircle size={14} className="chat-ia__girando" />}
+              {dictado.estado === 'grabando' ? 'Escuchando… apretá el cuadrado para terminar' : textoMicrofono}
+              {dictado.estado === 'preparando' && dictado.progreso != null && (
+                <span className="chat-ia__barra-dictado"><span style={{ width: `${Math.round(dictado.progreso * 100)}%` }} /></span>
+              )}
+            </p>
+          )}
+
           <form className="chat-ia__entrada" onSubmit={alEnviar}>
             <textarea
               ref={entradaRef}
@@ -504,16 +644,54 @@ export function ChatIAPage() {
               onPaste={alPegar}
               disabled={cargando}
             />
-            <button
-              type="button"
-              className="chat-ia__adjuntar"
-              onClick={() => entradaImagenRef.current?.click()}
-              disabled={ocupado || cargando || adjuntos.length >= MAX_IMAGENES}
-              title={adjuntos.length >= MAX_IMAGENES ? `Hasta ${MAX_IMAGENES} imágenes por mensaje` : 'Adjuntar imagen'}
-              aria-label="Adjuntar imagen"
-            >
-              <ImagePlus size={19} />
-            </button>
+            <div className="chat-ia__menu-contenedor" ref={menuAdjuntarRef}>
+              <button
+                type="button"
+                className="chat-ia__adjuntar"
+                onClick={() => setMenuAdjuntar((v) => !v)}
+                disabled={ocupado || cargando || leyendoArchivos}
+                title="Adjuntar"
+                aria-label="Adjuntar archivo, carpeta o foto"
+                aria-haspopup="menu"
+                aria-expanded={menuAdjuntar}
+              >
+                <Plus size={20} />
+              </button>
+              {menuAdjuntar && (
+                <div className="chat-ia__menu" role="menu" aria-label="Adjuntar" data-voz-grupo>
+                  <button type="button" role="menuitem" className="chat-ia__menu-opcion" autoFocus onClick={() => void adjuntarDeLaCompu(false)}>
+                    <FileUp size={17} /> Subir archivo
+                  </button>
+                  <button type="button" role="menuitem" className="chat-ia__menu-opcion" onClick={() => void adjuntarDeLaCompu(true)}>
+                    <FolderUp size={17} /> Subir carpeta
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="chat-ia__menu-opcion"
+                    onClick={() => {
+                      setMenuAdjuntar(false);
+                      setBuscandoEnSyntra(true);
+                    }}
+                  >
+                    <Search size={17} /> Buscar en Syntra
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="chat-ia__menu-opcion"
+                    disabled={adjuntos.length >= MAX_IMAGENES}
+                    title={adjuntos.length >= MAX_IMAGENES ? `Hasta ${MAX_IMAGENES} imágenes por mensaje` : undefined}
+                    onClick={() => {
+                      setMenuAdjuntar(false);
+                      entradaImagenRef.current?.click();
+                    }}
+                  >
+                    <ImagePlus size={17} /> Subir foto
+                  </button>
+                </div>
+              )}
+            </div>
             <input
               ref={entradaImagenRef}
               type="file"
@@ -526,6 +704,19 @@ export function ChatIAPage() {
                 void agregarImagenes(archivos);
               }}
             />
+            <button
+              type="button"
+              className={`chat-ia__adjuntar chat-ia__microfono${dictado.estado === 'grabando' ? ' chat-ia__microfono--grabando' : ''}`}
+              onClick={() => void dictado.alternar()}
+              disabled={ocupado || cargando || dictado.estado === 'preparando' || dictado.estado === 'transcribiendo'}
+              title={textoMicrofono}
+              aria-label={textoMicrofono}
+              aria-pressed={dictado.estado === 'grabando'}
+            >
+              {dictado.estado === 'preparando' || dictado.estado === 'transcribiendo'
+                ? <LoaderCircle size={19} className="chat-ia__girando" />
+                : dictado.estado === 'grabando' ? <Square size={15} /> : <Mic size={19} />}
+            </button>
             {ocupado ? (
               <button type="button" className="chat-ia__boton chat-ia__boton--cancelar" onClick={cancelar} title="Detener respuesta" aria-label="Detener respuesta">
                 <Square size={16} />
@@ -537,10 +728,16 @@ export function ChatIAPage() {
             )}
           </form>
           <p className="chat-ia__ayuda">
-            <MessageCircle size={13} /> Enter para enviar · Shift + Enter para un salto de línea · Podés pegar o arrastrar imágenes. La IA puede equivocarse: revisá lo importante.
+            <MessageCircle size={13} /> Enter para enviar · Shift + Enter para un salto de línea · Con + adjuntás archivos, carpetas o fotos · Con el micrófono dictás. La IA puede equivocarse: revisá lo importante.
+          </p>
+          {/* Para lectores de pantalla: qué está pasando con el micrófono. */}
+          <p className="chat-ia__solo-lector" role="status" aria-live="polite">
+            {dictado.estado === 'grabando' ? 'Escuchando. Apretá de nuevo el micrófono para terminar.' : dictado.estado === 'inactivo' ? '' : textoMicrofono}
           </p>
         </section>
       </div>
+
+      {buscandoEnSyntra && <ModalAbrirMaterial onElegir={(a) => void adjuntarDeMaterial(a)} onCerrar={() => setBuscandoEnSyntra(false)} />}
 
       {imagenAmpliada && (
         <div className="chat-ia__ampliada" role="dialog" aria-label="Imagen ampliada" onClick={() => setImagenAmpliada(null)}>

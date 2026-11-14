@@ -111,6 +111,8 @@ export interface VerificarMailDto {
 const idSchema = z.number().int().positive();
 
 export const obtenerPerfilSchema = z.object({ id: idSchema });
+export const elegirColorAvatarSchema = z.object({ id: idSchema, color: z.number().int().min(0).max(9).nullable() });
+export const elegirAvatarSchema = z.object({ id: idSchema, avatar: z.string().regex(/^[a-z-]{1,30}$/, 'Avatar inválido.') });
 
 export const modificarPerfilSchema = z.object({
     id: idSchema,

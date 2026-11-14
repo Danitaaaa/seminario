@@ -4,6 +4,7 @@ import { puede, rolDe } from '../../permisos';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { leerPaleta } from '../../hooks/usarModo';
 import { buscarPaleta } from '../../styles/temas/paletas';
+import { PALETA, claveMiembro, coloresDeMiembros } from '../../utils/tablero';
 
 type RolEditable = 'editor' | 'lector';
 
@@ -17,14 +18,6 @@ interface Props {
 
 const ETIQUETA_ROL = { propietario: 'Propietario', editor: 'Editor', lector: 'Solo lectura' } as const;
 
-// Colores de avatar, elegidos de forma estable según el usuario.
-const PALETA = [
-    { fondo: '#e3e8f7', texto: '#2b3a67' },
-    { fondo: '#fde9c9', texto: '#8a5a12' },
-    { fondo: '#dff1e4', texto: '#2f6b45' },
-    { fondo: '#f6dfe6', texto: '#8c3552' },
-    { fondo: '#e9e2f5', texto: '#5a3f8a' },
-];
 
 // Electron antepone "Error invoking remote method '...': Error: " al mensaje del main.
 const limpiar = (e: unknown) =>
@@ -39,10 +32,6 @@ const iniciales = (nombre?: string | null) => {
     return partes.length === 0 ? '?' : partes.slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
 };
 
-// CAMBIO: semilla estable para el color. Un miembro que solo existe en el servidor
-// tiene idUsuario null, así que se usa el mail.
-const semilla = (m: Miembro) =>
-    m.idUsuario ?? [...m.mail].reduce((acc, c) => acc + c.charCodeAt(0), 0);
 
 function IconoUsuarios() {
     return (
@@ -62,6 +51,7 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
     const [mail, setMail] = useState('');
     const [rolNuevo, setRolNuevo] = useState<RolEditable>('editor');
     const [ocupado, setOcupado] = useState(false);
+    const [eligiendoColor, setEligiendoColor] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [aviso, setAviso] = useState<string | null>(null);
     const [invitaciones, setInvitaciones] = useState<InvitacionPendiente[]>([]);
@@ -71,7 +61,20 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
     const activos = miembros.filter((m) => m.activo !== false);
 
     const rol = rolDe(activos, idUsuarioActual);
+    // Mismos colores que en la División de tareas y el cronograma: vos primero, sin repetir.
+    const colores = coloresDeMiembros(miembros.filter((m) => m.activo), (m) => m.idUsuario === idUsuarioActual);
     const puedeInvitar = puede(rol, 'miembro.invitar');
+
+    // Tu color en los proyectos: lo elegís tocando tu avatar. Con null vuelve al automático.
+    async function elegirColor(color: number | null) {
+        setEligiendoColor(false);
+        try {
+            await window.api.elegirColorAvatar({ id: idUsuarioActual, color });
+            await onCambio();
+        } catch {
+            setError('No se pudo cambiar el color.');
+        }
+    }
     const puedeCambiarRol = puede(rol, 'miembro.cambiarRol');
     const puedeQuitarOtros = puede(rol, 'miembro.quitar');
 
@@ -217,7 +220,7 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
                         {activos.map((m) => {
                             const propio = m.idUsuario === idUsuarioActual;
                             const nombre = nombreDe(m);
-                            const color = PALETA[semilla(m) % PALETA.length];
+                            const color = colores.get(claveMiembro(m)) ?? { fondo: 'var(--color-border)', texto: 'inherit' };
                             const editable = puedeCambiarRol && m.rol !== 'propietario' && !m.pendiente;
                             const puedeQuitar = m.rol !== 'propietario' && (puedeQuitarOtros || propio);
                             return (
@@ -225,13 +228,47 @@ export function GestionMiembros({ idProyecto, idUsuarioActual, miembros, onCambi
                                     key={m.mail}
                                     className={`miembros-item${m.pendiente ? ' miembros-item--pendiente' : ''}`}
                                 >
-                                    <span
-                                        className="miembros-item__avatar"
-                                        style={{ background: color.fondo, color: color.texto }}
-                                        aria-hidden="true"
-                                    >
-                                        {iniciales(nombre)}
-                                    </span>
+                                    {propio ? (
+                                        <span className="miembros-color">
+                                            <button
+                                                type="button"
+                                                className="miembros-item__avatar miembros-item__avatar--elegible"
+                                                style={{ background: color.fondo, color: color.texto }}
+                                                onClick={() => setEligiendoColor((v) => !v)}
+                                                title="Elegir tu color"
+                                                aria-label="Elegir el color de tu avatar"
+                                                aria-expanded={eligiendoColor}
+                                            >
+                                                {iniciales(nombre)}
+                                            </button>
+                                            {eligiendoColor && (
+                                                <span className="miembros-color__paleta" role="group" aria-label="Colores" data-voz-grupo>
+                                                    {PALETA.map((c, i) => (
+                                                        <button
+                                                            key={c.fondo}
+                                                            type="button"
+                                                            className="miembros-color__opcion"
+                                                            style={{ background: c.fondo }}
+                                                            aria-label={`Color ${i + 1}`}
+                                                            aria-pressed={m.colorAvatar === i}
+                                                            onClick={() => void elegirColor(i)}
+                                                        />
+                                                    ))}
+                                                    <button type="button" className="miembros-color__auto" onClick={() => void elegirColor(null)}>
+                                                        Automático
+                                                    </button>
+                                                </span>
+                                            )}
+                                        </span>
+                                    ) : (
+                                        <span
+                                            className="miembros-item__avatar"
+                                            style={{ background: color.fondo, color: color.texto }}
+                                            aria-hidden="true"
+                                        >
+                                            {iniciales(nombre)}
+                                        </span>
+                                    )}
 
                                     <span className="miembros-item__nombre" title={m.mail}>
                                         {nombre}

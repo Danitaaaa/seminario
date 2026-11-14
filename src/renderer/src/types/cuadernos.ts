@@ -47,6 +47,7 @@ export interface Cuaderno {
   mazos: { idDeck: number; nombre: string; flashcards: number; aMano: boolean }[];
   sesiones: { idSesion: number; nombre: string; fecha: string; estado: string }[];
   metodos: { nombre: string; sesiones: number }[];
+  materialesIA: { idMaterialIA: number; tipo: 'resumen' | 'cuestionario' | 'mapaMental'; titulo: string }[];
   notas: Nota[];
 }
 
@@ -58,6 +59,8 @@ export interface CuadernosApi {
   eliminarCuaderno(datos: { usuarioId: number; idCuaderno: number }): Promise<{ ok: boolean }>;
   agregarMazoCuaderno(datos: { usuarioId: number; idCuaderno: number; idDeck: number }): Promise<{ ok: boolean }>;
   quitarMazoCuaderno(datos: { usuarioId: number; idCuaderno: number; idDeck: number }): Promise<{ ok: boolean }>;
+  agregarMaterialIACuaderno(datos: { usuarioId: number; idCuaderno: number; idMaterialIA: number }): Promise<{ ok: boolean }>;
+  quitarMaterialIACuaderno(datos: { usuarioId: number; idCuaderno: number; idMaterialIA: number }): Promise<{ ok: boolean }>;
   crearNota(datos: { usuarioId: number; idCuaderno: number } & DatosNota): Promise<Nota>;
   modificarNota(datos: { usuarioId: number; idNota: number } & DatosNota): Promise<Nota>;
   eliminarNota(datos: { usuarioId: number; idNota: number }): Promise<{ ok: boolean }>;

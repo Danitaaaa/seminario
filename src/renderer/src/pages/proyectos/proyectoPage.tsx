@@ -128,7 +128,7 @@ function ProyectoDetalleContenido({ ID_USUARIO_ACTUAL }: { ID_USUARIO_ACTUAL: nu
             }
             subencabezado={
                 <>
-                    <AvataresMiembros miembros={miembros} />
+                    <AvataresMiembros miembros={miembros} idUsuarioActual={ID_USUARIO_ACTUAL} />
                     <GestionMiembros
                         idProyecto={proyecto.idProyecto}
                         idUsuarioActual={ID_USUARIO_ACTUAL}

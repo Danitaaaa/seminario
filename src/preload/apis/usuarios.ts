@@ -24,6 +24,8 @@ export const usuariosApi = {
     eliminarUsuario: (datos: unknown) => ipcRenderer.invoke("usuarios:eliminarUsuario", datos),
     obtenerFotoPerfil: (datos: unknown) => ipcRenderer.invoke("usuarios:obtenerFotoPerfil", datos),
     elegirFotoPerfil: (datos: unknown) => ipcRenderer.invoke("usuarios:elegirFotoPerfil", datos),
+    elegirAvatar: (datos: unknown) => ipcRenderer.invoke("usuarios:elegirAvatar", datos),
+    elegirColorAvatar: (datos: unknown) => ipcRenderer.invoke("usuarios:elegirColorAvatar", datos),
     verificarPassword: (datos: unknown) => ipcRenderer.invoke("usuarios:verificarPassword", datos),
     actualizarRostro: (datos: unknown) => ipcRenderer.invoke("usuarios:actualizarRostro", datos),
 };

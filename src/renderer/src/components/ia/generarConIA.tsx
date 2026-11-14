@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartelError } from '../comunes/cartelError';
 import { PantallaPrevia } from './pantallaPrevia';
-import { IndicadorIA } from '../materialIA/indicadorIA';
+import { VentanaIA } from '../materialIA/segundoPlano';
 import {
   NOMBRE_TIPO_IA,
   RUTA_TIPO_IA,
@@ -42,6 +42,8 @@ export function GenerarConIA({ archivo, onCerrar, tipoFijo }: GenerarConIAProps)
   const [progreso, setProgreso] = useState<ProgresoIA | null>(null);
   const [propuesta, setPropuesta] = useState<PropuestaIA | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // El cuestionario se guarda solo: al terminar, el cartel lleva a resolverlo.
+  const [cuestionarioListo, setCuestionarioListo] = useState<number | null>(null);
   const trabajoId = useRef<string | null>(null);
 
   // Progreso de la cola de IA (es una sola para toda la app: se filtra por id).
@@ -68,9 +70,9 @@ export function GenerarConIA({ archivo, onCerrar, tipoFijo }: GenerarConIAProps)
         preferencias: preferencias.trim() || undefined,
       });
       if (r.ok && r.propuesta.idMaterialIA) {
-        // Cuestionario: ya está guardado y se abre para resolver (no tiene pantalla previa).
-        navigate(`${RUTA_TIPO_IA.cuestionario}/${r.propuesta.idMaterialIA}/resolver`);
-        onCerrar();
+        // Cuestionario: ya está guardado y se resuelve desde el cartel (no tiene pantalla previa).
+        setCuestionarioListo(r.propuesta.idMaterialIA);
+        setPaso('revisar');
       } else if (r.ok) {
         setPropuesta(r.propuesta);
         setPaso('revisar');
@@ -100,6 +102,22 @@ export function GenerarConIA({ archivo, onCerrar, tipoFijo }: GenerarConIAProps)
         : 'Puede tardar un poco según el tamaño del material.';
 
   return (
+    <VentanaIA
+      generando={paso === 'generando'}
+      listo={paso === 'revisar'}
+      que={tipo === 'cuestionario' ? 'el cuestionario' : `el ${NOMBRE_TIPO_IA[tipo].toLowerCase()}`}
+      mensaje={`Generando el ${NOMBRE_TIPO_IA[tipo].toLowerCase()}`}
+      detalle={detalleProgreso}
+      onCancelar={() => {
+        cancelar();
+        onCerrar();
+      }}
+      textoVer={cuestionarioListo ? 'Resolver' : 'Ver'}
+      alVer={cuestionarioListo ? () => {
+        navigate(`${RUTA_TIPO_IA.cuestionario}/${cuestionarioListo}/resolver`);
+        onCerrar();
+      } : undefined}
+    >
     <div className="visor-overlay">
       <div className={`ia-modal ${paso === 'revisar' ? 'ia-modal--grande' : ''}`} role="dialog" aria-label="Generar con IA">
         <header className="visor__encabezado">
@@ -153,14 +171,6 @@ export function GenerarConIA({ archivo, onCerrar, tipoFijo }: GenerarConIAProps)
           </div>
         )}
 
-        {paso === 'generando' && (
-          // La misma animación que los modales de flashcards y guía de preguntas (siempre en movimiento).
-          <div className="ia-progreso">
-            <IndicadorIA mensaje={`Generando el ${NOMBRE_TIPO_IA[tipo].toLowerCase()}`} detalle={detalleProgreso} />
-            <button type="button" className="visor-boton visor-boton--contorno" onClick={cancelar}>Cancelar generación</button>
-          </div>
-        )}
-
         {paso === 'revisar' && propuesta && (
           <PantallaPrevia
             propuesta={propuesta}
@@ -193,5 +203,6 @@ export function GenerarConIA({ archivo, onCerrar, tipoFijo }: GenerarConIAProps)
         )}
       </div>
     </div>
+    </VentanaIA>
   );
 }

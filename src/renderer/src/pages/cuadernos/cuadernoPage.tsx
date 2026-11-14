@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Brain, ClipboardList, Folder, Layers, Pencil, Plus, Timer, X } from 'lucide-react';
+import { ArrowLeft, Brain, ClipboardList, Eye, EyeOff, FileText, Folder, Layers, Pencil, Plus, Timer, X, type LucideIcon } from 'lucide-react';
+import { RUTA_TIPO_IA, type MaterialIA, type TipoMaterialIA } from '../../types/ia';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
@@ -17,6 +18,16 @@ import { CORTO_TIPO, NOMBRE_ESTADO_NOTA, fechaCorta, formatoNota, promedio } fro
 import '../../styles/materias.css';
 import '../../styles/cuadernos.css';
 
+// Si el usuario ocultó el promedio, se recuerda en esta compu.
+const CLAVE_OCULTAR_PROMEDIO = 'syntra.cuaderno.ocultarPromedio';
+function leerOcultarPromedio(): boolean {
+  try {
+    return localStorage.getItem(CLAVE_OCULTAR_PROMEDIO) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 // Un cuaderno: sus notas y todo lo que tiene su materia en Material, Flashcards y Sesiones.
 export function CuadernoPage() {
   const usuarioId = obtenerUsuarioId() ?? 0;
@@ -25,9 +36,19 @@ export function CuadernoPage() {
   const avisos = usarAvisos();
   const [cuaderno, setCuaderno] = useState<Cuaderno | null>(null);
   const [editando, setEditando] = useState<Nota | 'nueva' | null>(null);
+  const [ocultarPromedio, setOcultarPromedio] = useState(leerOcultarPromedio);
+  const cambiarOcultarPromedio = (ocultar: boolean) => {
+    setOcultarPromedio(ocultar);
+    try {
+      localStorage.setItem(CLAVE_OCULTAR_PROMEDIO, String(ocultar));
+    } catch {
+      /* sin almacenamiento: queda solo para esta vez */
+    }
+  };
   const [editandoCuaderno, setEditandoCuaderno] = useState(false);
   const [confirmarBorrado, setConfirmarBorrado] = useState(false);
   const [misMazos, setMisMazos] = useState<Deck[]>([]);
+  const [misMaterialesIA, setMisMaterialesIA] = useState<MaterialIA[]>([]);
   const [error, setError] = useState('');
 
   async function cargar(): Promise<void> {
@@ -44,6 +65,7 @@ export function CuadernoPage() {
 
   useEffect(() => {
     window.api.listarDecks(usuarioId).then(setMisMazos).catch(() => setMisMazos([]));
+    window.api.listarMaterialesIA().then(setMisMaterialesIA).catch(() => setMisMaterialesIA([]));
   }, []);
 
   // Mazos agregados a mano. Los de la materia o de sus sesiones salen solos.
@@ -53,6 +75,25 @@ export function CuadernoPage() {
       await cargar();
     } catch (e) {
       avisos.error(mensajeDeError(e, 'No se pudo agregar el mazo.'));
+    }
+  }
+
+  // Cuestionarios, mapas mentales y resúmenes hechos con IA: se agregan o sacan del cuaderno como los mazos.
+  async function agregarMaterialIA(idMaterialIA: number): Promise<void> {
+    try {
+      await window.api.agregarMaterialIACuaderno({ usuarioId, idCuaderno, idMaterialIA });
+      await cargar();
+    } catch (e) {
+      avisos.error(mensajeDeError(e, 'No se pudo agregar.'));
+    }
+  }
+
+  async function quitarMaterialIA(idMaterialIA: number): Promise<void> {
+    try {
+      await window.api.quitarMaterialIACuaderno({ usuarioId, idCuaderno, idMaterialIA });
+      await cargar();
+    } catch (e) {
+      avisos.error(mensajeDeError(e, 'No se pudo sacar.'));
     }
   }
 
@@ -121,6 +162,7 @@ export function CuadernoPage() {
   const cursado = cuaderno?.notas.filter((n) => n.tipo !== 'final') ?? [];
   const finales = cuaderno?.notas.filter((n) => n.tipo === 'final') ?? [];
   const promedioCursado = promedio(cursado);
+  const promedioGeneral = promedio(cuaderno?.notas ?? []);
 
   return (
     <PlantillaLayout idActivo="material" usuario={{ nombre: 'Usuario' }}>
@@ -146,8 +188,21 @@ export function CuadernoPage() {
               </div>
             </header>
 
+            {promedioGeneral !== null && (
+              <div className={`cuaderno-promedio${ocultarPromedio ? ' cuaderno-promedio--oculto' : ''}`}>
+                {!ocultarPromedio && (
+                  <span>
+                    Promedio de tus notas: <strong>{formatoNota(promedioGeneral)}</strong>
+                  </span>
+                )}
+                <button type="button" className="materias-link" aria-pressed={ocultarPromedio} onClick={() => cambiarOcultarPromedio(!ocultarPromedio)}>
+                  {ocultarPromedio ? <><Eye size={15} /> Mostrar promedio</> : <><EyeOff size={15} /> Ocultar</>}
+                </button>
+              </div>
+            )}
+
             <TablaNotas titulo="Cursado" notas={cursado} onEditar={setEditando}
-              extra={promedioCursado !== null ? <>Promedio de cursado: <strong>{formatoNota(promedioCursado)}</strong></> : null}
+              extra={promedioCursado !== null && !ocultarPromedio ? <>Promedio de cursado: <strong>{formatoNota(promedioCursado)}</strong></> : null}
               vacio="Todavía no cargaste parciales ni trabajos." />
             <TablaNotas titulo="Finales" notas={finales} onEditar={setEditando}
               extra={materia.estado === 'regular' || materia.estado === 'cursando' ? 'Se habilita al regularizar' : null}
@@ -212,9 +267,20 @@ export function CuadernoPage() {
                     ))}
                   </select>
                 )}
-                {/* Cuestionarios y mapas mentales todavía no existen: cuando estén, se listan acá igual que los mazos. */}
-                <h4><ClipboardList size={16} aria-hidden="true" /> Cuestionarios <small className="cuaderno-pronto">Próximamente</small></h4>
-                <h4><Brain size={16} aria-hidden="true" /> Mapas mentales <small className="cuaderno-pronto">Próximamente</small></h4>
+                {TIPOS_IA_CUADERNO.map(({ tipo, titulo, singular, icono }) => (
+                  <ListaMaterialIA
+                    key={tipo}
+                    tipo={tipo}
+                    titulo={titulo}
+                    singular={singular}
+                    icono={icono}
+                    enCuaderno={cuaderno.materialesIA.filter((m) => m.tipo === tipo)}
+                    disponibles={misMaterialesIA.filter((m) => m.tipo === tipo && !cuaderno.materialesIA.some((c) => c.idMaterialIA === m.idMaterialIA))}
+                    onAbrir={(id) => navigate(tipo === 'resumen' ? `/resumenes/${id}` : `${RUTA_TIPO_IA[tipo]}/${id}`)}
+                    onAgregar={(id) => void agregarMaterialIA(id)}
+                    onQuitar={(id) => void quitarMaterialIA(id)}
+                  />
+                ))}
                 <div className="materias-botones">
                   <Boton variante="contorno" onClick={() => navigate('/flashcards')}>Ver flashcards</Boton>
                   <Boton variante="contorno" onClick={() => navigate('/metodos')}>Todos los métodos</Boton>
@@ -273,6 +339,57 @@ export function CuadernoPage() {
         />
       )}
     </PlantillaLayout>
+  );
+}
+
+const TIPOS_IA_CUADERNO: { tipo: TipoMaterialIA; titulo: string; singular: string; icono: LucideIcon }[] = [
+  { tipo: 'cuestionario', titulo: 'Cuestionarios', singular: 'cuestionario', icono: ClipboardList },
+  { tipo: 'mapaMental', titulo: 'Mapas mentales', singular: 'mapa mental', icono: Brain },
+  { tipo: 'resumen', titulo: 'Resúmenes', singular: 'resumen', icono: FileText },
+];
+
+interface ListaMaterialIAProps {
+  tipo: TipoMaterialIA;
+  titulo: string;
+  singular: string;
+  icono: LucideIcon;
+  enCuaderno: { idMaterialIA: number; titulo: string }[];
+  disponibles: MaterialIA[];
+  onAbrir: (id: number) => void;
+  onAgregar: (id: number) => void;
+  onQuitar: (id: number) => void;
+}
+
+// Igual que los mazos: lo que está en el cuaderno, con ✕ para sacarlo, y "+ Agregar…" con lo que falta.
+function ListaMaterialIA({ titulo, singular, icono: Icono, enCuaderno, disponibles, onAbrir, onAgregar, onQuitar }: ListaMaterialIAProps) {
+  return (
+    <>
+      <h4><Icono size={16} aria-hidden="true" /> {titulo}</h4>
+      {enCuaderno.length === 0 && disponibles.length === 0 && (
+        <p className="materias-ayuda">Todavía no generaste ningún {singular} con IA.</p>
+      )}
+      <ul>
+        {enCuaderno.map((m) => (
+          <li key={m.idMaterialIA}>
+            <button type="button" className="materias-link" onClick={() => onAbrir(m.idMaterialIA)}>
+              <Icono size={16} aria-hidden="true" /> {m.titulo}
+            </button>
+            <small>
+              <button type="button" className="cuaderno-quitar" aria-label={`Sacar ${m.titulo} del cuaderno`} title="Sacar del cuaderno" onClick={() => onQuitar(m.idMaterialIA)}>
+                <X size={14} />
+              </button>
+            </small>
+          </li>
+        ))}
+      </ul>
+      {disponibles.length > 0 && (
+        <select className="cuaderno-agregar" value="" aria-label={`Agregar un ${singular} al cuaderno`}
+          onChange={(e) => e.target.value && onAgregar(Number(e.target.value))}>
+          <option value="">+ Agregar {singular}…</option>
+          {disponibles.map((m) => <option key={m.idMaterialIA} value={m.idMaterialIA}>{m.titulo}</option>)}
+        </select>
+      )}
+    </>
   );
 }
 

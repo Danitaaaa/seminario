@@ -9,7 +9,8 @@ import { ObtenerPerfil } from "../logicaPersistente/gestionDeUsuarios/obtenerPer
 import { ModificarPerfil } from "../logicaPersistente/gestionDeUsuarios/modificarPerfil";
 import { CambiarPasswordActual } from "../logicaPersistente/gestionDeUsuarios/cambiarPasswordActual";
 import { EliminarUsuario } from "../logicaPersistente/gestionDeUsuarios/eliminarUsuario";
-import { ActualizarFotoPerfil, ObtenerFotoPerfil } from "../logicaPersistente/gestionDeUsuarios/fotoPerfil";
+import { ActualizarFotoPerfil, ElegirAvatar, ObtenerFotoPerfil } from "../logicaPersistente/gestionDeUsuarios/fotoPerfil";
+import { ElegirColorAvatar } from "../logicaPersistente/gestionDeUsuarios/colorAvatar";
 import { VerificarPassword } from "../logicaPersistente/gestionDeUsuarios/verificarPassword";
 import { ActualizarRostro } from "../logicaPersistente/gestionDeUsuarios/actualizarRostro";
 import type { Perfil } from "../logicaPersistente/gestionDeUsuarios/perfil";
@@ -34,7 +35,9 @@ export class Usuarios {
         private readonly obtenerFotoPerfilCaso: ObtenerFotoPerfil,
         private readonly actualizarFotoPerfilCaso: ActualizarFotoPerfil,
         private readonly verificarPasswordCaso: VerificarPassword,
-        private readonly actualizarRostroCaso: ActualizarRostro
+        private readonly actualizarRostroCaso: ActualizarRostro,
+        private readonly elegirAvatarCaso: ElegirAvatar,
+        private readonly elegirColorAvatarCaso: ElegirColorAvatar
     ) {}
 
     async iniciarSesion(datos: IniciarSesionDto): Promise<Usuario> {
@@ -83,6 +86,14 @@ export class Usuarios {
 
     async actualizarFotoPerfil(id: number, rutaOrigen: string): Promise<string | null> {
         return this.actualizarFotoPerfilCaso.ejecutar(id, rutaOrigen);
+    }
+
+    async elegirAvatar(id: number, avatar: string): Promise<string> {
+        return this.elegirAvatarCaso.ejecutar(id, avatar);
+    }
+
+    async elegirColorAvatar(id: number, color: number | null): Promise<void> {
+        return this.elegirColorAvatarCaso.ejecutar(id, color);
     }
 
     async verificarPassword(datos: VerificarPasswordDto): Promise<void> {

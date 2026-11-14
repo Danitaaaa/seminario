@@ -27,7 +27,7 @@ export class EnviarRecordatoriosPendientes {
                     u.email,
                     'Flashcard' AS tipo,
                     d.nombre AS titulo,
-                    f.pregunta AS detalle
+                    COUNT(*)::text AS detalle
                 FROM flashcards f
                 INNER JOIN decks d
                     ON d.id_deck = f.id_deck
@@ -43,6 +43,8 @@ export class EnviarRecordatoriosPendientes {
                             n.id_usuario = u.id_usuario
                             AND n.fecha_envio = CURRENT_DATE
                     )
+                -- Un renglón por mazo con cuántas tarjetas tocan (en el correo no van las preguntas).
+                GROUP BY u.id_usuario, u.email, d.id_deck, d.nombre
 
                 UNION ALL
 
@@ -83,9 +85,10 @@ export class EnviarRecordatoriosPendientes {
             const grupo = porUsuario.get(fila.id_usuario) ??
                 {email: fila.email,contenidos: []};
 
+            const tarjetas = Number(fila.detalle);
             grupo.contenidos.push(
                 fila.tipo === 'Flashcard'
-                    ? `${fila.titulo}: ${fila.detalle}`
+                    ? `${fila.titulo} (mazo): ${tarjetas} ${tarjetas === 1 ? 'tarjeta para repasar' : 'tarjetas para repasar'}`
                     : `${fila.titulo} (material)`
             );
 

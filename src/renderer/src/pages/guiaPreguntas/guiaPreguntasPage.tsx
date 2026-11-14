@@ -1,5 +1,5 @@
 // src/renderer/src/pages/guiasPreguntas/guiasPreguntasPage.tsx
-// Método de estudio "Guías de preguntas": lista las guías guardadas (.docx en Material › "guia"),
+// Método de estudio "Guías de preguntas": lista las guías guardadas (.docx en Material › "Guía de preguntas"),
 // permite abrirlas/editarlas, eliminarlas y generar una nueva con IA.
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft, ChevronRight, FileText, Sparkles, Trash2 } from 'lucide-react';
@@ -9,13 +9,13 @@ import { Button } from '../../components/ui/button/button';
 import { CartelError } from '../../components/comunes/cartelError';
 import { ModalGuiaPreguntas } from '../../components/materialIA/modalGuiaPreguntas';
 import { VisorArchivo } from '../../components/visor/visorArchivo';
-import { usarArchivosMaterial } from '../../hooks/usarArchivosMaterial';
+import { avisarGuardadoIA, usarRecargaAlGuardarIA, usarSegundoPlano } from '../../components/materialIA/segundoPlano';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import type { Archivo } from '../../types/nodo';
 import styles from '../../styles/flashcards.module.css';
 
 // Tienen que coincidir con guardarGuiaPreguntas.ts.
-const NOMBRE_CARPETA_GUIAS = 'guia';
+const NOMBRE_CARPETA_GUIAS = 'Guía de preguntas';
 const ID_RAIZ_MATERIAL = 1;
 
 export function GuiasPreguntasPage() {
@@ -23,9 +23,10 @@ export function GuiasPreguntasPage() {
   const [guias, setGuias] = useState<Archivo[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
-  const [modalAbierto, setModalAbierto] = useState(false);
   const [abierta, setAbierta] = useState<Archivo | null>(null);
-  const { archivos, cargando: cargandoArchivos } = usarArchivosMaterial(modalAbierto);
+  // El modal de IA sigue abierto aunque se cambie de pantalla (la IA trabaja en segundo plano).
+  const { abrir } = usarSegundoPlano();
+  const abrirModalIA = () => abrir('guiaIA', (cerrar) => <ModalGuiaPreguntas onCerrar={cerrar} onGuardada={avisarGuardadoIA} />);
 
   const cargar = useCallback(async () => {
     try {
@@ -47,6 +48,7 @@ export function GuiasPreguntasPage() {
       setCargando(false);
     }
   }, []);
+  usarRecargaAlGuardarIA(cargar);
 
   useEffect(() => { void cargar(); }, [cargar]);
 
@@ -74,7 +76,7 @@ export function GuiasPreguntasPage() {
             <h2 className={styles.heading}>Tus guías de preguntas</h2>
             <p className={styles.description}>Generalas con IA a partir de tu material, editalas y repasá con ellas. También las encontrás en Material.</p>
           </div>
-          <Button onClick={() => setModalAbierto(true)}><Sparkles size={17} /> Generar guía</Button>
+          <Button onClick={() => abrirModalIA()}><Sparkles size={17} /> Generar guía</Button>
         </header>
 
         {error && <CartelError mensaje={error} onCerrar={() => setError('')} onReintentar={cargar} />}
@@ -106,19 +108,11 @@ export function GuiasPreguntasPage() {
             <span className={styles.emptyIcon}><FileText size={25} /></span>
             <h3>Todavía no tenés guías</h3>
             <p>Elegí material y generá tu primera guía de preguntas con IA.</p>
-            <Button onClick={() => setModalAbierto(true)}>Generar mi primera guía</Button>
+            <Button onClick={() => abrirModalIA()}>Generar mi primera guía</Button>
           </div>
         )}
       </div>
 
-      {modalAbierto && (
-        <ModalGuiaPreguntas
-          archivos={archivos}
-          cargandoArchivos={cargandoArchivos}
-          onCerrar={() => setModalAbierto(false)}
-          onGuardada={() => void cargar()}
-        />
-      )}
 
       {abierta && (
         <VisorArchivo

@@ -9,6 +9,8 @@ import { obtenerUsuarioId, cerrarSesion } from "../../../lib/sesion";
 import type { Perfil } from "../../types/perfil";
 import { ActualizarRostro } from "./actualizarRostro";
 import { EVENTO_PERFIL_ACTUALIZADO } from "../../components/layout/menuUsuario";
+import { FotoPerfil } from "../../components/comunes/fotoPerfil";
+import { ElegirAvatar } from "../../components/comunes/elegirAvatar";
 import "../../styles/perfil.css";
 
 // Saca el prefijo que agrega Electron a los errores que vienen del proceso principal.
@@ -34,6 +36,7 @@ export function PerfilPage() {
   const [guardando, setGuardando] = useState(false);
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
   const [mostrarRostro, setMostrarRostro] = useState(false);
+  const [eligiendoAvatar, setEligiendoAvatar] = useState(false);
 
   useEffect(() => {
     if (!usuarioId) {
@@ -64,6 +67,18 @@ export function PerfilPage() {
     try {
       const nueva = await window.api.elegirFotoPerfil({ id: usuarioId });
       if (nueva) setFoto(nueva);
+    } catch (e) {
+      setError(mensajeDe(e));
+    }
+  }
+
+  async function elegirAvatar(avatar: string): Promise<void> {
+    if (!usuarioId) return;
+    setError("");
+    try {
+      setFoto(await window.api.elegirAvatar({ id: usuarioId, avatar }));
+      setEligiendoAvatar(false);
+      window.dispatchEvent(new Event(EVENTO_PERFIL_ACTUALIZADO));
     } catch (e) {
       setError(mensajeDe(e));
     }
@@ -136,12 +151,17 @@ export function PerfilPage() {
         <aside className="perfil__lateral">
           <div className="perfil__avatar">
             {foto
-              ? <img src={foto} alt="Foto de perfil" className="perfil__avatar-img" />
+              ? <FotoPerfil foto={foto} className="perfil__avatar-img" />
               : <span aria-hidden="true">{iniciales}</span>}
           </div>
           <button type="button" className="perfil__boton-lateral" onClick={elegirFoto}>
             Editar foto de perfil
           </button>
+          <button type="button" className="perfil__boton-lateral perfil__boton-lateral--contorno"
+            aria-expanded={eligiendoAvatar} onClick={() => setEligiendoAvatar((v) => !v)}>
+            {eligiendoAvatar ? "Cerrar avatares" : "Elegir avatar"}
+          </button>
+          {eligiendoAvatar && <ElegirAvatar actual={foto} onElegir={(a) => void elegirAvatar(a)} />}
           <button type="button" className="perfil__boton-lateral perfil__boton-lateral--contorno"
             onClick={() => setMostrarRostro(true)}>
             {perfil?.tieneRostro ? "Actualizar rostro" : "Registrar rostro"}

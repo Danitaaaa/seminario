@@ -25,6 +25,9 @@ export interface MiembroRemoto {
     pendiente: boolean;
     fechaUnion: Date | null;   // unido_en
     fechaBaja: Date | null;    // baja_en
+    // Si el servidor los manda: el apodo y el color de avatar que eligió cada uno.
+    apodo?: string | null;
+    colorAvatar?: number | null;
 }
 
 // Resultado de resolver un enlace de invitación.

@@ -103,9 +103,10 @@ export class RouterModelos {
   }
 
   /** Une la señal del usuario con un timeout. Si cualquiera se dispara, la llamada se corta. */
-  private conTimeout(p: ProveedorModelo, usuario?: AbortSignal) {
+  private conTimeout(p: ProveedorModelo, usuario?: AbortSignal, propio?: number) {
     const t = this.opciones.timeoutMs ?? { online: 60_000, local: 180_000 };
-    const tiempo = AbortSignal.timeout(p.tipo === 'online' ? t.online : t.local);
+    // Un pedido largo (por ejemplo, transcribir un plan escaneado de muchas páginas) puede pedir más tiempo.
+    const tiempo = AbortSignal.timeout(Math.max(propio ?? 0, p.tipo === 'online' ? t.online : t.local));
     return { tiempo, senal: usuario ? AbortSignal.any([usuario, tiempo]) : tiempo };
   }
 
@@ -117,7 +118,7 @@ export class RouterModelos {
     let ultimoMotivo = '';
 
     for (let intento = 1; intento <= maxIntentos; intento++) {
-      const { tiempo, senal } = this.conTimeout(proveedor, pedido.signal);
+      const { tiempo, senal } = this.conTimeout(proveedor, pedido.signal, pedido.timeoutMs);
       let texto: string;
       try {
         texto = await proveedor.generarJson({

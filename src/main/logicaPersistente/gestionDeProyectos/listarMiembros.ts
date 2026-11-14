@@ -52,14 +52,15 @@ export class ListarMiembros {
         const locales = await this.persistencia.ejecutar<{
             email: string; nombre: string | null; id_usuario: number | null;
             id_proyecto_miembro: number; fecha_union: Date | null; fecha_baja: Date | null;
-            id_global_usuario: string | null;
+            id_global_usuario: string | null; color_avatar: number | null;
         }>(
             `SELECT DISTINCT ON (LOWER(COALESCE(u.email, pm.mail)))
                     LOWER(COALESCE(u.email, pm.mail)) AS email,
                     COALESCE(NULLIF(u.apodo, ''), u.nombre) AS nombre,
                     pm.id_usuario,
                     pm.id_proyecto_miembro, pm.fecha_union, pm.fecha_baja,
-                    pm.id_global_usuario::text AS id_global_usuario
+                    pm.id_global_usuario::text AS id_global_usuario,
+                    u.color_avatar
              FROM proyecto_miembros pm
              LEFT JOIN usuarios u ON u.id_usuario = pm.id_usuario
              WHERE pm.id_proyecto = $2
@@ -71,12 +72,12 @@ export class ListarMiembros {
         const porMail = new Map(locales.map(u => [u.email, u]));
 
         // Nombre de usuarios locales que no tienen fila de membresía (caso poco común).
-        const usuarios = await this.persistencia.ejecutar<{ email: string; nombre: string }>(
-            `SELECT LOWER(email) AS email, COALESCE(NULLIF(apodo, ''), nombre) AS nombre
+        const usuarios = await this.persistencia.ejecutar<{ email: string; nombre: string; color_avatar: number | null }>(
+            `SELECT LOWER(email) AS email, COALESCE(NULLIF(apodo, ''), nombre) AS nombre, color_avatar
              FROM usuarios WHERE LOWER(email) = ANY($1::text[])`,
             [mails],
         );
-        const nombrePorMail = new Map(usuarios.map(u => [u.email, u.nombre]));
+        const usuarioPorMail = new Map(usuarios.map(u => [u.email, u]));
 
         // Respaldo: mismo cálculo que usa el trigger de proyecto_miembros.
         const globales = await this.persistencia.ejecutar<{ mail: string; id_global: string }>(
@@ -94,12 +95,14 @@ export class ListarMiembros {
                 idUsuario: u?.id_usuario ?? null,
                 idGlobalUsuario: u?.id_global_usuario ?? idGlobalPorMail.get(mail) ?? null,
                 rol: m.rol,
-                nombre: u?.nombre ?? nombrePorMail.get(mail) ?? mail.split('@')[0],
+                // Apodo: el de esta base si lo tiene; si no, el que mande el servidor; si no, lo de antes de la @.
+                nombre: u?.nombre ?? usuarioPorMail.get(mail)?.nombre ?? (m.apodo?.trim() || mail.split('@')[0]),
                 mail,
                 fechaUnion: m.fechaUnion ?? u?.fecha_union ?? null,
                 fechaBaja: m.fechaBaja ?? u?.fecha_baja ?? null,
                 pendiente: m.pendiente,
                 activo: m.activo,
+                colorAvatar: u?.color_avatar ?? usuarioPorMail.get(mail)?.color_avatar ?? m.colorAvatar ?? null,
             };
         });
     }
@@ -110,7 +113,8 @@ export class ListarMiembros {
         const filas = await this.persistencia.ejecutar(
             `SELECT pm.*, pm.id_global_usuario::text AS id_global_usuario,
                     COALESCE(NULLIF(u.apodo, ''), u.nombre, split_part(pm.mail, '@', 1)) AS nombre_usuario,
-                    COALESCE(u.email, pm.mail) AS email
+                    COALESCE(u.email, pm.mail) AS email,
+                    u.color_avatar
              FROM proyecto_miembros pm
              LEFT JOIN usuarios u ON u.id_usuario = pm.id_usuario
              WHERE pm.id_proyecto = $1 ${soloActivos ? 'AND pm.fecha_baja IS NULL' : ''}

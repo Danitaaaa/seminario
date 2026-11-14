@@ -29,9 +29,30 @@ export type RespuestaEnviarChat =
   | { ok: true; conversacion: ConversacionIA; mensajes: [MensajeIA, MensajeIA] }
   | { ok: false; cancelado: true };
 
+// Texto de un archivo adjunto (PDF, Word o texto) que ya leyó el main.
+export interface DocumentoChat {
+  nombre: string;
+  texto: string;
+}
+
+export interface LecturaAdjuntos {
+  documentos: DocumentoChat[];
+  avisos: string[];
+}
+
 export interface ChatIAApi {
   // Sin idConversacion empieza una conversación nueva. Se corta con cancelar(trabajoId).
-  enviarMensajeChat(datos: { trabajoId: string; idConversacion?: number | null; texto: string; imagenes?: string[] }): Promise<RespuestaEnviarChat>;
+  enviarMensajeChat(datos: {
+    trabajoId: string;
+    idConversacion?: number | null;
+    texto: string;
+    imagenes?: string[];
+    documentos?: DocumentoChat[];
+  }): Promise<RespuestaEnviarChat>;
+  // Abre el diálogo para elegir archivos (o una carpeta) de la compu. null si se cancela.
+  adjuntarArchivosChat(datos: { carpeta: boolean }): Promise<LecturaAdjuntos | null>;
+  // Un archivo de Material ("Buscar en Syntra").
+  adjuntarMaterialChat(datos: { idArchivo: number }): Promise<DocumentoChat>;
   listarConversacionesIA(): Promise<ConversacionIA[]>;
   obtenerConversacionIA(datos: { idConversacion: number }): Promise<ConversacionConMensajes>;
   renombrarConversacionIA(datos: { idConversacion: number; titulo: string }): Promise<ConversacionIA>;

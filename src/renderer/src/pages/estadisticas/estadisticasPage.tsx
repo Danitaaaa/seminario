@@ -1,18 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { PlantillaLayout } from "../plantillaLayout/plantillaLayout";
 import { obtenerUsuarioId } from "../../../lib/sesion";
 import { CartelError } from "../../components/comunes/cartelError";
 import { mesDe, type Meta } from "../../types/metas";
 import type { Evento } from "../../types/eventos";
-import type { HorarioCursado } from "../../types/horarios";
-import type { AporteIntegrante, ResumenProyecto, ResumenSesiones } from "../../types/estadisticas";
+import type { AporteIntegrante, ResumenCuestionarios, ResumenFlashcards, ResumenProyecto, ResumenSesiones } from "../../types/estadisticas";
 import "../../styles/estadisticas.css";
 
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-const CANTIDAD_MESES = 6;
 
 // Saca el prefijo que agrega Electron a los errores que vienen del proceso principal.
 const mensajeDe = (error: unknown) =>
@@ -23,11 +21,38 @@ const mensajeDe = (error: unknown) =>
 const dosCifras = (n: number) => String(n).padStart(2, "0");
 const diaDe = (d: Date) => `${d.getFullYear()}-${dosCifras(d.getMonth() + 1)}-${dosCifras(d.getDate())}`;
 const porcentaje = (parte: number, total: number) => (total > 0 ? Math.round((parte / total) * 100) : 0);
-const nombreMes = (mes: string) => `${MESES_CORTOS[Number(mes.slice(5, 7)) - 1]} ${mes.slice(2, 4)}`;
-const aMinutos = (hora: string) => {
-  const [h, m] = hora.split(":").map(Number);
-  return h * 60 + m;
-};
+// "2026-11" -> "Nov 26"; "2026-11-14" -> "14/11"
+const nombreMes = (clave: string) =>
+  clave.length === 10 ? `${clave.slice(8, 10)}/${clave.slice(5, 7)}` : `${MESES_CORTOS[Number(clave.slice(5, 7)) - 1]} ${clave.slice(2, 4)}`;
+
+// Período que se elige arriba: cambia desde cuándo se cuenta y si los gráficos van por día o por mes.
+type IdPeriodo = "semana" | "mes" | "4meses" | "6meses";
+const PERIODOS: { id: IdPeriodo; nombre: string }[] = [
+  { id: "semana", nombre: "Semana" },
+  { id: "mes", nombre: "Mes" },
+  { id: "4meses", nombre: "4 meses" },
+  { id: "6meses", nombre: "6 meses" },
+];
+
+interface Periodo {
+  claves: string[]; // una por barra: AAAA-MM-DD (por día) o AAAA-MM (por mes), de la más vieja a la actual
+  actual: string;
+  agrupar: "dia" | "mes";
+  unidad: string; // "por día" | "por mes"
+  nota: string; // lo que se ve arriba a la derecha de cada tarjeta
+}
+
+function armarPeriodo(id: IdPeriodo, hoy: Date): Periodo {
+  if (id === "semana" || id === "mes") {
+    const dias = id === "semana" ? 7 : 30;
+    const claves = Array.from({ length: dias }, (_, i) => diaDe(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (dias - 1 - i))));
+    return { claves, actual: diaDe(hoy), agrupar: "dia", unidad: "por día", nota: id === "semana" ? "Últimos 7 días" : "Últimos 30 días" };
+  }
+  const cantidad = id === "4meses" ? 4 : 6;
+  return { claves: ultimosMeses(cantidad, hoy), actual: mesDe(hoy), agrupar: "mes", unidad: "por mes", nota: `Últimos ${cantidad} meses` };
+}
+
+const desdeDe = (p: Periodo) => (p.agrupar === "dia" ? p.claves[0] : `${p.claves[0]}-01`);
 
 // Los últimos meses (AAAA-MM), del más viejo al actual.
 function ultimosMeses(cantidad: number, hoy: Date): string[] {
@@ -50,19 +75,21 @@ interface FilaBarra {
   texto: string;
 }
 
-// Reportes del usuario: metas, eventos, clases, sesiones de estudio y proyectos.
+// Reportes del usuario: metas, eventos, sesiones de estudio, flashcards, cuestionarios y proyectos.
 export function EstadisticasPage() {
   const usuarioId = obtenerUsuarioId();
   const [hoy] = useState(() => new Date());
   const [metas, setMetas] = useState<Meta[] | null>(null);
   const [eventos, setEventos] = useState<Evento[] | null>(null);
-  const [horarios, setHorarios] = useState<HorarioCursado[] | null>(null);
   const [sesiones, setSesiones] = useState<ResumenSesiones | null>(null);
   const [proyectos, setProyectos] = useState<ResumenProyecto[] | null>(null);
+  const [cuestionarios, setCuestionarios] = useState<ResumenCuestionarios | null>(null);
+  const [flashcards, setFlashcards] = useState<ResumenFlashcards | null>(null);
+  const [idPeriodo, setIdPeriodo] = useState<IdPeriodo>("6meses");
   const [error, setError] = useState("");
 
-  const meses = ultimosMeses(CANTIDAD_MESES, hoy);
   const mesActual = mesDe(hoy);
+  const periodo = armarPeriodo(idPeriodo, hoy);
 
   useEffect(() => {
     if (!usuarioId) return;
@@ -71,13 +98,24 @@ export function EstadisticasPage() {
     const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59);
     window.api.listarMetas({ idUsuario: usuarioId, mes: mesActual }).then(setMetas).catch(fallo);
     window.api.listarEventos({ usuarioId, desde: inicioMes.toISOString(), hasta: finMes.toISOString() }).then(setEventos).catch(fallo);
-    window.api.listarHorarios({ usuarioId }).then(setHorarios).catch(fallo);
-    // Sesiones y proyectos se cuentan desde el mismo día, con la hora de la compu.
-    // getTimezoneOffset da UTC - local (Argentina: 180); el main necesita local - UTC.
-    const periodo = { idUsuario: usuarioId, desde: `${meses[0]}-01`, desfaseMinutos: -hoy.getTimezoneOffset() };
-    window.api.resumenSesionesEstudio(periodo).then(setSesiones).catch(fallo);
-    window.api.resumenProyectos({ ...periodo, mes: mesActual, hoy: diaDe(hoy) }).then(setProyectos).catch(fallo);
   }, [usuarioId]);
+
+  // Lo que depende del período se vuelve a pedir al cambiarlo.
+  useEffect(() => {
+    if (!usuarioId) return;
+    const fallo = (e: unknown) => setError(mensajeDe(e));
+    setSesiones(null);
+    setCuestionarios(null);
+    setFlashcards(null);
+    setProyectos(null);
+    // Todo se cuenta desde el mismo día, con la hora de la compu.
+    // getTimezoneOffset da UTC - local (Argentina: 180); el main necesita local - UTC.
+    const datos = { idUsuario: usuarioId, desde: desdeDe(periodo), desfaseMinutos: -hoy.getTimezoneOffset(), agrupar: periodo.agrupar };
+    window.api.resumenSesionesEstudio(datos).then(setSesiones).catch(fallo);
+    window.api.resumenCuestionarios(datos).then(setCuestionarios).catch(fallo);
+    window.api.resumenFlashcards(datos).then(setFlashcards).catch(fallo);
+    window.api.resumenProyectos({ ...datos, mes: mesActual, hoy: diaDe(hoy) }).then(setProyectos).catch(fallo);
+  }, [usuarioId, idPeriodo]);
 
   // ---- Metas personales del mes ----
   const hoyISO = diaDe(hoy);
@@ -90,21 +128,26 @@ export function EstadisticasPage() {
   const proximos = eventos?.filter((e) => new Date(e.fecha) >= hoy && new Date(e.fecha) <= enUnaSemana).length ?? 0;
   const porCategoria = agrupar(eventos ?? [], (e) => e.categoria || "Sin categoría");
 
-  // ---- Clases: horas por semana de cada materia ----
-  const minutosPorMateria = new Map<string, number>();
-  for (const h of horarios ?? []) {
-    const minutos = Math.max(0, aMinutos(h.horaFin) - aMinutos(h.horaInicio));
-    minutosPorMateria.set(h.titulo, (minutosPorMateria.get(h.titulo) ?? 0) + minutos);
-  }
-  const minutosClase = [...minutosPorMateria.values()].reduce((n, m) => n + m, 0);
-  const clases: FilaBarra[] = [...minutosPorMateria]
-    .sort((a, b) => b[1] - a[1])
-    .map(([materia, minutos]) => ({ clave: materia, nombre: materia, valor: minutos, texto: textoMinutos(minutos) }));
+  // ---- Horas estudiadas por materia (de las sesiones terminadas en el período) ----
+  const horasPorMateria: FilaBarra[] = (sesiones?.porMateria ?? []).map((m) => ({
+    clave: m.materia,
+    nombre: m.materia,
+    valor: m.minutos,
+    texto: textoMinutos(m.minutos),
+  }));
 
   return (
     <PlantillaLayout titulo="Estadísticas" idActivo="estadisticas" usuario={{ nombre: "Usuario" }}>
       <div className="estadisticas">
         {error && <CartelError mensaje={error} onCerrar={() => setError("")} />}
+
+        <div className="estadisticas__filtros estadisticas__periodo" role="group" aria-label="Período">
+          {PERIODOS.map((p) => (
+            <button key={p.id} type="button" className="estadisticas__filtro" aria-pressed={idPeriodo === p.id} onClick={() => setIdPeriodo(p.id)}>
+              {p.nombre}
+            </button>
+          ))}
+        </div>
 
         <div className="estadisticas__kpis">
           <Kpi
@@ -116,11 +159,6 @@ export function EstadisticasPage() {
             valor={eventos ? String(eventos.length) : "—"}
             etiqueta={`eventos en ${MESES[hoy.getMonth()]}`}
             detalle={eventos ? `${proximos} en los próximos 7 días` : "Cargando…"}
-          />
-          <Kpi
-            valor={horarios ? textoMinutos(minutosClase) : "—"}
-            etiqueta="de clase por semana"
-            detalle={horarios ? `${minutosPorMateria.size} ${minutosPorMateria.size === 1 ? "materia" : "materias"}` : "Cargando…"}
           />
         </div>
 
@@ -144,6 +182,29 @@ export function EstadisticasPage() {
             )}
           </Tarjeta>
 
+          <Tarjeta titulo="Flashcards" nota={periodo.nota}>
+            {flashcards === null ? <Cargando /> : flashcards.repasos === 0 ? (
+              <Vacio>No repasaste flashcards en este período. <Link to="/flashcards">Repasá un mazo</Link>.</Vacio>
+            ) : (
+              <div className="dona-metas">
+                <Dona parte={flashcards.faciles} total={flashcards.repasos} etiqueta="de las tarjetas te salieron fáciles" />
+                <ul className="dona-metas__leyenda">
+                  <li><span className="punto punto--cumplida" /> {flashcards.faciles} {flashcards.faciles === 1 ? "fácil" : "fáciles"}</li>
+                  <li><span className="punto punto--pendiente" /> {flashcards.repasos - flashcards.faciles} intermedias o difíciles</li>
+                  <li>{flashcards.repasos} {flashcards.repasos === 1 ? "repaso" : "repasos"} · {flashcards.mazos} {flashcards.mazos === 1 ? "mazo" : "mazos"}</li>
+                </ul>
+              </div>
+            )}
+          </Tarjeta>
+
+          <Tarjeta titulo="Cuestionarios con IA" nota={periodo.nota}>
+            {cuestionarios === null ? <Cargando /> : cuestionarios.intentos === 0 ? (
+              <Vacio>No resolviste cuestionarios en este período. <Link to="/cuestionarios">Generá uno con IA</Link>.</Vacio>
+            ) : (
+              <TarjetaCuestionarios resumen={cuestionarios} />
+            )}
+          </Tarjeta>
+
           <Tarjeta titulo={`Eventos de ${MESES[hoy.getMonth()]} por categoría`}>
             {eventos === null ? <Cargando /> : porCategoria.length === 0 ? (
               <Vacio>No tenés eventos este mes.</Vacio>
@@ -152,23 +213,23 @@ export function EstadisticasPage() {
             )}
           </Tarjeta>
 
-          <Tarjeta titulo="Horas de clase por materia">
-            {horarios === null ? <Cargando /> : clases.length === 0 ? (
-              <Vacio>Cargá tus horarios de cursado para ver cuántas horas tenés de cada materia.</Vacio>
+          <Tarjeta titulo="Horas estudiadas por materia" nota={periodo.nota}>
+            {sesiones === null ? <Cargando /> : horasPorMateria.length === 0 ? (
+              <Vacio>Cuando termines sesiones de estudio con materia, acá vas a ver cuántas horas le dedicaste a cada una.</Vacio>
             ) : (
-              <Barras filas={clases} />
+              <Barras filas={horasPorMateria} />
             )}
           </Tarjeta>
 
-          <Tarjeta titulo="Sesiones de estudio" ancha nota={`Últimos ${CANTIDAD_MESES} meses`}>
-            {sesiones === null ? <Cargando /> : <SeccionSesiones resumen={sesiones} meses={meses} mesActual={mesActual} />}
+          <Tarjeta titulo="Sesiones de estudio" ancha nota={periodo.nota}>
+            {sesiones === null ? <Cargando /> : <SeccionSesiones resumen={sesiones} periodo={periodo} />}
           </Tarjeta>
 
-          <Tarjeta titulo="Proyectos" ancha nota={`Últimos ${CANTIDAD_MESES} meses`}>
+          <Tarjeta titulo="Proyectos" ancha nota={periodo.nota}>
             {proyectos === null ? <Cargando /> : proyectos.length === 0 ? (
               <Vacio>No estás en ningún proyecto todavía. <Link to="/proyectos">Creá uno</Link> o pedí que te inviten.</Vacio>
             ) : (
-              <SeccionProyectos proyectos={proyectos} meses={meses} mesActual={mesActual} />
+              <SeccionProyectos proyectos={proyectos} periodo={periodo} />
             )}
           </Tarjeta>
         </div>
@@ -210,12 +271,12 @@ const Cargando = () => <p className="estadisticas__vacio" role="status">Cargando
 const Vacio = ({ children }: { children: ReactNode }) => <p className="estadisticas__vacio">{children}</p>;
 
 // Anillo con el % cumplido en el centro.
-function Dona({ parte, total }: { parte: number; total: number }) {
+function Dona({ parte, total, etiqueta = "de las metas cumplidas" }: { parte: number; total: number; etiqueta?: string }) {
   const radio = 42;
   const vuelta = 2 * Math.PI * radio;
   const valor = porcentaje(parte, total);
   return (
-    <svg className="dona" viewBox="0 0 100 100" role="img" aria-label={`${valor}% de las metas cumplidas`}>
+    <svg className="dona" viewBox="0 0 100 100" role="img" aria-label={`${valor}% ${etiqueta}`}>
       <circle className="dona__fondo" cx="50" cy="50" r={radio} />
       <circle
         className="dona__valor"
@@ -230,9 +291,9 @@ function Dona({ parte, total }: { parte: number; total: number }) {
   );
 }
 
-// Barras horizontales: el largo es proporcional al valor más alto.
-function Barras({ filas }: { filas: FilaBarra[] }) {
-  const maximo = Math.max(1, ...filas.map((f) => f.valor));
+// Barras horizontales: el largo es proporcional al valor más alto (o a `tope`, por ejemplo 100 para porcentajes).
+function Barras({ filas, tope }: { filas: FilaBarra[]; tope?: number }) {
+  const maximo = tope ?? Math.max(1, ...filas.map((f) => f.valor));
   return (
     <ul className="barras">
       {filas.map((f) => (
@@ -307,20 +368,21 @@ function GraficoMeses({ titulo, barras, tope, actual, texto, guia, sinDatos }: {
         </ol>
       </div>
       <ol className="grafico__ejes" aria-hidden="true" style={{ gridTemplateColumns: `repeat(${barras.length}, 1fr)` }}>
-        {barras.map((b) => <li key={b.mes}>{nombreMes(b.mes)}</li>)}
+        {/* Con muchas barras (30 días) se muestra una etiqueta cada tanto para que no se encimen. */}
+        {barras.map((b, i) => <li key={b.mes}>{i % Math.ceil(barras.length / 10) === 0 || b.mes === actual ? nombreMes(b.mes) : ""}</li>)}
       </ol>
     </figure>
   );
 }
 
-function SeccionSesiones({ resumen, meses, mesActual }: { resumen: ResumenSesiones; meses: string[]; mesActual: string }) {
-  const { sesiones, minutos, objetivos, porMes, porMateria } = resumen;
+function SeccionSesiones({ resumen, periodo }: { resumen: ResumenSesiones; periodo: Periodo }) {
+  const { sesiones, minutos, objetivos, porMes } = resumen;
   const vencidas = sesiones.completadas + sesiones.atrasadas;
 
   if (vencidas === 0 && minutos.estudiados === 0) {
     return (
       <Vacio>
-        Todavía no terminaste sesiones en estos meses. <Link to="/sesiones">Planificá una sesión</Link> y acá vas a ver cuánto estudiaste.
+        Todavía no terminaste sesiones en este período. <Link to="/sesiones">Planificá una sesión</Link> y acá vas a ver cuánto estudiaste.
       </Vacio>
     );
   }
@@ -337,22 +399,42 @@ function SeccionSesiones({ resumen, meses, mesActual }: { resumen: ResumenSesion
       </div>
       <div className="sesiones-resumen__graficos">
         <GraficoMeses
-          titulo="Tiempo estudiado por mes"
+          titulo={`Tiempo estudiado ${periodo.unidad}`}
           tope={tope}
-          actual={mesActual}
+          actual={periodo.actual}
           texto={textoMinutos}
           guia={(minutos) => `${minutos / 60} h`}
           sinDatos="sin sesiones terminadas"
-          barras={meses.map((mes) => ({ mes, valor: porMes.find((m) => m.mes === mes)?.minutos ?? null }))}
+          barras={periodo.claves.map((mes) => ({ mes, valor: porMes.find((m) => m.mes === mes)?.minutos ?? null }))}
         />
-        {porMateria.length > 0 && (
-          <div>
-            <p className="grafico__titulo">Tiempo por materia</p>
-            <Barras filas={porMateria.map((m) => ({ clave: m.materia, nombre: m.materia, valor: m.minutos, texto: textoMinutos(m.minutos) }))} />
-          </div>
-        )}
       </div>
     </div>
+  );
+}
+
+// Cuestionarios como "Metas del mes": el % de respuestas correctas y, al tocar, los temas para reforzar.
+function TarjetaCuestionarios({ resumen }: { resumen: ResumenCuestionarios }) {
+  const [verTemas, setVerTemas] = useState(false);
+  const { intentos, correctas, preguntas, temas } = resumen;
+  return (
+    <>
+      <div className="dona-metas">
+        <Dona parte={correctas} total={preguntas} etiqueta="de respuestas correctas" />
+        <ul className="dona-metas__leyenda">
+          <li><span className="punto punto--cumplida" /> {correctas} {correctas === 1 ? "correcta" : "correctas"}</li>
+          <li><span className="punto punto--pendiente" /> {preguntas - correctas} {preguntas - correctas === 1 ? "incorrecta" : "incorrectas"}</li>
+          <li>{intentos} {intentos === 1 ? "cuestionario resuelto" : "cuestionarios resueltos"}</li>
+        </ul>
+      </div>
+      {temas.length > 0 && (
+        <>
+          <button type="button" className="estadisticas__desplegar" aria-expanded={verTemas} onClick={() => setVerTemas((v) => !v)}>
+            {verTemas ? <ChevronUp size={16} /> : <ChevronDown size={16} />} Temas para reforzar ({temas.length})
+          </button>
+          {verTemas && <Barras filas={temas.map((t) => ({ clave: t.tema, nombre: t.tema, valor: t.errores, texto: `${t.errores} de ${t.total} mal` }))} />}
+        </>
+      )}
+    </>
   );
 }
 
@@ -368,7 +450,7 @@ function Numero({ valor, etiqueta, detalle }: { valor: string; etiqueta: string;
 
 // Proyectos con el mismo formato que las sesiones: números, tareas completadas por mes y aporte de cada integrante.
 // Se puede ver un proyecto o todos juntos.
-function SeccionProyectos({ proyectos, meses, mesActual }: { proyectos: ResumenProyecto[]; meses: string[]; mesActual: string }) {
+function SeccionProyectos({ proyectos, periodo }: { proyectos: ResumenProyecto[]; periodo: Periodo }) {
   const [elegido, setElegido] = useState<number | null>(null);
   const visibles = elegido === null ? proyectos : proyectos.filter((p) => p.idProyecto === elegido);
   const sumar = (valor: (p: ResumenProyecto) => number) => visibles.reduce((n, p) => n + valor(p), 0);
@@ -395,7 +477,7 @@ function SeccionProyectos({ proyectos, meses, mesActual }: { proyectos: ResumenP
     .sort((a, b) => b.hechas - a.hechas || a.nombre.localeCompare(b.nombre));
   const maximo = Math.max(1, ...integrantes.map((i) => i.hechas + i.pendientes));
 
-  const barras: BarraMes[] = meses.map((mes) => {
+  const barras: BarraMes[] = periodo.claves.map((mes) => {
     const cantidad = visibles.reduce((n, p) => n + (p.porMes.find((m) => m.mes === mes)?.hechas ?? 0), 0);
     return { mes, valor: cantidad || null };
   });
@@ -432,9 +514,9 @@ function SeccionProyectos({ proyectos, meses, mesActual }: { proyectos: ResumenP
 
       <div className="sesiones-resumen__graficos">
         <GraficoMeses
-          titulo="Tareas completadas por mes"
+          titulo={`Tareas completadas ${periodo.unidad}`}
           tope={tope}
-          actual={mesActual}
+          actual={periodo.actual}
           texto={tareas}
           guia={String}
           sinDatos="ninguna completada"

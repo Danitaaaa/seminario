@@ -8,7 +8,7 @@ import type {
   Meta, EstadisticasMetas, ListarMetasInput, CrearMetaInput, ModificarMetaInput, AlternarMetaInput,
   EliminarMetaInput, CopiarMetasInput, EstadisticasMetasInput,
 } from './metas';
-import type { ResumenMaterial, ResumenProyecto, ResumenSesiones } from './estadisticas';
+import type { PeriodoEstadisticas, ResumenCuestionarios, ResumenFlashcards, ResumenMaterial, ResumenProyecto, ResumenSesiones } from './estadisticas';
 import type { Deck, Flashcard, FlashcardPendiente, RepeticionMaterial } from './flashcards';
 import type { Notificacion } from './notificaciones';
 import type {
@@ -113,6 +113,8 @@ declare global {
       eliminarUsuario: (datos: { id: number }) => Promise<void>;
       obtenerFotoPerfil: (datos: { id: number }) => Promise<string | null>;
       elegirFotoPerfil: (datos: { id: number }) => Promise<string | null>;
+      elegirAvatar: (datos: { id: number; avatar: string }) => Promise<string>;
+      elegirColorAvatar: (datos: { id: number; color: number | null }) => Promise<boolean>;
       verificarPassword: (datos: { id: number; password: string }) => Promise<void>;
       actualizarRostro: (datos: { id: number; password: string; embedding: number[] }) => Promise<{ exito: boolean; mensaje: string }>;
 
@@ -199,9 +201,11 @@ declare global {
       cancelarInvitacion: (datos: { idProyecto: number; idUsuarioSolicitante: number; idInvitacion: number }) => Promise<void>;
 
       // Estadisticas
-      resumenProyectos: (datos: { idUsuario: number; mes: string; hoy: string; desde: string; desfaseMinutos: number }) => Promise<ResumenProyecto[]>;
+      resumenProyectos: (datos: PeriodoEstadisticas & { mes: string; hoy: string }) => Promise<ResumenProyecto[]>;
       resumenMaterial: (datos: { idUsuario: number }) => Promise<ResumenMaterial>;
-      resumenSesionesEstudio: (datos: { idUsuario: number; desde: string; desfaseMinutos: number }) => Promise<ResumenSesiones>;
+      resumenSesionesEstudio: (datos: PeriodoEstadisticas) => Promise<ResumenSesiones>;
+      resumenCuestionarios: (datos: PeriodoEstadisticas) => Promise<ResumenCuestionarios>;
+      resumenFlashcards: (datos: PeriodoEstadisticas) => Promise<ResumenFlashcards>;
 
       // Portada del proyecto
       obtenerPortadaProyecto: (datos: { idProyecto: number; idUsuario: number }) => Promise<string | null>;
@@ -240,6 +244,13 @@ declare global {
       // Modo voz
       lectorPantallaActivo: () => Promise<boolean>;
       alCambiarLector: (escuchar: (activo: boolean) => void) => () => void;
+      // Dictado (Whisper en la compu)
+      dictadoListo: () => Promise<boolean>;
+      prepararDictado: () => Promise<boolean>;
+      alProgresoDictado: (escuchar: (avance: number) => void) => () => void;
+      // Bienestar (avisos si planificás o estudiás demasiado)
+      bienestarActivo: (datos: { usuarioId: number }) => Promise<boolean>;
+      cambiarBienestar: (datos: { usuarioId: number; activo: boolean }) => Promise<boolean>;
     };
   }
 }

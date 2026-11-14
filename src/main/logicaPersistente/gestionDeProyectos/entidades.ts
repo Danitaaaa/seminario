@@ -24,6 +24,7 @@ export interface ProyectoMiembro {
     pendiente: boolean;
     fechaUnion: Date | null;            // alta; null si solo existe en el servidor
     fechaBaja: Date | null;             // baja; null mientras esté activo
+    colorAvatar: number | null;         // color elegido (0 a 9 de la paleta); null = automático
 }
 
 export type EntidadSincronizable = 'proyecto' | 'miembro' | 'nodo' | 'archivo' | 'evento' | 'meta' | 'tarea' | 'categoria';

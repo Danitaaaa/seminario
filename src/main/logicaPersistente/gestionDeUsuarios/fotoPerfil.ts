@@ -2,6 +2,10 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { Persistencia } from '../../persistencia/persistencia';
 
+// Un avatar de Syntra se guarda en foto_perfil como "avatar:<id>" (el dibujo está en el renderer).
+export const PREFIJO_AVATAR = 'avatar:';
+const esAvatar = (valor: string) => valor.startsWith(PREFIJO_AVATAR);
+
 // Exportados para reutilizarlos con la imagen de fondo del inicio.
 export const FORMATOS: Record<string, string> = {
     '.png': 'image/png',
@@ -36,7 +40,8 @@ export class ObtenerFotoPerfil {
 
     async ejecutar(id: number): Promise<string | null> {
         const ruta = await rutaGuardada(this.persistencia, id);
-        return ruta ? leerComoDataUrl(ruta) : null;
+        if (!ruta) return null;
+        return esAvatar(ruta) ? ruta : leerComoDataUrl(ruta);
     }
 }
 
@@ -54,7 +59,7 @@ export class ActualizarFotoPerfil {
         const destino = path.join(this.carpeta, `${id}${extension}`);
 
         await fs.mkdir(this.carpeta, { recursive: true });
-        if (anterior && anterior !== destino) await fs.rm(anterior, { force: true });
+        if (anterior && !esAvatar(anterior) && anterior !== destino) await fs.rm(anterior, { force: true });
         await fs.copyFile(rutaOrigen, destino);
 
         await this.persistencia.ejecutar(
@@ -62,5 +67,21 @@ export class ActualizarFotoPerfil {
             [destino, id]
         );
         return leerComoDataUrl(destino);
+    }
+}
+
+// Elige un avatar de Syntra en lugar de una foto. Si había una foto subida, se borra.
+export class ElegirAvatar {
+    constructor(private readonly persistencia: Persistencia) {}
+
+    async ejecutar(id: number, avatar: string): Promise<string> {
+        const anterior = await rutaGuardada(this.persistencia, id);
+        const valor = `${PREFIJO_AVATAR}${avatar}`;
+        await this.persistencia.ejecutar(
+            `UPDATE usuarios SET foto_perfil = $1 WHERE id_usuario = $2`,
+            [valor, id]
+        );
+        if (anterior && !esAvatar(anterior)) await fs.rm(anterior, { force: true });
+        return valor;
     }
 }

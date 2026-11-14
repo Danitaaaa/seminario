@@ -52,6 +52,8 @@ export const iaApi = {
 
   // Chat con IA: las conversaciones quedan guardadas. Para cortar una respuesta: cancelar(trabajoId).
   enviarMensajeChat: (datos: unknown) => ipcRenderer.invoke('chatIA:enviar', datos),
+  adjuntarArchivosChat: (datos: unknown) => ipcRenderer.invoke('chatIA:adjuntarArchivos', datos),
+  adjuntarMaterialChat: (datos: unknown) => ipcRenderer.invoke('chatIA:adjuntarMaterial', datos),
   listarConversacionesIA: () => ipcRenderer.invoke('chatIA:listar'),
   obtenerConversacionIA: (datos: unknown) => ipcRenderer.invoke('chatIA:obtener', datos),
   renombrarConversacionIA: (datos: unknown) => ipcRenderer.invoke('chatIA:renombrar', datos),

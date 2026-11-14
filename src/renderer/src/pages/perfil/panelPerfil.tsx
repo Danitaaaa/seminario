@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { obtenerUsuarioId } from "../../../lib/sesion";
 import type { Perfil } from "../../types/perfil";
 import { EVENTO_PERFIL_ACTUALIZADO } from "../../components/layout/menuUsuario";
+import { FotoPerfil } from "../../components/comunes/fotoPerfil";
 import "../../styles/panelPerfil.css";
 
 export const EVENTO_ABRIR_PERFIL = "syntra:abrir-perfil";
@@ -71,7 +72,7 @@ function ContenidoPerfil({ onCerrar }: { onCerrar: () => void }) {
     <div className="panel-perfil__fondo" onClick={onCerrar}>
       <div className="panel-perfil" onClick={(e) => e.stopPropagation()}>
         <div className="panel-perfil__avatar">
-          {foto && <img src={foto} alt="Foto de perfil" />}
+          <FotoPerfil foto={foto} />
         </div>
         <button type="button" className="panel-perfil__cambiar-foto" onClick={cambiarFoto}>
           Cambiar foto

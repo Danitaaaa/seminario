@@ -169,6 +169,8 @@ export class SincronizadorSupabase implements ISincronizador, IBloqueador, IAvis
             pendiente: !!m.pendiente,
             fechaUnion: fecha(m.fechaUnion ?? m.unido_en),
             fechaBaja: fecha(m.fechaBaja ?? m.baja_en),
+            apodo: m.apodo ?? null,
+            colorAvatar: m.colorAvatar ?? m.color_avatar ?? null,
         }));
     }
 

@@ -14,7 +14,7 @@ export class ObtenerCuaderno {
     if (!resumen) throw new Error('El cuaderno no existe.');
     const { idMateria, nombre } = resumen.materia;
 
-    const [carpetas, mazos, sesiones, metodos, notas] = await Promise.all([
+    const [carpetas, mazos, sesiones, metodos, notas, materialesIA] = await Promise.all([
       this.persistencia.ejecutar(
         `SELECT n.id_nodo, n.nombre,
                 ((SELECT count(*) FROM nodos h WHERE h.id_padre = n.id_nodo)
@@ -25,14 +25,14 @@ export class ObtenerCuaderno {
       this.persistencia.ejecutar(
         `SELECT d.id_deck, d.nombre, count(f.id_flashcard)::int AS flashcards,
                 -- Solo se puede sacar si está únicamente a mano (no por la materia ni por una sesión).
-                (EXISTS (SELECT 1 FROM cuaderno_mazo cm WHERE cm.id_cuaderno = $4 AND cm.id_deck = d.id_deck)
+                (d.id_materia = $3
                  AND lower(trim(coalesce(d.materia_asociada, ''))) <> lower($2)
                  AND NOT EXISTS (SELECT 1 FROM sesion_estudio s
                                   WHERE s.id_usuario = $1 AND s.id_materia = $3 AND s.id_deck = d.id_deck)) AS a_mano
            FROM decks d LEFT JOIN flashcards f ON f.id_deck = d.id_deck
-          WHERE d.id_deck IN (${mazosDelCuaderno('$1', '$2', '$3', '$4')})
+          WHERE d.id_deck IN (${mazosDelCuaderno('$1', '$2', '$3')})
           GROUP BY d.id_deck ORDER BY d.nombre`,
-        [datos.usuarioId, nombre, idMateria, datos.idCuaderno]
+        [datos.usuarioId, nombre, idMateria]
       ),
       this.persistencia.ejecutar(
         `SELECT id_sesion_estudio, nombre, to_char(fecha_programada, 'YYYY-MM-DD') AS fecha, estado
@@ -55,6 +55,12 @@ export class ObtenerCuaderno {
           ORDER BY fecha NULLS LAST, id_nota`,
         [datos.idCuaderno]
       ),
+      this.persistencia.ejecutar(
+        `SELECT id_material_ia, tipo, titulo FROM materiales_ia
+          WHERE id_usuario = $1 AND id_materia = $2
+          ORDER BY tipo, titulo`,
+        [datos.usuarioId, idMateria]
+      ),
     ]);
 
     return {
@@ -63,6 +69,7 @@ export class ObtenerCuaderno {
       mazos: mazos.map((m: any) => ({ idDeck: m.id_deck, nombre: m.nombre, flashcards: m.flashcards, aMano: m.a_mano })),
       sesiones: sesiones.map((s: any) => ({ idSesion: s.id_sesion_estudio, nombre: s.nombre, fecha: s.fecha, estado: s.estado })),
       metodos: metodos.map((m: any) => ({ nombre: m.nombre, sesiones: m.sesiones })),
+      materialesIA: materialesIA.map((m: any) => ({ idMaterialIA: m.id_material_ia, tipo: m.tipo, titulo: m.titulo })),
       notas: notas.map(materializarNota),
     };
   }

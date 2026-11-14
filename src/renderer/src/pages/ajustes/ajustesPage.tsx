@@ -49,6 +49,22 @@ const mensajeDe = (error: unknown) =>
     : "Ocurrió un error inesperado.";
 
 export function AjustesPage() {
+  // Bienestar: los avisos se guardan en la cuenta (los arma el main cada minuto).
+  const usuarioIdBienestar = obtenerUsuarioId();
+  const [bienestar, setBienestar] = useState(true);
+  useEffect(() => {
+    if (usuarioIdBienestar) window.api.bienestarActivo({ usuarioId: usuarioIdBienestar }).then(setBienestar).catch(() => {});
+  }, [usuarioIdBienestar]);
+  async function cambiarBienestar(activo: boolean): Promise<void> {
+    if (!usuarioIdBienestar) return;
+    setBienestar(activo);
+    try {
+      setBienestar(await window.api.cambiarBienestar({ usuarioId: usuarioIdBienestar, activo }));
+    } catch {
+      setBienestar(!activo);
+    }
+  }
+
   const navigate = useNavigate();
   const usuarioId = obtenerUsuarioId();
   const { preferencia, cambiar, paleta, cambiarPaleta } = usarModo();
@@ -248,6 +264,23 @@ export function AjustesPage() {
               )}
             </>
           )}
+        </section>
+
+        <section className="ajustes__seccion">
+          <h3 className="ajustes__titulo">Bienestar</h3>
+          <label className="ajustes__check">
+            <input
+              type="checkbox"
+              checked={bienestar}
+              disabled={!usuarioIdBienestar}
+              onChange={(e) => void cambiarBienestar(e.target.checked)}
+            />
+            Avisarme si planifico o estudio demasiado en un día
+          </label>
+          <p className="ajustes__ayuda">
+            Te llega una notificación si tenés 4 sesiones o más (o 5 horas planificadas) en el día, y otra si ya estudiaste 4 horas.
+            Solo avisa: no cambia ni bloquea nada.
+          </p>
         </section>
       </div>
     </PlantillaLayout>

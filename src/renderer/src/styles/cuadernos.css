@@ -234,3 +234,29 @@
 .cuaderno-metodo-chip { padding: 3px 10px; border: 1px solid var(--color-frost-blue); border-radius: 999px; background: var(--color-frost-claro); color: var(--color-text); }
 .cuaderno-tarjeta .materias-botones { margin-top: auto; flex-wrap: wrap; }
 .cuaderno-tarjeta .materias-botones .app-boton { margin-top: 0; }
+
+/* Promedio de todas las notas, con botón para ocultarlo */
+.cuaderno-promedio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-md);
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  font-size: 1.05rem;
+}
+
+.cuaderno-promedio strong {
+  font-size: 1.3rem;
+  color: var(--color-primary);
+}
+
+.cuaderno-promedio--oculto {
+  justify-content: flex-end;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+

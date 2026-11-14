@@ -21,6 +21,7 @@ export interface Miembro {
     pendiente: boolean;
     fechaUnion: string | Date | null;
     fechaBaja: string | Date | null;
+    colorAvatar?: number | null; // color elegido (0 a 9 de la paleta); null = automático
 }
 
 export const claveProyecto = (p: Proyecto) => `proyecto-${p.idProyecto}`;

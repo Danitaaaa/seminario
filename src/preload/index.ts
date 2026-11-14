@@ -22,6 +22,8 @@ import { estadisticasApi } from './apis/estadisticas';
 import { sesionesEstudioApi } from './apis/sesionesEstudio';
 import { spotifyApi } from './apis/spotify';
 import { vozApi } from './apis/voz';
+import { dictadoApi } from './apis/dictado';
+import { bienestarApi } from './apis/bienestar';
 
 import { iaApi } from './apis/ia';
 import { materialIAExtraApi } from './apis/materialIA';
@@ -50,6 +52,8 @@ contextBridge.exposeInMainWorld('api', {
   ...sesionesEstudioApi,
   ...spotifyApi,
   ...vozApi,
+  ...dictadoApi,
+  ...bienestarApi,
   ...iaApi,
   ...materialIAExtraApi
 });

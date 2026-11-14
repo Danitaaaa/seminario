@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import type { ZodType } from 'zod';
 import { Estadisticas } from '../administracionDePersistencia/estadisticas';
-import { resumenMaterialSchema, resumenProyectosSchema, resumenSesionesSchema } from '../logicaPersistente/gestionDeEstadisticas/dto';
+import { resumenCuestionariosSchema, resumenFlashcardsSchema, resumenMaterialSchema, resumenProyectosSchema, resumenSesionesSchema } from '../logicaPersistente/gestionDeEstadisticas/dto';
 
 function validar<T>(schema: ZodType<T>, datos: unknown): T {
   const resultado = schema.safeParse(datos);
@@ -20,5 +20,11 @@ export function registerEstadisticasIpc(estadisticas: Estadisticas): void {
   });
   ipcMain.handle('estadisticas:sesiones', async (_e, datos: unknown) =>
     estadisticas.sesiones(validar(resumenSesionesSchema, datos))
+  );
+  ipcMain.handle('estadisticas:cuestionarios', async (_e, datos: unknown) =>
+    estadisticas.cuestionarios(validar(resumenCuestionariosSchema, datos))
+  );
+  ipcMain.handle('estadisticas:flashcards', async (_e, datos: unknown) =>
+    estadisticas.flashcards(validar(resumenFlashcardsSchema, datos))
   );
 }

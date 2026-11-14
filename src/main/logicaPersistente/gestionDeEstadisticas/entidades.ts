@@ -59,3 +59,28 @@ export interface ResumenMaterial {
   bytes: number;
   carpetas: number;
 }
+
+// Resumen de los cuestionarios con IA que resolvió el usuario en el período pedido.
+export interface ResumenCuestionarios {
+  intentos: number; // veces que resolvió un cuestionario
+  cuestionarios: number; // cuestionarios distintos
+  correctas: number;
+  preguntas: number;
+  // % de aciertos de cada mes (AAAA-MM), solo los meses con algún intento.
+  porMes: { mes: string; porcentaje: number; intentos: number }[];
+  // Temas en los que más se equivocó, de mayor a menor.
+  temas: { tema: string; errores: number; total: number }[];
+  // Los últimos cuestionarios que resolvió, con su último resultado y el mejor.
+  recientes: { idMaterialIA: number; titulo: string; ultimo: number; mejor: number; intentos: number }[];
+}
+
+// Resumen de los repasos de flashcards del usuario en el período pedido.
+export interface ResumenFlashcards {
+  repasos: number; // tarjetas repasadas (cada vez cuenta)
+  tarjetas: number; // tarjetas distintas
+  mazos: number;
+  faciles: number;
+  dificiles: number;
+  porMes: { mes: string; repasos: number }[];
+  porMazo: { idDeck: number; nombre: string; repasos: number }[];
+}

@@ -10,11 +10,13 @@ import { LARGO_PREGUNTA, LARGO_RESPUESTA } from '../../utils/formulas';
 import { api, nuevoTrabajoIA, type ArchivoMaterial } from '../../utils/apiMaterialIA';
 import type { TarjetaIA } from '../../../../preload/apis/materialIA';
 import { SelectorMateriales } from './selectorMateriales';
-import { ModalGenerando } from './modalGenerando';
+import { VentanaIA } from './segundoPlano';
+import { usarArchivosMaterial } from '../../hooks/usarArchivosMaterial';
 import styles from '../../styles/flashcards.module.css';
 
 interface Props {
-  archivos: ArchivoMaterial[];
+  // Si no se pasan, el modal carga los archivos de Material solo (así sirve abierto en segundo plano).
+  archivos?: ArchivoMaterial[];
   cargandoArchivos?: boolean;
   idArchivoInicial?: number;
   onCerrar: () => void;
@@ -37,7 +39,10 @@ function mensajeDe(e: unknown, porDefecto: string): string {
   return limpio || porDefecto;
 }
 
-export function ModalFlashcardsIA({ archivos, cargandoArchivos = false, idArchivoInicial, onCerrar, onGuardado }: Props) {
+export function ModalFlashcardsIA({ archivos: archivosProp, cargandoArchivos: cargandoProp = false, idArchivoInicial, onCerrar, onGuardado }: Props) {
+  const propios = usarArchivosMaterial(!archivosProp);
+  const archivos = archivosProp ?? propios.archivos;
+  const cargandoArchivos = archivosProp ? cargandoProp : propios.cargando;
   const [paso, setPaso] = useState<Paso>('configurar');
   const [idsArchivos, setIdsArchivos] = useState<number[]>(idArchivoInicial ? [idArchivoInicial] : []);
   const [cantidad, setCantidad] = useState(15);
@@ -68,19 +73,6 @@ export function ModalFlashcardsIA({ archivos, cargandoArchivos = false, idArchiv
     trabajosGenerados.current = [];
   }
 
-  // Botón "Cancelar generación": invalida la corrida, avisa al main y vuelve a configurar sin esperar respuesta.
-  function cancelarGeneracion() {
-    corrida.current++;
-    const t = trabajo.current;
-    trabajo.current = null;
-    try {
-      void Promise.resolve(t?.cancelar()).catch(() => undefined);
-    } catch {
-      /* nada */
-    }
-    descartarPropuestas();
-    setPaso('configurar');
-  }
 
   async function generar() {
     if (!idsArchivos.length) return setError('Elegí al menos un archivo de Material.');
@@ -214,6 +206,16 @@ export function ModalFlashcardsIA({ archivos, cargandoArchivos = false, idArchiv
   }
 
   return (
+    <VentanaIA
+      generando={paso === 'generando'}
+      listo={paso === 'revisar'}
+      que="las flashcards"
+      mensaje="Generando flashcards"
+      detalle={idsArchivos.length > 1
+        ? `Archivo ${Math.min(avance + 1, idsArchivos.length)} de ${idsArchivos.length} · puede tardar un poco`
+        : 'Puede tardar un poco según el tamaño del material.'}
+      onCancelar={cerrar}
+    >
     <div className={styles.modalBackdrop}>
       <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="fc-ia-titulo" style={paso === 'revisar' ? { width: 'min(820px, 95vw)', maxHeight: '90vh', overflowY: 'auto' } : { maxHeight: '90vh', overflowY: 'auto' }}>
         <h2 id="fc-ia-titulo">Crear flashcards con IA</h2>
@@ -233,16 +235,6 @@ export function ModalFlashcardsIA({ archivos, cargandoArchivos = false, idArchiv
               <Button onClick={() => void generar()} disabled={idsArchivos.length === 0}>Generar</Button>
             </div>
           </>
-        )}
-
-        {paso === 'generando' && (
-          <ModalGenerando
-            mensaje="Generando flashcards"
-            detalle={idsArchivos.length > 1
-              ? `Archivo ${Math.min(avance + 1, idsArchivos.length)} de ${idsArchivos.length} · puede tardar un poco`
-              : 'Puede tardar un poco según el tamaño del material.'}
-            onCancelar={cancelarGeneracion}
-          />
         )}
 
         {(paso === 'revisar' || paso === 'guardando') && (
@@ -276,5 +268,6 @@ export function ModalFlashcardsIA({ archivos, cargandoArchivos = false, idArchiv
         )}
       </div>
     </div>
+    </VentanaIA>
   );
 }

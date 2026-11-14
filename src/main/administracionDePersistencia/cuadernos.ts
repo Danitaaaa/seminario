@@ -8,9 +8,10 @@ import { ModificarNota } from '../logicaPersistente/gestionDeCuadernos/modificar
 import { EliminarNota } from '../logicaPersistente/gestionDeCuadernos/eliminarNota';
 import { AgregarMazo } from '../logicaPersistente/gestionDeCuadernos/agregarMazo';
 import { QuitarMazo } from '../logicaPersistente/gestionDeCuadernos/quitarMazo';
+import { AgregarMaterialIA, QuitarMaterialIA } from '../logicaPersistente/gestionDeCuadernos/materialIACuaderno';
 import { Cuaderno, Nota, ResumenCuaderno } from '../logicaPersistente/gestionDeCuadernos/entidades';
 import {
-  CrearCuadernoDTO, CrearNotaDTO, CuadernoDTO, MazoCuadernoDTO, ModificarCuadernoDTO, ModificarNotaDTO, NotaDTO, UsuarioDTO,
+  CrearCuadernoDTO, CrearNotaDTO, CuadernoDTO, MaterialIACuadernoDTO, MazoCuadernoDTO, ModificarCuadernoDTO, ModificarNotaDTO, NotaDTO, UsuarioDTO,
 } from '../logicaPersistente/gestionDeCuadernos/dto';
 
 export class Cuadernos {
@@ -24,7 +25,9 @@ export class Cuadernos {
     private readonly modificarNota: ModificarNota,
     private readonly eliminarNota: EliminarNota,
     private readonly agregarMazo: AgregarMazo,
-    private readonly quitarMazo: QuitarMazo
+    private readonly quitarMazo: QuitarMazo,
+    private readonly agregarMaterialIA: AgregarMaterialIA,
+    private readonly quitarMaterialIA: QuitarMaterialIA
   ) {}
 
   listar(datos: UsuarioDTO): Promise<ResumenCuaderno[]> { return this.listarCuadernos.ejecutar(datos); }
@@ -39,4 +42,6 @@ export class Cuadernos {
 
   sumarMazo(datos: MazoCuadernoDTO): Promise<void> { return this.agregarMazo.ejecutar(datos); }
   sacarMazo(datos: MazoCuadernoDTO): Promise<void> { return this.quitarMazo.ejecutar(datos); }
+  sumarMaterialIA(datos: MaterialIACuadernoDTO): Promise<void> { return this.agregarMaterialIA.ejecutar(datos); }
+  sacarMaterialIA(datos: MaterialIACuadernoDTO): Promise<void> { return this.quitarMaterialIA.ejecutar(datos); }
 }

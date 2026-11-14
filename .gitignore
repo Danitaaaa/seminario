@@ -9,3 +9,7 @@ package2.json
 docker-compose_2.yml
 dist/
 ia-claves.json
+
+
+electron-data-1/
+electron-data-2/

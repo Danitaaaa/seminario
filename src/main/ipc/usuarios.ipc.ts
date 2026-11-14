@@ -9,6 +9,8 @@ import {
     eliminarUsuarioSchema,
     iniciarSesionSchema,
     modificarPerfilSchema,
+    elegirAvatarSchema,
+    elegirColorAvatarSchema,
     obtenerPerfilSchema,
     recuperarPasswordSchema,
     registrarUsuarioSchema,
@@ -120,6 +122,17 @@ export function registerUsuariosIpc(usuarios: Usuarios, hooks: HooksSesion): voi
         });
         if (canceled || filePaths.length === 0) return null;
         return usuarios.actualizarFotoPerfil(id, filePaths[0]);
+    });
+
+    ipcMain.handle("usuarios:elegirAvatar", async (_event, datos: unknown) => {
+        const { id, avatar } = validarDatos(elegirAvatarSchema, datos);
+        return usuarios.elegirAvatar(id, avatar);
+    });
+
+    ipcMain.handle("usuarios:elegirColorAvatar", async (_event, datos: unknown) => {
+        const { id, color } = validarDatos(elegirColorAvatarSchema, datos);
+        await usuarios.elegirColorAvatar(id, color);
+        return true;
     });
 
     ipcMain.handle('usuarios:idGlobal', async (_e, idUsuario: number) => {

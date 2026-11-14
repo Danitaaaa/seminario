@@ -1,6 +1,6 @@
 import { Persistencia } from '../../persistencia/persistencia';
 import { ResumenSesiones } from './entidades';
-import { ResumenSesionesDTO } from './dto';
+import { FORMATO_AGRUPAR, ResumenSesionesDTO } from './dto';
 import { materializarResumenSesiones } from './materializador';
 
 // Tiempo realmente estudiado en una sesión terminada: de inicio a fin, menos lo que estuvo en pausa.
@@ -38,7 +38,7 @@ export class ResumenSesionesEstudio {
         valores
       ),
       this.persistencia.ejecutar(
-        `SELECT to_char(${local('s.fecha_inicio')}, 'YYYY-MM') AS mes,
+        `SELECT to_char(${local('s.fecha_inicio')}, '${FORMATO_AGRUPAR[datos.agrupar]}') AS mes,
                 ROUND(SUM(${MINUTOS_ESTUDIADOS}))::int AS minutos
            FROM sesion_estudio s
           WHERE ${delPeriodo} AND s.fecha_fin IS NOT NULL

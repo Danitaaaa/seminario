@@ -31,8 +31,14 @@ export type RespuestaPlanIA =
   | { ok: false; causa: string; mensaje: string };
 
 // La IA pasa el archivo del plan (PDF, también escaneado) a texto siguiendo el prompt.
+// Si necesita que el usuario elija algo (carrera, orientación…), devuelve las preguntas y el texto vacío.
+export interface PreguntaPlanIA {
+  pregunta: string;
+  opciones: string[];
+}
+
 export type RespuestaTranscripcionIA =
-  | { ok: true; nombre: string; texto: string; proveedores: string[] }
+  | { ok: true; nombre: string; preguntas: PreguntaPlanIA[]; texto: string; proveedores: string[] }
   | { ok: false; causa: string; mensaje: string };
 
 export const materialIAExtraApi = {
@@ -69,7 +75,14 @@ export const materialIAExtraApi = {
 
   // Si la app no pudo leer el texto (PDF escaneado o foto), la IA lee las páginas como imágenes
   // (JPEG/PNG en base64) con el prompt indicado y devuelve el texto para el cuadro.
-  transcribirPlanIA: (datos: { trabajoId: string; nombre?: string; prompt: string; imagenes: string[] }): Promise<RespuestaTranscripcionIA> =>
+  transcribirPlanIA: (datos: {
+    trabajoId: string;
+    nombre?: string;
+    prompt: string;
+    imagenes?: string[];
+    textoPlan?: string;
+    respuestas?: { pregunta: string; respuesta: string }[];
+  }): Promise<RespuestaTranscripcionIA> =>
     ipcRenderer.invoke('materias:transcribirPlanIA', datos),
 };
 

@@ -11,7 +11,7 @@ import { TarjetaFlashcard } from '../../components/flashcards/tarjetaFlashcard';
 import { ModalFlashcardsIA } from '../../components/materialIA/modalFlashcardsIA';
 import type { Deck, Flashcard } from '../../types/flashcards';
 import { ESTILOS_TARJETA, usarEstiloFlashcards, type EstiloTarjeta } from '../../hooks/usarEstiloFlashcards';
-import { usarArchivosMaterial } from '../../hooks/usarArchivosMaterial';
+import { avisarGuardadoIA, usarRecargaAlGuardarIA, usarSegundoPlano } from '../../components/materialIA/segundoPlano';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import styles from '../../styles/flashcards.module.css';
 import { hablar } from '../../voz/narrador';
@@ -43,9 +43,10 @@ export function FlashcardsPage() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
   const [errorFormulario, setErrorFormulario] = useState('');
-  // Generar flashcards con IA: los archivos de Material solo se cargan cuando se abre el modal.
-  const [modalIAAbierto, setModalIAAbierto] = useState(false);
-  const { archivos, cargando: cargandoArchivos } = usarArchivosMaterial(modalIAAbierto);
+  // Generar flashcards con IA: el modal sigue abierto aunque se cambie de pantalla (la IA trabaja en segundo plano).
+  const { abrir } = usarSegundoPlano();
+  const abrirModalIA = () =>
+    abrir('flashcardsIA', (cerrar) => <ModalFlashcardsIA onCerrar={cerrar} onGuardado={avisarGuardadoIA} />);
 
   const cargarMazos = useCallback(async () => {
     try {
@@ -57,6 +58,7 @@ export function FlashcardsPage() {
       setCargando(false);
     }
   }, []);
+  usarRecargaAlGuardarIA(cargarMazos);
 
   useEffect(() => { void cargarMazos(); }, [cargarMazos]);
 
@@ -189,7 +191,7 @@ export function FlashcardsPage() {
             <p className={styles.description}>Organizá tus tarjetas y repasá a tu ritmo.</p>
           </div>
           <div className={styles.actions}>
-            <Button variant="secondary" onClick={() => setModalIAAbierto(true)}><Sparkles size={17} /> Generar con IA</Button>
+            <Button variant="secondary" onClick={() => abrirModalIA()}><Sparkles size={17} /> Generar con IA</Button>
             <Button onClick={() => {
               setDeckEditando(null);
               setNombre('');
@@ -278,14 +280,6 @@ export function FlashcardsPage() {
             </div>
           </form>
         </div>
-      )}
-      {modalIAAbierto && (
-        <ModalFlashcardsIA
-          archivos={archivos}
-          cargandoArchivos={cargandoArchivos}
-          onCerrar={() => setModalIAAbierto(false)}
-          onGuardado={() => void cargarMazos()}
-        />
       )}
     </PlantillaLayout>
   );

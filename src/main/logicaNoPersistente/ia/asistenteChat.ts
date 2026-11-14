@@ -1,7 +1,7 @@
 // src/main/logicaNoPersistente/ia/asistenteChat.ts
 // Chat con IA: arma el pedido con el historial y lo manda por el router (Luna → Gemini → Gemma).
 // No guarda nada: eso lo hace administracionDePersistencia/chatIA.ts.
-import { armarChat, type MensajeHistorial } from './prompts';
+import { armarChat, type DocumentoChat, type MensajeHistorial } from './prompts';
 import type { RouterModelos } from './routerModelos';
 import { TAREAS_IA } from './tareas';
 import { respuestaChatSchema } from './esquemas';
@@ -20,10 +20,11 @@ export class AsistenteChat {
     mensaje: string,
     signal?: AbortSignal,
     imagenes: string[] = [],
+    documentos: DocumentoChat[] = [],
   ): Promise<RespuestaAsistente> {
     const r = await this.router.generar('chat', {
       sistema: TAREAS_IA.chat.sistema,
-      usuario: armarChat(historial, mensaje),
+      usuario: armarChat(historial, mensaje, undefined, documentos),
       esquema: respuestaChatSchema,
       esquemaJson: TAREAS_IA.chat.esquemaJson,
       signal,

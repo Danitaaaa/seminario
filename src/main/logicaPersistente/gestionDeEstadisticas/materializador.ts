@@ -1,4 +1,4 @@
-import { AporteIntegrante, ResumenMaterial, ResumenProyecto, ResumenSesiones, TareasMes } from './entidades';
+import { AporteIntegrante, ResumenCuestionarios, ResumenFlashcards, ResumenMaterial, ResumenProyecto, ResumenSesiones, TareasMes } from './entidades';
 
 export function materializarAporte(fila: any): AporteIntegrante {
   return {
@@ -51,5 +51,35 @@ export function materializarResumenMaterial(fila: any): ResumenMaterial {
     // SUM de un BIGINT llega como texto desde pg.
     bytes: Number(fila.bytes),
     carpetas: fila.carpetas,
+  };
+}
+
+export function materializarResumenCuestionarios(totales: any, porMes: any[], temas: any[], recientes: any[]): ResumenCuestionarios {
+  return {
+    intentos: totales.intentos,
+    cuestionarios: totales.cuestionarios,
+    correctas: totales.correctas,
+    preguntas: totales.preguntas,
+    porMes: porMes.map((f) => ({ mes: f.mes, porcentaje: f.porcentaje, intentos: f.intentos })),
+    temas: temas.map((f) => ({ tema: f.tema, errores: f.errores, total: f.total })),
+    recientes: recientes.map((f) => ({
+      idMaterialIA: f.id_material_ia,
+      titulo: f.titulo,
+      ultimo: f.ultimo,
+      mejor: f.mejor,
+      intentos: f.intentos,
+    })),
+  };
+}
+
+export function materializarResumenFlashcards(totales: any, porMes: any[], porMazo: any[]): ResumenFlashcards {
+  return {
+    repasos: totales.repasos,
+    tarjetas: totales.tarjetas,
+    mazos: totales.mazos,
+    faciles: totales.faciles,
+    dificiles: totales.dificiles,
+    porMes: porMes.map((f) => ({ mes: f.mes, repasos: f.repasos })),
+    porMazo: porMazo.map((f) => ({ idDeck: f.id_deck, nombre: f.nombre, repasos: f.repasos })),
   };
 }

@@ -50,6 +50,7 @@ import { EcoTeclado } from "./voz/ecoTeclado";
 import { AnunciarPantalla } from "./voz/anunciarPantalla";
 import { LectorFoco } from "./voz/lectorFoco";
 import { NavegacionFlechas } from "./voz/navegacionFlechas";
+import { ProveedorSegundoPlano } from "./components/materialIA/segundoPlano";
 
 
 export default function App() {
@@ -69,6 +70,8 @@ export default function App() {
       <ModalBienvenidaVoz />
     {/* Práctica activa: mientras dura la sesión no se puede salir de ella (ver bloqueoPracticaActiva.tsx). */}
     <ProveedorBloqueoSesion>
+    {/* Los modales de IA siguen abiertos al cambiar de pantalla; mientras generan se ven como un cartel al costado. */}
+    <ProveedorSegundoPlano>
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/registro" element={<RegistrarUsuarioPage />} />
@@ -121,6 +124,7 @@ export default function App() {
       <EcoTeclado activo />
       <LectorFoco />
       <NavegacionFlechas />
+    </ProveedorSegundoPlano>
     </ProveedorBloqueoSesion>
     </ProveedorSpotify>
     </ProveedorAvisos>

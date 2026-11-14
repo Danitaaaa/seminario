@@ -2,7 +2,7 @@ import { ipcMain } from 'electron';
 import type { ZodType } from 'zod';
 import { Cuadernos } from '../administracionDePersistencia/cuadernos';
 import {
-  crearCuadernoSchema, crearNotaSchema, cuadernoSchema, mazoCuadernoSchema, modificarCuadernoSchema, modificarNotaSchema, notaSchema, usuarioSchema,
+  crearCuadernoSchema, crearNotaSchema, cuadernoSchema, materialIACuadernoSchema, mazoCuadernoSchema, modificarCuadernoSchema, modificarNotaSchema, notaSchema, usuarioSchema,
 } from '../logicaPersistente/gestionDeCuadernos/dto';
 
 function validar<T>(schema: ZodType<T>, datos: unknown): T {
@@ -30,6 +30,15 @@ export function registerCuadernosIpc(cuadernos: Cuadernos): void {
   });
   ipcMain.handle('cuadernos:quitarMazo', async (_e, d: unknown) => {
     await cuadernos.sacarMazo(validar(mazoCuadernoSchema, d));
+    return { ok: true };
+  });
+
+  ipcMain.handle('cuadernos:agregarMaterialIA', async (_e, d: unknown) => {
+    await cuadernos.sumarMaterialIA(validar(materialIACuadernoSchema, d));
+    return { ok: true };
+  });
+  ipcMain.handle('cuadernos:quitarMaterialIA', async (_e, d: unknown) => {
+    await cuadernos.sacarMaterialIA(validar(materialIACuadernoSchema, d));
     return { ok: true };
   });
 

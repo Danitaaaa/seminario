@@ -1,6 +1,8 @@
-import { ipcMain } from 'electron';
+import { dialog, ipcMain } from 'electron';
 import { ChatIA } from '../administracionDePersistencia/chatIA';
 import {
+  adjuntarArchivosChatSchema,
+  adjuntarMaterialChatSchema,
   conversacionIASchema,
   enviarMensajeChatSchema,
   renombrarConversacionIASchema,
@@ -20,6 +22,22 @@ export function registerChatIAIpc(chatIA: ChatIA): void {
       throw error;
     }
   });
+
+  // El diálogo se abre acá: el renderer nunca recibe rutas del disco, solo el texto leído.
+  ipcMain.handle('chatIA:adjuntarArchivos', async (_event, datos: unknown) => {
+    const { carpeta } = adjuntarArchivosChatSchema.parse(datos ?? {});
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: carpeta ? 'Elegir carpeta para la IA' : 'Elegir archivos para la IA',
+      properties: carpeta ? ['openDirectory'] : ['openFile', 'multiSelections'],
+      ...(carpeta ? {} : { filters: [{ name: 'PDF, Word o texto', extensions: ['pdf', 'docx', 'txt', 'md'] }] }),
+    });
+    if (canceled || filePaths.length === 0) return null;
+    return chatIA.leerDeLaCompu(filePaths, carpeta);
+  });
+
+  ipcMain.handle('chatIA:adjuntarMaterial', async (_event, datos: unknown) =>
+    chatIA.leerDeMaterial(adjuntarMaterialChatSchema.parse(datos).idArchivo)
+  );
 
   ipcMain.handle('chatIA:listar', async () => chatIA.listar());
 

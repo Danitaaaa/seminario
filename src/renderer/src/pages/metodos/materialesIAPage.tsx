@@ -12,6 +12,7 @@ import { RUTA_TIPO_IA, esFuenteIA, type MaterialIA, type TipoMaterialIA } from '
 import { formatearFecha, mensajeError } from './utilidadesMetodosIA';
 import styles from '../../styles/metodos.module.css';
 import '../../styles/metodosIA.css';
+import { avisarGuardadoIA, usarRecargaAlGuardarIA, usarSegundoPlano } from '../../components/materialIA/segundoPlano';
 
 const TEXTOS: Record<TipoMaterialIA, { titulo: string; detalle: string; vacio: string; icono: LucideIcon; singular: string }> = {
   resumen: {
@@ -47,7 +48,8 @@ export function MaterialesIAPage({ tipo }: { tipo: TipoMaterialIA }) {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [eligiendo, setEligiendo] = useState(false);
-  const [archivo, setArchivo] = useState<Archivo | null>(null);
+  // El modal de IA sigue abierto aunque se cambie de pantalla (la IA trabaja en segundo plano).
+  const { abrir } = usarSegundoPlano();
 
   const cargar = useCallback(async () => {
     try {
@@ -59,6 +61,7 @@ export function MaterialesIAPage({ tipo }: { tipo: TipoMaterialIA }) {
       setCargando(false);
     }
   }, [tipo, textos.titulo]);
+  usarRecargaAlGuardarIA(cargar);
 
   useEffect(() => {
     void cargar();
@@ -70,7 +73,16 @@ export function MaterialesIAPage({ tipo }: { tipo: TipoMaterialIA }) {
       return;
     }
     setEligiendo(false);
-    setArchivo(elegido);
+    abrir(`generarIA-${tipo}-${elegido.id}`, (cerrar) => (
+      <GenerarConIA
+        archivo={elegido}
+        tipoFijo={tipo}
+        onCerrar={() => {
+          cerrar();
+          avisarGuardadoIA();
+        }}
+      />
+    ));
   }
 
   async function eliminar(material: MaterialIA) {
@@ -140,16 +152,6 @@ export function MaterialesIAPage({ tipo }: { tipo: TipoMaterialIA }) {
       </section>
 
       {eligiendo && <ModalAbrirMaterial onElegir={elegirArchivo} onCerrar={() => setEligiendo(false)} />}
-      {archivo && (
-        <GenerarConIA
-          archivo={archivo}
-          tipoFijo={tipo}
-          onCerrar={() => {
-            setArchivo(null);
-            void cargar();
-          }}
-        />
-      )}
     </PlantillaLayout>
   );
 }

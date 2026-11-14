@@ -43,6 +43,8 @@ export interface PedidoGeneracion<T> {
   signal?: AbortSignal; // para cancelar
   /** Imágenes para que el modelo las lea (JPEG o PNG en base64, sin el prefijo data:). */
   imagenes?: string[];
+  /** Tiempo máximo por intento si este pedido necesita más que el de siempre (ms). */
+  timeoutMs?: number;
 }
 
 /** Lo que recibe un proveedor: no necesita el validador, solo el JSON Schema. */

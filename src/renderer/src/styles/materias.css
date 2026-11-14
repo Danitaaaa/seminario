@@ -577,3 +577,119 @@
 
 /* Elegir cómo ver el plan: por estado o por año */
 .materias-plan-barra { display: flex; justify-content: flex-end; }
+
+/* "La IA necesita tu ayuda": preguntas antes de transcribir el plan (solo si el plan tiene algo para elegir) */
+.plan-ia-ayuda {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+}
+
+.plan-ia-ayuda__cabecera {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--tamano-xs);
+  color: var(--color-text-secondary);
+}
+
+.plan-ia-ayuda__cabecera span:first-child {
+  color: var(--color-primary);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.plan-ia-ayuda__pregunta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.plan-ia-ayuda__chispa {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-frost-claro);
+  color: var(--color-primary);
+}
+
+.plan-ia-ayuda__opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 40px;
+}
+
+.plan-ia-ayuda__opcion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.plan-ia-ayuda__opcion:hover,
+.plan-ia-ayuda__opcion:focus-visible {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.plan-ia-ayuda__circulo {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-text-secondary);
+  border-radius: 50%;
+}
+
+.plan-ia-ayuda__elegido {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-text-secondary);
+}
+
+/* En qué formación se carga el plan (se puede cambiar antes de empezar) */
+.plan-destino {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-sm);
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.plan-destino label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.plan-destino select {
+  padding: 6px 10px;
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 700;
+}

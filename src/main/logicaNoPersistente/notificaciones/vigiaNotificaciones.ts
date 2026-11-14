@@ -1,12 +1,16 @@
 import type { Evento } from '../../logicaPersistente/gestionDeEventos/entidades';
 import type { Meta } from '../../logicaPersistente/gestionDeMetas/entidades';
 import { avisosPendientes } from './avisosPendientes';
+import { avisosBienestar } from './avisosBienestar';
+import type { CargaDelDia } from '../../logicaPersistente/gestionDeBienestar/entidades';
 import type { Notificador } from './notificador';
 
 export interface FuentesDeAvisos {
   eventos(usuarioId: number, desde: Date): Promise<Evento[]>;
   // Metas personales que vencen el día indicado (AAAA-MM-DD).
   metas(usuarioId: number, dia: string): Promise<Meta[]>;
+  // Bienestar: lo planificado y estudiado hoy. null si el usuario desactivó esos avisos.
+  bienestar?(usuarioId: number, ahora: Date): Promise<CargaDelDia | null>;
 }
 
 const dosCifras = (n: number) => String(n).padStart(2, '0');
@@ -54,7 +58,11 @@ export class VigiaNotificaciones {
       this.fuentes.eventos(usuarioId, ahora).catch((e) => avisarFallo('eventos', e, [] as Evento[])),
       this.fuentes.metas(usuarioId, diaDe(ahora)).catch((e) => avisarFallo('metas', e, [] as Meta[])),
     ]);
-    for (const aviso of avisosPendientes(usuarioId, eventos, metas, ahora)) {
+    const carga = this.fuentes.bienestar
+      ? await this.fuentes.bienestar(usuarioId, ahora).catch((e) => avisarFallo('sesiones (bienestar)', e, null))
+      : null;
+    const avisos = [...avisosPendientes(usuarioId, eventos, metas, ahora), ...(carga ? avisosBienestar(usuarioId, carga, ahora) : [])];
+    for (const aviso of avisos) {
       await this.notificador.notificar(aviso);
     }
   }

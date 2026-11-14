@@ -10,7 +10,7 @@ import { Button } from '../../components/ui/button/button';
 import { CartelError } from '../../components/comunes/cartelError';
 import { ModalResumenIA } from '../../components/materialIA/modalResumenIA';
 import { VisorArchivo } from '../../components/visor/visorArchivo';
-import { usarArchivosMaterial } from '../../hooks/usarArchivosMaterial';
+import { avisarGuardadoIA, usarRecargaAlGuardarIA, usarSegundoPlano } from '../../components/materialIA/segundoPlano';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import type { Archivo } from '../../types/nodo';
 import type { MaterialIA } from '../../types/ia';
@@ -37,9 +37,10 @@ export function ResumenesPage() {
   const [anteriores, setAnteriores] = useState<MaterialIA[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
-  const [modalAbierto, setModalAbierto] = useState(false);
   const [abierto, setAbierto] = useState<Archivo | null>(null);
-  const { archivos, cargando: cargandoArchivos } = usarArchivosMaterial(modalAbierto);
+  // El modal de IA sigue abierto aunque se cambie de pantalla (la IA trabaja en segundo plano).
+  const { abrir } = usarSegundoPlano();
+  const abrirModalIA = () => abrir('resumenIA', (cerrar) => <ModalResumenIA onCerrar={cerrar} onGuardado={avisarGuardadoIA} />);
 
   const cargar = useCallback(async () => {
     try {
@@ -62,6 +63,7 @@ export function ResumenesPage() {
       setCargando(false);
     }
   }, []);
+  usarRecargaAlGuardarIA(cargar);
 
   useEffect(() => {
     void cargar();
@@ -111,7 +113,7 @@ export function ResumenesPage() {
               Generalos con IA a partir de tu material, editalos y repasá con ellos. También los encontrás en Material.
             </p>
           </div>
-          <Button onClick={() => setModalAbierto(true)}><Sparkles size={17} /> Generar resumen</Button>
+          <Button onClick={() => abrirModalIA()}><Sparkles size={17} /> Generar resumen</Button>
         </header>
 
         {error && <CartelError mensaje={error} onCerrar={() => setError('')} onReintentar={cargar} />}
@@ -187,19 +189,11 @@ export function ResumenesPage() {
             <span className={styles.emptyIcon}><ScrollText size={25} /></span>
             <h3>Todavía no tenés resúmenes</h3>
             <p>Elegí material y generá tu primer resumen con IA.</p>
-            <Button onClick={() => setModalAbierto(true)}>Generar mi primer resumen</Button>
+            <Button onClick={() => abrirModalIA()}>Generar mi primer resumen</Button>
           </div>
         )}
       </div>
 
-      {modalAbierto && (
-        <ModalResumenIA
-          archivos={archivos}
-          cargandoArchivos={cargandoArchivos}
-          onCerrar={() => setModalAbierto(false)}
-          onGuardado={() => void cargar()}
-        />
-      )}
 
       {abierto && (
         <VisorArchivo archivo={abierto} soloLectura={false} onCerrar={() => setAbierto(null)} onGuardado={() => void cargar()} />

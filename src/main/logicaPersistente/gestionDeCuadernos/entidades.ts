@@ -41,5 +41,7 @@ export interface Cuaderno {
   sesiones: { idSesion: number; nombre: string; fecha: string; estado: string }[];
   // Métodos de estudio usados en las sesiones de la materia, con cuántas sesiones los usaron.
   metodos: { nombre: string; sesiones: number }[];
+  // Cuestionarios, mapas mentales y resúmenes con IA asociados a la materia.
+  materialesIA: { idMaterialIA: number; tipo: 'resumen' | 'cuestionario' | 'mapaMental'; titulo: string }[];
   notas: Nota[];
 }

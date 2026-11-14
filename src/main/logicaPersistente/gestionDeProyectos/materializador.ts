@@ -30,6 +30,7 @@ export function materializarMiembro(fila: any): ProyectoMiembro {
         pendiente: false,
         fechaUnion: fila.fecha_union ?? null,
         fechaBaja: fila.fecha_baja ?? null,
+        colorAvatar: fila.color_avatar ?? null,
     };
 }
 

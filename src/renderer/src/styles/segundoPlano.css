@@ -1,0 +1,151 @@
+/* Carteles de la IA trabajando en segundo plano: abajo a la derecha, se apilan si hay varios. */
+.tarjetas-ia {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.tarjeta-ia {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 280px;
+  padding: 4px 16px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 12px 32px rgba(20, 20, 30, 0.18);
+  text-align: center;
+  pointer-events: auto;
+  animation: tarjeta-ia-entrar 0.3s ease-out;
+}
+
+.tarjeta-ia .indicador-ia {
+  padding: 14px 4px 4px;
+}
+
+.tarjeta-ia--lista {
+  padding-top: 18px;
+  border-color: var(--color-primary-light);
+}
+
+.tarjeta-ia__nota {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.tarjeta-ia__icono {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  animation: tarjeta-ia-latir 1.4s ease-in-out infinite;
+}
+
+.tarjeta-ia__titulo {
+  margin: 0;
+  font-weight: 700;
+}
+
+.tarjeta-ia__acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.tarjeta-ia__boton {
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tarjeta-ia__boton--secundario {
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+}
+
+.tarjeta-ia__boton:hover {
+  filter: brightness(1.08);
+}
+
+
+
+@keyframes tarjeta-ia-entrar {
+  from { opacity: 0; transform: translateY(16px); }
+}
+
+@keyframes tarjeta-ia-latir {
+  50% { transform: scale(1.08); }
+}
+
+/* Flechita para achicar el cartel */
+.tarjeta-ia__ocultar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.tarjeta-ia__ocultar:hover {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+/* El cartel achicado: una pastilla con la chispa girando */
+.tarjeta-ia-pastilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(20, 20, 30, 0.16);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: tarjeta-ia-entrar 0.25s ease-out;
+}
+
+.tarjeta-ia-pastilla__chispa {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  animation: tarjeta-ia-girar 2.4s linear infinite;
+}
+
+@keyframes tarjeta-ia-girar {
+  to { transform: rotate(360deg); }
+}

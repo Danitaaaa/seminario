@@ -518,3 +518,29 @@
   color: var(--color-primary);
   font-weight: 600;
 }
+
+/* Elegir el período (semana, mes, 4 o 6 meses) */
+.estadisticas__periodo {
+  justify-content: flex-end;
+}
+
+/* "Temas para reforzar" de los cuestionarios: se despliega al tocarlo */
+.estadisticas__desplegar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--espacio-sm);
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--tamano-sm);
+  cursor: pointer;
+}
+
+.estadisticas__desplegar[aria-expanded="true"] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}

@@ -735,3 +735,59 @@
   border: 0;
   background: transparent;
 }
+
+/* Tu avatar en la lista de miembros: tocándolo elegís tu color */
+.miembros-color {
+  position: relative;
+  flex: none;
+}
+
+.miembros-item__avatar--elegible {
+  border: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 3px var(--color-border);
+}
+
+.miembros-color__paleta {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(5, 26px);
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgba(30, 30, 30, 0.14);
+}
+
+.miembros-color__opcion {
+  width: 26px;
+  height: 26px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.miembros-color__opcion[aria-pressed="true"],
+.miembros-color__opcion:focus-visible {
+  border-color: var(--color-text);
+  outline: none;
+}
+
+.miembros-color__auto {
+  grid-column: 1 / -1;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-background);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
