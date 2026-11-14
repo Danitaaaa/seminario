@@ -7,3 +7,4 @@ electron-data-*/
 
 package2.json
 docker-compose_2.yml
+dist/

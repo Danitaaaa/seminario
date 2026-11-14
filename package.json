@@ -1,6 +1,9 @@
 {
   "name": "study-app",
+  "productName": "Syntra",
   "version": "1.0.0",
+  "description": "Syntra: organizá tu material de estudio",
+  "author": "Equipo Syntra",
   "main": "out/main/index.js",
   "engines": {
     "node": ">=24.17.0"
@@ -9,6 +12,7 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "dev": "npm run db:up && electron-vite dev",
+    "dev:sin-docker": "electron-vite dev",
     "build": "electron-vite build",
     "start": "npm run db:up && npm run build && electron-vite preview",
     "package": "npm run build && electron-builder",
@@ -26,6 +30,7 @@
     "@turbodocx/html-to-docx": "^1.23.1",
     "bcrypt": "^6.0.0",
     "dotenv": "^16.6.1",
+    "embedded-postgres": "18.6.0-beta.19",
     "exceljs": "^4.4.0",
     "katex": "^0.16.22",
     "lucide-react": "^1.51.0",
@@ -70,5 +75,50 @@
     "bcrypt@6.0.0": true,
     "esbuild@0.28.2": true,
     "@turbodocx/html-to-docx@1.23.1": true
+  },
+  "build": {
+    "appId": "com.syntra.app",
+    "productName": "Syntra",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asar": false,
+    "npmRebuild": false,
+    "compression": "normal",
+    "extraResources": [
+      {
+        "from": "db/init",
+        "to": "db/init"
+      },
+      {
+        "from": ".env",
+        "to": ".env"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Syntra"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Education",
+      "maintainer": "Equipo Syntra <babineo.utn15@gmail.com>"
+    }
   }
 }

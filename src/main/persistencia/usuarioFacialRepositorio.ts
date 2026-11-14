@@ -8,6 +8,9 @@ export const pool = new Pool({
   password: process.env.POSTGRES_PASSWORD,
 });
 
+// Si la base corta una conexión que estaba libre, el pool la descarta y sigue (sin romper la app).
+pool.on('error', (error) => console.error('[db] Conexión cerrada por la base:', error.message));
+
 export interface EmbeddingGuardado {
   usuarioId: number
   embedding: number[]
