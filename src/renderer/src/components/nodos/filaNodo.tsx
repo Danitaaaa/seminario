@@ -46,6 +46,9 @@ export function FilaNodo({
             className={`fila-nodo${seleccionado ? ' fila-nodo--seleccionada' : ''}${sobreDestino ? ' fila-nodo--sobre-destino' : ''}`}
             role="row"
             draggable={puedeMover}
+            tabIndex={0}
+            aria-label={`${tipo} ${nodo.nombre}`}
+            onKeyDown={(e) => e.key === 'Enter' && onAbrir(nodo)}
             onClick={(e) => { e.stopPropagation(); onSeleccionar(nodo, e); }}
             onDoubleClick={() => onAbrir(nodo)}
             onDragStart={(e) => onArrastrarInicio(nodo, e)}

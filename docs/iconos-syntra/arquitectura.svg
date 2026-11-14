@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+	<g><g fill="none" stroke="#8BA3C5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path d="M22 3v14c0 0.55 -0.45 1 -1 1h-14c-0.55 0 -1 -0.45 -1 -1v-14c0 -0.55 0.45 -1 1 -1h14c0.55 0 1 0.45 1 1Z" stroke-dasharray="66">
+			<animate attributeName="stroke-dashoffset" dur="4.2s" repeatCount="indefinite" values="66;66;0;0" keyTimes="0.0;0.0;0.1429;1" /></path>
+		<g stroke-dasharray="10">
+			<path d="M10 6h8" stroke-dashoffset="10">
+				<animate attributeName="stroke-dashoffset" dur="4.2s" repeatCount="indefinite" values="10;10;0;0" keyTimes="0.0;0.1667;0.2143;1" /></path>
+			<path d="M10 10h8" stroke-dashoffset="10">
+				<animate attributeName="stroke-dashoffset" dur="4.2s" repeatCount="indefinite" values="10;10;0;0" keyTimes="0.0;0.2143;0.2619;1" /></path>
+		</g>
+		<path d="M10 14h5" stroke-dasharray="8" stroke-dashoffset="8">
+			<animate attributeName="stroke-dashoffset" dur="4.2s" repeatCount="indefinite" values="8;8;0;0" keyTimes="0.0;0.2619;0.3096;1" /></path>
+		<path d="M2 6v15c0 0.55 0.45 1 1 1h15" opacity="0">
+			<animate attributeName="opacity" dur="4.2s" repeatCount="indefinite" calcMode="discrete" values="0;1" keyTimes="0.0;0.3333" /><animate attributeName="d" dur="4.2s" repeatCount="indefinite" values="M6 3v14c0 0.55 0.45 1 1 1h14;M6 3v14c0 0.55 0.45 1 1 1h14;M2 6v15c0 0.55 0.45 1 1 1h15;M2 6v15c0 0.55 0.45 1 1 1h15" keyTimes="0.0;0.3333;0.3809;1" /></path>
+	</g>
+<animate attributeName="opacity" dur="4.2s" repeatCount="indefinite" values="1;1;0" keyTimes="0;0.9167;1" /></g></svg>

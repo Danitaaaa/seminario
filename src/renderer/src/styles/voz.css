@@ -1,0 +1,119 @@
+.voz-modal-fondo {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--color-background) 75%, transparent);
+}
+
+.voz-modal {
+  width: min(720px, 100%);
+  padding: clamp(32px, 7vw, 64px);
+  border: 4px solid var(--color-primary);
+  border-radius: 16px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.voz-modal:focus {
+  outline: 4px solid var(--color-primary);
+  outline-offset: 6px;
+}
+
+.voz-modal h1 {
+  margin: 0 0 32px;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.15;
+}
+
+.voz-modal p {
+  margin: 16px 0 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.4;
+}
+
+.voz-login-guiado {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 0;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.voz-login-guiado h1,
+.voz-login-fallback h2 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.15;
+}
+
+.voz-login-marco {
+  width: min(440px, 100%);
+  border: 8px solid var(--color-primary);
+  border-radius: 16px;
+  padding: 8px;
+  transition: border-color 150ms ease-in-out;
+}
+
+.voz-login-marco-centrado {
+  border-color: var(--color-success);
+}
+
+.voz-login-marco video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.voz-login-mensaje,
+.voz-login-fallback p {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.4;
+}
+
+.voz-login-fallback {
+  display: flex;
+  width: min(720px, 100%);
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: clamp(24px, 6vw, 48px);
+  border: 4px solid var(--color-primary);
+  border-radius: 16px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.voz-login-opciones {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.voz-login-opciones button:focus-visible,
+.voz-login-guiado button:focus-visible {
+  outline: 4px solid var(--color-primary);
+  outline-offset: 5px;
+}
+
+.voz-login-fase {
+  min-height: 1em;
+}
+
+@media (max-width: 720px) {
+  .voz-login-guiado {
+    padding: 0;
+  }
+}

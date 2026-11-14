@@ -11,6 +11,7 @@ interface ButtonProps {
     type?: "button" | "submit";
 
     disabled?: boolean;
+    autoFocus?: boolean;
 
 }
 
@@ -19,7 +20,8 @@ export function Button({
     onClick,
     variant = "primary",
     type = "button",
-    disabled = false
+    disabled = false,
+    autoFocus = false
 }: ButtonProps) {
 
     return (
@@ -28,6 +30,7 @@ export function Button({
             type={type}
             onClick={onClick}
             disabled={disabled}
+            autoFocus={autoFocus}
             className={`${styles.button} ${styles[variant]}`}
         >
             {children}

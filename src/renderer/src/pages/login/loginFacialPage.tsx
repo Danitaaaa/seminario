@@ -6,6 +6,14 @@ import { Button } from "../../components/ui/button/button";
 interface Props {
   onLoginExitoso: (usuarioId: number) => void
 }
+
+export async function verificarLoginFacial(video: HTMLVideoElement) {
+  const embedding = await ObtenerEmbedding(video)
+  if (!embedding) return { tipo: 'rostro-no-detectado' } as const
+
+  const resultado = await window.api.loginFacial(embedding)
+  return { tipo: 'resultado' as const, resultado }
+}
  
 export default function LoginFacial({ onLoginExitoso }: Props) {
   const { videoRef, camaraLista, error, alCargarVideo } = UsarCamara()
@@ -25,13 +33,13 @@ export default function LoginFacial({ onLoginExitoso }: Props) {
     setProcesando(true)
     setMensaje('Verificando rostro...')
     try {
-      const embedding = await ObtenerEmbedding(videoRef.current)
-      if (!embedding) {
+      const resultadoLogin = await verificarLoginFacial(videoRef.current)
+      if (resultadoLogin.tipo === 'rostro-no-detectado') {
         setMensaje('No se detectó ningún rostro. Probá con más luz y de frente.')
         return
       }
 
-      const resultado = await window.api.loginFacial(embedding)
+      const { resultado } = resultadoLogin
       if (resultado.exito) {
         onLoginExitoso(resultado.usuarioId)
       } else {

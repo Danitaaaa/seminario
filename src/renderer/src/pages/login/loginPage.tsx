@@ -1,4 +1,4 @@
-import { useState } from  'react';
+import { useEffect, useState } from  'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button/button';
 import { Input } from '../../components/ui/input/input';
@@ -8,14 +8,26 @@ import { CartelError } from '../../components/comunes/cartelError';
 import LoginFacial from './loginFacialPage';
 import { guardarSesion } from '../../../lib/sesion';
 import { enterParaAvanzar } from '../../utils/enterParaAvanzar';
+import { useVoice } from '../../hooks/useVoice';
+import { GuidedFaceLogin } from './GuidedFaceLogin';
 
 export function LoginPage(){
+    const { modoVoz } = useVoice();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [modoFacial, setModoFacial] = useState(false);
+    const [modoGuiado, setModoGuiado] = useState(false);
     const [error, setError] = useState("");
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (modoVoz === true) {
+            setModoFacial(false);
+        } else {
+            setModoGuiado(false);
+        }
+    }, [modoVoz]);
 
     const finalizarInicioSesion = (usuarioId: number) => {
         guardarSesion(usuarioId);
@@ -88,20 +100,36 @@ export function LoginPage(){
 
             <section className="login-facial" aria-label="Login facial">
                 <Title>Reconocimiento facial</Title>
-                {modoFacial ? (
+                {modoVoz === true ? (
+                    modoGuiado ? (
+                            <GuidedFaceLogin
+                                onLoginExitoso={finalizarInicioSesion}
+                                onElegirContraseña={() => setModoGuiado(false)}
+                            />
+                    ) : (
+                            <>
+                                <p>Presioná Enter sobre la opción para iniciar el reconocimiento facial.</p>
+                                <div className="voz-login-opciones">
+                                    <Button autoFocus onClick={() => setModoGuiado(true)}>
+                                        Iniciar sesión con rostro
+                                    </Button>
+                                </div>
+                            </>
+                    )
+                ) : modoFacial ? (
                     <>
-                        <p>Mirá a la cámara para escanear tu rostro.</p>
-                        <LoginFacial onLoginExitoso={finalizarInicioSesion} />
-                        <Button variant="secondary" onClick={() => setModoFacial(false)}>
-                            Usar contraseña
-                        </Button>
+                            <p>Mirá a la cámara para escanear tu rostro.</p>
+                            <LoginFacial onLoginExitoso={finalizarInicioSesion} />
+                            <Button variant="secondary" onClick={() => setModoFacial(false)}>
+                                Usar contraseña
+                            </Button>
                     </>
                 ) : (
                     <>
-                        <p>Mirá a la cámara para escanear tu rostro.</p>
-                        <Button variant="secondary" onClick={() => setModoFacial(true)}>
-                            Iniciar sesión con rostro
-                        </Button>
+                            <p>Mirá a la cámara para escanear tu rostro.</p>
+                            <Button variant="secondary" onClick={() => setModoFacial(true)}>
+                                Iniciar sesión con rostro
+                            </Button>
                     </>
                 )}
             </section>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, BookOpen, Check, ChevronRight, Pencil, RotateCcw, Search, SkipForward, Trash2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
@@ -11,6 +11,7 @@ import type { Deck, Flashcard } from '../../types/flashcards';
 import { ESTILOS_TARJETA, usarEstiloFlashcards, type EstiloTarjeta } from '../../hooks/usarEstiloFlashcards';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import styles from '../../styles/flashcards.module.css';
+import { hablar } from '../../voz/narrador';
 
 function usuarioIdActual(): number {
   const usuarioId = Number(localStorage.getItem('usuarioId'));
@@ -571,6 +572,13 @@ export function EstudiarFlashcardsPage() {
 
   const actual = tarjetas[indice];
   const quedanOtras = indice < tarjetas.length - 1;
+
+  // Cada tarjeta nueva recibe el foco, así se lee su pregunta (y Tab sigue desde ahí).
+  const tarjetaRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    tarjetaRef.current?.focus();
+  }, [actual?.idFlashcard]);
+
   if (cargando) return <main className={styles.studyShell}><p role="status">Preparando tus tarjetas…</p></main>;
   if (error && !actual) return <main className={styles.studyShell}><CartelError mensaje={error} /><Button onClick={() => navigate(`/flashcards/${deckId}`)}>Volver al mazo</Button></main>;
   if (!actual) return (
@@ -599,7 +607,10 @@ export function EstudiarFlashcardsPage() {
         ))}
       </div>
       {error && <CartelError mensaje={error} onCerrar={() => setError('')} />}
-      <button type="button" className={`${styles.studyCard} ${CLASE_ESTILO[estilo]} ${volteada ? styles.studyCardFlipped : ''}`} onClick={() => setVolteada((valor) => !valor)} aria-label={volteada ? 'Mostrar la pregunta' : 'Voltear para ver la respuesta'}>
+      <button type="button" className={`${styles.studyCard} ${CLASE_ESTILO[estilo]} ${volteada ? styles.studyCardFlipped : ''}`} ref={tarjetaRef} onClick={() => {
+        setVolteada(!volteada);
+        hablar(volteada ? `Pregunta: ${actual.pregunta}` : `Respuesta: ${actual.respuesta}. ¿Cómo te resultó? Difícil, Intermedio o Fácil.`);
+      }} aria-label={volteada ? `Respuesta: ${actual.respuesta}` : `Pregunta: ${actual.pregunta}. Enter para ver la respuesta`}>
         <span className={styles.cardSide}><small>{volteada ? 'RESPUESTA' : 'PREGUNTA'}</small><span><TextoConFormulas texto={volteada ? actual.respuesta : actual.pregunta} /></span>{!volteada && <small className={styles.flipHint}>Voltear para visualizar la respuesta</small>}</span>
       </button>
       {volteada && <section className={styles.rating}><p>¿Cómo te resultó?</p><div className={styles.ratingButtons}>

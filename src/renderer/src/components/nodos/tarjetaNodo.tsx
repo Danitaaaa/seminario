@@ -31,7 +31,7 @@ export function TarjetaNodo({
     onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino, rol = 'propietario',
 }: TarjetaNodoProps) {
     const [menuAbierto, setMenuAbierto] = useState(false);
-    const { icono } = resolverIconoNodo(nodo);
+    const { icono, tipo } = resolverIconoNodo(nodo);
     const esCarpeta = nodo.tipo === 'carpeta';
     const puedeMover = puede(rol, `${nodo.tipo}.mover`);
     const hayAcciones = puede(rol, `${nodo.tipo}.renombrar`) || puede(rol, `${nodo.tipo}.eliminar`);
@@ -40,6 +40,9 @@ export function TarjetaNodo({
         <div
             className={`tarjeta-nodo${seleccionado ? ' tarjeta-nodo--seleccionada' : ''}${sobreDestino ? ' tarjeta-nodo--sobre-destino' : ''}`}
             draggable={puedeMover}
+            tabIndex={0}
+            aria-label={`${tipo} ${nodo.nombre}`}
+            onKeyDown={(e) => e.key === 'Enter' && onAbrir(nodo)}
             onClick={(e) => { e.stopPropagation(); onSeleccionar(nodo, e); }}
             onDoubleClick={() => onAbrir(nodo)}
             onDragStart={(e) => onArrastrarInicio(nodo, e)}

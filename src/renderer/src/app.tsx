@@ -20,6 +20,7 @@ import { MiniEstante } from "./components/cuadernos/miniEstante";
 import { FormacionPage } from "./pages/materias/formacionPage";
 import { CargarPlanPage } from "./pages/materias/cargarPlanPage";
 import { PerfilPage } from "./pages/perfil/perfilPage";
+import { Anunciador } from "./voz/anunciador";
 import { PanelPerfil } from "./pages/perfil/panelPerfil";
 import { AjustesPage } from "./pages/ajustes/ajustesPage";
 import { MetodosPage } from "./pages/metodos/metodosPage";
@@ -35,6 +36,11 @@ import { CrearSesionEstudioPage } from "./pages/sesionesEstudio/crearSesionEstud
 import { SesionEstudioPage } from "./pages/sesionesEstudio/sesionEstudioPage";
 import { ProveedorAvisos } from "./hooks/usarAvisos";
 import { ProveedorSpotify } from "./hooks/usarSpotify";
+import { ModalBienvenidaVoz } from "./components/comunes/modalBienvenidaVoz";
+import { EcoTeclado } from "./voz/ecoTeclado";
+import { AnunciarPantalla } from "./voz/anunciarPantalla";
+import { LectorFoco } from "./voz/lectorFoco";
+
 
 export default function App() {
   const [mostrarSplash, setMostrarSplash] = useState(true);
@@ -50,6 +56,7 @@ export default function App() {
   return (
     <ProveedorAvisos>
     <ProveedorSpotify>
+      <ModalBienvenidaVoz />
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/registro" element={<RegistrarUsuarioPage />} />
@@ -86,6 +93,10 @@ export default function App() {
         <Route path="/proximamente/:id" element={<Proximamente />} />
       </Routes>
       <PanelPerfil />
+      <Anunciador />
+      <AnunciarPantalla />
+      <EcoTeclado activo />
+      <LectorFoco />
     </ProveedorSpotify>
     </ProveedorAvisos>
   );

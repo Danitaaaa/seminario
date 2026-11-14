@@ -264,6 +264,9 @@ import { AutenticacionSpotify } from './logicaNoPersistente/spotify/autenticacio
 import { ClienteSpotify } from './logicaNoPersistente/spotify/clienteSpotify';
 import { registerSpotifyIpc } from './ipc/spotify.ipc';
 
+//comando de vox
+import { registerVozIpc } from './ipc/voz.ipc';
+
 let mainWindow: BrowserWindow | null = null;
 let procesoSesion: ProcesoSesionEstudio | null = null;
 
@@ -467,6 +470,8 @@ function wireDependencies(): ProcesoSesionEstudio {
     new EliminarDecks(persistencia),
     new EliminarFlashcards(persistencia)
   );
+    // Modo voz
+  registerVozIpc(() => mainWindow);
   registerFlashcardsIpc(flashcards);
 
   const repeticionEspaciada = new RepeticionEspaciada(

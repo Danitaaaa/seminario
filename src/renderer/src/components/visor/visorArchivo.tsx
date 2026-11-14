@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Archivo } from '../../types/nodo';
 import { CartelError } from '../comunes/cartelError';
 import { tipoVisor } from './formatos';
@@ -11,6 +11,8 @@ import { BannerEdicion } from '../proyectos/bannerEdicion';
 import { ModalConflicto } from '../proyectos/modalConflicto';
 import { useEdicionDeElemento } from '../../hooks/useEdicionCompartida';
 import '../../styles/visor.css';
+import { extraerBloques } from '../../voz/extraerTexto';
+import { anteriorTitulo, detenerLectura, empezarLectura, pausarLectura, seguirLectura, siguienteTitulo } from '../../voz/lectorDocumento';
 
 interface VisorArchivoProps {
   archivo: Archivo;
@@ -25,6 +27,7 @@ const mensaje = (e: unknown, porDefecto: string) => (e instanceof Error ? e.mess
 export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = false }: VisorArchivoProps) {
   const [contenido, setContenido] = useState<Uint8Array | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lectura, setLectura] = useState<'quieta' |'leyendo' | 'pausada'>('quieta');
   const [aviso, setAviso] = useState<string | null>(null);
   const [recarga, setRecarga] = useState(0);
   const [resolviendo, setResolviendo] = useState(false);
@@ -81,12 +84,52 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
     void reintentar();
   };
 
+  useEffect(() => () => detenerLectura(), []); // al cerrar el visor, se calla
+
+  // Cuando el archivo termina de cargar, el foco va a "Leer en voz alta":
+  // si no, queda atrás del visor y con Tab nunca se llega a sus botones.
+  const botonLeer = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (contenido) botonLeer.current?.focus();
+  }, [contenido]);
+
+  // Mientras lee, ← y → cambian de página sin cortar la lectura.
+  useEffect(() => {
+    if (lectura !== 'leyendo') return;
+    const alTeclear = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el.isContentEditable) return;
+      if (e.key === 'ArrowRight') siguienteTitulo();
+      else if (e.key === 'ArrowLeft') anteriorTitulo();
+      else return;
+      e.preventDefault();
+    };
+    document.addEventListener('keydown', alTeclear);
+    return () => document.removeEventListener('keydown', alTeclear);
+  }, [lectura]);
+
+  const alternarLectura = async () => {
+    if (lectura === 'leyendo') {
+      pausarLectura();
+      setLectura('pausada');
+    } else if (lectura === 'pausada') {
+      seguirLectura();
+      setLectura('leyendo');
+    } else if (contenido) {
+      setLectura('leyendo');
+      empezarLectura(await extraerBloques(contenido, archivo.extension ?? ''));
+    }
+  };
+
   return (
     <div className="visor-overlay">
       <div className="visor">
         <header className="visor__encabezado">
           <h3 className="visor__titulo">{archivo.nombre}.{archivo.extension}</h3>
           <div className="visor__acciones">
+                   <button ref={botonLeer} className="visor-boton visor-boton--contorno" onClick={alternarLectura} disabled={!contenido}>
+              {lectura === 'leyendo' ? 'Pausar lectura' : lectura === 'pausada' ? 'Seguir leyendo' : 'Leer en voz alta'}
+            </button>     
             <MenuAbrirCon archivo={archivo} onError={setError} />
             <button className="visor-boton visor-boton--contorno" onClick={onCerrar}>Cerrar</button>
           </div>
