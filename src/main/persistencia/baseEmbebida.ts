@@ -9,7 +9,9 @@ import { levantarBase, type Servidor } from './servidorBase';
 
 export const usaBaseEmbebida = app.isPackaged || process.env.SYNTRA_BASE_EMBEBIDA === 'true';
 
-const CONEXION = { host: 'localhost', port: 54329, user: 'syntra', password: 'syntra', database: 'syntra' };
+// Puerto fuera del rango 49152-65535: con Docker/WSL, Windows reserva pedazos de ese rango
+// (Hyper-V) y PostgreSQL no puede usarlos ("could not bind ... Permission denied").
+const CONEXION = { host: 'localhost', port: 15432, user: 'syntra', password: 'syntra', database: 'syntra' };
 
 // En la app instalada el .env viaja en la carpeta resources.
 if (app.isPackaged) config({ path: join(process.resourcesPath, '.env') });

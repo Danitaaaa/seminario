@@ -809,6 +809,19 @@ function createWindow(): void {
 
 }
 
+// Una sola Syntra abierta por usuario: si se abre otra, se muestra la que ya estaba.
+// (Dos a la vez se pelean por la misma base y la segunda no puede arrancar.)
+if (!app.requestSingleInstanceLock()) {
+  app.exit(0);
+} else {
+  app.on('second-instance', () => {
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  });
+}
+
 app.whenReady().then(async () => {
   // Windows necesita este nombre para mostrar las notificaciones de la app.
   if (process.platform === 'win32') app.setAppUserModelId(is.dev ? process.execPath : 'com.syntra.app');

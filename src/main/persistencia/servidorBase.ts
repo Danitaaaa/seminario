@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { Client } from 'pg';
 
@@ -60,18 +60,30 @@ export async function levantarBase(
   const { default: EmbeddedPostgres } = await import('embedded-postgres');
   const nueva = !existsSync(join(carpetaDatos, 'PG_VERSION'));
 
+  // Se guardan los últimos mensajes de PostgreSQL: si no arranca, dicen por qué (puerto ocupado, permisos…).
+  const ultimos: string[] = [];
   const pg = new EmbeddedPostgres({
     databaseDir: carpetaDatos,
     port: conexion.port,
     user: conexion.user,
     password: conexion.password,
     persistent: true,
-    onLog: () => undefined,
+    onLog: (mensaje) => {
+      ultimos.push(String(mensaje).trim());
+      if (ultimos.length > 15) ultimos.shift();
+    },
     onError: (e) => console.error('[base]', e),
   });
 
   if (nueva) await pg.initialise();
-  await pg.start();
+  else limpiarBloqueoViejo(carpetaDatos);
+  try {
+    await pg.start();
+  } catch (error) {
+    // embedded-postgres rechaza sin decir nada cuando PostgreSQL se cierra: se arma el error con lo que dijo.
+    const detalle = ultimos.filter(Boolean).join('\n') || (error instanceof Error ? error.message : String(error));
+    throw new Error(`PostgreSQL no arrancó:\n${detalle}`);
+  }
   try {
     if (nueva) await pg.createDatabase(conexion.database);
     const aplicados = await correrScriptsPendientes(conexion, carpetaScripts);
@@ -79,5 +91,30 @@ export async function levantarBase(
   } catch (error) {
     await pg.stop();
     throw error;
+  }
+}
+
+// Si la app se cerró de golpe (o se mató desde el Administrador de tareas), queda postmaster.pid
+// y PostgreSQL no vuelve a arrancar. Si el proceso que lo dejó ya no existe, se borra.
+function limpiarBloqueoViejo(carpetaDatos: string): void {
+  const archivo = join(carpetaDatos, 'postmaster.pid');
+  if (!existsSync(archivo)) return;
+  const pid = Number(readFileSync(archivo, 'utf8').split(/\r?\n/)[0]);
+  if (Number.isInteger(pid) && pid > 0 && procesoVivo(pid)) return;
+  try {
+    unlinkSync(archivo);
+    console.warn('[base] Se borró un postmaster.pid viejo de un cierre anterior.');
+  } catch (error) {
+    console.warn('[base] No se pudo borrar postmaster.pid:', error);
+  }
+}
+
+function procesoVivo(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    // EPERM: existe pero es de otro usuario.
+    return (error as NodeJS.ErrnoException).code === 'EPERM';
   }
 }
