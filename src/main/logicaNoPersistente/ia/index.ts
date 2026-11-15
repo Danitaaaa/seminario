@@ -21,10 +21,11 @@ export function crearServiciosIA(opciones: OpcionesServiciosIA = {}) {
   // userData ya es distinto por instancia si arrancás con --user-data-dir o setPath (ver README)
   const claves = new AlmacenClaves(join(app.getPath('userData'), 'ia-claves.json'), safeStorage);
 
-  // En desarrollo se permite caer al .env; empaquetada, solo la clave que cargó el usuario
+  // Primero la clave que cargó el usuario; si no hay, la del .env (también en la app instalada:
+  // el .env va adentro del instalador y no hay pantalla para cargar la clave a mano).
   const clave = (id: string, envVar: string) => () => {
     try {
-      return claves.obtener(id) ?? (app.isPackaged ? undefined : process.env[envVar]);
+      return claves.obtener(id) ?? process.env[envVar];
     } catch {
       return undefined; // clave ilegible: se trata como "sin clave"
     }
