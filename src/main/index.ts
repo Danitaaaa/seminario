@@ -355,6 +355,9 @@ let cerrando = false;
 // Raíz global bajo la que cuelgan los proyectos (según el comentario de DepsSincronizacion: hoy 2).
 const ID_NODO_PADRE_PROYECTOS = 2;
 
+// En Linux, Chromium solo habla (speechSynthesis) si se lo habilita y usa speech-dispatcher.
+if (process.platform === 'linux') app.commandLine.appendSwitch('enable-speech-dispatcher');
+
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'modelos',
