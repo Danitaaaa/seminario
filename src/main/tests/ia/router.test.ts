@@ -1,6 +1,6 @@
 import { test, expect, afterAll } from 'vitest';
-import { RouterModelos, type EventoRouter } from '../../logicaNoPersistente/ia/routerModelos';
-import { ErrorProveedor, ErrorRouter } from '../../logicaNoPersistente/ia/errores';
+import { RouterModelos, extraerJson, type EventoRouter } from '../../logicaNoPersistente/ia/routerModelos';
+import { ErrorAbortado, ErrorProveedor, ErrorRouter } from '../../logicaNoPersistente/ia/errores';
 import type { PedidoCrudo, ProveedorModelo } from '../../logicaNoPersistente/ia/tipos';
 import { falso, pedido, router, cadenas } from './ayudas';
 
@@ -13,7 +13,7 @@ test('usa el principal si anda', async () => {
   expect(gem.llamadas).toBe(0);
 });
 
-test('cae a Gemini si GptMini da 429, y a Gemma si ambos fallan', async () => {
+test('cae a Gemini si Luna da 429, y a Gemma si ambos fallan', async () => {
   const luna = falso('luna', 'online', [new ErrorProveedor('cuota', 'luna', 'x')]);
   const gem = falso('gemini', 'online', [new ErrorProveedor('red', 'gemini', 'x')]);
   const gemma = falso('gemma', 'local', ['{"x":3}']);
@@ -36,6 +36,9 @@ test('reintenta si el JSON no valida y lo logra', async () => {
   const r = await router([luna]).generar('resumen', pedido());
   expect(r.intentos).toBe(2);
   expect(r.dato.x).toBe(5);
+  // El reintento le avisa al modelo qué falló; el primer pedido sale limpio.
+  expect(luna.pedidos[0]?.usuario).toBe('u');
+  expect(luna.pedidos[1]?.usuario).toContain('[CORRECCIÓN]');
 });
 
 test('JSON siempre inválido → pasa al siguiente proveedor', async () => {
@@ -59,9 +62,19 @@ test('cancelar NO activa el respaldo', async () => {
   const gemma = falso('gemma', 'local', ['{"x":3}']);
   ac.abort();
   await expect(router([luna, gemma]).generar('resumen', pedido(ac.signal))).rejects.toThrow();
+  expect(luna.llamadas).toBe(0);
   expect(gemma.llamadas).toBe(0);
 });
 
+test('un proveedor no disponible se omite y se usa el siguiente', async () => {
+  const luna = falso('luna', 'online', ['{"x":1}'], false); // disponible = false
+  const gemma = falso('gemma', 'local', ['{"x":3}']);
+  const ev: EventoRouter[] = [];
+  const r = await router([luna, gemma], true, ev).generar('resumen', pedido());
+  expect(r.proveedor).toBe('gemma');
+  expect(luna.llamadas).toBe(0);
+  expect(ev.some((e) => e.tipo === 'omitido' && e.proveedor === 'luna' && e.motivo === 'no disponible')).toBe(true);
+});
 
 // ---------- router: timeout, enfriamiento, probar ----------
 const colgado = (id: string): ProveedorModelo & { llamadas: number } => {
@@ -71,33 +84,60 @@ const colgado = (id: string): ProveedorModelo & { llamadas: number } => {
   };
   return p;
 };
+// Responde después de `ms`, pero se corta si le abortan la señal (como un fetch real).
+const lento = (id: string, ms: number, respuesta: string): ProveedorModelo => ({
+  id, tipo: 'online', disponible: async () => true,
+  generarJson: (pd: PedidoCrudo) =>
+    new Promise<string>((res, rej) => {
+      const t = setTimeout(() => res(respuesta), ms);
+      pd.signal?.addEventListener('abort', () => { clearTimeout(t); rej(pd.signal!.reason); });
+    }),
+});
 const routerT = (ps: ProveedorModelo[], extra: object = {}) =>
   new RouterModelos(ps, { cadenas, hayInternet: () => true, timeoutMs: { online: 30, local: 30 }, ...extra });
 
-test('timeout: un proveedor colgado no bloquea, se pasa al respaldo', async () => {
+test('timeout: un proveedor colgado no bloquea, se pasa al respaldo y queda en enfriamiento', async () => {
   const luna = colgado('luna');
   const gemma = falso('gemma', 'local', ['{"x":3}']);
-  const r = await routerT([luna, gemma]).generar('resumen', pedido());
-  expect(r.proveedor).toBe('gemma');
+  const ev: EventoRouter[] = [];
+  const rt = routerT([luna, gemma], { alEvento: (e: EventoRouter) => ev.push(e) });
+  expect((await rt.generar('resumen', pedido())).proveedor).toBe('gemma');
+  expect(ev.some((e) => e.tipo === 'fallo' && e.proveedor === 'luna' && e.causa === 'timeout')).toBe(true);
+  // El timeout también enfría: la segunda vez ni lo intenta.
+  expect((await rt.generar('resumen', pedido())).proveedor).toBe('gemma');
+  expect(luna.llamadas).toBe(1);
 });
 
 test('timeout NO se confunde con cancelación del usuario', async () => {
   const ac = new AbortController();
   const luna = colgado('luna');
-  const rt = routerT([luna, falso('gemma', 'local', ['{"x":1}'])]);
+  const gemma = falso('gemma', 'local', ['{"x":1}']);
+  const rt = routerT([luna, gemma]);
   const p = rt.generar('resumen', pedido(ac.signal));
   setTimeout(() => ac.abort(), 5);
-  await expect(p).rejects.toMatchObject({ name: 'AbortError' });
+  await expect(p).rejects.toBeInstanceOf(ErrorAbortado);
+  expect(gemma.llamadas).toBe(0);
+});
+
+test('timeoutMs del pedido amplía el límite para pedidos largos', async () => {
+  // Con el límite normal (30 ms) Luna (80 ms) no llega y se usa Gemma...
+  const sinExtra = routerT([lento('luna', 80, '{"x":1}'), falso('gemma', 'local', ['{"x":3}'])]);
+  expect((await sinExtra.generar('resumen', pedido())).proveedor).toBe('gemma');
+  // ...pero si el pedido pide más tiempo, Luna alcanza a responder.
+  const conExtra = routerT([lento('luna', 80, '{"x":1}'), falso('gemma', 'local', ['{"x":3}'])]);
+  expect((await conExtra.generar('resumen', { ...pedido(), timeoutMs: 500 })).proveedor).toBe('luna');
 });
 
 test('enfriamiento: tras un 429 no vuelve a probar Luna hasta que pasa el tiempo', async () => {
   let t = 1000;
   const luna = falso('luna', 'online', [new ErrorProveedor('cuota', 'luna', '429'), '{"x":1}']);
   const gemma = falso('gemma', 'local', ['{"x":3}']);
-  const rt = routerT([luna, gemma], { enfriamientoMs: 60_000, ahora: () => t });
+  const ev: EventoRouter[] = [];
+  const rt = routerT([luna, gemma], { enfriamientoMs: 60_000, ahora: () => t, alEvento: (e: EventoRouter) => ev.push(e) });
   expect((await rt.generar('resumen', pedido())).proveedor).toBe('gemma');
   expect((await rt.generar('resumen', pedido())).proveedor).toBe('gemma');
   expect(luna.llamadas).toBe(1); // la segunda vez ni lo intentó
+  expect(ev.some((e) => e.tipo === 'omitido' && e.proveedor === 'luna' && e.motivo === 'en enfriamiento')).toBe(true);
   t += 61_000;
   expect((await rt.generar('resumen', pedido())).proveedor).toBe('luna'); // ya se puede reintentar
 });
@@ -108,6 +148,25 @@ test('probar(): informa ok o la causa del fallo', async () => {
   const rt = routerT([ok, mal]);
   expect((await rt.probar('luna')).ok).toBe(true);
   expect((await rt.probar('gemini')).causa).toEqual('auth');
+  expect(await rt.probar('nadie')).toMatchObject({ ok: false, causa: 'desconocido' });
+});
+
+// ---------- router: imágenes y extracción de JSON ----------
+test('las imágenes del pedido se reenvían al proveedor solo si hay', async () => {
+  const conImagen = falso('luna', 'online', ['{"x":1}']);
+  const imagenes = [{ mime: 'image/png', base64: 'AAAA' }] as never;
+  await router([conImagen]).generar('resumen', { ...pedido(), imagenes });
+  expect(conImagen.pedidos[0]?.imagenes).toEqual(imagenes);
+
+  const sinImagen = falso('luna', 'online', ['{"x":1}']);
+  await router([sinImagen]).generar('resumen', pedido());
+  expect('imagenes' in (sinImagen.pedidos[0] ?? {})).toBe(false);
+});
+
+test('extraerJson: saca el bloque ```json y deja intacto el JSON limpio', () => {
+  expect(extraerJson('```json\n{"a":1}\n```')).toBe('{"a":1}');
+  expect(extraerJson('```\n{"a":1}\n```')).toBe('{"a":1}');
+  expect(extraerJson('  {"a":1}  ')).toBe('{"a":1}');
 });
 
 
