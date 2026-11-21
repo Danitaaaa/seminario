@@ -11,6 +11,7 @@ import { useEdicionDeElemento } from '../../hooks/useEdicionCompartida';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { BannerEdicion } from '../../components/proyectos/bannerEdicion';
 import { ConflictosProyecto } from '../../components/proyectos/conflictosProyecto';
+import { BotonGoogleCalendar } from '../../components/eventos/botonGoogleCalendar';
 import '../../styles/eventos.css';
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
@@ -482,6 +483,7 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
               <div className="eventos-acciones">
                 <button className="eventos-boton-nav" onClick={() => cambiarMes(-1)}>‹</button>
                 <button className="eventos-boton-nav" onClick={() => cambiarMes(1)}>›</button>
+                <BotonGoogleCalendar />
                 {puede(rol, 'evento.crear') && (
                   <button className="eventos-boton-primario" onClick={abrirModalNuevoEvento}>+ Nuevo Evento</button>
                 )}

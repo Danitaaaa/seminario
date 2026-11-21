@@ -337,3 +337,22 @@
 :root[data-modo="oscuro"] .eventos-boton-nav {
   color: var(--color-primary-light);
 }
+/* Botón "Sincronizar con Google" */
+.eventos-boton-google {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.eventos-boton-google:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.eventos-girando {
+  animation: eventos-girar 0.9s linear infinite;
+}
+
+@keyframes eventos-girar {
+  to { transform: rotate(360deg); }
+}

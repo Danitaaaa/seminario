@@ -7,6 +7,7 @@ import {
   NOMBRES_DIA_SEMANA,
 } from '../../types/horarios';
 import { obtenerUsuarioId } from '../../../lib/sesion';
+import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { TONOS, claseTono, tonoDeMateria } from '../../utils/tonos';
 import '../../styles/horarios.css';
  
@@ -37,7 +38,8 @@ export function HorariosPage(): JSX.Element {
   const USUARIO_ID_ACTUAL = obtenerUsuarioId() ?? 0;
   const [, setBusqueda] = useState('');
  
-  const [vista, setVista] = useState<Vista>('semanal');
+  // La vista elegida (semanal o por materia) queda guardada al salir de la pantalla.
+  const [vista, setVista] = usarPreferencia<Vista>(`horarios:vista:${obtenerUsuarioId() ?? 0}`, 'semanal');
   const [horarios, setHorarios] = useState<HorarioCursado[]>([]);
   const [cargando, setCargando] = useState(false);
  

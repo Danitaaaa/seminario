@@ -3,16 +3,19 @@ import type { ReactNode } from 'react';
 import type { Editor } from '@tiptap/react';
 import {
   Bold, Italic, Underline, Strikethrough, List, ListOrdered, Quote,
-  IndentDecrease, IndentIncrease, Heading2, Link2, Undo2, Redo2,
+  IndentDecrease, IndentIncrease, Heading2, Link2, ImagePlus, Undo2, Redo2,
 } from 'lucide-react';
+import { elegirImagenes } from '../comunes/imagenesEditor';
+import { HerramientasImagen } from '../comunes/herramientasImagen';
 
 interface BarraEditorSesionProps {
   editor: Editor | null;
+  conImagenes?: boolean; // los .txt no pueden guardar imágenes
 }
 
 // Barra de herramientas del editor de la sesión (estilo de la referencia: franja crema con íconos).
 // Es distinta de la barra de los Word de Material (visor/barraEditor.tsx), que se deja como está.
-export function BarraEditorSesion({ editor }: BarraEditorSesionProps) {
+export function BarraEditorSesion({ editor, conImagenes = true }: BarraEditorSesionProps) {
   const [editandoEnlace, setEditandoEnlace] = useState(false);
   const [url, setUrl] = useState('');
 
@@ -69,6 +72,9 @@ export function BarraEditorSesion({ editor }: BarraEditorSesionProps) {
       {boton('Aumentar sangría', <IndentIncrease size={15} />, false, () => cadena().sinkListItem('listItem').run(), !enLista)}
       <span className="editor-sesion__separador" />
       {boton('Enlace', <Link2 size={15} />, editor.isActive('link'), abrirEnlace)}
+      {conImagenes && boton('Imagen', <ImagePlus size={15} />, false, () => elegirImagenes(editor))}
+      {conImagenes && editor.isActive('image') && <span className="editor-sesion__separador" />}
+      {conImagenes && <HerramientasImagen editor={editor} boton={(etiqueta, icono, activo, accion) => boton(etiqueta, icono, activo, accion)} />}
       {boton('Deshacer', <Undo2 size={15} />, false, () => cadena().undo().run(), !editor.can().undo())}
       {boton('Rehacer', <Redo2 size={15} />, false, () => cadena().redo().run(), !editor.can().redo())}
 

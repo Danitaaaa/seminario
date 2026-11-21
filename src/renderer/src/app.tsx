@@ -51,6 +51,7 @@ import { AnunciarPantalla } from "./voz/anunciarPantalla";
 import { LectorFoco } from "./voz/lectorFoco";
 import { NavegacionFlechas } from "./voz/navegacionFlechas";
 import { ProveedorSegundoPlano } from "./components/materialIA/segundoPlano";
+import { CartelLecturaPlan } from "./pages/materias/cartelLecturaPlan";
 
 
 export default function App() {
@@ -118,6 +119,7 @@ export default function App() {
         <Route path="/proximamente/:id" element={<Proximamente />} />
         <Route path="/guias-preguntas" element={<GuiasPreguntasPage />} />
       </Routes>
+      <CartelLecturaPlan />
       <PanelPerfil />
       <Anunciador />
       <AnunciarPantalla />

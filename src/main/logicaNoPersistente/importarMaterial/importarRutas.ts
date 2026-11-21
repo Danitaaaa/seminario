@@ -25,7 +25,7 @@ const EXTENSION_VALIDA = /^[a-zA-Z0-9]{1,20}$/;
 const esIgnorado = (nombre: string) => nombre.startsWith('.') || nombre.startsWith('~$') || DE_SISTEMA.has(nombre.toLowerCase());
 
 // "Apuntes" → "Apuntes (2)" si ya existe; en archivos el número va antes de la extensión.
-function nombreLibre(nombre: string, extension: string, usados: Set<string>): string {
+export function nombreLibre(nombre: string, extension: string, usados: Set<string>): string {
   const clave = (n: string) => (extension ? `${n}.${extension}` : n).toLowerCase();
   let candidato = nombre;
   for (let i = 2; usados.has(clave(candidato)); i++) candidato = `${nombre} (${i})`;
@@ -56,7 +56,8 @@ export async function importarRutas(rutas: string[], idPadre: number, destino: D
 
   async function importar(ruta: string, idDestino: number): Promise<void> {
     const info = await fs.lstat(ruta);
-    const base = path.basename(ruta);
+    // NFC: las tildes "separadas" (archivos de Mac o Drive) no entran en una base WIN1252.
+    const base = path.basename(ruta).normalize('NFC');
     if (info.isSymbolicLink() || esIgnorado(base)) {
       resultado.salteados++;
       return;

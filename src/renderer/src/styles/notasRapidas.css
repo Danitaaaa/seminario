@@ -1,0 +1,176 @@
+/* Notas rápidas (post-its): flotan sobre la pantalla de la carpeta y se arrastran desde la barrita de arriba.
+   El área llega hasta abajo de la ventana, así se pueden dejar también debajo del panel derecho. */
+.nodos-con-notas {
+  position: relative;
+  min-height: calc(100vh - 140px);
+}
+
+/* La capa no tapa los clics: solo las notas los reciben. */
+.notas-rapidas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Tonos pastel de la paleta elegida: el papel es el color mezclado con blanco y la tinta, con negro. */
+.nota-rapida--0 { --tono: var(--color-accent); }
+.nota-rapida--1 { --tono: var(--color-primary); }
+.nota-rapida--2 { --tono: var(--color-secondary); }
+.nota-rapida--3 { --tono: var(--color-primary-light); }
+
+.nota-rapida,
+.nota-rapida__color {
+  --papel: color-mix(in srgb, var(--tono) 24%, #ffffff);
+  --tinta: color-mix(in srgb, var(--tono) 55%, #000000);
+}
+
+:root[data-modo="oscuro"] .nota-rapida,
+:root[data-modo="oscuro"] .nota-rapida__color {
+  --papel: color-mix(in srgb, var(--tono) 30%, #1c2130);
+  --tinta: color-mix(in srgb, var(--tono) 25%, #ffffff);
+}
+
+.nota-rapida {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 176px;
+  min-height: 104px;
+  padding: 0 12px 12px;
+  border-radius: 4px;
+  background: var(--papel);
+  color: var(--tinta);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+  pointer-events: auto;
+}
+
+.nota-rapida--arrastrando {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+  opacity: 0.95;
+}
+
+.nota-rapida--editando {
+  width: 208px;
+  padding-top: 10px;
+}
+
+.nota-rapida__agarre {
+  display: flex;
+  justify-content: center;
+  margin: 0 -12px 4px;
+  padding: 4px 0 2px;
+  border-radius: 4px 4px 0 0;
+  color: inherit;
+  opacity: 0.45;
+  cursor: grab;
+  touch-action: none;
+}
+
+.nota-rapida__agarre:hover,
+.nota-rapida__agarre:focus-visible {
+  opacity: 0.85;
+}
+
+.nota-rapida__agarre:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: -2px;
+}
+
+.nota-rapida--arrastrando .nota-rapida__agarre {
+  cursor: grabbing;
+}
+
+.nota-rapida__texto {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  align-self: stretch;
+  padding: 0 14px 0 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+
+.nota-rapida__borrar {
+  position: absolute;
+  top: 18px;
+  right: 6px;
+  display: flex;
+  padding: 2px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.nota-rapida:hover .nota-rapida__borrar,
+.nota-rapida__borrar:focus-visible {
+  opacity: 0.7;
+}
+
+.nota-rapida__campo {
+  flex: 1;
+  min-height: 72px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  resize: none;
+}
+
+.nota-rapida__campo::placeholder {
+  color: inherit;
+  opacity: 0.55;
+}
+
+.nota-rapida__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.nota-rapida__colores {
+  display: flex;
+  gap: 6px;
+}
+
+.nota-rapida__color {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--tinta) 40%, transparent);
+  border-radius: 50%;
+  background: var(--papel);
+  cursor: pointer;
+}
+
+.nota-rapida__color--elegido {
+  outline: 2px solid var(--tinta);
+  outline-offset: 1px;
+}
+
+.nota-rapida__listo {
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}

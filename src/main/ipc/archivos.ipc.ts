@@ -1,4 +1,4 @@
-import { app, ipcMain, dialog, shell } from 'electron';
+import { app, ipcMain, dialog, shell, BrowserWindow } from 'electron';
 import HTMLtoDOCX from '@turbodocx/html-to-docx';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,9 +19,13 @@ import {
   ImportarRutasDTOSchema,
   ListarContenidoDTOSchema,
   SubirCarpetaDTOSchema,
+  DescargarArchivosDTOSchema,
+  CrearDocumentoDTOSchema,
 } from '../logicaPersistente/gestionMaterialEstudio/dto';
 import { Nodos } from '../administracionDePersistencia/nodo';
-import { importarRutas, type DestinoImportacion } from '../logicaNoPersistente/importarMaterial/importarRutas';
+import { importarRutas, nombreLibre, type DestinoImportacion } from '../logicaNoPersistente/importarMaterial/importarRutas';
+import { copiarACarpeta, copiarUno, nombreSeguro } from '../logicaNoPersistente/descargas/copiarArchivos';
+import { documentoVacio } from '../logicaNoPersistente/documentos/documentoVacio';
 import { Almacenamiento } from '../persistencia/almacenamiento';
 import {
   listarAplicaciones,
@@ -67,11 +71,12 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
   const destino: DestinoImportacion = {
     nombresEn: async (idPadre) => {
       const lista = await nodos.listar(ListarContenidoDTOSchema.parse({ idPadre }));
-      return new Set(lista.map((n) => (n.tipo === 'carpeta' ? n.nombre : `${n.nombre}.${n.extension}`).toLowerCase()));
+      return new Set(lista.map((n) => (n.tipo === 'carpeta' ? n.nombre : `${n.nombre}.${n.extension}`).normalize('NFC').toLowerCase()));
     },
-    crearCarpeta: async (nombre, idPadre) => (await nodos.crear({ nombre, idPadre })).id,
+    // NFC: los nombres con tildes "separadas" (de Mac o de Drive) no entran en la base si está en WIN1252.
+    crearCarpeta: async (nombre, idPadre) => (await nodos.crear({ nombre: nombre.normalize('NFC'), idPadre })).id,
     crearArchivo: async (rutaFisica, nombre, extension, idPadre) => {
-      await copiarYCrear(archivos, { nombre, extension, rutaFisica, idPadre });
+      await copiarYCrear(archivos, { nombre: nombre.normalize('NFC'), extension, rutaFisica, idPadre });
     },
   };
 
@@ -185,6 +190,57 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
     if (error) throw new Error(error);
   });
 
+  // Descarga: con un archivo pregunta dónde guardarlo (con su nombre original); con varios, en qué carpeta.
+  // Devuelve null si el usuario canceló.
+  ipcMain.handle('archivos:descargar', async (event, datos: unknown) => {
+    const { ids } = DescargarArchivosDTOSchema.parse(datos);
+    const lista = await Promise.all(ids.map((id) => archivos.obtener({ id })));
+    const ventana = BrowserWindow.fromWebContents(event.sender);
+    const descargas = app.getPath('downloads');
+
+    if (lista.length === 1) {
+      const [archivo] = lista;
+      const opciones = {
+        defaultPath: path.join(descargas, `${nombreSeguro(archivo.nombre)}.${archivo.extension}`),
+        filters: [{ name: archivo.extension.toUpperCase(), extensions: [archivo.extension] }],
+      };
+      const elegido = ventana ? await dialog.showSaveDialog(ventana, opciones) : await dialog.showSaveDialog(opciones);
+      if (elegido.canceled || !elegido.filePath) return null;
+      await copiarUno(almacenamiento.rutaCompleta(archivo.rutaFisica), elegido.filePath);
+      return { copiados: 1, fallidos: 0, destino: path.basename(elegido.filePath) };
+    }
+
+    const opciones = {
+      title: `Descargar ${lista.length} archivos`,
+      defaultPath: descargas,
+      buttonLabel: 'Descargar acá',
+      properties: ['openDirectory', 'createDirectory'] as Array<'openDirectory' | 'createDirectory'>,
+    };
+    const elegido = ventana ? await dialog.showOpenDialog(ventana, opciones) : await dialog.showOpenDialog(opciones);
+    if (elegido.canceled || elegido.filePaths.length === 0) return null;
+    const carpeta = elegido.filePaths[0];
+    const resultado = await copiarACarpeta(
+      carpeta,
+      lista.map((a) => ({ origen: almacenamiento.rutaCompleta(a.rutaFisica), nombre: a.nombre, extension: a.extension }))
+    );
+    return { ...resultado, destino: path.basename(carpeta) };
+  });
+
+  // Documento nuevo y vacío en la carpeta (Word o texto). Si el nombre ya existe, le suma "(2)".
+  // Pasa por la misma fachada que subir un archivo: mismos permisos y la misma sincronización en proyectos.
+  ipcMain.handle('archivos:crearDocumento', async (_event, datos: unknown) => {
+    const { idPadre, nombre, tipo } = CrearDocumentoDTOSchema.parse(datos);
+    const libre = nombreLibre(nombre.normalize('NFC'), tipo, await destino.nombresEn(idPadre));
+    const carpetaTmp = await mkdtemp(join(tmpdir(), 'nuevo-'));
+    const rutaTmp = join(carpetaTmp, `nuevo.${tipo}`);
+    try {
+      await writeFile(rutaTmp, await documentoVacio(tipo));
+      return await copiarYCrear(archivos, { nombre: libre, extension: tipo, rutaFisica: rutaTmp, idPadre });
+    } finally {
+      await rm(carpetaTmp, { recursive: true, force: true });
+    }
+  });
+
   // Abre el selector de archivos del SO y devuelve la metadata básica del elegido.
   ipcMain.handle('archivos:seleccionar', async () => {
     const resultado = await dialog.showOpenDialog({ properties: ['openFile'] });
@@ -193,7 +249,7 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
     const rutaFisica = resultado.filePaths[0];
     const stats = fs.statSync(rutaFisica);
     const extension = path.extname(rutaFisica).replace('.', '');
-    const nombre = path.basename(rutaFisica, path.extname(rutaFisica));
+    const nombre = path.basename(rutaFisica, path.extname(rutaFisica)).normalize('NFC');
 
     return { nombre, extension, rutaFisica, tamanio: stats.size };
   });

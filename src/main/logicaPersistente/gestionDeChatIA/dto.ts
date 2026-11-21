@@ -12,6 +12,8 @@ export const enviarMensajeChatSchema = z.object({
   // Identifica el pedido en la cola de la IA: con 'ia:cancelar' y este id se corta la respuesta.
   trabajoId: z.uuid({ error: 'Identificador de trabajo inválido.' }),
   idConversacion: z.number().int().positive().nullable().optional(),
+  // Si la IA puede ver la agenda y el material del usuario (se apaga desde el chat).
+  conAgenda: z.boolean().default(true),
   texto: z.string().trim().max(8000, { error: 'El mensaje no puede superar los 8000 caracteres.' }),
   // Imágenes adjuntas (JPEG en base64, sin "data:..."), ya achicadas por la app.
   imagenes: z

@@ -6,12 +6,14 @@ import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
-import { apiIA, nuevoTrabajoIA } from '../../utils/apiMaterialIA';
 import { IndicadorIA } from '../../components/materialIA/indicadorIA';
-import { EXTENSIONES_IMAGEN, imagenesDePlan } from '../../utils/imagenesDePlan';
 import type { Cuatrimestre, EstadoMateria, Formacion } from '../../types/materias';
 import { CUATRIMESTRES, ESTADOS, PROMPT_PLAN, estadoInicial, mensajeDeError } from './utilidadesMaterias';
 import type { PreguntaPlanIA } from '../../../../preload/apis/materialIA';
+import {
+  cancelarLecturaPlan, leerArchivoPlan, marcarPantallaPlan, olvidarLecturaPlan, responderPlan, usarLecturaPlan,
+  type PlanParaIA, type Respondida,
+} from './lecturaPlanIA';
 import { Pasos } from './formacionPage';
 import '../../styles/materias.css';
 
@@ -35,13 +37,6 @@ interface MateriaLeida {
 const separar = (texto: string) => texto.split(';').map((t) => t.trim()).filter(Boolean);
 const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 
-// Lo que se le mandó a la IA, para volver a pedírselo con las respuestas del usuario.
-interface PlanParaIA {
-  nombre: string;
-  imagenes?: string[];
-  textoPlan?: string;
-}
-
 const EJEMPLO = 'Primer año\nPrimer cuatrimestre\nÁlgebra y Geometría Analítica\nAnálisis Matemático I\nAnual\nAlgoritmos y Estructuras de Datos\n\nSegundo año\n...';
 
 export function CargarPlanPage() {
@@ -57,18 +52,48 @@ export function CargarPlanPage() {
   const [estadoCursadas, setEstadoCursadas] = useState<EstadoMateria>('libre');
   const [error, setError] = useState('');
   const [trabajando, setTrabajando] = useState(false);
-  const [leyendoArchivo, setLeyendoArchivo] = useState(false);
+  // La lectura con IA sigue aunque se cambie de pantalla (ver lecturaPlanIA.ts).
+  const lectura = usarLecturaPlan();
+  const lecturaAca = lectura?.idFormacion === idFormacion ? lectura : null;
+  const leyendoArchivo = lecturaAca !== null && lecturaAca.fase !== 'lista';
   // Solo cuando ya la está leyendo la IA (para mostrar la animación de "Generando").
-  const [leyendoConIA, setLeyendoConIA] = useState(false);
+  const leyendoConIA = lecturaAca?.fase === 'leyendoConIA';
   const [copiado, setCopiado] = useState(false);
   // Preguntas de la IA cuando el plan tiene algo para elegir (varias carreras, orientaciones…).
   const [preguntasIA, setPreguntasIA] = useState<PreguntaPlanIA[] | null>(null);
   const [respuestasIA, setRespuestasIA] = useState<string[]>([]);
   const planParaIA = useRef<PlanParaIA | null>(null);
   // Lo que ya contestó en vueltas anteriores (como en un chat: primero la carrera, después la orientación…).
-  const [respondidas, setRespondidas] = useState<{ pregunta: string; respuesta: string }[]>([]);
-  const trabajoIA = useRef<ReturnType<typeof nuevoTrabajoIA> | null>(null);
+  const [respondidas, setRespondidas] = useState<Respondida[]>([]);
   const entradaArchivo = useRef<HTMLInputElement>(null);
+
+  // Con la pantalla abierta no se muestra el cartel del costado: el progreso se ve acá.
+  useEffect(() => {
+    marcarPantallaPlan(idFormacion);
+    return () => marcarPantallaPlan(null);
+  }, [idFormacion]);
+
+  // Cuando la lectura termina (estando acá o al volver), su resultado pasa a la pantalla.
+  useEffect(() => {
+    if (lecturaAca?.fase !== 'lista') return;
+    const { nombre, texto, conIA, preguntas, respondidas: yaRespondidas, plan, error: fallo } = lecturaAca;
+    if (fallo) setError(fallo);
+    if (preguntas && plan) {
+      setNombreArchivo(nombre);
+      planParaIA.current = plan;
+      setRespondidas(yaRespondidas ?? []);
+      setRespuestasIA([]);
+      setPreguntasIA(preguntas);
+    }
+    if (texto !== undefined) {
+      setNombreArchivo(nombre);
+      setPreguntasIA(null);
+      setTexto(texto);
+      if (conIA) avisos.exito('La IA pasó el plan a texto. Revisalo y tocá "Leer plan".');
+    }
+    // Las preguntas se guardan hasta que se contesten: si se va y vuelve, siguen ahí.
+    if (!preguntas) olvidarLecturaPlan();
+  }, [lecturaAca]);
 
   useEffect(() => {
     window.api.listarFormaciones({ usuarioId })
@@ -93,6 +118,9 @@ export function CargarPlanPage() {
   }
 
   async function leer(): Promise<void> {
+    // Si quedaban preguntas de la IA sin contestar, ya no hacen falta.
+    olvidarLecturaPlan();
+    setPreguntasIA(null);
     setTrabajando(true);
     setError('');
     try {
@@ -106,109 +134,23 @@ export function CargarPlanPage() {
     }
   }
 
-  // La IA pasa el plan a texto con el prompt de siempre. Si el plan tiene algo para elegir
-  // (por ejemplo, varias carreras), primero devuelve las preguntas y se espera la respuesta del usuario.
-  // Devuelve false si no hubo IA disponible (para seguir sin ella).
-  async function leerConIA(plan: PlanParaIA, respuestas: { pregunta: string; respuesta: string }[] = []): Promise<boolean> {
-    setLeyendoConIA(true);
-    trabajoIA.current = nuevoTrabajoIA();
-    try {
-      const r = await apiIA().transcribirPlanIA({
-        trabajoId: trabajoIA.current.id, nombre: plan.nombre, prompt: PROMPT_PLAN,
-        imagenes: plan.imagenes, textoPlan: plan.textoPlan, respuestas,
-      });
-      if (!r.ok) {
-        // Con texto sacado del archivo, si la IA no está o falla, el texto queda tal cual en el cuadro.
-        if (plan.textoPlan) return false;
-        if (r.causa !== 'cancelado') setError(r.mensaje);
-        return true;
-      }
-      setNombreArchivo(plan.nombre);
-      if (r.preguntas.length) {
-        planParaIA.current = plan;
-        setRespondidas(respuestas);
-        setRespuestasIA([]);
-        setPreguntasIA(r.preguntas);
-        return true;
-      }
-      setPreguntasIA(null);
-      setTexto(r.texto);
-      avisos.exito('La IA pasó el plan a texto. Revisalo y tocá "Leer plan".');
-      return true;
-    } finally {
-      trabajoIA.current = null;
-      setLeyendoConIA(false);
-    }
-  }
-
-  // Carga del archivo:
-  //  1. La app saca el texto sola si puede (PDF con texto, Word) y se lo pasa a la IA para ordenarlo.
-  //     Si no hay ninguna IA disponible, el texto queda tal cual en el cuadro, como antes.
-  //  2. Si no hay texto (PDF escaneado o foto), la IA lee las páginas como imágenes.
-  //  3. Si la IA pregunta algo, se contesta y recién ahí aparece el texto. Después se revisa y se toca "Leer plan".
-  async function cargarArchivo(archivo: File | undefined): Promise<void> {
+  function cargarArchivo(archivo: File | undefined): void {
     if (!archivo || ocupado) return;
     setError('');
     setPreguntasIA(null);
     setRespondidas([]);
-    setLeyendoArchivo(true);
-    try {
-      const extension = archivo.name.split('.').pop()?.toLowerCase() ?? '';
-      const ruta = window.api.rutaDeArchivo(archivo);
-
-      if (ruta && !EXTENSIONES_IMAGEN.includes(extension)) {
-        let extraido: { nombre: string; texto: string } | null = null;
-        try {
-          extraido = await apiIA().extraerTextoPlan({ ruta });
-        } catch {
-          // Sin texto seleccionable: sigue con las imágenes.
-        }
-        if (extraido) {
-          const conIA = await leerConIA({ nombre: extraido.nombre, textoPlan: extraido.texto });
-          if (!conIA) {
-            setNombreArchivo(extraido.nombre);
-            setTexto(extraido.texto);
-          }
-          return;
-        }
-      }
-
-      setLeyendoConIA(true);
-      const imagenes = await imagenesDePlan(archivo);
-      if (imagenes.length === 0) {
-        setLeyendoConIA(false);
-        return setError('No se pudo leer el archivo. Probá con un PDF, una foto del plan o pegá el texto a mano.');
-      }
-      await leerConIA({ nombre: archivo.name, imagenes });
-    } catch (e) {
-      setError(mensajeDeError(e, 'No se pudo leer el archivo.'));
-    } finally {
-      setLeyendoConIA(false);
-      setLeyendoArchivo(false);
-    }
+    void leerArchivoPlan(idFormacion, archivo);
   }
 
   // El usuario eligió una opción: pasa a la siguiente pregunta o, si era la última, la IA transcribe.
-  async function responderIA(opcion: string): Promise<void> {
+  function responderIA(opcion: string): void {
     if (!preguntasIA || !planParaIA.current) return;
     const respuestas = [...respuestasIA, opcion];
     if (respuestas.length < preguntasIA.length) return setRespuestasIA(respuestas);
-    const plan = planParaIA.current;
     const pares = [...respondidas, ...preguntasIA.map((p, i) => ({ pregunta: p.pregunta, respuesta: respuestas[i] }))];
     setPreguntasIA(null);
-    setLeyendoArchivo(true);
     setError('');
-    try {
-      await leerConIA(plan, pares);
-    } catch (e) {
-      setError(mensajeDeError(e, 'No se pudo leer el archivo.'));
-    } finally {
-      setLeyendoArchivo(false);
-    }
-  }
-
-  function cancelarLecturaIA(): void {
-    void trabajoIA.current?.cancelar();
+    void responderPlan(idFormacion, planParaIA.current, pares);
   }
 
   async function copiarPrompt(): Promise<void> {
@@ -303,7 +245,7 @@ export function CargarPlanPage() {
             <div
               className="materias-prompt"
               onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => { e.preventDefault(); void cargarArchivo(e.dataTransfer.files[0]); }}
+              onDrop={(e) => { e.preventDefault(); cargarArchivo(e.dataTransfer.files[0]); }}
             >
               <div>
                 <strong>Subí el archivo de tu plan</strong>
@@ -325,7 +267,7 @@ export function CargarPlanPage() {
                 onChange={(e) => {
                   const archivo = e.target.files?.[0];
                   e.target.value = '';
-                  void cargarArchivo(archivo);
+                  cargarArchivo(archivo);
                 }}
               />
             </div>
@@ -334,10 +276,10 @@ export function CargarPlanPage() {
               <>
                 <IndicadorIA
                   mensaje="Leyendo el plan con IA"
-                  detalle="La app no pudo leer el texto del archivo (parece escaneado). La IA lo está pasando a texto; puede tardar un poco."
+                  detalle="La IA está pasando el plan a texto; puede tardar un poco. Podés ir a otra pantalla: te avisa con un cartel cuando termine."
                 />
                 <div className="materias-acciones">
-                  <Boton variante="contorno" onClick={cancelarLecturaIA}>Cancelar generación</Boton>
+                  <Boton variante="contorno" onClick={cancelarLecturaPlan}>Cancelar generación</Boton>
                 </div>
               </>
             )}
@@ -359,7 +301,7 @@ export function CargarPlanPage() {
                 </p>
                 <div className="plan-ia-ayuda__opciones" role="radiogroup" aria-label={preguntasIA[respuestasIA.length].pregunta} data-voz-grupo>
                   {preguntasIA[respuestasIA.length].opciones.map((opcion) => (
-                    <button key={opcion} type="button" role="radio" aria-checked={false} className="plan-ia-ayuda__opcion" onClick={() => void responderIA(opcion)}>
+                    <button key={opcion} type="button" role="radio" aria-checked={false} className="plan-ia-ayuda__opcion" onClick={() => responderIA(opcion)}>
                       <span className="plan-ia-ayuda__circulo" aria-hidden="true" /> {opcion}
                     </button>
                   ))}

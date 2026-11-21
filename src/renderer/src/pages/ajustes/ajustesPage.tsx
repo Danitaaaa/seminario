@@ -11,6 +11,7 @@ import { usarPreferenciaMetas, type EstiloMetas, type MostrarMetas } from "../..
 import { usarPreferenciaBanner, type FondoBanner, type TarjetasBanner } from "../../hooks/usarPreferenciaBanner";
 import { PALETAS } from "../../styles/temas/paletas";
 import { VistaPreviaBanner } from "./vistaPreviaBanner";
+import { AjustesCalendarioGoogle } from "../../components/ajustes/calendarioGoogle";
 import "../../styles/ajustes.css";
 
 const opcionesModo: { valor: PreferenciaModo; etiqueta: string; icono: LucideIcon }[] = [
@@ -282,6 +283,8 @@ export function AjustesPage() {
             Solo avisa: no cambia ni bloquea nada.
           </p>
         </section>
+
+        <AjustesCalendarioGoogle />
       </div>
     </PlantillaLayout>
   );

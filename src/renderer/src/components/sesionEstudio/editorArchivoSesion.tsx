@@ -6,6 +6,7 @@ import mammoth from 'mammoth';
 import { Check, CloudOff, Loader2 } from 'lucide-react';
 import type { Archivo } from '../../types/nodo';
 import { BarraEditorSesion } from './barraEditorSesion';
+import { extensionImagen, propsImagenes } from '../comunes/imagenesEditor';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { extraerMensajeError } from '../../pages/sesionesEstudio/utilidades';
 
@@ -88,7 +89,9 @@ function EditorCargado({ archivo, tipo, htmlInicial, filaPestanas, onGuardado }:
   const ultimo = useRef({ html: htmlInicial, texto: '' });
 
   const editor = useEditor({
-    extensions: [StarterKit.configure({ link: { openOnClick: false, autolink: true } })],
+    // Los .txt no guardan imágenes: solo los Word las llevan.
+    extensions: [StarterKit.configure({ link: { openOnClick: false, autolink: true } }), ...(tipo === 'docx' ? [extensionImagen] : [])],
+    editorProps: tipo === 'docx' ? propsImagenes : undefined,
     content: htmlInicial,
     // La barra muestra qué formato está activo: necesita redibujarse en cada cambio.
     shouldRerenderOnTransaction: true,
@@ -155,7 +158,7 @@ function EditorCargado({ archivo, tipo, htmlInicial, filaPestanas, onGuardado }:
 
   return (
     <>
-      <BarraEditorSesion editor={editor} />
+      <BarraEditorSesion editor={editor} conImagenes={tipo === 'docx'} />
       {filaPestanas(guardado)}
       <EditorContent editor={editor} className="editor-sesion__hoja" />
     </>

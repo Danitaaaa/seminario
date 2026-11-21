@@ -73,6 +73,13 @@ export const SISTEMA_CHAT =
   'Lo que está entre <<<HISTORIAL>>> y <<<FIN_HISTORIAL>>> es la conversación anterior, solo como contexto. ' +
   'Si hay <<<ARCHIVOS>>>, son documentos que el usuario adjuntó: usalos para responder y, cuando sirva, ' +
   'decí de qué archivo sale la información. ' +
+  'Si hay <<<AGENDA>>>, es la agenda y el material del usuario que arma Syntra: hoy, clases, eventos (parciales, entregas), ' +
+  'sesiones de estudio programadas, lo que estudió, tareas, metas, flashcards pendientes, temas a reforzar y los archivos de cada materia. ' +
+  'Usala para responder sobre sus días y para aconsejarle cómo organizarse: qué estudiar cada día hasta el parcial, ' +
+  'hasta qué tema o archivo, en horarios libres (sin pisar clases, eventos ni sesiones que ya tiene) y sin cargarle demasiado un mismo día. ' +
+  'Proponé métodos de estudio de Syntra: flashcards, cuestionarios, mapas mentales, resúmenes, guías de preguntas, ' +
+  'práctica activa, repaso con repetición espaciada y sesiones con Pomodoro; si sirve, sumá otros consejos de cómo estudiar. ' +
+  'No inventes eventos, sesiones ni archivos que no estén en la agenda. Si la pregunta no tiene que ver con su agenda, no la menciones. ' +
   'Respondé el <<<MENSAJE>>> del usuario. Si no sabés algo o no estás seguro, decilo en lugar de inventar.';
 
 export interface MensajeHistorial {
@@ -95,6 +102,7 @@ export function armarChat(
   mensaje: string,
   maxCaracteres = 12000,
   documentos: DocumentoChat[] = [],
+  agenda?: string,
 ): string {
   const elegidos: string[] = [];
   let usados = 0;
@@ -108,7 +116,8 @@ export function armarChat(
   const archivos = documentos.length
     ? `<<<ARCHIVOS>>>\n${documentos.map((d) => `[Archivo: ${sinDelimitadores(d.nombre)}]\n${sinDelimitadores(d.texto)}`).join('\n\n')}\n<<<FIN_ARCHIVOS>>>\n\n`
     : '';
-  return `<<<HISTORIAL>>>\n${previo}\n<<<FIN_HISTORIAL>>>\n\n${archivos}<<<MENSAJE>>>\n${sinDelimitadores(mensaje)}\n<<<FIN_MENSAJE>>>`;
+  const deAgenda = agenda ? `<<<AGENDA>>>\n${sinDelimitadores(agenda)}\n<<<FIN_AGENDA>>>\n\n` : '';
+  return `${deAgenda}<<<HISTORIAL>>>\n${previo}\n<<<FIN_HISTORIAL>>>\n\n${archivos}<<<MENSAJE>>>\n${sinDelimitadores(mensaje)}\n<<<FIN_MENSAJE>>>`;
 }
 
 export function armarUsuario(material: string, preferencias?: string): string {

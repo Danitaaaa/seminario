@@ -6,6 +6,9 @@ import type { FetchFn } from './driveCliente';
 // Solo ve los archivos que la propia app crea o abre. "openid email" es para saber con qué cuenta
 // se entró y abrir los documentos con esa misma (si el navegador tiene varias cuentas de Google).
 export const SCOPE_DRIVE = 'openid email https://www.googleapis.com/auth/drive.file';
+// Google Calendar: solo puede crear su propio calendario ("Syntra") y manejar los eventos de ese calendario.
+// No ve ni toca el resto de los calendarios del usuario.
+export const SCOPE_CALENDAR = 'openid email https://www.googleapis.com/auth/calendar.app.created';
 const URL_AUTORIZACION = 'https://accounts.google.com/o/oauth2/v2/auth';
 const URL_TOKEN = 'https://oauth2.googleapis.com/token';
 const TIEMPO_MAXIMO_LOGIN_MS = 5 * 60 * 1000;
@@ -53,6 +56,13 @@ export class ErrorLoginCancelado extends Error {
   }
 }
 
+// No hay permiso de Google guardado (o venció) y no se puede pedir ahora.
+export class ErrorSinPermiso extends Error {
+  constructor() {
+    super('Hay que volver a conectar la cuenta de Google.');
+  }
+}
+
 class ErrorTokens extends Error {
   constructor(readonly estado: number) {
     super(`No se pudo obtener el acceso de Google (${estado}).`);
@@ -70,7 +80,13 @@ export class OAuthDrive {
     private readonly almacen: AlmacenTokens,
     private readonly abrirNavegador: (url: string) => Promise<void>,
     private readonly fetchFn: FetchFn = fetch,
+    private readonly scope: string = SCOPE_DRIVE,
   ) {}
+
+  // Si ya hay un permiso guardado (no abre nada).
+  async tienePermiso(): Promise<boolean> {
+    return (await this.almacen.leerRefreshToken()) !== null;
+  }
 
   // Cuenta de Google con la que se entró (null si todavía no se sabe).
   cuenta(): string | null {
@@ -82,15 +98,24 @@ export class OAuthDrive {
     this.cancelarLogin?.();
   }
 
-  async obtenerAccessToken(): Promise<string> {
+  // permitirLogin = false: para tareas en segundo plano, que nunca deben abrir el navegador.
+  async obtenerAccessToken(permitirLogin = true): Promise<string> {
     if (this.acceso && this.acceso.vence > Date.now() + 60_000) {
       return this.acceso.valor;
     }
     const refresh = await this.almacen.leerRefreshToken();
-    return refresh ? this.refrescar(refresh) : this.iniciarSesion();
+    if (refresh) return this.refrescar(refresh, permitirLogin);
+    if (!permitirLogin) throw new ErrorSinPermiso();
+    return this.iniciarSesion();
   }
 
-  private async refrescar(refreshToken: string): Promise<string> {
+  // Fuerza el inicio de sesión (por ejemplo, para volver a conectar).
+  async conectar(): Promise<string> {
+    this.acceso = null;
+    return this.iniciarSesion();
+  }
+
+  private async refrescar(refreshToken: string, permitirLogin = true): Promise<string> {
     try {
       const datos = await this.pedirTokens({ grant_type: 'refresh_token', refresh_token: refreshToken });
       this.correo = correoDe(datos.id_token) ?? this.correo;
@@ -98,7 +123,10 @@ export class OAuthDrive {
     } catch (error) {
       // 400/401: el permiso venció o se revocó (en modo prueba, Google lo vence a los 7 días).
       // Se vuelve a pedir el inicio de sesión; el nuevo permiso reemplaza al guardado.
-      if (error instanceof ErrorTokens && (error.estado === 400 || error.estado === 401)) return this.iniciarSesion();
+      if (error instanceof ErrorTokens && (error.estado === 400 || error.estado === 401)) {
+        if (!permitirLogin) throw new ErrorSinPermiso();
+        return this.iniciarSesion();
+      }
       throw error;
     }
   }
@@ -145,7 +173,7 @@ export class OAuthDrive {
         client_id: this.credenciales.clientId,
         redirect_uri: redirect,
         response_type: 'code',
-        scope: SCOPE_DRIVE,
+        scope: this.scope,
         code_challenge: desafio,
         code_challenge_method: 'S256',
         access_type: 'offline',

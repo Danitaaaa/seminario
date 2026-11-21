@@ -68,6 +68,8 @@ export async function levantarBase(
     user: conexion.user,
     password: conexion.password,
     persistent: true,
+    // UTF8 (con locale C, que funciona en cualquier Windows): si no, Windows la crea en WIN1252.
+    initdbFlags: ['--encoding=UTF8', '--locale=C'],
     onLog: (mensaje) => {
       ultimos.push(String(mensaje).trim());
       if (ultimos.length > 15) ultimos.shift();

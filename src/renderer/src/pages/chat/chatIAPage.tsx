@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type DragEvent, type FormEvent, type KeyboardEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Check, Copy, FileText, FileUp, FolderUp, ImagePlus, LoaderCircle, MessageCircle, Mic, PanelLeft, PanelLeftClose, Pencil,
+  CalendarDays, Check, Copy, FileText, FileUp, FolderUp, ImagePlus, LoaderCircle, MessageCircle, Mic, PanelLeft, PanelLeftClose, Pencil,
   Plus, Search, SendHorizontal, Sparkles, Square, Trash2, X,
 } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { CartelError } from '../../components/comunes/cartelError';
 import { TextoConFormulas } from '../../components/comunes/textoConFormulas';
 import { usarAvisos } from '../../hooks/usarAvisos';
+import { usarPreferencia } from '../../hooks/usarPreferencia';
+import { obtenerUsuarioId } from '../../../lib/sesion';
 import { nombreProveedorIA } from '../../types/ia';
 import type { ConversacionIA, DocumentoChat, LecturaAdjuntos, MensajeIA } from '../../types/chatIA';
 import type { Archivo } from '../../types/nodo';
@@ -79,6 +81,8 @@ export function ChatIAPage() {
   // Archivos (PDF, Word o texto) para el próximo mensaje: el main ya leyó su texto.
   // Después de mandarlos, la IA los sigue teniendo en esa conversación mientras la app esté abierta.
   const [documentos, setDocumentos] = useState<DocumentoChat[]>([]);
+  // La IA ve tu agenda y tu material (clases, eventos, sesiones, tareas, archivos) para ayudarte a organizarte.
+  const [conAgenda, setConAgenda] = usarPreferencia<boolean>(`chat:agenda:${obtenerUsuarioId() ?? 0}`, true);
   const [leyendoArchivos, setLeyendoArchivos] = useState(false);
   const [menuAdjuntar, setMenuAdjuntar] = useState(false);
   const [buscandoEnSyntra, setBuscandoEnSyntra] = useState(false);
@@ -305,6 +309,7 @@ export function ChatIAPage() {
         trabajoId: trabajo.trabajoId,
         idConversacion,
         texto: pregunta,
+        conAgenda,
         ...(imagenes.length ? { imagenes } : {}),
         ...(docs.length ? { documentos: docs } : {}),
       });
@@ -630,6 +635,21 @@ export function ChatIAPage() {
               )}
             </p>
           )}
+
+          <div className="chat-ia__opciones">
+            <button
+              type="button"
+              className={`chat-ia__agenda${conAgenda ? ' chat-ia__agenda--activa' : ''}`}
+              aria-pressed={conAgenda}
+              onClick={() => setConAgenda((v) => !v)}
+              title={conAgenda
+                ? 'La IA ve tus clases, eventos, sesiones, tareas y material para ayudarte a organizarte. Tocá para apagarlo.'
+                : 'La IA no ve tu agenda. Tocá para que pueda usarla.'}
+            >
+              <CalendarDays size={14} aria-hidden="true" />
+              {conAgenda ? 'Usa tu agenda' : 'Sin tu agenda'}
+            </button>
+          </div>
 
           <form className="chat-ia__entrada" onSubmit={alEnviar}>
             <textarea

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 // Tiene que ir antes que baseDeDatos: deja armada la conexión a la base propia de Syntra.
 import { iniciarBaseEmbebida, detenerBaseEmbebida } from './persistencia/baseEmbebida';
-import { app, BrowserWindow, dialog, net, Notification, protocol, shell } from 'electron';
+import { app, Menu, BrowserWindow, dialog, net, Notification, protocol, shell } from 'electron';
 import { isAbsolute, join, relative, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
@@ -162,6 +162,17 @@ import { Bienestar } from './administracionDePersistencia/bienestar';
 import { ObtenerCargaDelDia } from './logicaPersistente/gestionDeBienestar/cargaDelDia';
 import { CambiarBienestar, ObtenerBienestar } from './logicaPersistente/gestionDeBienestar/preferenciaBienestar';
 import { registerBienestarIpc } from './ipc/bienestar.ipc';
+import { NotasRapidas } from './administracionDePersistencia/notasRapidas';
+import { ListarNotas } from './logicaPersistente/gestionDeNotasRapidas/listarNotas';
+import { CrearNota } from './logicaPersistente/gestionDeNotasRapidas/crearNota';
+import { ModificarNota } from './logicaPersistente/gestionDeNotasRapidas/modificarNota';
+import { EliminarNota } from './logicaPersistente/gestionDeNotasRapidas/eliminarNota';
+import { registerNotasRapidasIpc } from './ipc/notasRapidas.ipc';
+import { AgendaParaIA } from './logicaPersistente/gestionDeChatIA/agendaParaIA';
+import { CalendarioGoogle } from './administracionDePersistencia/calendarioGoogle';
+import { ItemsParaCalendario } from './logicaPersistente/gestionDeCalendarioGoogle/itemsParaCalendario';
+import { registerCalendarioGoogleIpc } from './ipc/calendarioGoogle.ipc';
+import { activarMenuContextual } from './logicaNoPersistente/ventana/menuContextual';
 import { registerNotificacionesIpc } from './ipc/notificaciones.ipc';
 
 // Gestion de proyectos
@@ -390,6 +401,18 @@ function wireDependencies(): ProcesoSesionEstudio {
     almacenTokens,
     (url) => shell.openExternal(url),
   );
+  // Google Calendar: copia de Syntra al calendario "Syntra" de Google (cada 15 minutos y al tocar "Sincronizar").
+  const calendarioGoogle = new CalendarioGoogle(
+    new ItemsParaCalendario(persistencia),
+    app.getPath('userData'),
+    { clientId: process.env.GOOGLE_CLIENT_ID ?? '', clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '' },
+    cifradorElectron,
+    (url) => shell.openExternal(url),
+  );
+  registerCalendarioGoogleIpc(calendarioGoogle);
+  setTimeout(() => void calendarioGoogle.sincronizarEnSegundoPlano(), 30_000);
+  setInterval(() => void calendarioGoogle.sincronizarEnSegundoPlano(), 15 * 60_000);
+
   const driveServicio = new DriveServicio(
     new DriveCliente(() => oauth.obtenerAccessToken()),
     archivos,
@@ -495,6 +518,11 @@ function wireDependencies(): ProcesoSesionEstudio {
   // Bienestar: avisa si planificás o estudiás demasiado en el día (se desactiva en Ajustes).
   const bienestar = new Bienestar(new ObtenerCargaDelDia(persistencia), new ObtenerBienestar(persistencia), new CambiarBienestar(persistencia));
   registerBienestarIpc(bienestar);
+
+  // Notas rápidas (post-its) de las carpetas de Material y de los proyectos.
+  registerNotasRapidasIpc(new NotasRapidas(
+    new ListarNotas(persistencia), new CrearNota(persistencia), new ModificarNota(persistencia), new EliminarNota(persistencia)
+  ));
   const vigia = new VigiaNotificaciones(
     {
       eventos: (usuarioId, desde) => eventos.listar({ usuarioId, desde }),
@@ -760,6 +788,7 @@ function wireDependencies(): ProcesoSesionEstudio {
     new EliminarConversacionIA(persistencia),
     archivos,
     almacenamiento,
+    new AgendaParaIA(persistencia),
   );
   registerChatIAIpc(chatIA);
   // Una sola cola para toda la IA: al cerrar se cancela todo lo que esté en curso.
@@ -792,6 +821,8 @@ function createWindow(): void {
     },
   });
 
+  // Corrector ortográfico con sugerencias en el clic derecho.
+  activarMenuContextual(mainWindow.webContents);
   mainWindow.on('ready-to-show', () => mainWindow?.show());
   // Práctica activa: mientras no se cumpla el tiempo de la sesión, la ventana no se cierra.
   mainWindow.on('close', (event) => {
@@ -823,6 +854,8 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 app.whenReady().then(async () => {
+  // Sin la barra de menú de Electron (File, Edit, View...).
+  Menu.setApplicationMenu(null);
   // Windows necesita este nombre para mostrar las notificaciones de la app.
   if (process.platform === 'win32') app.setAppUserModelId(is.dev ? process.execPath : 'com.syntra.app');
 

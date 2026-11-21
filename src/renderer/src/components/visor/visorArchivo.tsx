@@ -11,6 +11,8 @@ import { BannerEdicion } from '../proyectos/bannerEdicion';
 import { ModalConflicto } from '../proyectos/modalConflicto';
 import { useEdicionDeElemento } from '../../hooks/useEdicionCompartida';
 import { useVoice } from '../../hooks/useVoice';
+import { usarAvisos } from '../../hooks/usarAvisos';
+import { descargarArchivos } from '../../utils/descargar';
 import '../../styles/visor.css';
 import { extraerBloques } from '../../voz/extraerTexto';
 import { anteriorTitulo, detenerLectura, empezarLectura, pausarLectura, seguirLectura, siguienteTitulo } from '../../voz/lectorDocumento';
@@ -33,6 +35,7 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
   const [recarga, setRecarga] = useState(0);
   const [resolviendo, setResolviendo] = useState(false);
   const [completo, setCompleto] = useState(false);
+  const avisos = usarAvisos();
 
   // Agrandar: el visor ocupa toda la ventana de Syntra. Escape (o el botón) lo achica.
   const alternarCompleto = () => setCompleto((c) => !c);
@@ -148,6 +151,9 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
               </button>
             )}
             <MenuAbrirCon archivo={archivo} onError={setError} />
+            <button className="visor-boton visor-boton--contorno" onClick={() => void descargarArchivos([archivo.id], avisos)}>
+              Descargar
+            </button>
             <button className="visor-boton visor-boton--contorno" onClick={alternarCompleto}>
               {completo ? 'Achicar' : 'Agrandar'}
             </button>

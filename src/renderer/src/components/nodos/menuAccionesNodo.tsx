@@ -1,5 +1,6 @@
 import iconoPencil from '../../assets/icons/pencil.svg';
 import iconoTrash from '../../assets/icons/trash.svg';
+import iconoDownload from '../../assets/icons/download.svg';
 import { Icono } from '../comunes/icono';
 import { puede } from '../../permisos';
 import type { RolMiembro } from '../../types/proyectos';
@@ -8,19 +9,27 @@ interface MenuAccionesNodoProps {
     abierto: boolean;
     onRenombrar: () => void;
     onEliminar: () => void;
+    onDescargar?: () => void; // solo archivos: bajar una copia la puede hacer cualquier rol
     rol?: RolMiembro | null; // por defecto 'propietario' (material personal)
     nodoTipo?: 'archivo' | 'carpeta';
 }
 
 // Reutilizado tanto por la fila (vista lista) como por la tarjeta (vista cuadrícula):
 // una sola definición de "qué acciones tiene un nodo", sin duplicar el menú dos veces.
-export function MenuAccionesNodo({ abierto, onRenombrar, onEliminar, rol = 'propietario', nodoTipo = 'archivo' }: MenuAccionesNodoProps) {
+export function MenuAccionesNodo({ abierto, onRenombrar, onEliminar, onDescargar, rol = 'propietario', nodoTipo = 'archivo' }: MenuAccionesNodoProps) {
     const puedeRenombrar = puede(rol, `${nodoTipo}.renombrar`);
     const puedeEliminar = puede(rol, `${nodoTipo}.eliminar`);
-    if (!abierto || (!puedeRenombrar && !puedeEliminar)) return null;
+    const puedeDescargar = nodoTipo === 'archivo' && !!onDescargar;
+    if (!abierto || (!puedeRenombrar && !puedeEliminar && !puedeDescargar)) return null;
 
     return (
         <div className="menu-acciones-nodo" role="menu">
+            {puedeDescargar && (
+                <button type="button" className="menu-acciones-nodo__opcion" onClick={onDescargar}>
+                    <Icono src={iconoDownload} tamaño={16} />
+                    <span>Descargar</span>
+                </button>
+            )}
             {puedeRenombrar && (
                 <button type="button" className="menu-acciones-nodo__opcion" onClick={onRenombrar}>
                     <Icono src={iconoPencil} tamaño={16} />

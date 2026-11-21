@@ -57,17 +57,19 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const alPresionar = (event: KeyboardEvent) => {
+      // event.code es la tecla física: funciona con el teclado en cualquier idioma.
       if (
         event.repeat ||
         !event.ctrlKey ||
         !event.altKey ||
-        event.key.toLowerCase() !== 's'
+        event.code !== 'KeyS'
       ) {
         return;
       }
 
       event.preventDefault();
-      const siguiente = modoVoz !== true;
+      // Sin elegir todavía (null) también habla: el atajo lo apaga.
+      const siguiente = modoVoz === false;
       setModoVoz(siguiente);
       hablar(siguiente ? 'Modo voz activado' : 'Modo voz desactivado');
     };

@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import iconoPlus from '../../assets/icons/plus.svg';
 import iconoChevronDown from '../../assets/icons/chevron-down.svg';
 import iconoTrash from '../../assets/icons/trash.svg';
+import iconoDownload from '../../assets/icons/download.svg';
 import iconoGrid from '../../assets/icons/grid.svg';
 import iconoList from '../../assets/icons/list.svg';
 import { Icono } from '../comunes/icono';
@@ -37,6 +38,10 @@ interface BarraFiltrosNodosProps {
     onSubirArchivo: () => void;
     onSubirCarpeta: () => void;
     onCrearCarpeta: () => void;
+    onCrearDocumento?: (tipo: 'docx' | 'txt') => void;
+    onCrearNota?: () => void;
+    onDescargarSeleccion?: () => void;
+    archivosSeleccionados?: number; // cuántos archivos hay seleccionados (para descargar)
     onEliminarSeleccion: () => void;
     haySeleccion?: boolean;
     rol?: RolMiembro | null; // por defecto 'propietario' (material personal)
@@ -48,7 +53,8 @@ interface BarraFiltrosNodosProps {
 export function BarraFiltrosNodos({
     ordenActivo, direccion, onOrdenar,
     vista, onCambiarVista,
-    menuAgregarAbierto, onToggleMenuAgregar, onSubirArchivo, onSubirCarpeta, onCrearCarpeta,
+    menuAgregarAbierto, onToggleMenuAgregar, onSubirArchivo, onSubirCarpeta, onCrearCarpeta, onCrearDocumento, onCrearNota,
+    onDescargarSeleccion, archivosSeleccionados = 0,
     onEliminarSeleccion, haySeleccion = false, rol = 'propietario',
 }: BarraFiltrosNodosProps) {
     const contenedorMenuRef = useRef<HTMLDivElement>(null);
@@ -84,11 +90,21 @@ export function BarraFiltrosNodos({
                             onSubirArchivo={onSubirArchivo}
                             onSubirCarpeta={onSubirCarpeta}
                             onCrearCarpeta={onCrearCarpeta}
+                            onCrearDocumento={onCrearDocumento}
+                            onCrearNota={onCrearNota}
                             rol={rol}
                         />
                     </div>
                 )}
 
+                {onDescargarSeleccion && (
+                    <IconoAccion
+                        icono={iconoDownload}
+                        alt={archivosSeleccionados > 1 ? `Descargar ${archivosSeleccionados} archivos` : 'Descargar seleccionados'}
+                        deshabilitado={archivosSeleccionados === 0}
+                        onClick={onDescargarSeleccion}
+                    />
+                )}
                 {puedeEliminar && (
                     <IconoAccion
                         icono={iconoTrash}

@@ -259,3 +259,33 @@
   outline: 2px solid var(--color-secondary);
   outline-offset: 2px;
 }
+/* ---------- Google Calendar ---------- */
+.ajustes__calendario-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  margin: 0;
+  font-size: var(--tamano-sm);
+  color: var(--color-text);
+}
+
+.ajustes__calendario-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-sm);
+}
+
+.ajustes__boton--secundario {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.ajustes__girando {
+  animation: ajustes-girar 0.9s linear infinite;
+}
+
+@keyframes ajustes-girar {
+  to { transform: rotate(360deg); }
+}

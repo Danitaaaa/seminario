@@ -1,4 +1,6 @@
 import type { Editor } from '@tiptap/react';
+import { elegirImagenes } from '../comunes/imagenesEditor';
+import { HerramientasImagen } from '../comunes/herramientasImagen';
 
 interface BarraEditorProps {
   editor: Editor | null;
@@ -33,6 +35,22 @@ export function BarraEditor({ editor, modificado, onGuardar, conFormato = true, 
           {boton('T2', editor.isActive('heading', { level: 2 }), () => editor.chain().focus().toggleHeading({ level: 2 }).run())}
           {boton('• Lista', editor.isActive('bulletList'), () => editor.chain().focus().toggleBulletList().run())}
           {boton('1. Lista', editor.isActive('orderedList'), () => editor.chain().focus().toggleOrderedList().run())}
+          {boton('Imagen', false, () => elegirImagenes(editor))}
+          <HerramientasImagen
+            editor={editor}
+            boton={(etiqueta, icono, activo, accion) => (
+              <button
+                key={etiqueta}
+                className={`visor-boton ${activo ? '' : 'visor-boton--contorno'}`}
+                title={etiqueta}
+                aria-label={etiqueta}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={accion}
+              >
+                {icono}
+              </button>
+            )}
+          />
         </>
       )}
       {boton('Deshacer', false, () => editor.chain().focus().undo().run())}

@@ -227,3 +227,81 @@
 :root[data-modo="oscuro"] .ayuda__avatar {
   background: var(--color-primary-dark);
 }
+/* ---------- Contacto (pie) ---------- */
+.ayuda__contacto {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-sm);
+}
+
+.ayuda__contacto-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-frost-claro);
+  color: var(--color-primary);
+}
+
+.ayuda__contacto-texto {
+  flex: 1;
+  min-width: 180px;
+}
+
+.ayuda__contacto-titulo {
+  margin: 0;
+  font-size: var(--tamano-sm);
+  font-weight: var(--peso-medium);
+  color: var(--color-text-primary);
+}
+
+.ayuda__contacto-correo {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.ayuda__contacto-correo strong {
+  color: var(--color-text-primary);
+  font-weight: var(--peso-medium);
+}
+
+.ayuda__contacto-acciones {
+  display: flex;
+  gap: 6px;
+}
+
+.ayuda__contacto-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--tamano-xs);
+  cursor: pointer;
+}
+
+.ayuda__contacto-boton:hover {
+  border-color: var(--color-primary-light);
+}
+
+.ayuda__contacto-boton:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+.ayuda__contacto-boton--hecho {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.ayuda__version {
+  margin-left: auto;
+}

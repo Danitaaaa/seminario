@@ -28,4 +28,9 @@ export class AlmacenTokensDrive implements AlmacenTokens {
     fs.mkdirSync(path.dirname(this.archivo), { recursive: true });
     fs.writeFileSync(this.archivo, this.cifrador.cifrar(token));
   }
+
+  // Olvida el permiso (al desconectar).
+  async borrar(): Promise<void> {
+    fs.rmSync(this.archivo, { force: true });
+  }
 }

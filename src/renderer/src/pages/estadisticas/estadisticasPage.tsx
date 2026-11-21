@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { PlantillaLayout } from "../plantillaLayout/plantillaLayout";
 import { obtenerUsuarioId } from "../../../lib/sesion";
+import { usarPreferencia } from "../../hooks/usarPreferencia";
 import { CartelError } from "../../components/comunes/cartelError";
 import { mesDe, type Meta } from "../../types/metas";
 import type { Evento } from "../../types/eventos";
@@ -85,7 +86,8 @@ export function EstadisticasPage() {
   const [proyectos, setProyectos] = useState<ResumenProyecto[] | null>(null);
   const [cuestionarios, setCuestionarios] = useState<ResumenCuestionarios | null>(null);
   const [flashcards, setFlashcards] = useState<ResumenFlashcards | null>(null);
-  const [idPeriodo, setIdPeriodo] = useState<IdPeriodo>("6meses");
+  // El período elegido queda guardado al salir de la pantalla.
+  const [idPeriodo, setIdPeriodo] = usarPreferencia<IdPeriodo>(`estadisticas:periodo:${obtenerUsuarioId() ?? 0}`, "6meses");
   const [error, setError] = useState("");
 
   const mesActual = mesDe(hoy);

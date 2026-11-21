@@ -27,6 +27,8 @@ import type { RolMiembro } from '../../types/proyectos';
 import { puede } from '../../permisos';
 import { useCambiosRemotos } from '../../hooks/useCambiosRemotos';
 import { ConflictosProyecto } from '../../components/proyectos/conflictosProyecto';
+import { NotasRapidas } from '../../components/nodos/notasRapidas';
+import { descargarArchivos } from '../../utils/descargar';
 
 const usuarioLogueado = 'Usuario';
 
@@ -38,6 +40,7 @@ type ModalAbierto =
     | { tipo: 'renombrar'; nodo: Nodo }
     | { tipo: 'eliminar'; nodo: Nodo }
     | { tipo: 'eliminarSeleccion' }
+    | { tipo: 'documento'; formato: 'docx' | 'txt' }
     | null;
 
 type Miga = { id: number; nombre: string };
@@ -102,6 +105,9 @@ export function NodoPage({
         carpetaInicial ? [raiz, { id: carpetaInicial, nombre: parametros.get('nombre') ?? 'Carpeta' }] : [raiz]
     );
     const idPadreActual = ruta[ruta.length - 1].id;
+    // Nota rápida que se está escribiendo; al cambiar de carpeta se deja.
+    const [creandoNota, setCreandoNota] = useState(false);
+    useEffect(() => setCreandoNota(false), [idPadreActual]);
 
     const [errorMover, setErrorMover] = useState<string | null>(null);
     const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
@@ -121,6 +127,7 @@ export function NodoPage({
     const materiaFiltrada = materias.find((m) => m.idMateria === filtroMateria);
 
     const nodosSeleccionados = nodos.filter((n) => seleccionados.has(claveNodo(n)));
+    const archivosSeleccionados = nodosSeleccionados.filter((n) => n.tipo === 'archivo');
 
     const puedeMover = (n: Nodo) => puede(rol, n.tipo === 'archivo' ? 'archivo.mover' : 'carpeta.mover');
     const puedeEliminarNodo = (n: Nodo) => puede(rol, n.tipo === 'archivo' ? 'archivo.eliminar' : 'carpeta.eliminar');
@@ -395,6 +402,8 @@ export function NodoPage({
         rol,
         onRenombrar: (nodo: Nodo) => { if (puedeRenombrarNodo(nodo)) setModal({ tipo: 'renombrar', nodo }); },
         onEliminar: (nodo: Nodo) => { if (puedeEliminarNodo(nodo)) setModal({ tipo: 'eliminar', nodo }); },
+        // Bajar una copia no cambia nada: la puede hacer cualquier rol, también el lector.
+        onDescargar: (nodo: Nodo) => void descargarArchivos([nodo.id], avisos),
     };
 
     return (
@@ -427,6 +436,8 @@ export function NodoPage({
                     }}
                 />
             ) : (
+                // Las notas rápidas flotan sobre toda la pantalla de la carpeta (también al lado y debajo del panel derecho).
+                <div className="nodos-con-notas">
                 <div className={lateral ? 'nodos-pagina nodos-pagina--con-lateral' : 'nodos-pagina'}>
                     <div
                         className={`nodos-modulo${soltandoAfuera ? ' nodos-modulo--soltar' : ''}`}
@@ -478,6 +489,16 @@ export function NodoPage({
                                 setMenuAgregarAbierto(false);
                                 setModal({ tipo: 'crear' });
                             }}
+                            onCrearDocumento={filtroMateria === '' ? (formato) => {
+                                setMenuAgregarAbierto(false);
+                                setModal({ tipo: 'documento', formato });
+                            } : undefined}
+                            onCrearNota={filtroMateria === '' ? () => {
+                                setMenuAgregarAbierto(false);
+                                setCreandoNota(true);
+                            } : undefined}
+                            onDescargarSeleccion={() => void descargarArchivos(archivosSeleccionados.map((a) => a.id), avisos)}
+                            archivosSeleccionados={archivosSeleccionados.length}
                             onEliminarSeleccion={() => {
                                 if (!nodosSeleccionados.some(puedeEliminarNodo)) return;
                                 setModal({ tipo: 'eliminarSeleccion' });
@@ -492,6 +513,10 @@ export function NodoPage({
                         )}
                     </div>
                     {lateral}
+                </div>
+                {filtroMateria === '' && (
+                    <NotasRapidas key={idPadreActual} idNodo={idPadreActual} creando={creandoNota} onTerminarCrear={() => setCreandoNota(false)} />
+                )}
                 </div>
             )}
 
@@ -523,6 +548,34 @@ export function NodoPage({
                             await cargarContenido();
                         } catch (error) {
                             console.error('No se pudo crear', error);
+                        }
+                    }}
+                />
+            )}
+
+            {modal?.tipo === 'documento' && (
+                <ModalNodo
+                    titulo={modal.formato === 'docx' ? 'Nuevo documento de Word' : 'Nuevo archivo de texto'}
+                    valorInicial={modal.formato === 'docx' ? 'Documento sin título' : 'Notas'}
+                    onCancelar={() => setModal(null)}
+                    onGuardar={async (nombre) => {
+                        try {
+                            const creado = await window.api.crearDocumento({ idPadre: idPadreActual, nombre, tipo: modal.formato });
+                            setModal(null);
+                            await cargarContenido();
+                            // Se abre enseguida para empezar a escribir.
+                            setArchivoAbierto({
+                                tipo: 'archivo',
+                                id: creado.id,
+                                nombre: creado.nombre,
+                                extension: creado.extension,
+                                fechaDeCarga: creado.fechaDeCarga,
+                                ultimaFechaAcceso: creado.ultimaFechaAcceso ?? creado.fechaDeCarga,
+                                ultimaFechaModificacion: creado.ultimaFechaModificacion ?? creado.fechaDeCarga,
+                                tamaño: String(creado.tamanio),
+                            });
+                        } catch (error) {
+                            avisos.error(error instanceof Error ? error.message.split('Error: ').pop() ?? 'No se pudo crear el documento.' : 'No se pudo crear el documento.');
                         }
                     }}
                 />
@@ -607,4 +660,4 @@ export function NodoPage({
             )}
         </PlantillaLayout>
     );
-}
+}

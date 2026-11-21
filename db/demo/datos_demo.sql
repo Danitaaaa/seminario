@@ -30,6 +30,7 @@ DECLARE
   nodo INT; p_sem INT; p_bd INT;
   carpeta INT; sub INT;
   mazo_analisis INT; mazo_fisica INT;
+  mazo_prob INT; mazo_redes INT; cuest_prob INT; cuest_redes INT; cuest_bd INT; conv INT;
   t_rep INT; t_flash INT; t_mapa INT; t_prac INT;
   i INT;
 BEGIN
@@ -308,6 +309,181 @@ BEGIN
   INSERT INTO repeticiones_material (id_usuario, id_nodo, intervalo_dias, proxima_revision)
   SELECT sofi, n.id_nodo, CASE n.id_materia WHEN m_prob THEN 3 ELSE 7 END, CASE n.id_materia WHEN m_prob THEN hoy ELSE hoy + 4 END
     FROM nodos n WHERE n.id_materia IN (m_prob, m_com);
+
+
+  -- ===== Novedades: avatares, cuadernos, flashcards y cuestionarios con historial, material IA y chat =====
+
+  -- Avatares y colores (los colores se ven en los integrantes de los proyectos).
+  UPDATE usuarios SET foto_perfil = 'avatar:buho', color_avatar = 1 WHERE id_usuario = sofi;
+  UPDATE usuarios SET foto_perfil = 'avatar:libro', color_avatar = 4 WHERE id_usuario = caro;
+  UPDATE usuarios SET color_avatar = 7 WHERE id_usuario = alba;
+
+  -- Mazos asociados a un cuaderno.
+  UPDATE decks SET id_materia = m_numerico WHERE id_deck = mazo_analisis;
+  INSERT INTO decks (id_usuario, nombre, descripcion, materia_asociada, id_materia)
+  VALUES (sofi, 'Probabilidad', 'Distribuciones y variables aleatorias', 'Probabilidad y Estadística', m_prob) RETURNING id_deck INTO mazo_prob;
+  INSERT INTO decks (id_usuario, nombre, descripcion, materia_asociada, id_materia)
+  VALUES (sofi, 'Redes', 'Modelo OSI, TCP/IP y protocolos', 'Comunicaciones de Datos', m_com) RETURNING id_deck INTO mazo_redes;
+
+  INSERT INTO flashcards (id_deck, pregunta, respuesta, proxima_revision) VALUES
+    (mazo_prob, '¿Qué es una variable aleatoria?', 'Una función que asigna un número a cada resultado de un experimento.', hoy),
+    (mazo_prob, '¿Cuál es la media de una binomial?', '$E(X) = n\,p$', hoy + 1),
+    (mazo_prob, '¿Cuál es la varianza de una binomial?', '$V(X) = n\,p\,(1-p)$', hoy + 2),
+    (mazo_prob, '¿Qué dice el teorema central del límite?', 'La suma de muchas variables independientes tiende a una distribución normal.', hoy),
+    (mazo_prob, '¿Cómo se estandariza una normal?', '$Z = \frac{X - \mu}{\sigma}$', hoy + 4),
+    (mazo_prob, '¿Qué es la probabilidad condicional?', '$P(A \mid B) = \frac{P(A \cap B)}{P(B)}$', hoy + 3),
+    (mazo_redes, '¿Cuántas capas tiene el modelo OSI?', 'Siete: física, enlace, red, transporte, sesión, presentación y aplicación.', hoy),
+    (mazo_redes, '¿En qué capa trabaja un router?', 'En la capa de red (capa 3).', hoy + 2),
+    (mazo_redes, '¿Qué diferencia hay entre TCP y UDP?', 'TCP es orientado a conexión y confiable; UDP no garantiza la entrega pero es más rápido.', hoy + 1),
+    (mazo_redes, '¿Para qué sirve DNS?', 'Traduce nombres de dominio a direcciones IP.', hoy + 5),
+    (mazo_redes, '¿Qué es una máscara de subred?', 'Indica qué parte de la dirección IP es la red y cuál el host.', hoy);
+
+  -- Repasos de los últimos 6 meses: al principio más difíciles, cada vez más fáciles.
+  INSERT INTO flashcard_revisiones (id_flashcard, dificultad, revisado_en, proxima_revision)
+  SELECT f.id_flashcard,
+         CASE WHEN (f.id_flashcard + g) % 10 < (CASE WHEN g > 120 THEN 2 WHEN g > 60 THEN 4 ELSE 6 END) THEN 'facil'
+              WHEN (f.id_flashcard + g) % 10 < 8 THEN 'intermedio' ELSE 'dificil' END,
+         (hoy - g) + time '18:30' + make_interval(mins => (f.id_flashcard % 7) * 3),
+         hoy - g + 3
+    FROM flashcards f
+   CROSS JOIN generate_series(1, 180, 4) g
+   WHERE f.id_deck IN (mazo_analisis, mazo_fisica, mazo_prob, mazo_redes)
+     AND (f.id_flashcard + g) % 3 <> 0
+     -- Las de Probabilidad y Redes se empezaron a estudiar este cuatrimestre.
+     AND (f.id_deck IN (mazo_analisis, mazo_fisica) OR g < 100);
+
+  -- Cuestionarios generados con IA (asociados a su cuaderno).
+  INSERT INTO materiales_ia (id_usuario, tipo, titulo, contenido, proveedores, fecha_creacion, id_materia)
+  VALUES (sofi, 'cuestionario', 'Distribuciones de probabilidad', $j${
+    "titulo": "Distribuciones de probabilidad",
+    "preguntas": [
+      {"tipo": "opcion_multiple", "enunciado": "¿Qué distribución modela la cantidad de éxitos en n ensayos independientes?", "opciones": ["Binomial", "Poisson", "Normal", "Exponencial"], "indiceCorrecta": 0, "respuesta": null, "explicacion": "La binomial cuenta éxitos en n ensayos con la misma probabilidad p.", "tema": "Binomial"},
+      {"tipo": "opcion_multiple", "enunciado": "¿Cuál es la media de una Poisson con parámetro λ?", "opciones": ["λ²", "λ", "1/λ", "√λ"], "indiceCorrecta": 1, "respuesta": null, "explicacion": "En la Poisson la media y la varianza valen λ.", "tema": "Poisson"},
+      {"tipo": "completar_seleccion", "enunciado": "La distribución normal estándar tiene media 0 y desvío ___.", "opciones": ["1", "0", "10"], "indiceCorrecta": 0, "respuesta": null, "explicacion": "La normal estándar es N(0, 1).", "tema": "Normal"},
+      {"tipo": "completar_escrito", "enunciado": "Para estandarizar se resta la media y se divide por el ___.", "opciones": [], "indiceCorrecta": null, "respuesta": "desvío", "explicacion": "Z = (X − μ) / σ.", "tema": "Normal"},
+      {"tipo": "opcion_multiple", "enunciado": "¿Qué distribución modela el tiempo entre llegadas de un proceso de Poisson?", "opciones": ["Uniforme", "Binomial", "Exponencial", "Normal"], "indiceCorrecta": 2, "respuesta": null, "explicacion": "Los tiempos entre eventos de un proceso de Poisson son exponenciales.", "tema": "Exponencial"}
+    ]}$j$::jsonb, ARRAY['gptMini'], now() - interval '75 days', m_prob) RETURNING id_material_ia INTO cuest_prob;
+
+  INSERT INTO materiales_ia (id_usuario, tipo, titulo, contenido, proveedores, fecha_creacion, id_materia)
+  VALUES (sofi, 'cuestionario', 'Modelo OSI y TCP/IP', $j${
+    "titulo": "Modelo OSI y TCP/IP",
+    "preguntas": [
+      {"tipo": "opcion_multiple", "enunciado": "¿En qué capa del modelo OSI trabaja un switch?", "opciones": ["Física", "Enlace", "Red", "Transporte"], "indiceCorrecta": 1, "respuesta": null, "explicacion": "El switch usa direcciones MAC: capa de enlace.", "tema": "Modelo OSI"},
+      {"tipo": "opcion_multiple", "enunciado": "¿Qué protocolo garantiza la entrega ordenada de los datos?", "opciones": ["UDP", "IP", "TCP", "ICMP"], "indiceCorrecta": 2, "respuesta": null, "explicacion": "TCP es orientado a conexión y confiable.", "tema": "Capa de transporte"},
+      {"tipo": "completar_seleccion", "enunciado": "HTTP usa por defecto el puerto ___.", "opciones": ["21", "80", "443"], "indiceCorrecta": 1, "respuesta": null, "explicacion": "HTTP usa el 80 y HTTPS el 443.", "tema": "Capa de aplicación"},
+      {"tipo": "opcion_multiple", "enunciado": "¿Cuántos bits tiene una dirección IPv4?", "opciones": ["16", "32", "64", "128"], "indiceCorrecta": 1, "respuesta": null, "explicacion": "IPv4 usa 32 bits; IPv6, 128.", "tema": "Direccionamiento IP"},
+      {"tipo": "completar_escrito", "enunciado": "El protocolo que traduce nombres de dominio a direcciones IP es ___.", "opciones": [], "indiceCorrecta": null, "respuesta": "DNS", "explicacion": "DNS resuelve nombres a direcciones.", "tema": "Capa de aplicación"},
+      {"tipo": "opcion_multiple", "enunciado": "¿Qué máscara corresponde a /24?", "opciones": ["255.0.0.0", "255.255.0.0", "255.255.255.0", "255.255.255.255"], "indiceCorrecta": 2, "respuesta": null, "explicacion": "24 bits en 1: 255.255.255.0.", "tema": "Direccionamiento IP"}
+    ]}$j$::jsonb, ARRAY['gptMini'], now() - interval '50 days', m_com) RETURNING id_material_ia INTO cuest_redes;
+
+  INSERT INTO materiales_ia (id_usuario, tipo, titulo, contenido, proveedores, fecha_creacion, id_materia)
+  VALUES (sofi, 'cuestionario', 'Normalización y SQL', $j${
+    "titulo": "Normalización y SQL",
+    "preguntas": [
+      {"tipo": "opcion_multiple", "enunciado": "¿Qué forma normal elimina las dependencias parciales?", "opciones": ["1FN", "2FN", "3FN", "FNBC"], "indiceCorrecta": 1, "respuesta": null, "explicacion": "La 2FN exige que los atributos dependan de toda la clave.", "tema": "Normalización"},
+      {"tipo": "opcion_multiple", "enunciado": "¿Qué cláusula filtra después de agrupar?", "opciones": ["WHERE", "HAVING", "ORDER BY", "LIMIT"], "indiceCorrecta": 1, "respuesta": null, "explicacion": "HAVING filtra grupos; WHERE filtra filas.", "tema": "SQL"},
+      {"tipo": "completar_seleccion", "enunciado": "Un ___ JOIN devuelve también las filas de la izquierda sin coincidencia.", "opciones": ["INNER", "LEFT", "CROSS"], "indiceCorrecta": 1, "respuesta": null, "explicacion": "LEFT JOIN conserva todas las filas de la tabla izquierda.", "tema": "SQL"},
+      {"tipo": "opcion_multiple", "enunciado": "¿Qué garantiza la propiedad de atomicidad?", "opciones": ["Que la transacción se hace entera o no se hace", "Que los datos no se repiten", "Que se puede leer en paralelo", "Que se guarda en disco"], "indiceCorrecta": 0, "respuesta": null, "explicacion": "Atomicidad: todo o nada.", "tema": "Transacciones"}
+    ]}$j$::jsonb, ARRAY['gptMini'], now() - interval '150 days', m_bd) RETURNING id_material_ia INTO cuest_bd;
+
+  -- Intentos: le va cada vez mejor. Las respuestas no se muestran en las estadísticas, quedan vacías.
+  FOR n IN 0..11 LOOP
+    -- Probabilidad: en los últimos 2 meses y medio.
+    IF n * 6 < 75 THEN
+      INSERT INTO intentos_cuestionario (id_material_ia, id_usuario, respuestas, correctas, total, temas_a_reforzar, fecha)
+      VALUES (cuest_prob, sofi, '[]', LEAST(5, 2 + (11 - n) / 4), 5,
+              CASE WHEN n >= 8 THEN '[{"tema":"Poisson","errores":1,"total":1},{"tema":"Normal","errores":2,"total":2}]'
+                   WHEN n >= 4 THEN '[{"tema":"Normal","errores":1,"total":2},{"tema":"Exponencial","errores":1,"total":1}]'
+                   ELSE '[{"tema":"Exponencial","errores":1,"total":1}]' END::jsonb,
+              now() - make_interval(days => n * 6, hours => 2));
+    END IF;
+    -- Redes: en los últimos 50 días.
+    IF n * 4 < 50 THEN
+      INSERT INTO intentos_cuestionario (id_material_ia, id_usuario, respuestas, correctas, total, temas_a_reforzar, fecha)
+      VALUES (cuest_redes, sofi, '[]', LEAST(6, 3 + (11 - n) / 4), 6,
+              CASE WHEN n >= 6 THEN '[{"tema":"Direccionamiento IP","errores":2,"total":2},{"tema":"Modelo OSI","errores":1,"total":1}]'
+                   ELSE '[{"tema":"Direccionamiento IP","errores":1,"total":2}]' END::jsonb,
+              now() - make_interval(days => n * 4, hours => 5));
+    END IF;
+    -- Bases de Datos: entre hace 5 meses y hace 3 (antes del parcial).
+    IF n < 6 THEN
+      INSERT INTO intentos_cuestionario (id_material_ia, id_usuario, respuestas, correctas, total, temas_a_reforzar, fecha)
+      VALUES (cuest_bd, sofi, '[]', LEAST(4, 1 + n / 2), 4,
+              CASE WHEN n < 3 THEN '[{"tema":"Normalización","errores":1,"total":1},{"tema":"SQL","errores":1,"total":2}]'
+                   ELSE '[{"tema":"Transacciones","errores":1,"total":1}]' END::jsonb,
+              now() - make_interval(days => 150 - n * 10));
+    END IF;
+  END LOOP;
+
+  -- Un resumen y un mapa mental, también en sus cuadernos.
+  INSERT INTO materiales_ia (id_usuario, tipo, titulo, contenido, proveedores, fecha_creacion, id_materia)
+  VALUES (sofi, 'resumen', 'Resumen: capa de transporte', $j${
+    "titulo": "Resumen: capa de transporte",
+    "ideasClave": ["TCP es confiable y orientado a conexión", "UDP es rápido y sin conexión", "Los puertos identifican a cada aplicación"],
+    "secciones": [
+      {"titulo": "TCP", "contenido": "Establece la conexión con el saludo de tres vías, numera los segmentos y retransmite los que se pierden."},
+      {"titulo": "UDP", "contenido": "Manda datagramas sin confirmar la entrega. Se usa en video, voz y DNS."},
+      {"titulo": "Puertos", "contenido": "Un número de 16 bits que indica a qué proceso va cada segmento."}
+    ]}$j$::jsonb, ARRAY['gptMini'], now() - interval '20 days', m_com);
+
+  INSERT INTO materiales_ia (id_usuario, tipo, titulo, contenido, proveedores, fecha_creacion, id_materia)
+  VALUES (sofi, 'mapaMental', 'Variables aleatorias', $j${
+    "titulo": "Variables aleatorias",
+    "nodos": [
+      {"id": "n1", "texto": "Variables aleatorias", "padreId": null},
+      {"id": "n2", "texto": "Discretas", "padreId": "n1"},
+      {"id": "n3", "texto": "Continuas", "padreId": "n1"},
+      {"id": "n4", "texto": "Binomial", "padreId": "n2"},
+      {"id": "n5", "texto": "Poisson", "padreId": "n2"},
+      {"id": "n6", "texto": "Normal", "padreId": "n3"},
+      {"id": "n7", "texto": "Exponencial", "padreId": "n3"},
+      {"id": "n8", "texto": "Media y varianza", "padreId": "n1"}
+    ]}$j$::jsonb, ARRAY['gptMini'], now() - interval '30 days', m_prob);
+
+  -- Cuadernos con notas.
+  INSERT INTO cuaderno (id_usuario, id_materia, nombre) VALUES
+    (sofi, m_prob, 'Probabilidad y Estadística'), (sofi, m_com, 'Comunicaciones de Datos'),
+    (sofi, m_bd, 'Bases de Datos'), (sofi, m_numerico, 'Análisis Numérico')
+  ON CONFLICT (id_materia) DO NOTHING;
+
+  INSERT INTO nota (id_cuaderno, tipo, nombre, fecha, nota, estado)
+  SELECT c.id_cuaderno, v.tipo, v.nombre, hoy + v.dias, v.nota, v.estado
+    FROM cuaderno c
+    JOIN (VALUES
+      (m_bd, 'parcial', 'Primer parcial', -200, 7.00, 'aprobado'),
+      (m_bd, 'parcial', 'Segundo parcial', -150, 8.00, 'aprobado'),
+      (m_bd, 'tp', 'TP integrador', -140, 9.00, 'aprobado'),
+      (m_bd, 'final', 'Final', 20, NULL, 'pendiente'),
+      (m_numerico, 'parcial', 'Primer parcial', -190, 5.00, 'desaprobado'),
+      (m_numerico, 'recuperatorio', 'Recuperatorio primer parcial', -175, 7.00, 'aprobado'),
+      (m_numerico, 'parcial', 'Segundo parcial', -145, 6.50, 'aprobado'),
+      (m_prob, 'parcial', 'Primer parcial', -30, 8.00, 'aprobado'),
+      (m_prob, 'tp', 'TP de simulación', -12, 9.50, 'aprobado'),
+      (m_prob, 'parcial', 'Segundo parcial', 5, NULL, 'pendiente'),
+      (m_com, 'tp', 'TP de subredes', -25, 9.00, 'aprobado'),
+      (m_com, 'parcial', 'Primer parcial', -18, 6.00, 'aprobado'),
+      (m_com, 'parcial', 'Segundo parcial', 14, NULL, 'pendiente')
+    ) AS v(id_materia, tipo, nombre, dias, nota, estado) ON v.id_materia = c.id_materia
+   WHERE c.id_usuario = sofi;
+
+  -- Un día cargado hoy (4 sesiones): dispara el aviso de bienestar.
+  FOR n IN 0..2 LOOP
+    INSERT INTO sesion_estudio (id_usuario, id_materia, nombre, duracion, estado, fecha_programada, fecha_inicio, fecha_fin)
+    VALUES (sofi, (ARRAY[m_prob, m_com, m_bd])[n + 1], (ARRAY['Ejercicios de distribuciones', 'Subredes', 'Repaso para el final'])[n + 1],
+            90, 'completada', hoy + time '09:00' + make_interval(hours => n * 2),
+            hoy + time '09:00' + make_interval(hours => n * 2), hoy + time '10:30' + make_interval(hours => n * 2));
+  END LOOP;
+
+  -- Una conversación con la IA.
+  INSERT INTO conversaciones_ia (id_usuario, titulo, fecha_creacion, fecha_actualizacion)
+  VALUES (sofi, 'Diferencia entre binomial y Poisson', now() - interval '2 days', now() - interval '2 days') RETURNING id_conversacion INTO conv;
+  INSERT INTO mensajes_ia (id_conversacion, rol, texto, proveedor, fecha) VALUES
+    (conv, 'usuario', '¿Cuándo uso una binomial y cuándo una Poisson?', NULL, now() - interval '2 days'),
+    (conv, 'ia', 'Usá la **binomial** cuando tenés una cantidad fija de ensayos (n) y en cada uno hay éxito o fracaso con la misma probabilidad p. Usá la **Poisson** cuando contás eventos en un intervalo de tiempo o espacio y no hay un número fijo de ensayos, por ejemplo, llamadas por hora. Si n es grande y p chica, la binomial se aproxima con una Poisson de λ = n·p.', 'gptMini', now() - interval '2 days' + interval '20 seconds'),
+    (conv, 'usuario', 'Dame un ejemplo de cada una', NULL, now() - interval '2 days' + interval '2 minutes'),
+    (conv, 'ia', '**Binomial:** de 10 preguntas de opción múltiple con 4 opciones, ¿cuál es la probabilidad de acertar 3 respondiendo al azar? (n = 10, p = 0,25).
+
+**Poisson:** a una mesa de ayuda llegan en promedio 4 consultas por hora. ¿Cuál es la probabilidad de que lleguen 6 en la próxima hora? (λ = 4).', 'gptMini', now() - interval '2 days' + interval '2 minutes 15 seconds');
 
   RAISE NOTICE 'Listo: entrá con sofi@syntra.demo / demo1234';
 END $demo$;

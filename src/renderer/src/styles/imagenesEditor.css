@@ -1,0 +1,111 @@
+/* Imágenes en los editores (sesiones y Word): esquinas para cambiar el tamaño, alineación y recorte. */
+
+[data-resize-container][data-node="image"] {
+  margin: var(--espacio-sm, 8px) 0;
+}
+
+/* La alineación se guarda en la imagen; el contenedor de las esquinas la acompaña. */
+[data-resize-container][data-node="image"]:has(img[data-alinear="centro"]) {
+  justify-content: center;
+}
+
+[data-resize-container][data-node="image"]:has(img[data-alinear="derecha"]) {
+  justify-content: flex-end;
+}
+
+[data-resize-container][data-node="image"] img {
+  display: block;
+  max-width: 100%;
+  margin: 0;
+}
+
+/* Esquinas: solo se ven con la imagen seleccionada o con el mouse encima. */
+[data-resize-handle] {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-surface, #fff);
+  border-radius: 50%;
+  background: var(--color-frost-blue, #5e81ac);
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+
+[data-resize-handle="top-left"] { cursor: nwse-resize; transform: translate(-50%, -50%); }
+[data-resize-handle="top-right"] { cursor: nesw-resize; transform: translate(50%, -50%); }
+[data-resize-handle="bottom-left"] { cursor: nesw-resize; transform: translate(-50%, 50%); }
+[data-resize-handle="bottom-right"] { cursor: nwse-resize; transform: translate(50%, 50%); }
+
+[data-resize-wrapper]:hover [data-resize-handle],
+.ProseMirror-selectednode [data-resize-handle],
+[data-resize-state="true"] [data-resize-handle] {
+  opacity: 1;
+}
+
+.ProseMirror-selectednode [data-resize-wrapper] {
+  outline: 2px solid var(--color-frost-blue, #5e81ac);
+}
+
+/* Ventana para recortar */
+.recorte__fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 18, 47, 0.55);
+}
+
+.recorte__ventana {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md, 12px);
+  max-width: min(900px, 92vw);
+  padding: var(--espacio-lg, 20px);
+  border-radius: var(--radio-lg, 14px);
+  background: var(--color-surface, #fff);
+  color: var(--color-text-primary, inherit);
+  box-shadow: 0 16px 40px rgba(11, 26, 51, 0.25);
+}
+
+.recorte__titulo {
+  margin: 0;
+}
+
+.recorte__ayuda {
+  margin: 0;
+  color: var(--color-text-secondary, inherit);
+}
+
+.recorte__area {
+  position: relative;
+  align-self: center;
+  cursor: crosshair;
+  user-select: none;
+  touch-action: none;
+}
+
+.recorte__imagen {
+  display: block;
+  max-width: 100%;
+  max-height: 65vh;
+}
+
+/* Lo que queda afuera del recorte se oscurece con la sombra del recuadro. */
+.recorte__zona {
+  position: absolute;
+  border: 2px dashed #fff;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.recorte__area {
+  overflow: hidden;
+}
+
+.recorte__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espacio-sm, 8px);
+}

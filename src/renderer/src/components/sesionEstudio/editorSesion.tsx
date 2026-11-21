@@ -6,6 +6,7 @@ import { Check, CloudOff, Loader2 } from 'lucide-react';
 import type { PestanaSesion } from '../../types/sesionesEstudio';
 import type { Archivo } from '../../types/nodo';
 import { BarraEditorSesion } from './barraEditorSesion';
+import { extensionImagen, propsImagenes } from '../comunes/imagenesEditor';
 import { PestanasSesion } from './pestanasSesion';
 import { ModalConfirmar } from './modalConfirmar';
 import { ModalAbrirMaterial } from './modalAbrirMaterial';
@@ -15,6 +16,7 @@ import { tipoVisor } from '../visor/formatos';
 import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { extraerMensajeError } from '../../pages/sesionesEstudio/utilidades';
+import { descargarArchivos } from '../../utils/descargar';
 
 // Espera desde la última tecla hasta guardar solo.
 const ESPERA_GUARDADO_MS = 1500;
@@ -100,6 +102,18 @@ export function EditorSesion({ usuarioId, idSesion, materia }: EditorSesionProps
     window.clearTimeout(temporizador.current);
     temporizador.current = window.setTimeout(() => void guardarPendientes(), ESPERA_GUARDADO_MS);
   }, [guardarPendientes]);
+
+  // El Word de la sesión vive en Material: se guarda lo pendiente y se descarga esa copia.
+  const descargarWord = async () => {
+    if (!(await guardarPendientes())) return;
+    try {
+      const sesion = await window.api.abrirSesionEstudio(usuarioId, idSesion);
+      if (!sesion.idArchivo) return avisos.info('Escribí algo en la sesión para poder descargarla.');
+      await descargarArchivos([sesion.idArchivo], avisos);
+    } catch (e) {
+      avisos.error(extraerMensajeError(e, 'No se pudo descargar el documento.'));
+    }
+  };
 
   const guardarAhora = useCallback(async () => {
     if (await guardarPendientes()) avisos.exito('Se guardaron los cambios.');
@@ -221,6 +235,9 @@ export function EditorSesion({ usuarioId, idSesion, materia }: EditorSesionProps
   const guardadoSesion = (
     <div className="editor-sesion__guardado">
       <IndicadorGuardado estado={estado} />
+      <button type="button" className="boton-chico boton-chico--claro" onClick={() => void descargarWord()} title="Descargar el Word de la sesión">
+        Descargar
+      </button>
       <button type="button" className="boton-chico" onClick={() => void guardarAhora()} title="Guardar (Ctrl+S)">
         Guardar
       </button>
@@ -291,7 +308,8 @@ function EditorPestana({ contenidoInicial, onCambio, barraPestanas }: EditorPest
   alCambiar.current = onCambio;
 
   const editor = useEditor({
-    extensions: [StarterKit.configure({ link: { openOnClick: false, autolink: true } })],
+    extensions: [StarterKit.configure({ link: { openOnClick: false, autolink: true } }), extensionImagen],
+    editorProps: propsImagenes,
     content: contenidoInicial,
     // La barra muestra qué formato está activo: necesita redibujarse en cada cambio.
     shouldRerenderOnTransaction: true,

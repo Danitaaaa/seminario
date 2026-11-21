@@ -17,6 +17,7 @@ interface TarjetaNodoProps {
     onAbrir: (nodo: Nodo) => void;
     onRenombrar: (nodo: Nodo) => void;
     onEliminar: (nodo: Nodo) => void;
+    onDescargar?: (nodo: Nodo) => void;
     onArrastrarInicio: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onArrastrarSobre: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onSoltar: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
@@ -27,14 +28,14 @@ interface TarjetaNodoProps {
 // Misma lógica de selección/arrastre que FilaNodo, pero para la vista cuadrícula.
 export function TarjetaNodo({
     nodo, seleccionado, sobreDestino,
-    onSeleccionar, onAbrir, onRenombrar, onEliminar,
+    onSeleccionar, onAbrir, onRenombrar, onEliminar, onDescargar,
     onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino, rol = 'propietario',
 }: TarjetaNodoProps) {
     const [menuAbierto, setMenuAbierto] = useState(false);
     const { icono, tipo } = resolverIconoNodo(nodo);
     const esCarpeta = nodo.tipo === 'carpeta';
     const puedeMover = puede(rol, `${nodo.tipo}.mover`);
-    const hayAcciones = puede(rol, `${nodo.tipo}.renombrar`) || puede(rol, `${nodo.tipo}.eliminar`);
+    const hayAcciones = puede(rol, `${nodo.tipo}.renombrar`) || puede(rol, `${nodo.tipo}.eliminar`) || (nodo.tipo === 'archivo' && !!onDescargar);
 
     return (
         <div
@@ -60,6 +61,7 @@ export function TarjetaNodo({
                     nodoTipo={nodo.tipo}
                     onRenombrar={() => { setMenuAbierto(false); onRenombrar(nodo); }}
                     onEliminar={() => { setMenuAbierto(false); onEliminar(nodo); }}
+                    onDescargar={onDescargar && (() => { setMenuAbierto(false); onDescargar(nodo); })}
                 />
             </div>
 

@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import {
-  BookOpen, CalendarClock, CalendarDays, Timer, Briefcase, ScanFace, ExternalLink, Mail, X,
+  BookOpen, CalendarClock, CalendarDays, Timer, Briefcase, ScanFace, ExternalLink, Mail, X, Send, Copy, Check,
   type LucideIcon,
 } from "lucide-react";
 import "../../styles/ayuda.css";
+import { hablar } from "../../voz/narrador";
 
 interface PanelAyudaProps {
   onCerrar: () => void;
 }
 
-type Enlace = "github-dana";
+type Enlace = "github-dana" | "correo";
+
+const CORREO = "babineo.utn15@gmail.com";
 
 interface Funcion {
   icono: LucideIcon;
@@ -48,8 +51,9 @@ export function PanelAyuda({ onCerrar }: PanelAyudaProps) {
   const [copiado, setCopiado] = useState(false);
 
   const copiarCorreo = () =>
-    navigator.clipboard.writeText("babineo.utn15@gmail.com").then(() => {
+    navigator.clipboard.writeText(CORREO).then(() => {
       setCopiado(true);
+      hablar("Correo copiado");
       setTimeout(() => setCopiado(false), 2000);
     });
 
@@ -127,10 +131,28 @@ export function PanelAyuda({ onCerrar }: PanelAyudaProps) {
         </div>
 
         <footer className="ayuda__pie">
-          <button type="button" className="ayuda__enlace" onClick={copiarCorreo}>
-            <Mail size={12} aria-hidden="true" /> {copiado ? "¡Correo copiado!" : "babineo.utn15@gmail.com"}
-          </button>
-          <span>Versión 1.0 · 2026</span>
+          {/* Contacto: "Escribinos" abre la app de correo; "Copiar" sirve si se usa el correo en el navegador. */}
+          <div className="ayuda__contacto">
+            <span className="ayuda__contacto-icono" aria-hidden="true"><Mail size={16} /></span>
+            <div className="ayuda__contacto-texto">
+              <p className="ayuda__contacto-titulo">¿Dudas, sugerencias o encontraste un error?</p>
+              <p className="ayuda__contacto-correo">Escribinos a <strong>{CORREO}</strong></p>
+            </div>
+            <div className="ayuda__contacto-acciones">
+              <button type="button" className="ayuda__contacto-boton" onClick={() => abrir("correo")} aria-label={`Escribinos por correo a ${CORREO}`}>
+                <Send size={13} aria-hidden="true" /> Escribinos
+              </button>
+              <button
+                type="button"
+                className={`ayuda__contacto-boton${copiado ? " ayuda__contacto-boton--hecho" : ""}`}
+                onClick={copiarCorreo}
+                aria-label={copiado ? "Correo copiado" : "Copiar el correo"}
+              >
+                {copiado ? <Check size={13} aria-hidden="true" /> : <Copy size={13} aria-hidden="true" />} {copiado ? "Copiado" : "Copiar"}
+              </button>
+            </div>
+          </div>
+          <span className="ayuda__version">Versión 1.0 · 2026</span>
         </footer>
       </div>
     </div>

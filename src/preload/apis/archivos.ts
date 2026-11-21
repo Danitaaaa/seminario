@@ -17,6 +17,8 @@ export const archivosApi = {
   seleccionarArchivo: () => ipcRenderer.invoke('archivos:seleccionar'),
   subirCarpeta: (datos: unknown) => ipcRenderer.invoke('archivos:subirCarpeta', datos),
   importarRutas: (datos: unknown) => ipcRenderer.invoke('archivos:importar', datos),
+  descargarArchivos: (datos: unknown) => ipcRenderer.invoke('archivos:descargar', datos),
+  crearDocumento: (datos: unknown) => ipcRenderer.invoke('archivos:crearDocumento', datos),
   // Ruta en disco de un archivo o carpeta arrastrado (Electron ya no la pone en File.path).
   rutaDeArchivo: (archivo: File) => webUtils.getPathForFile(archivo),
 };

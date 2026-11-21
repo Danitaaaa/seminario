@@ -46,6 +46,7 @@ export interface ChatIAApi {
     trabajoId: string;
     idConversacion?: number | null;
     texto: string;
+    conAgenda?: boolean; // la IA ve la agenda y el material del usuario (por defecto, sí)
     imagenes?: string[];
     documentos?: DocumentoChat[];
   }): Promise<RespuestaEnviarChat>;

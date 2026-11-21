@@ -21,10 +21,11 @@ export class AsistenteChat {
     signal?: AbortSignal,
     imagenes: string[] = [],
     documentos: DocumentoChat[] = [],
+    agenda?: string, // resumen de la agenda y el material del usuario (si eligió usarla)
   ): Promise<RespuestaAsistente> {
     const r = await this.router.generar('chat', {
       sistema: TAREAS_IA.chat.sistema,
-      usuario: armarChat(historial, mensaje, undefined, documentos),
+      usuario: armarChat(historial, mensaje, undefined, documentos, agenda),
       esquema: respuestaChatSchema,
       esquemaJson: TAREAS_IA.chat.esquemaJson,
       signal,

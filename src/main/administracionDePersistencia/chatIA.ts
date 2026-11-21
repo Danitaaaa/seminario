@@ -17,6 +17,7 @@ import type { Archivos } from './archivos';
 import type { Almacenamiento } from '../persistencia/almacenamiento';
 import type { ColaEjecucion } from '../logicaNoPersistente/ia/colaEjecucion';
 import { usuarioSesionSync } from '../sesionSync';
+import { AgendaParaIA } from '../logicaPersistente/gestionDeChatIA/agendaParaIA';
 
 function usuarioActual(): number {
   const id = usuarioSesionSync();
@@ -55,7 +56,18 @@ export class ChatIA {
     private readonly eliminarCasoUso: EliminarConversacionIA,
     private readonly archivos: Archivos,
     private readonly almacenamiento: Almacenamiento,
+    private readonly agenda: AgendaParaIA,
   ) {}
+
+  // Si falla armar la agenda, el chat sigue sin ella.
+  private async agendaDe(idUsuario: number): Promise<string | undefined> {
+    try {
+      return await this.agenda.ejecutar(idUsuario);
+    } catch (error) {
+      console.error('[Chat IA] No se pudo armar la agenda:', error);
+      return undefined;
+    }
+  }
 
   // Pregunta → respuesta de la IA disponible → se guardan las dos.
   // Si la IA falla o el usuario cancela, no se guarda nada (el texto sigue en el cuadro del front).
@@ -70,6 +82,7 @@ export class ChatIA {
     // Los de antes van primero; si se pasa del límite, quedan los más nuevos.
     const documentos = [...(idConversacion == null ? [] : this.documentosPorConversacion.get(idConversacion) ?? []), ...nuevos]
       .slice(-MAX_DOCUMENTOS_CHAT);
+    const agenda = datos.conAgenda ? await this.agendaDe(idUsuario) : undefined;
     const respuesta = await this.cola.add(datos.trabajoId, (ctx) =>
       this.asistente.responder(
         // De los mensajes viejos solo va el texto; si tenían imágenes, se avisa para que la IA tenga contexto.
@@ -81,6 +94,7 @@ export class ChatIA {
         ctx.signal,
         imagenes,
         documentos,
+        agenda,
       ),
     );
 

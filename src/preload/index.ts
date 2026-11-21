@@ -24,6 +24,8 @@ import { spotifyApi } from './apis/spotify';
 import { vozApi } from './apis/voz';
 import { dictadoApi } from './apis/dictado';
 import { bienestarApi } from './apis/bienestar';
+import { notasRapidasApi } from './apis/notasRapidas';
+import { calendarioGoogleApi } from './apis/calendarioGoogle';
 
 import { iaApi } from './apis/ia';
 import { materialIAExtraApi } from './apis/materialIA';
@@ -54,6 +56,8 @@ contextBridge.exposeInMainWorld('api', {
   ...vozApi,
   ...dictadoApi,
   ...bienestarApi,
+  ...notasRapidasApi,
+  ...calendarioGoogleApi,
   ...iaApi,
   ...materialIAExtraApi
 });

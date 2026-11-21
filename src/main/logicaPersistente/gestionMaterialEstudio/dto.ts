@@ -56,6 +56,18 @@ export const CrearArchivoDTOSchema = z.object({
 });
 export type CrearArchivoDTO = z.infer<typeof CrearArchivoDTOSchema>;
 
+// Descargar uno o varios archivos a una carpeta de la compu.
+export const DescargarArchivosDTOSchema = z.object({
+    ids: z.array(z.number().int().positive()).min(1, 'Elegí al menos un archivo.').max(200, 'Son demasiados archivos para descargar de una vez.'),
+});
+
+// Crear un documento vacío (Word o texto) en una carpeta.
+export const CrearDocumentoDTOSchema = z.object({
+    idPadre: z.number().int(),
+    nombre: z.string().trim().min(1, 'Poné un nombre.').max(200, 'El nombre es demasiado largo.'),
+    tipo: z.enum(['docx', 'txt']),
+});
+
 // Subir una carpeta elegida con el selector del sistema.
 export const SubirCarpetaDTOSchema = z.object({ idPadre: z.number().int() });
 

@@ -1,5 +1,7 @@
 import { Archivo, AplicacionExterna } from './archivo';
 import { Nodo, ResultadoImportacion } from './nodo';
+import type { NotaRapida } from './notasRapidas';
+import type { EstadoCalendarioGoogle } from './calendarioGoogle';
 import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput } from './eventos';
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
@@ -68,6 +70,9 @@ declare global {
       } | null>;
       subirCarpeta: (datos: { idPadre: number }) => Promise<ResultadoImportacion | null>;
       importarRutas: (datos: { idPadre: number; rutas: string[] }) => Promise<ResultadoImportacion>;
+      // null = el usuario canceló el diálogo. `destino` = nombre del archivo o de la carpeta donde quedó.
+      descargarArchivos: (datos: { ids: number[] }) => Promise<{ copiados: number; fallidos: number; destino: string } | null>;
+      crearDocumento: (datos: { idPadre: number; nombre: string; tipo: 'docx' | 'txt' }) => Promise<Archivo>;
       rutaDeArchivo: (archivo: File) => string;
       modificarArchivo: (datos: { id: number; nombre: string }) => Promise<Archivo>;
       eliminarArchivo: (datos: { id: number }) => Promise<void>;
@@ -153,7 +158,7 @@ declare global {
       alSonarNotificacion: (escuchar: () => void) => () => void;
 
       // Enlaces externos
-      abrirEnlace: (datos: { enlace: 'github-dana' }) => Promise<void>;
+      abrirEnlace: (datos: { enlace: 'github-dana' | 'correo' }) => Promise<void>;
 
       // Gestion de flashcards
       crearDeck: (datos: { usuarioId: number; nombre: string; descripcion?: string; materiaAsociada?: string }) => Promise<Deck>;
@@ -250,6 +255,19 @@ declare global {
       alProgresoDictado: (escuchar: (avance: number) => void) => () => void;
       // Bienestar (avisos si planificás o estudiás demasiado)
       bienestarActivo: (datos: { usuarioId: number }) => Promise<boolean>;
+
+      // Notas rápidas (post-its) de una carpeta
+      listarNotasRapidas: (datos: { usuarioId: number; idNodo: number }) => Promise<NotaRapida[]>;
+      crearNotaRapida: (datos: { usuarioId: number; idNodo: number; texto: string; color?: number }) => Promise<NotaRapida>;
+      modificarNotaRapida: (datos: { usuarioId: number; idNota: number; texto?: string; color?: number; posX?: number; posY?: number }) => Promise<NotaRapida>;
+      eliminarNotaRapida: (datos: { usuarioId: number; idNota: number }) => Promise<void>;
+
+      // Google Calendar (copia de Syntra hacia Google)
+      estadoCalendarioGoogle: () => Promise<EstadoCalendarioGoogle>;
+      conectarCalendarioGoogle: () => Promise<EstadoCalendarioGoogle>;
+      sincronizarCalendarioGoogle: () => Promise<EstadoCalendarioGoogle>;
+      desconectarCalendarioGoogle: () => Promise<EstadoCalendarioGoogle>;
+      cancelarCalendarioGoogle: () => Promise<void>;
       cambiarBienestar: (datos: { usuarioId: number; activo: boolean }) => Promise<boolean>;
     };
   }

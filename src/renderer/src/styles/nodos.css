@@ -580,3 +580,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.menu-agregar__separador {
+    height: 1px;
+    margin: 4px 6px;
+    background: var(--color-border);
+}

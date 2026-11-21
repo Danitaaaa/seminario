@@ -11,6 +11,7 @@ interface CuadriculaNodosProps {
     onAbrir: (nodo: Nodo) => void;
     onRenombrar: (nodo: Nodo) => void;
     onEliminar: (nodo: Nodo) => void;
+    onDescargar?: (nodo: Nodo) => void;
     onArrastrarInicio: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onArrastrarSobre: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
     onSoltar: (nodo: Nodo, evento: DragEvent<HTMLDivElement>) => void;
@@ -20,7 +21,7 @@ interface CuadriculaNodosProps {
 
 export function CuadriculaNodos({
     nodos, seleccionados, destinoArrastre,
-    onSeleccionar, onAbrir, onRenombrar, onEliminar,
+    onSeleccionar, onAbrir, onRenombrar, onEliminar, onDescargar,
     onArrastrarInicio, onArrastrarSobre, onSoltar, onSalirDestino, rol,
 }: CuadriculaNodosProps) {
     if (nodos.length === 0) {
@@ -41,6 +42,7 @@ export function CuadriculaNodos({
                         onAbrir={onAbrir}
                         onRenombrar={onRenombrar}
                         onEliminar={onEliminar}
+                        onDescargar={onDescargar}
                         onArrastrarInicio={onArrastrarInicio}
                         onArrastrarSobre={onArrastrarSobre}
                         onSoltar={onSoltar}

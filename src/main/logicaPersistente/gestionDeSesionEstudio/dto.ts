@@ -92,7 +92,8 @@ export type RenombrarPestanaDTO = z.infer<typeof renombrarPestanaSchema>;
 export const guardarContenidoSesionSchema = z.object({
   idSesion: idPositivo,
   idPestana: idPositivo,
-  contenido: z.string().max(2_000_000),
+  // Con imágenes (en base64) el HTML pesa bastante más que el texto solo.
+  contenido: z.string().max(20_000_000),
 });
 export type GuardarContenidoSesionDTO = z.infer<typeof guardarContenidoSesionSchema>;
 

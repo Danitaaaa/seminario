@@ -3,6 +3,7 @@ import mammoth from 'mammoth';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { BarraEditor } from './barraEditor';
+import { extensionImagen, propsImagenes } from '../comunes/imagenesEditor';
 
 interface VisorDocxProps {
   contenido: Uint8Array;
@@ -16,7 +17,10 @@ export function VisorDocx({ contenido, onGuardar, soloLectura = false }: VisorDo
   const [modificado, setModificado] = useState(false);
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [StarterKit, extensionImagen],
+    editorProps: propsImagenes,
+    // La barra muestra las herramientas de imagen al seleccionar una: necesita redibujarse.
+    shouldRerenderOnTransaction: true,
     content: '',
     editable: !soloLectura,
     onUpdate: () => setModificado(true),
@@ -46,7 +50,7 @@ export function VisorDocx({ contenido, onGuardar, soloLectura = false }: VisorDo
     <div className="visor-editor">
       <BarraEditor editor={editor} modificado={modificado} onGuardar={guardar} soloLectura={soloLectura} />
       {!soloLectura && <p className="visor__nota">
-        Se conservan texto, títulos, listas y negritas. El diseño exacto del Word original (tablas complejas, encabezados) puede cambiar al guardar.
+        Se conservan texto, títulos, listas, negritas e imágenes. El diseño exacto del Word original (tablas complejas, encabezados) puede cambiar al guardar.
       </p>}
       {!cargado && <p className="visor__cargando">Cargando documento…</p>}
       <EditorContent editor={editor} className="visor-editor__hoja" />
