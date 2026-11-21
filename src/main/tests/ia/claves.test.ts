@@ -28,4 +28,3 @@ test('claves: rechaza vacía y falta de cifrado', () => {
   expect(() => new AlmacenClaves(ruta, safeFalso()).establecer('x', '  ')).toThrow(ErrorClaves);
   expect(() => new AlmacenClaves(ruta, safeFalso(false)).establecer('x', 'abc')).toThrow(ErrorClaves);
 });
-

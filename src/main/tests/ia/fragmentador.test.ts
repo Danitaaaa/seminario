@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { fragmentar, fragmentarEnTextos } from '../../logicaNoPersistente/ia/fragmentador';
+import { estimarTokens, fragmentar, fragmentarEnTextos } from '../../logicaNoPersistente/ia/fragmentador';
 
 test('fragmentador: ningún fragmento supera el máximo de tokens', () => {
   const texto = '# Intro\n' + 'Hola mundo. '.repeat(50)
@@ -23,4 +23,29 @@ test('fragmentarEnTextos: respeta el máximo, no pierde texto y parte párrafos 
   expect(frags.every((f) => f.length <= 100)).toBe(true);
   expect(frags.join('').replace(/\s/g, '').length).toBe(350);
   expect(fragmentarEnTextos('   ')).toEqual([]);
+});
+
+test('fragmentador: agrupa secciones chicas en un solo fragmento', () => {
+  const fragmentos = fragmentar('# A\nuno\n# B\ndos');
+  expect(fragmentos).toHaveLength(1);
+  expect(fragmentos[0]?.titulo).toBe('A');
+  expect(fragmentos[0]?.texto).toContain('uno');
+  expect(fragmentos[0]?.texto).toContain('dos');
+  expect(estimarTokens('abcd')).toBe(1); // ~4 caracteres por token
+  expect(estimarTokens('abcde')).toBe(2);
+});
+
+test('fragmentador: una sección partida repite el título y el final del fragmento anterior', () => {
+  const p = (palabra: string) => `${`${palabra} `.repeat(59)}${palabra.toUpperCase()}`; // ~300 caracteres
+  const texto = `# Tema\n${p('alfa')}\n\n${p('beta')}\n\n${p('gama')}`;
+
+  const conSolape = fragmentar(texto, { maxTokens: 100, solapamientoTokens: 10 });
+  expect(conSolape).toHaveLength(3);
+  expect(conSolape.every((f) => f.titulo === 'Tema' && f.texto.startsWith('Tema\n'))).toBe(true);
+  expect(conSolape[0]?.texto.includes('…')).toBe(false);
+  expect(conSolape[1]?.texto).toContain('…'); // arranca con la cola del anterior
+  expect(conSolape[1]?.texto).toContain('ALFA');
+
+  const sinSolape = fragmentar(texto, { maxTokens: 100, solapamientoTokens: 0 });
+  expect(sinSolape.some((f) => f.texto.includes('…'))).toBe(false);
 });
