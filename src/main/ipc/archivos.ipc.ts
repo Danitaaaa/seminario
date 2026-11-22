@@ -1,9 +1,5 @@
 import { app, ipcMain, dialog, shell, BrowserWindow } from 'electron';
-import HTMLtoDOCX from '@turbodocx/html-to-docx';
-import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
-import os from 'node:os';
 import { Archivos } from '../administracionDePersistencia/archivos';
 import {
   CrearArchivoDTOSchema,
@@ -15,71 +11,21 @@ import {
   GuardarContenidoDTOSchema,
   GuardarDocxDTOSchema,
   AbrirConAplicacionDTOSchema,
-  CrearArchivoDTO,
   ImportarRutasDTOSchema,
-  ListarContenidoDTOSchema,
   SubirCarpetaDTOSchema,
   DescargarArchivosDTOSchema,
   CrearDocumentoDTOSchema,
 } from '../logicaPersistente/gestionMaterialEstudio/dto';
-import { Nodos } from '../administracionDePersistencia/nodo';
-import { importarRutas, nombreLibre, type DestinoImportacion } from '../logicaNoPersistente/importarMaterial/importarRutas';
-import { copiarACarpeta, copiarUno, nombreSeguro } from '../logicaNoPersistente/descargas/copiarArchivos';
-import { documentoVacio } from '../logicaNoPersistente/documentos/documentoVacio';
-import { Almacenamiento } from '../persistencia/almacenamiento';
+import { ServicioArchivos } from '../logicaNoPersistente/documentos/servicioArchivos';
 import {
   listarAplicaciones,
   abrirConAplicacion,
   elegirOtraAplicacion,
 } from '../logicaNoPersistente/abrirCon/aplicacionesSistema';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 
-
-// Carpeta propia de la app donde viven las copias de los archivos subidos.
-const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
-  // Se llama después de guardar un Word desde el visor (lo usa Sesión de estudio para traer los cambios).
-  type AlGuardarDocx = (idArchivo: number, html: string) => Promise<unknown>;
-
-  // Copia el archivo elegido a la carpeta de material de la app (nunca toca el original) y lo registra.
-  async function copiarYCrear(archivos: Archivos, datos: CrearArchivoDTO) {
-    // La extensión forma parte del nombre físico: solo alfanumérica, para evitar rutas raras.
-    if (!/^[a-zA-Z0-9]+$/.test(datos.extension)) {
-      throw new Error('Extensión inválida');
-    }
-
-    fs.mkdirSync(CARPETA_MATERIAL, { recursive: true });
-    const nombreFisico = `${crypto.randomUUID()}.${datos.extension}`;
-    const rutaCopia = path.join(CARPETA_MATERIAL, nombreFisico);
-    fs.copyFileSync(datos.rutaFisica, rutaCopia);
-
-    try {
-      // El tamaño se toma de la copia real, no de lo que manda el renderer.
-      const tamanio = fs.statSync(rutaCopia).size;
-      return await archivos.crear({ ...datos, rutaFisica: rutaCopia, tamanio });
-    } catch (error) {
-      // Si falla el INSERT (por ejemplo nombre duplicado), no dejar la copia huérfana.
-      fs.unlink(rutaCopia, () => {});
-      throw error;
-    }
-  }
-
-  export function registerArchivosIpc(
-  archivos: Archivos, almacenamiento: Almacenamiento, nodos: Nodos, alGuardarDocx?: AlGuardarDocx): void {
-  // Para subir carpetas: crea subcarpetas y archivos con las mismas fachadas (y permisos) de siempre.
-  const destino: DestinoImportacion = {
-    nombresEn: async (idPadre) => {
-      const lista = await nodos.listar(ListarContenidoDTOSchema.parse({ idPadre }));
-      return new Set(lista.map((n) => (n.tipo === 'carpeta' ? n.nombre : `${n.nombre}.${n.extension}`).normalize('NFC').toLowerCase()));
-    },
-    // NFC: los nombres con tildes "separadas" (de Mac o de Drive) no entran en la base si está en WIN1252.
-    crearCarpeta: async (nombre, idPadre) => (await nodos.crear({ nombre: nombre.normalize('NFC'), idPadre })).id,
-    crearArchivo: async (rutaFisica, nombre, extension, idPadre) => {
-      await copiarYCrear(archivos, { nombre: nombre.normalize('NFC'), extension, rutaFisica, idPadre });
-    },
-  };
-
+// Handlers IPC de archivos: validan los datos con Zod y llaman a la fachada (Archivos) o a ServicioArchivos,
+// que es donde está lo que pasa en el disco. Acá solo quedan los cuadros de diálogo de Electron.
+export function registerArchivosIpc(archivos: Archivos, servicio: ServicioArchivos): void {
   ipcMain.handle('archivos:buscar', async (_event, datos: unknown) => {
     const validado = BuscadorArchivoDTOSchema.parse(datos);
     return archivos.buscar(validado);
@@ -88,14 +34,11 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
   // Devuelve la metadata y los bytes del archivo para visualizarlo en el renderer.
   ipcMain.handle('archivos:leer', async (_event, datos: unknown) => {
     const { id } = ObtenerArchivoDTOSchema.parse(datos);
-    const archivo = await archivos.obtener({ id });
-    const contenido = await fs.promises.readFile(almacenamiento.rutaCompleta(archivo.rutaFisica));
-    return { ...archivo, contenido };
+    return servicio.leer(id);
   });
 
-
   ipcMain.handle('archivos:crear', async (_event, datos: unknown) => {
-    return copiarYCrear(archivos, CrearArchivoDTOSchema.parse(datos));
+    return servicio.crear(CrearArchivoDTOSchema.parse(datos));
   });
 
   // Abre el selector de carpetas del SO y sube las elegidas con todo lo que tienen adentro.
@@ -103,13 +46,13 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
     const { idPadre } = SubirCarpetaDTOSchema.parse(datos);
     const resultado = await dialog.showOpenDialog({ properties: ['openDirectory', 'multiSelections'] });
     if (resultado.canceled || resultado.filePaths.length === 0) return null;
-    return importarRutas(resultado.filePaths, idPadre, destino);
+    return servicio.importar(resultado.filePaths, idPadre);
   });
 
   // Carpetas y archivos arrastrados desde el explorador.
   ipcMain.handle('archivos:importar', async (_event, datos: unknown) => {
     const { idPadre, rutas } = ImportarRutasDTOSchema.parse(datos);
-    return importarRutas(rutas, idPadre, destino);
+    return servicio.importar(rutas, idPadre);
   });
 
   ipcMain.handle('archivos:modificar', async (_event, datos: unknown) => {
@@ -117,35 +60,16 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
     return archivos.modificar(validado);
   });
 
-  // Escribe los bytes en un temporal y deja que actualizarContenido haga el reemplazo.
-  async function guardarBytes(id: number, bytes: Uint8Array) {
-    const carpetaTmp = await mkdtemp(join(tmpdir(), 'guardar-'));
-    const rutaTmp = join(carpetaTmp, 'contenido.tmp');
-    try {
-      await writeFile(rutaTmp, bytes);
-      return await archivos.actualizarContenido(id, rutaTmp);
-    } finally {
-      await rm(carpetaTmp, { recursive: true, force: true });
-    }
-  }
-
   // Guarda bytes ya generados por el renderer (PDF, XLSX, TXT).
   ipcMain.handle('archivos:guardar', async (_event, datos: unknown) => {
     const { id, contenido } = GuardarContenidoDTOSchema.parse(datos);
-    return guardarBytes(id, contenido);
+    return servicio.guardarBytes(id, contenido);
   });
 
   // Convierte el HTML del editor a DOCX y lo guarda.
   ipcMain.handle('archivos:guardarDocx', async (_event, datos: unknown) => {
     const { id, html } = GuardarDocxDTOSchema.parse(datos);
-    const docx = (await HTMLtoDOCX(html, null, {})) as Buffer;
-    const archivo = await guardarBytes(id, docx);
-    try {
-      await alGuardarDocx?.(id, html);
-    } catch (error) {
-      console.error('[Archivos] No se pudo actualizar la sesión de estudio del Word:', error);
-    }
-    return archivo;
+    return servicio.guardarDocx(id, html);
   });
 
   ipcMain.handle('archivos:mover', async (_event, datos: unknown) => {
@@ -160,8 +84,8 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
 
   // Abre el archivo con la aplicación predeterminada del sistema operativo.
   ipcMain.handle('archivos:abrirExterno', async (_event, datos: unknown) => {
-    const archivo = await archivos.obtener(ObtenerArchivoDTOSchema.parse(datos));
-    const error = await shell.openPath(almacenamiento.rutaCompleta(archivo.rutaFisica));
+    const { ruta } = await servicio.rutaDe(ObtenerArchivoDTOSchema.parse(datos).id);
+    const error = await shell.openPath(ruta);
     if (error) throw new Error(error);
   });
 
@@ -175,16 +99,15 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
   // La app se vuelve a buscar acá: el renderer solo puede elegir entre las que listó el main.
   ipcMain.handle('archivos:abrirConAplicacion', async (_event, datos: unknown) => {
     const { id, aplicacionId } = AbrirConAplicacionDTOSchema.parse(datos);
-    const archivo = await archivos.obtener({ id });
+    const { archivo, ruta } = await servicio.rutaDe(id);
     const aplicacion = (await listarAplicaciones(archivo.extension)).find((a) => a.id === aplicacionId);
     if (!aplicacion) throw new Error('La aplicación elegida no está disponible.');
-    await abrirConAplicacion(aplicacion, almacenamiento.rutaCompleta(archivo.rutaFisica));
+    await abrirConAplicacion(aplicacion, ruta);
   });
 
   // Diálogo nativo de Windows para elegir cualquier otra app; en otros sistemas usa la predeterminada.
   ipcMain.handle('archivos:elegirAplicacion', async (_event, datos: unknown) => {
-    const archivo = await archivos.obtener(ObtenerArchivoDTOSchema.parse(datos));
-    const ruta = almacenamiento.rutaCompleta(archivo.rutaFisica);
+    const { ruta } = await servicio.rutaDe(ObtenerArchivoDTOSchema.parse(datos).id);
     if (process.platform === 'win32') return elegirOtraAplicacion(ruta);
     const error = await shell.openPath(ruta);
     if (error) throw new Error(error);
@@ -201,13 +124,12 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
     if (lista.length === 1) {
       const [archivo] = lista;
       const opciones = {
-        defaultPath: path.join(descargas, `${nombreSeguro(archivo.nombre)}.${archivo.extension}`),
+        defaultPath: path.join(descargas, servicio.nombreDescarga(archivo)),
         filters: [{ name: archivo.extension.toUpperCase(), extensions: [archivo.extension] }],
       };
       const elegido = ventana ? await dialog.showSaveDialog(ventana, opciones) : await dialog.showSaveDialog(opciones);
       if (elegido.canceled || !elegido.filePath) return null;
-      await copiarUno(almacenamiento.rutaCompleta(archivo.rutaFisica), elegido.filePath);
-      return { copiados: 1, fallidos: 0, destino: path.basename(elegido.filePath) };
+      return servicio.descargarUno(archivo, elegido.filePath);
     }
 
     const opciones = {
@@ -218,48 +140,19 @@ const CARPETA_MATERIAL = path.join(app.getPath('userData'), 'material');
     };
     const elegido = ventana ? await dialog.showOpenDialog(ventana, opciones) : await dialog.showOpenDialog(opciones);
     if (elegido.canceled || elegido.filePaths.length === 0) return null;
-    const carpeta = elegido.filePaths[0];
-    const resultado = await copiarACarpeta(
-      carpeta,
-      lista.map((a) => ({ origen: almacenamiento.rutaCompleta(a.rutaFisica), nombre: a.nombre, extension: a.extension }))
-    );
-    return { ...resultado, destino: path.basename(carpeta) };
+    return servicio.descargarVarios(lista, elegido.filePaths[0]);
   });
 
-  // Documento nuevo y vacío en la carpeta (Word o texto). Si el nombre ya existe, le suma "(2)".
-  // Pasa por la misma fachada que subir un archivo: mismos permisos y la misma sincronización en proyectos.
+  // Documento nuevo y vacío en la carpeta (Word o texto).
   ipcMain.handle('archivos:crearDocumento', async (_event, datos: unknown) => {
     const { idPadre, nombre, tipo } = CrearDocumentoDTOSchema.parse(datos);
-    const libre = nombreLibre(nombre.normalize('NFC'), tipo, await destino.nombresEn(idPadre));
-    const carpetaTmp = await mkdtemp(join(tmpdir(), 'nuevo-'));
-    const rutaTmp = join(carpetaTmp, `nuevo.${tipo}`);
-    try {
-      await writeFile(rutaTmp, await documentoVacio(tipo));
-      return await copiarYCrear(archivos, { nombre: libre, extension: tipo, rutaFisica: rutaTmp, idPadre });
-    } finally {
-      await rm(carpetaTmp, { recursive: true, force: true });
-    }
+    return servicio.crearDocumento(idPadre, nombre, tipo);
   });
 
   // Abre el selector de archivos del SO y devuelve la metadata básica del elegido.
   ipcMain.handle('archivos:seleccionar', async () => {
     const resultado = await dialog.showOpenDialog({ properties: ['openFile'] });
     if (resultado.canceled || resultado.filePaths.length === 0) return null;
-
-    const rutaFisica = resultado.filePaths[0];
-    const stats = fs.statSync(rutaFisica);
-    const extension = path.extname(rutaFisica).replace('.', '');
-    const nombre = path.basename(rutaFisica, path.extname(rutaFisica)).normalize('NFC');
-
-    return { nombre, extension, rutaFisica, tamanio: stats.size };
+    return servicio.describir(resultado.filePaths[0]);
   });
-
-}
-
-// Reemplaza el contenido físico escribiendo primero a un temporal, así un fallo no deja el archivo a medias.
-function escribirSeguro(ruta: string, contenido: Uint8Array): number {
-  const temporal = `${ruta}.tmp`;
-  fs.writeFileSync(temporal, contenido);
-  fs.renameSync(temporal, ruta);
-  return fs.statSync(ruta).size;
 }

@@ -30,10 +30,19 @@ export interface MateriaDelCuaderno {
   estado: string;
 }
 
+export interface CuatrimestreDelCuaderno {
+  idCuatrimestre: number;
+  nombre: string; // "2° cuatrimestre 2026"
+  corto: string; // "2C 2026"
+  fechaInicio: string;
+  fechaFin: string;
+}
+
 export interface ResumenCuaderno {
   idCuaderno: number;
   nombre: string;
   materia: MateriaDelCuaderno;
+  cuatrimestre: CuatrimestreDelCuaderno | null;
   archivos: number;
   flashcards: number;
   notasTotal: number;
@@ -49,13 +58,22 @@ export interface Cuaderno {
   metodos: { nombre: string; sesiones: number }[];
   materialesIA: { idMaterialIA: number; tipo: 'resumen' | 'cuestionario' | 'mapaMental'; titulo: string }[];
   notas: Nota[];
+  cursadas: { idCuaderno: number; cuatrimestre: string | null; actual: boolean }[];
+  cuentaPara: { idMateria: number; nombre: string; formacion: string }[];
+}
+
+export interface DatosCuaderno {
+  nombre: string;
+  idMateria: number;
+  idCuatrimestre: number | null;
+  materiasExtra: number[];
 }
 
 export interface CuadernosApi {
   listarCuadernos(datos: { usuarioId: number }): Promise<ResumenCuaderno[]>;
   obtenerCuaderno(datos: { usuarioId: number; idCuaderno: number }): Promise<Cuaderno>;
-  crearCuaderno(datos: { usuarioId: number; nombre: string; idMateria: number }): Promise<{ idCuaderno: number }>;
-  modificarCuaderno(datos: { usuarioId: number; idCuaderno: number; nombre: string; idMateria: number }): Promise<{ ok: boolean }>;
+  crearCuaderno(datos: { usuarioId: number } & DatosCuaderno): Promise<{ idCuaderno: number }>;
+  modificarCuaderno(datos: { usuarioId: number; idCuaderno: number } & DatosCuaderno): Promise<{ ok: boolean }>;
   eliminarCuaderno(datos: { usuarioId: number; idCuaderno: number }): Promise<{ ok: boolean }>;
   agregarMazoCuaderno(datos: { usuarioId: number; idCuaderno: number; idDeck: number }): Promise<{ ok: boolean }>;
   quitarMazoCuaderno(datos: { usuarioId: number; idCuaderno: number; idDeck: number }): Promise<{ ok: boolean }>;

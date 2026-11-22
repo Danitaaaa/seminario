@@ -31,3 +31,22 @@ export interface Correlativa {
   idMateria: number;
   idRequisito: number;
 }
+
+// Cuatrimestre de cursada del usuario (vale para todas sus formaciones). Fechas en AAAA-MM-DD.
+export interface Receso {
+  desde: string;
+  hasta: string;
+  descripcion: string | null;
+}
+
+export interface CuatrimestreCursada {
+  idCuatrimestre: number;
+  anio: number;
+  tipo: 'primero' | 'segundo';
+  nombre: string; // "2° cuatrimestre 2026"
+  fechaInicio: string;
+  fechaFin: string;
+  recesos: Receso[];
+  horarios: number; // cuántos horarios tiene cargados
+  cuadernos: number; // cuántos cuadernos (cursadas) tiene
+}

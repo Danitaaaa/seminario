@@ -260,3 +260,46 @@
   background: none;
 }
 
+
+/* Filtro por cuatrimestre */
+.cuadernos-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cuadernos-chip {
+  padding: 5px 14px;
+  border: 1px solid var(--color-frost-claro);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.cuadernos-chip:hover { border-color: var(--color-steel); }
+
+.cuadernos-chip--activo {
+  border-color: var(--color-storm);
+  background: var(--color-storm);
+  color: var(--color-surface);
+}
+
+/* Las otras veces que se cursó la materia, y las carreras para las que vale */
+.cuaderno-cursadas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--color-steel);
+}
+
+.cuaderno-cuenta-para {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-steel);
+}

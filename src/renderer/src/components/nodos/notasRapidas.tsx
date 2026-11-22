@@ -8,7 +8,14 @@ import { extraerMensajeError } from '../../pages/sesionesEstudio/utilidades';
 import '../../styles/notasRapidas.css';
 
 // Tonos pastel sacados de la paleta elegida (ver notasRapidas.css).
-const TONOS = ['Tono acento', 'Tono principal', 'Tono secundario', 'Tono claro'];
+// Cuatro tonos de la paleta elegida (acento y principal, cada uno suave y fuerte): nunca se repiten.
+const TONOS = ['Acento suave', 'Acento', 'Principal suave', 'Principal'];
+
+// La nota nueva toma el tono menos usado en la carpeta, así las notas no quedan todas iguales.
+const tonoSiguiente = (notas: NotaRapida[]) => {
+  const usos = TONOS.map((_, i) => notas.filter((n) => n.color === i).length);
+  return usos.indexOf(Math.min(...usos));
+};
 const MAXIMO = 300;
 const ANCHO_NOTA = 176;
 const PASO_TECLADO = 16;
@@ -198,7 +205,7 @@ export function NotasRapidas({ idNodo, creando, onTerminarCrear }: NotasRapidasP
         <EditorNota
           estilo={{ ...porDefecto(notas.length), zIndex: 3 }}
           textoInicial=""
-          colorInicial={0}
+          colorInicial={tonoSiguiente(notas)}
           onGuardar={(t, c) => void crear(t, c)}
           onCancelar={onTerminarCrear}
         />

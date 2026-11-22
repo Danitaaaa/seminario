@@ -9,10 +9,14 @@ import { EliminarMateria } from '../logicaPersistente/gestionDeMaterias/eliminar
 import { ListarMateriasUsuario, OpcionMateria } from '../logicaPersistente/gestionDeMaterias/listarMateriasUsuario';
 import { ListarCorrelativas } from '../logicaPersistente/gestionDeMaterias/listarCorrelativas';
 import { GuardarCorrelativas } from '../logicaPersistente/gestionDeMaterias/guardarCorrelativas';
-import { Correlativa, Formacion, MateriaFormacion } from '../logicaPersistente/gestionDeMaterias/entidades';
+import { ListarCuatrimestres } from '../logicaPersistente/gestionDeMaterias/listarCuatrimestres';
+import { GuardarCuatrimestre } from '../logicaPersistente/gestionDeMaterias/guardarCuatrimestre';
+import { EliminarCuatrimestre } from '../logicaPersistente/gestionDeMaterias/eliminarCuatrimestre';
+import { RecursarMateria } from '../logicaPersistente/gestionDeMaterias/recursarMateria';
+import { Correlativa, CuatrimestreCursada, Formacion, MateriaFormacion } from '../logicaPersistente/gestionDeMaterias/entidades';
 import {
-  CrearFormacionDTO, CrearMateriasDTO, FormacionDTO, GuardarCorrelativasDTO, LeerPlanDTO, MateriaDTO,
-  ModificarFormacionDTO, ModificarMateriaDTO, UsuarioDTO,
+  CrearFormacionDTO, CrearMateriasDTO, CuatrimestreDTO, FormacionDTO, GuardarCorrelativasDTO, GuardarCuatrimestreDTO,
+  LeerPlanDTO, MateriaDTO, ModificarFormacionDTO, ModificarMateriaDTO, RecursarDTO, UsuarioDTO,
 } from '../logicaPersistente/gestionDeMaterias/dto';
 import { leerPlanEstudios, MateriaLeida } from '../logicaNoPersistente/lectorPlanEstudios/leerPlanEstudios';
 
@@ -28,7 +32,11 @@ export class Materias {
     private readonly eliminarMateria: EliminarMateria,
     private readonly listarMateriasUsuario: ListarMateriasUsuario,
     private readonly listarCorrelativas: ListarCorrelativas,
-    private readonly guardarCorrelativas: GuardarCorrelativas
+    private readonly guardarCorrelativas: GuardarCorrelativas,
+    private readonly listarCuatrimestres: ListarCuatrimestres,
+    private readonly guardarCuatrimestre: GuardarCuatrimestre,
+    private readonly eliminarCuatrimestre: EliminarCuatrimestre,
+    private readonly recursarMateria: RecursarMateria
   ) {}
 
   formaciones(datos: UsuarioDTO): Promise<Formacion[]> { return this.listarFormaciones.ejecutar(datos); }
@@ -44,6 +52,12 @@ export class Materias {
 
   correlativas(datos: FormacionDTO): Promise<Correlativa[]> { return this.listarCorrelativas.ejecutar(datos); }
   editarCorrelativas(datos: GuardarCorrelativasDTO): Promise<Correlativa[]> { return this.guardarCorrelativas.ejecutar(datos); }
+
+  // Cuatrimestres de cursada del usuario (valen para todas sus formaciones).
+  cuatrimestres(datos: UsuarioDTO): Promise<CuatrimestreCursada[]> { return this.listarCuatrimestres.ejecutar(datos); }
+  guardarCuatrimestreCursada(datos: GuardarCuatrimestreDTO): Promise<CuatrimestreCursada> { return this.guardarCuatrimestre.ejecutar(datos); }
+  borrarCuatrimestre(datos: CuatrimestreDTO): Promise<void> { return this.eliminarCuatrimestre.ejecutar(datos); }
+  recursar(datos: RecursarDTO): Promise<{ idCuaderno: number }> { return this.recursarMateria.ejecutar(datos); }
 
   leerPlan(datos: LeerPlanDTO): MateriaLeida[] { return leerPlanEstudios(datos.texto); }
 }

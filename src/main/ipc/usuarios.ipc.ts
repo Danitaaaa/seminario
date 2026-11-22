@@ -19,13 +19,15 @@ import {
     verificarPasswordSchema,
 } from "../logicaPersistente/gestionDeUsuarios/dto";
 import type { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios/dto";
-import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/loginFacial";
-import { RegistrarRostro } from "../logicaPersistente/gestionDeUsuarios/registrarRostro";
 
 export interface HooksSesion {
     alIniciarSesion: (idUsuario: number, password: string | null) => void;
     alCerrarSesion: () => Promise<void>;
 }
+
+// Rostro: 128 números (el largo exacto y que sean finitos lo revisa el caso de uso, con su propio mensaje).
+const embeddingSchema = z.array(z.number(), { message: "El embedding recibido no es válido" });
+const usuarioIdSchema = z.number().int().positive();
 
 function validarDatos<T extends z.ZodType>(schema: T, datos: unknown): z.output<T> {
     const resultado = schema.safeParse(datos);
@@ -70,12 +72,12 @@ export function registerUsuariosIpc(usuarios: Usuarios, hooks: HooksSesion): voi
         usuarios.validarCodigo(validarDatos(validarCodigoSchema, datos))
     );
 
-    ipcMain.handle("usuarios:registrarRostro", (_evento, usuarioId: number, embedding: number[]) =>
-        new RegistrarRostro().ejecutar(usuarioId, embedding)
+    ipcMain.handle("usuarios:registrarRostro", (_evento, usuarioId: unknown, embedding: unknown) =>
+        usuarios.registrarRostro(validarDatos(usuarioIdSchema, usuarioId), validarDatos(embeddingSchema, embedding))
     );
 
-    ipcMain.handle("usuarios:loginFacial", async (_evento, embedding: number[]) => {
-        const r = await new LoginFacial().ejecutar(embedding);
+    ipcMain.handle("usuarios:loginFacial", async (_evento, embedding: unknown) => {
+        const r = await usuarios.loginFacial(validarDatos(embeddingSchema, embedding));
         // Sin contraseña: la sincronización solo funciona si esta PC ya tiene la clave guardada.
         if (r.exito) hooks.alIniciarSesion(r.usuarioId, null);
         return r;

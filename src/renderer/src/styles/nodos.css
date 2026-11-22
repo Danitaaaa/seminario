@@ -535,7 +535,8 @@
 .filtro-materia__chip--activo {
     border-color: var(--color-storm);
     background: var(--color-storm);
-    color: var(--color-white);
+    /* storm es oscuro en modo claro y claro en oscuro: el texto va con el color de la superficie. */
+    color: var(--color-surface);
 }
 
 .modal--editar-carpeta { width: 420px; }

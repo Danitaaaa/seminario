@@ -20,7 +20,7 @@ async function main(): Promise<void> {
     const guardarOriginal = UsuarioFacialRepositorio.prototype.guardarEmbedding;
     try {
         await caso(1, 'Registrar embedding facial inválido', 'Error: El embedding recibido no es válido', async () => {
-            const r = await new RegistrarRostro().ejecutar(12, [1, 2, 3]);
+            const r = await new RegistrarRostro(new UsuarioFacialRepositorio()).ejecutar(12, [1, 2, 3]);
             comprobar(!r.exito && r.mensaje === 'El embedding recibido no es válido', 'Se aceptó un embedding inválido');
             return `Error: ${r.mensaje}`;
         });
@@ -30,13 +30,13 @@ async function main(): Promise<void> {
                 idGuardado = id;
                 return true;
             };
-            const r = await new RegistrarRostro().ejecutar(42, Array(128).fill(0.25));
+            const r = await new RegistrarRostro(new UsuarioFacialRepositorio()).ejecutar(42, Array(128).fill(0.25));
             comprobar(r.exito && idGuardado === 42, 'No se guardó el embedding del usuario esperado');
             return r.mensaje;
         });
         await caso(3, 'Registrar rostro para usuario inexistente', 'Error: No se encontró el usuario', async () => {
             UsuarioFacialRepositorio.prototype.guardarEmbedding = async () => false;
-            const r = await new RegistrarRostro().ejecutar(999, Array(128).fill(0.25));
+            const r = await new RegistrarRostro(new UsuarioFacialRepositorio()).ejecutar(999, Array(128).fill(0.25));
             comprobar(!r.exito && r.mensaje === 'No se encontró el usuario', 'El resultado no coincide');
             return `Error: ${r.mensaje}`;
         });

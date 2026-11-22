@@ -1,4 +1,4 @@
-import { Archivo, AplicacionExterna } from './archivo';
+import { Archivo, AplicacionExterna, LadoDrive } from './archivo';
 import { Nodo, ResultadoImportacion } from './nodo';
 import type { NotaRapida } from './notasRapidas';
 import type { EstadoCalendarioGoogle } from './calendarioGoogle';
@@ -81,7 +81,8 @@ declare global {
       guardarArchivo: (datos: { id: number; contenido: Uint8Array }) => Promise<Archivo>;
       guardarDocx: (datos: { id: number; html: string }) => Promise<Archivo>;
       abrirExterno: (datos: { id: number }) => Promise<void>;
-      abrirEnDrive: (datos: { id: number }) => Promise<void>;
+      abrirEnDrive: (datos: { id: number; conservar?: LadoDrive }) => Promise<'abierto' | 'conflicto'>;
+      revisarDrive: (datos: { id: number; conservar?: LadoDrive }) => Promise<'nada' | 'traido' | 'conflicto'>;
       traerVersionDrive: (datos: { id: number }) => Promise<void>;
       cancelarDrive: () => Promise<void>;
       aplicacionesDisponibles: (datos: { id: number }) => Promise<AplicacionExterna[]>;
@@ -140,6 +141,7 @@ declare global {
       listarHorarios: (datos: ListarHorariosInput) => Promise<HorarioCursado[]>;
       modificarHorario: (datos: ModificarHorarioInput) => Promise<HorarioCursado>;
       eliminarHorario: (datos: { id: number }) => Promise<{ ok: boolean }>;
+      asignarCuatrimestreHorarios: (datos: { usuarioId: number; idCuatrimestre: number }) => Promise<{ asignados: number }>;
 
       // Pantalla de inicio
       obtenerFondoInicio: (datos: { id: number }) => Promise<string | null>;

@@ -2,8 +2,9 @@ import { ipcMain } from 'electron';
 import type { ZodType } from 'zod';
 import { Materias } from '../administracionDePersistencia/materias';
 import {
-  crearFormacionSchema, crearMateriasSchema, formacionSchema, guardarCorrelativasSchema, leerPlanSchema, materiaSchema,
-  modificarFormacionSchema, modificarMateriaSchema, usuarioSchema,
+  crearFormacionSchema, crearMateriasSchema, cuatrimestreSchema, formacionSchema, guardarCorrelativasSchema,
+  guardarCuatrimestreSchema, leerPlanSchema, materiaSchema, modificarFormacionSchema, modificarMateriaSchema,
+  recursarSchema, usuarioSchema,
 } from '../logicaPersistente/gestionDeMaterias/dto';
 
 function validar<T>(schema: ZodType<T>, datos: unknown): T {
@@ -33,6 +34,14 @@ export function registerMateriasIpc(materias: Materias): void {
 
   ipcMain.handle('materias:correlativas', (_e, d: unknown) => materias.correlativas(validar(formacionSchema, d)));
   ipcMain.handle('materias:guardarCorrelativas', (_e, d: unknown) => materias.editarCorrelativas(validar(guardarCorrelativasSchema, d)));
+
+  ipcMain.handle('materias:cuatrimestres', (_e, d: unknown) => materias.cuatrimestres(validar(usuarioSchema, d)));
+  ipcMain.handle('materias:guardarCuatrimestre', (_e, d: unknown) => materias.guardarCuatrimestreCursada(validar(guardarCuatrimestreSchema, d)));
+  ipcMain.handle('materias:eliminarCuatrimestre', async (_e, d: unknown) => {
+    await materias.borrarCuatrimestre(validar(cuatrimestreSchema, d));
+    return { ok: true };
+  });
+  ipcMain.handle('materias:recursar', (_e, d: unknown) => materias.recursar(validar(recursarSchema, d)));
 
   ipcMain.handle('materias:leerPlan', (_e, d: unknown) => materias.leerPlan(validar(leerPlanSchema, d)));
 }

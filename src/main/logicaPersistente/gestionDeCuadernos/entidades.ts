@@ -21,11 +21,21 @@ export interface MateriaDelCuaderno {
   estado: string; // estado de la materia (cursando, aprobada...)
 }
 
+// Cuatrimestre de la cursada del cuaderno.
+export interface CuatrimestreDelCuaderno {
+  idCuatrimestre: number;
+  nombre: string; // "2° cuatrimestre 2026"
+  corto: string; // "2C 2026"
+  fechaInicio: string;
+  fechaFin: string;
+}
+
 // El cuaderno lo crea el usuario y le asocia una materia; muestra lo que tiene esa materia.
 export interface ResumenCuaderno {
   idCuaderno: number;
   nombre: string;
   materia: MateriaDelCuaderno;
+  cuatrimestre: CuatrimestreDelCuaderno | null; // null = cuaderno de antes de los cuatrimestres
   archivos: number;
   flashcards: number;
   notasTotal: number;
@@ -44,4 +54,8 @@ export interface Cuaderno {
   // Cuestionarios, mapas mentales y resúmenes con IA asociados a la materia.
   materialesIA: { idMaterialIA: number; tipo: 'resumen' | 'cuestionario' | 'mapaMental'; titulo: string }[];
   notas: Nota[];
+  // Todas las veces que se cursó la materia (incluida esta), de la más nueva a la más vieja.
+  cursadas: { idCuaderno: number; cuatrimestre: string | null; actual: boolean }[];
+  // Materias de otras formaciones para las que también cuenta esta cursada.
+  cuentaPara: { idMateria: number; nombre: string; formacion: string }[];
 }

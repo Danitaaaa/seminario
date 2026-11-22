@@ -225,3 +225,7 @@
     grid-template-columns: 1fr;
   }
 }
+
+:root[data-modo="oscuro"] .perfil__boton-peligro--confirmar {
+  color: var(--color-error-bg);
+}

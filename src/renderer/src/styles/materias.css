@@ -693,3 +693,54 @@
   font: inherit;
   font-weight: 700;
 }
+
+/* Recursar una materia libre */
+.materias-tarjeta__pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.materias-recursar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.materias-recursar:hover { border-color: var(--color-primary); }
+
+/* Mis cuatrimestres */
+.cuatris-modal { max-width: 640px; }
+.cuatris-lista { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.cuatris-fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border);
+}
+.cuatris-fila > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.cuatris-fila span { font-size: 0.875rem; color: var(--color-text-light); }
+.cuatris-estado { padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; white-space: nowrap; }
+.cuatris-estado--actual { background: color-mix(in srgb, var(--color-success) 18%, transparent); color: var(--color-text); }
+.cuatris-estado--proximo { background: var(--color-frost-claro); color: var(--color-text); }
+.cuatris-estado--terminado { background: var(--color-background); color: var(--color-text-light); }
+.cuatris-confirmar { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--color-error); border-radius: 10px; }
+.cuatris-form { display: flex; flex-direction: column; gap: 14px; padding-top: 14px; border-top: 1px solid var(--color-border); }
+.cuatris-form h3 { margin: 0; font-size: 1.125rem; }
+.cuatris-receso { display: grid; grid-template-columns: 150px 150px minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+.cuatris-receso input {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.cuatris-agregar { align-self: flex-start; }
+.cuatris-check { display: flex; align-items: center; gap: 8px; font-size: 0.9375rem; }

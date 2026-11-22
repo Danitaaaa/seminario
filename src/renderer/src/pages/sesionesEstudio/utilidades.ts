@@ -17,8 +17,8 @@ export const ETIQUETA_ESTADO: Record<EstadoSesionEstudio, string> = {
 // Pestañas del panel Pomodoro (como en la referencia de diseño).
 export const ETIQUETA_FASE: Record<FasePomodoro, string> = {
   pomodoro: 'Pomodoro',
-  descanso_corto: 'Short Break',
-  descanso_largo: 'Long Break',
+  descanso_corto: 'Descanso corto',
+  descanso_largo: 'Descanso largo',
 };
 
 // Campos por los que se puede ordenar la lista de sesiones.

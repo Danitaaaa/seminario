@@ -766,3 +766,13 @@
   background: var(--color-primary);
   transition: width 0.3s;
 }
+
+/* En oscuro, primary-light es muy claro para el texto claro: la burbuja usa el tono oscuro del primario. */
+:root[data-modo="oscuro"] .chat-ia__burbuja--usuario {
+  background: var(--color-primary-dark);
+}
+
+:root[data-modo="oscuro"] .chat-ia__microfono--grabando,
+:root[data-modo="oscuro"] .chat-ia__microfono--grabando:hover:not(:disabled) {
+  color: var(--color-error-bg);
+}

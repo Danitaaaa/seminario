@@ -12,8 +12,10 @@ export class ListarHorarios {
   // lista completa del usuario una sola vez.
   async ejecutar(datos: ListarHorariosDTO): Promise<HorarioCursado[]> {
     const filas = await this.persistencia.ejecutar(
-      `SELECT * FROM horarios_cursado WHERE usuario_id = $1 ORDER BY dia_semana ASC, hora_inicio ASC`,
-      [datos.usuarioId]
+      `SELECT * FROM horarios_cursado
+        WHERE usuario_id = $1 AND ($2::int IS NULL OR id_cuatrimestre = $2 OR id_cuatrimestre IS NULL)
+        ORDER BY dia_semana ASC, hora_inicio ASC`,
+      [datos.usuarioId, datos.idCuatrimestre ?? null]
     );
     return filas.map(materializarHorario);
   }

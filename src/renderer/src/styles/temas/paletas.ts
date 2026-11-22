@@ -47,7 +47,7 @@ export const PALETAS: Paleta[] = [
 
   paleta("grafito", "Grafito",
     { lateral: "#2E3138", lateralTexto: "#FFFFFF", activo: "#1C1E23", fondo: "#F7F7F8", superficie: "#FFFFFF", suave: "#E6E7EA", borde: "#E0E1E5", primario: "#3A3F4A", primarioClaro: "#8A909C", acento: "#4FA3C3", texto: "#1A1C20", textoSecundario: "#5C616B" },
-    { lateral: "#0F1012", lateralTexto: "#E6E7EA", activo: "#2A2D33", fondo: "#121316", superficie: "#1A1C20", suave: "#23262B", borde: "#33363D", primario: "#4A505C", primarioClaro: "#6DB8D6", acento: "#6DB8D6", texto: "#ECEDEF", textoSecundario: "#A4A8B0" }),
+    { lateral: "#0F1012", lateralTexto: "#E6E7EA", activo: "#2A2D33", fondo: "#121316", superficie: "#1A1C20", suave: "#23262B", borde: "#33363D", primario: "#69717F", primarioClaro: "#6DB8D6", acento: "#6DB8D6", texto: "#ECEDEF", textoSecundario: "#A4A8B0" }),
 ];
 
 export const PALETA_PREDETERMINADA = "syntra";

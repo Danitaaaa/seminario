@@ -14,6 +14,19 @@ export const idGoogle = (clave: string) => `sntr${clave}`;
 
 const fechaLocal = (f: Date) => `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`;
 
+// Formatos de RFC 5545 para la repetición: UNTIL en UTC y EXDATE en hora local de la zona.
+const utcBasico = (f: Date) => f.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+const dosCifras = (n: number) => String(n).padStart(2, '0');
+const localBasico = (f: Date) =>
+  `${f.getFullYear()}${dosCifras(f.getMonth() + 1)}${dosCifras(f.getDate())}T${dosCifras(f.getHours())}${dosCifras(f.getMinutes())}00`;
+
+// Clases: cada semana hasta el fin de la cursada, sin los días de feriados y recesos.
+function repeticion(item: ItemCalendario, zonaHoraria: string): string[] {
+  const regla = `RRULE:FREQ=WEEKLY${item.hasta ? `;UNTIL=${utcBasico(item.hasta)}` : ''}`;
+  if (!item.excepciones?.length) return [regla];
+  return [regla, `EXDATE;TZID=${zonaHoraria}:${item.excepciones.map(localBasico).join(',')}`];
+}
+
 // Un elemento de Syntra como evento de Google. La huella resume el contenido: si no cambió, no se vuelve a subir.
 export function aEventoGoogle(item: ItemCalendario, zonaHoraria: string): Record<string, unknown> {
   const cuerpo: Record<string, unknown> = {
@@ -23,7 +36,7 @@ export function aEventoGoogle(item: ItemCalendario, zonaHoraria: string): Record
     ...(item.color ? { colorId: item.color } : {}),
     start: item.todoElDia ? { date: fechaLocal(item.inicio) } : { dateTime: item.inicio.toISOString(), timeZone: zonaHoraria },
     end: item.todoElDia ? { date: fechaLocal(item.fin) } : { dateTime: item.fin.toISOString(), timeZone: zonaHoraria },
-    ...(item.semanal ? { recurrence: ['RRULE:FREQ=WEEKLY'] } : {}),
+    ...(item.semanal ? { recurrence: repeticion(item, zonaHoraria) } : {}),
     // Sin recordatorios de Google: los avisos los da Syntra (si no, llegan dos veces).
     reminders: { useDefault: false, overrides: [] },
   };

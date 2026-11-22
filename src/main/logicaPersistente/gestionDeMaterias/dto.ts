@@ -71,3 +71,40 @@ export const leerPlanSchema = z.object({
   texto: z.string().trim().min(1, 'Pegá el texto del plan.').max(50000, 'El texto es demasiado largo.'),
 });
 export type LeerPlanDTO = z.infer<typeof leerPlanSchema>;
+
+// --- Cuatrimestres de cursada ---
+const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha no es válida.');
+
+const recesoSchema = z.object({
+  desde: fecha,
+  hasta: fecha,
+  descripcion: textoOpcional(60),
+}).refine((r) => r.hasta >= r.desde, { message: 'El receso termina antes de empezar.', path: ['hasta'] });
+
+export const guardarCuatrimestreSchema = z.object({
+  usuarioId: id,
+  idCuatrimestre: id.optional(), // sin id se crea uno nuevo
+  anio: z.number().int().min(2000, 'El año no es válido.').max(2100, 'El año no es válido.'),
+  tipo: z.enum(['primero', 'segundo'], { error: 'Elegí el cuatrimestre.' }),
+  fechaInicio: fecha,
+  fechaFin: fecha,
+  recesos: z.array(recesoSchema).max(30).default([]),
+  // Al crear: copia los horarios de otro cuatrimestre (por ejemplo, el anterior).
+  copiarHorariosDe: id.optional(),
+}).refine((c) => c.fechaFin > c.fechaInicio, { message: 'La cursada termina antes de empezar.', path: ['fechaFin'] })
+  .refine((c) => c.recesos.every((r) => r.desde >= c.fechaInicio && r.hasta <= c.fechaFin), {
+    message: 'Los feriados y recesos tienen que estar dentro de la cursada.', path: ['recesos'],
+  });
+export type GuardarCuatrimestreDTO = z.infer<typeof guardarCuatrimestreSchema>;
+
+export const cuatrimestreSchema = z.object({ usuarioId: id, idCuatrimestre: id });
+export type CuatrimestreDTO = z.infer<typeof cuatrimestreSchema>;
+
+// Volver a cursar una materia libre: nuevo cuaderno en el cuatrimestre elegido.
+export const recursarSchema = z.object({
+  usuarioId: id,
+  idMateria: id,
+  idCuatrimestre: id,
+  copiarHorarios: z.boolean().default(true), // copia los horarios de la última cursada de esa materia
+});
+export type RecursarDTO = z.infer<typeof recursarSchema>;

@@ -10,7 +10,7 @@ import { ModalNota } from '../../components/cuadernos/modalNota';
 import { ModalCuaderno } from '../../components/cuadernos/modalCuaderno';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
-import type { Cuaderno, DatosNota, Nota } from '../../types/cuadernos';
+import type { Cuaderno, DatosCuaderno, DatosNota, Nota } from '../../types/cuadernos';
 import type { Deck } from '../../types/flashcards';
 import type { Cuatrimestre, EstadoMateria } from '../../types/materias';
 import { NOMBRE_ESTADO, cuatrimestreCorto, mensajeDeError, nombreAnio } from '../materias/utilidadesMaterias';
@@ -130,7 +130,7 @@ export function CuadernoPage() {
     }
   }
 
-  async function guardarCuaderno(datos: { nombre: string; idMateria: number }): Promise<boolean> {
+  async function guardarCuaderno(datos: DatosCuaderno): Promise<boolean> {
     try {
       await window.api.modificarCuaderno({ usuarioId, idCuaderno, ...datos });
       avisos.exito('Se guardaron los cambios.');
@@ -177,10 +177,30 @@ export function CuadernoPage() {
             <header className="cuadernos-encabezado">
               <div>
                 <span className="materias-detalle">
-                  {[materia.nombre !== r.nombre ? materia.nombre : null, materia.anio && nombreAnio(materia.anio), cuatrimestreCorto(materia.cuatrimestre as Cuatrimestre | null),
-                    NOMBRE_ESTADO[materia.estado as EstadoMateria]].filter(Boolean).join(' · ')}
+                  {[materia.nombre !== r.nombre ? materia.nombre : null, materia.anio && nombreAnio(materia.anio),
+                    r.cuatrimestre ? r.cuatrimestre.corto : cuatrimestreCorto(materia.cuatrimestre as Cuatrimestre | null),
+                    // El estado de la materia es el de la cursada más nueva; las anteriores ya terminaron.
+                    cuaderno.cursadas.length > 1 && !cuaderno.cursadas[0].actual ? 'Cursada anterior' : NOMBRE_ESTADO[materia.estado as EstadoMateria]]
+                    .filter(Boolean).join(' · ')}
                 </span>
                 <h1>{r.nombre}</h1>
+                {cuaderno.cursadas.length > 1 && (
+                  <div className="cuaderno-cursadas" role="group" aria-label="Otras veces que cursaste la materia">
+                    <span>Cursadas:</span>
+                    {cuaderno.cursadas.map((c) => (
+                      <button key={c.idCuaderno} type="button" aria-current={c.actual ? 'page' : undefined}
+                        className={`cuadernos-chip${c.actual ? ' cuadernos-chip--activo' : ''}`}
+                        onClick={() => !c.actual && navigate(`/cuadernos/${c.idCuaderno}`)}>
+                        {c.cuatrimestre ?? 'Sin cuatrimestre'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {cuaderno.cuentaPara.length > 0 && (
+                  <p className="cuaderno-cuenta-para">
+                    Cuenta para: {[`${materia.nombre} · ${materia.formacion}`, ...cuaderno.cuentaPara.map((m) => `${m.nombre} · ${m.formacion}`)].join(' y ')}
+                  </p>
+                )}
               </div>
               <div className="materias-botones">
                 <Boton variante="contorno" onClick={() => setEditandoCuaderno(true)}><Pencil size={16} /> Editar</Boton>
@@ -310,6 +330,7 @@ export function CuadernoPage() {
       {editandoCuaderno && r && (
         <ModalCuaderno
           cuaderno={r}
+          cuentaPara={cuaderno?.cuentaPara.map((m) => m.idMateria)}
           usadas={[]}
           onGuardar={guardarCuaderno}
           onEliminar={() => { setEditandoCuaderno(false); setConfirmarBorrado(true); }}

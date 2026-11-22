@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { GraduationCap, Plus, Upload } from 'lucide-react';
+import { CalendarRange, GraduationCap, Plus, Upload } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
@@ -9,10 +9,13 @@ import { ProgresoFormacion } from '../../components/materias/progresoFormacion';
 import { VistaTablero } from '../../components/materias/vistaTablero';
 import { VistaPorAnio } from '../../components/materias/vistaPorAnio';
 import { VistaCorrelativas } from '../../components/materias/vistaCorrelativas';
+import { ModalCuatrimestres } from '../../components/materias/modalCuatrimestres';
+import { ModalRecursar } from '../../components/materias/modalRecursar';
+import { cuatrimestreActual } from '../../utils/cuatrimestres';
 import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { usarAvisos } from '../../hooks/usarAvisos';
 import { obtenerUsuarioId } from '../../../lib/sesion';
-import type { Correlativa, EstadoMateria, Formacion, MateriaFormacion } from '../../types/materias';
+import type { Correlativa, CuatrimestreCursada, EstadoMateria, Formacion, MateriaFormacion } from '../../types/materias';
 import { NOMBRE_TIPO, ORGANIZACIONES, mensajeDeError, textoDuracion } from './utilidadesMaterias';
 import '../../styles/materias.css';
 
@@ -38,9 +41,24 @@ export function MateriasPage() {
   const [editando, setEditando] = useState<MateriaFormacion | 'nueva' | null>(parametros.get('nueva') ? 'nueva' : null);
   const [porEliminar, setPorEliminar] = useState<MateriaFormacion | Formacion | null>(null);
   const [error, setError] = useState('');
+  const [cuatrimestres, setCuatrimestres] = useState<CuatrimestreCursada[]>([]);
+  const [verCuatrimestres, setVerCuatrimestres] = useState(parametros.get('cuatrimestres') !== null);
+  const [recursando, setRecursando] = useState<MateriaFormacion | null>(null);
 
   const idElegida = Number(parametros.get('f')) || formaciones?.[0]?.idFormacion || 0;
   const formacion = formaciones?.find((f) => f.idFormacion === idElegida) ?? formaciones?.[0] ?? null;
+
+  const cargarCuatrimestres = () =>
+    window.api.listarCuatrimestres({ usuarioId }).then(setCuatrimestres).catch(() => setCuatrimestres([]));
+  useEffect(() => { void cargarCuatrimestres(); }, []);
+  const cuatriActual = cuatrimestreActual(cuatrimestres);
+
+  function recursada(idCuaderno: number): void {
+    setRecursando(null);
+    setEditando(null);
+    avisos.exito('Listo: la materia está en curso y tiene un cuaderno nuevo.');
+    navigate(`/cuadernos/${idCuaderno}`);
+  }
 
   useEffect(() => {
     window.api.listarFormaciones({ usuarioId })
@@ -159,6 +177,7 @@ export function MateriasPage() {
                 </button>
               </div>
               <div className="materias-botones">
+                <Boton variante="contorno" onClick={() => setVerCuatrimestres(true)}><CalendarRange size={16} /> Cuatrimestres</Boton>
                 <Boton variante="contorno" onClick={() => navigate(`/materias/plan/${formacion.idFormacion}`)}><Upload size={16} /> Cargar plan</Boton>
                 <Boton onClick={() => setEditando('nueva')}><Plus size={16} /> Nueva materia</Boton>
               </div>
@@ -170,7 +189,7 @@ export function MateriasPage() {
                 <h2 className="materias-cabecera__nombre">{formacion.nombre}</h2>
                 <span className="materias-detalle">
                   {[formacion.institucion, formacion.duracionAnios && textoDuracion(formacion.duracionAnios), organizacion,
-                    formacion.anioActual && `cursando ${formacion.anioActual}° año`].filter(Boolean).join(' · ')}
+                    formacion.anioActual && `cursando ${formacion.anioActual}° año`, cuatriActual?.nombre].filter(Boolean).join(' · ')}
                 </span>
               </div>
               <div className="materias-resumen__links">
@@ -213,7 +232,7 @@ export function MateriasPage() {
                     </div>
                     {vistaPlan === 'estado'
                       ? <VistaTablero materias={materias} onEditar={setEditando} onCambiarEstado={(m, e) => void cambiarEstado(m, e)} />
-                      : <VistaPorAnio materias={materias} onEditar={setEditando} onEliminar={setPorEliminar} />}
+                      : <VistaPorAnio materias={materias} onEditar={setEditando} onEliminar={setPorEliminar} onRecursar={setRecursando} />}
                   </>
                 )}
                 {vista === 'correlativas' && <VistaCorrelativas materias={materias} correlativas={correlativas} onGuardar={guardarCorrelativas} />}
@@ -231,7 +250,18 @@ export function MateriasPage() {
           materia={editando === 'nueva' ? undefined : editando}
           onCerrar={() => setEditando(null)}
           onGuardada={guardada}
+          onRecursar={setRecursando}
         />
+      )}
+
+      {verCuatrimestres && (
+        <ModalCuatrimestres usuarioId={usuarioId} onCerrar={() => setVerCuatrimestres(false)} onCambio={() => void cargarCuatrimestres()}
+          editarId={Number(parametros.get('cuatrimestres')) || undefined} />
+      )}
+
+      {recursando && (
+        <ModalRecursar usuarioId={usuarioId} materia={recursando} onCerrar={() => setRecursando(null)} onRecursada={recursada}
+          onCrearCuatrimestre={() => { setRecursando(null); setVerCuatrimestres(true); }} />
       )}
 
       {porEliminar && (

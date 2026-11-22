@@ -34,6 +34,15 @@ import { BuscarNodosPorMateria } from './logicaPersistente/gestionMaterialEstudi
 import { CrearArchivo } from './logicaPersistente/gestionMaterialEstudio/crearArchivo';
 import { Archivos } from './administracionDePersistencia/archivos';
 import { registerArchivosIpc } from './ipc/archivos.ipc';
+import { ListarCuatrimestres } from './logicaPersistente/gestionDeMaterias/listarCuatrimestres';
+import { GuardarCuatrimestre } from './logicaPersistente/gestionDeMaterias/guardarCuatrimestre';
+import { EliminarCuatrimestre } from './logicaPersistente/gestionDeMaterias/eliminarCuatrimestre';
+import { RecursarMateria } from './logicaPersistente/gestionDeMaterias/recursarMateria';
+import { AsignarCuatrimestre } from './logicaPersistente/gestionDeHorarios/asignarCuatrimestre';
+import { ServicioArchivos } from './logicaNoPersistente/documentos/servicioArchivos';
+import { LoginFacial } from './logicaPersistente/gestionDeUsuarios/loginFacial';
+import { RegistrarRostro } from './logicaPersistente/gestionDeUsuarios/registrarRostro';
+import { UsuarioFacialRepositorio } from './persistencia/usuarioFacialRepositorio';
 import { ModificarArchivo } from './logicaPersistente/gestionMaterialEstudio/modificarArchivo';
 import { EliminarArchivo } from './logicaPersistente/gestionMaterialEstudio/eliminarArchivo';
 import { MoverArchivos } from './logicaPersistente/gestionMaterialEstudio/moverArchivos';
@@ -164,9 +173,9 @@ import { CambiarBienestar, ObtenerBienestar } from './logicaPersistente/gestionD
 import { registerBienestarIpc } from './ipc/bienestar.ipc';
 import { NotasRapidas } from './administracionDePersistencia/notasRapidas';
 import { ListarNotas } from './logicaPersistente/gestionDeNotasRapidas/listarNotas';
-import { CrearNota } from './logicaPersistente/gestionDeNotasRapidas/crearNota';
-import { ModificarNota } from './logicaPersistente/gestionDeNotasRapidas/modificarNota';
-import { EliminarNota } from './logicaPersistente/gestionDeNotasRapidas/eliminarNota';
+import { CrearNota as CrearNotaRapida } from './logicaPersistente/gestionDeNotasRapidas/crearNota';
+import { ModificarNota as ModificarNotaRapida } from './logicaPersistente/gestionDeNotasRapidas/modificarNota';
+import { EliminarNota as EliminarNotaRapida } from './logicaPersistente/gestionDeNotasRapidas/eliminarNota';
 import { registerNotasRapidasIpc } from './ipc/notasRapidas.ipc';
 import { AgendaParaIA } from './logicaPersistente/gestionDeChatIA/agendaParaIA';
 import { CalendarioGoogle } from './administracionDePersistencia/calendarioGoogle';
@@ -425,6 +434,8 @@ function wireDependencies(): ProcesoSesionEstudio {
       if (!oauth.cuenta()) await oauth.obtenerAccessToken().catch(() => {});
       await shell.openExternal(conCuenta(url, oauth.cuenta()));
     },
+    // Para revisar cambios al abrir un archivo en Syntra: nunca abre el inicio de sesión.
+    new DriveCliente(() => oauth.obtenerAccessToken(false)),
   );
   
 
@@ -436,14 +447,18 @@ function wireDependencies(): ProcesoSesionEstudio {
   const validarCodigo = new ValidarCodigo(persistencia);
   const cambiarPassword = new CambiarPassword(persistencia);
   const verificarPassword = new VerificarPassword(persistencia);
+  // Rostros del login facial (lo usan iniciar sesión con la cámara y registrar el rostro).
+  const usuarioFacial = new UsuarioFacialRepositorio();
+  const registrarRostro = new RegistrarRostro(usuarioFacial);
   const usuarios = new Usuarios(
     iniciarSesion, registrarUsuario, verificarMail, recuperarPassword, validarCodigo, cambiarPassword,
     new ObtenerPerfil(persistencia), new ModificarPerfil(persistencia),
     new CambiarPasswordActual(verificarPassword, persistencia), new EliminarUsuario(persistencia),
     new ObtenerFotoPerfil(persistencia),
     new ActualizarFotoPerfil(persistencia, path.join(app.getPath('userData'), 'fotosPerfil')),
-    verificarPassword, new ActualizarRostro(verificarPassword), new ElegirAvatar(persistencia),
-    new ElegirColorAvatar(persistencia)
+    verificarPassword, new ActualizarRostro(verificarPassword, registrarRostro), new ElegirAvatar(persistencia),
+    new ElegirColorAvatar(persistencia),
+    new LoginFacial(usuarioFacial), registrarRostro
   );
 
   // Gestion de eventos
@@ -464,18 +479,22 @@ function wireDependencies(): ProcesoSesionEstudio {
   // Gestion de horarios
   const horarios = new Horarios(
     new CrearHorario(persistencia), new ListarHorarios(persistencia),
-    new ModificarHorario(persistencia), new EliminarHorario(persistencia)
+    new ModificarHorario(persistencia), new EliminarHorario(persistencia),
+    new AsignarCuatrimestre(persistencia)
   );
   registerHorariosIpc(horarios);
 
   // Gestion de materias
+  const listarCuatrimestres = new ListarCuatrimestres(persistencia);
   const materias = new Materias(
     new ListarFormaciones(persistencia), new CrearFormacion(persistencia),
     new ModificarFormacion(persistencia), new EliminarFormacion(persistencia),
     new ListarMaterias(persistencia), new CrearMaterias(persistencia),
     new ModificarMateria(persistencia), new EliminarMateria(persistencia),
     new ListarMateriasUsuario(persistencia),
-    new ListarCorrelativas(persistencia), new GuardarCorrelativas(persistencia)
+    new ListarCorrelativas(persistencia), new GuardarCorrelativas(persistencia),
+    listarCuatrimestres, new GuardarCuatrimestre(persistencia, listarCuatrimestres),
+    new EliminarCuatrimestre(persistencia), new RecursarMateria(persistencia)
   );
   registerMateriasIpc(materias);
 
@@ -524,7 +543,7 @@ function wireDependencies(): ProcesoSesionEstudio {
 
   // Notas rápidas (post-its) de las carpetas de Material y de los proyectos.
   registerNotasRapidasIpc(new NotasRapidas(
-    new ListarNotas(persistencia), new CrearNota(persistencia), new ModificarNota(persistencia), new EliminarNota(persistencia)
+    new ListarNotas(persistencia), new CrearNotaRapida(persistencia), new ModificarNotaRapida(persistencia), new EliminarNotaRapida(persistencia)
   ));
   const vigia = new VigiaNotificaciones(
     {
@@ -702,9 +721,12 @@ function wireDependencies(): ProcesoSesionEstudio {
     importarDesdeMaterial: new ImportarContenidoDesdeMaterial(persistencia),
   });
   // Se registra acá porque al guardar un Word desde Material avisa a Sesión de estudio.
-  registerArchivosIpc(archivos, almacenamiento, nodos, (idArchivo, html) =>
-    sesionesEstudio.importarDesdeMaterial(idArchivo, html)
+  // Lo que pasa en el disco con los archivos (copias, Word, descargas). Al guardar un Word desde Material avisa a Sesión de estudio.
+  const servicioArchivos = new ServicioArchivos(
+    archivos, nodos, almacenamiento, path.join(app.getPath('userData'), 'material'),
+    (idArchivo, html) => sesionesEstudio.importarDesdeMaterial(idArchivo, html),
   );
+  registerArchivosIpc(archivos, servicioArchivos);
   // Lo mismo al traer la versión de Google Drive: si es el Word de una sesión, la sesión se actualiza.
   registerDriveIpc(driveServicio, () => oauth.cancelar(), async (idArchivo) => {
     const archivo = await archivos.obtener({ id: idArchivo });
@@ -818,7 +840,8 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      // La ventana corre aislada del sistema: el preload solo usa ipcRenderer, contextBridge y webUtils, que funcionan así.
+      sandbox: true,
       // Para que el sonido de los avisos pueda reproducirse sin que se haya hecho clic.
       autoplayPolicy: 'no-user-gesture-required',
     },

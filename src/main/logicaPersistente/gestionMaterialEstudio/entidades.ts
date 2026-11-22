@@ -22,6 +22,9 @@ export interface Archivo {
   idPadre: number;
   // ID de la copia en Google Drive; null si el archivo nunca se subió.
   driveId: string | null;
+  // Última sincronización con Drive: huella del archivo de Syntra y fecha de Drive en ese momento.
+  driveHuella: string | null;
+  driveModificado: string | null;
 }
 
 

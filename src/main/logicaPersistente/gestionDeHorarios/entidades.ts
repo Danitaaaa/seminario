@@ -7,4 +7,6 @@ export interface HorarioCursado {
   horaFin: string; // "HH:MM", ej "14:30" — tiene que ser posterior a horaInicio
   titulo: string; // nombre de la materia
   tono: number | null; // tono de la paleta (0-5); null = automático
+  idCuatrimestre: number | null; // null = cargado antes de los cuatrimestres
+  idMateria: number | null; // null = materia escrita a mano
 }

@@ -4,6 +4,7 @@ import type { Persistencia } from '../../persistencia/persistencia';
 import { VerificarPassword } from '../../logicaPersistente/gestionDeUsuarios/verificarPassword';
 import { ActualizarRostro } from '../../logicaPersistente/gestionDeUsuarios/actualizarRostro';
 import { RegistrarRostro } from '../../logicaPersistente/gestionDeUsuarios/registrarRostro';
+import { UsuarioFacialRepositorio } from '../../persistencia/usuarioFacialRepositorio';
 import { actualizarRostroSchema } from '../../logicaPersistente/gestionDeUsuarios/dto';
 
 
@@ -84,7 +85,7 @@ async function main(): Promise<void> {
 
     await caso(4, 'Actualizar rostro con contraseña incorrecta', 'Error y el rostro no se guarda', async () => {
         llamadasRostro.length = 0;
-        const actualizar = new ActualizarRostro(new VerificarPassword(await crearPersistencia()));
+        const actualizar = new ActualizarRostro(new VerificarPassword(await crearPersistencia()), new RegistrarRostro(new UsuarioFacialRepositorio()));
         await esperarError(
             () => actualizar.ejecutar({ id: 12, password: 'Otra456', embedding: embeddingValido }),
             'La contraseña es incorrecta.',
@@ -96,7 +97,7 @@ async function main(): Promise<void> {
 
     await caso(5, 'Actualizar rostro con contraseña correcta', 'Rostro registrado correctamente', async () => {
         llamadasRostro.length = 0;
-        const actualizar = new ActualizarRostro(new VerificarPassword(await crearPersistencia()));
+        const actualizar = new ActualizarRostro(new VerificarPassword(await crearPersistencia()), new RegistrarRostro(new UsuarioFacialRepositorio()));
         const resultado = await actualizar.ejecutar({ id: 12, password: 'Clave123', embedding: embeddingValido });
         comprobar(llamadasRostro.length === 1, 'No se guardó el rostro');
         comprobar(llamadasRostro[0].usuarioId === 12, 'El id de usuario no coincide');

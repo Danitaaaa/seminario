@@ -36,5 +36,7 @@ export function materializarArchivo(fila: any): Archivo {
     ultimaFechaModificacion: fila.ultima_fecha_modificacion,
     idPadre: fila.id_padre,
     driveId: fila.drive_id ?? null,
+    driveHuella: fila.drive_huella ?? null,
+    driveModificado: fila.drive_modificado ?? null,
   };
 }

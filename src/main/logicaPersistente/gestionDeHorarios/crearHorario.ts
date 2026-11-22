@@ -16,8 +16,9 @@ export class CrearHorario {
     const solapados = await this.persistencia.ejecutar(
       `SELECT titulo, hora_inicio, hora_fin FROM horarios_cursado
        WHERE usuario_id = $1 AND dia_semana = $2
-         AND hora_inicio < $4 AND hora_fin > $3`,
-      [datos.usuarioId, datos.diaSemana, datos.horaInicio, datos.horaFin]
+         AND hora_inicio < $4 AND hora_fin > $3
+         AND (id_cuatrimestre IS NOT DISTINCT FROM $5::int OR id_cuatrimestre IS NULL)`,
+      [datos.usuarioId, datos.diaSemana, datos.horaInicio, datos.horaFin, datos.idCuatrimestre]
     );
 
     if (solapados.length > 0) {
@@ -28,10 +29,15 @@ export class CrearHorario {
     }
 
     const filas = await this.persistencia.ejecutar(
-      `INSERT INTO horarios_cursado (usuario_id, dia_semana, hora_inicio, hora_fin, titulo, tono)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [datos.usuarioId, datos.diaSemana, datos.horaInicio, datos.horaFin, datos.titulo, datos.tono ?? null]
+      `INSERT INTO horarios_cursado (usuario_id, dia_semana, hora_inicio, hora_fin, titulo, tono, id_cuatrimestre, id_materia)
+       SELECT $1, $2, $3, $4, $5, $6, $7, $8
+        WHERE ($7::int IS NULL OR EXISTS (SELECT 1 FROM cuatrimestre WHERE id_cuatrimestre = $7 AND id_usuario = $1))
+       RETURNING *`,
+      [datos.usuarioId, datos.diaSemana, datos.horaInicio, datos.horaFin, datos.titulo, datos.tono ?? null,
+       datos.idCuatrimestre, datos.idMateria]
     );
+
+    if (filas.length === 0) throw new Error('El cuatrimestre no existe.');
 
     // El color es de la materia: todos sus bloques quedan con el mismo tono.
     if (datos.tono !== undefined) {

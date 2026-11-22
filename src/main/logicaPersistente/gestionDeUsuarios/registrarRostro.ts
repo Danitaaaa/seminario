@@ -1,8 +1,9 @@
 import { UsuarioFacialRepositorio } from '../../persistencia/usuarioFacialRepositorio'
 
 // Registra los datos biométricos faciales de un usuario
+// El repositorio se recibe por constructor (inyección de dependencias), como en el resto de los casos de uso.
 export class RegistrarRostro {
-  private repositorio = new UsuarioFacialRepositorio()
+  constructor(private readonly repositorio: UsuarioFacialRepositorio) {}
  
   async ejecutar(
     usuarioId: number,

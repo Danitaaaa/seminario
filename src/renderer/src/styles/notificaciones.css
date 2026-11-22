@@ -219,3 +219,8 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* En oscuro el rojo de error es claro: el número va oscuro para que se lea. */
+:root[data-modo="oscuro"] .notificaciones__contador {
+  color: var(--color-error-bg);
+}

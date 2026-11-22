@@ -43,6 +43,7 @@ export type FetchFn = (url: string, init?: RequestInit) => Promise<Response>;
 export interface ArchivoDrive {
   id: string;
   webViewLink: string;
+  modifiedTime?: string;
 }
 
 // Cliente mínimo de la API de Drive. No guarda nada: el token lo entrega quien lo usa.
@@ -66,7 +67,7 @@ export class DriveCliente {
     ]);
 
     const respuesta = await this.pedir(
-      `${BASE_API}/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink`,
+      `${BASE_API}/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,modifiedTime`,
       {
         method: 'POST',
         headers: { 'Content-Type': `multipart/related; boundary=${limite}` },
@@ -74,6 +75,27 @@ export class DriveCliente {
       },
     );
     return (await respuesta.json()) as ArchivoDrive;
+  }
+
+  // Reemplaza el contenido del documento que ya está en Drive (mismo ID y mismo enlace).
+  // Drive lo vuelve a convertir a Google Docs, Sheets o Slides. Devuelve la nueva fecha de modificación.
+  async actualizarContenido(driveId: string, extension: string, contenido: Buffer): Promise<string> {
+    const ext = this.extensionSoportada(extension);
+    const respuesta = await this.pedir(
+      `${BASE_API}/upload/drive/v3/files/${encodeURIComponent(driveId)}?uploadType=media&fields=modifiedTime`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': MIME_SUBIDA[ext] },
+        body: new Uint8Array(contenido),
+      },
+    );
+    return ((await respuesta.json()) as { modifiedTime: string }).modifiedTime;
+  }
+
+  // Fecha de la última modificación del documento en Drive (cambia cuando alguien lo edita en Google).
+  async ultimaModificacion(driveId: string): Promise<string> {
+    const respuesta = await this.pedir(`${BASE_API}/drive/v3/files/${encodeURIComponent(driveId)}?fields=modifiedTime`);
+    return ((await respuesta.json()) as { modifiedTime: string }).modifiedTime;
   }
 
   // Trae la versión actual del archivo de Drive como documento de Office.

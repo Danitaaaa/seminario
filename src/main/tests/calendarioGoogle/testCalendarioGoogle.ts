@@ -75,7 +75,8 @@ async function main(): Promise<void> {
     const respuestas = [
         [{ id: 12, titulo: 'Parcial de Probabilidad', descripcion: null, lugar: 'Aula 5', fecha: new Date(2026, 10, 25, 14), categoria: 'Parciales', prioridad: 'importante', proyecto: null }],
         [{ id: 40, nombre: 'Repaso Poisson', fecha_programada: new Date(2026, 10, 22, 9), duracion: 90, materia: 'Probabilidad', metodos: 'Flashcards', objetivos: '- Ejercicios 1 a 5' }],
-        [{ id: 3, dia_semana: 1, hora_inicio: '18:00', hora_fin: '20:00', titulo: 'Redes' }],
+        [{ id: 3, dia_semana: 1, hora_inicio: '18:00', hora_fin: '20:00', titulo: 'Redes',
+           fecha_inicio: '2026-08-10', fecha_fin: '2026-11-28', recesos: [{ desde: '2026-10-12', hasta: '2026-10-12' }] }],
         [{ id: 7, titulo: 'Terminar TP', descripcion: null, fecha_limite: new Date(2026, 10, 30) }],
     ];
     const { persistencia, llamadas } = persistenciaFalsa(respuestas);
@@ -101,7 +102,7 @@ async function main(): Promise<void> {
         return `${s.titulo} | ${(s.fin.getTime() - s.inicio.getTime()) / 60000} min | ${s.descripcion.split('\n')[1]}`;
     });
 
-    await caso(5, 'La clase del lunes arranca esta semana y se repite', 'lunes 16/11/2026 18:00 a 20:00 | semanal', () => {
+    await caso(5, 'La clase del lunes arranca el primer lunes de la cursada y se repite', 'lunes 10/8/2026 18:00 a 20:00 | semanal', () => {
         const c = porClave.get('cl3')!;
         const hora = (f: Date) => `${String(f.getHours()).padStart(2, '0')}:${String(f.getMinutes()).padStart(2, '0')}`;
         return `lunes ${c.inicio.toLocaleDateString('es-AR')} ${hora(c.inicio)} a ${hora(c.fin)} | ${c.semanal ? 'semanal' : 'una vez'}`;
@@ -117,8 +118,14 @@ async function main(): Promise<void> {
         return !ev.reminders.useDefault && ev.reminders.overrides.length === 0 ? 'sin recordatorios' : 'con recordatorios';
     });
 
-    await caso(8, 'La clase se copia como evento semanal', 'RRULE:FREQ=WEEKLY', () =>
+    await caso(8, 'La clase se repite cada semana hasta el fin de la cursada (28/11, hora argentina)', 'RRULE:FREQ=WEEKLY;UNTIL=20261129T025959Z', () =>
         String((aEventoGoogle(porClave.get('cl3')!, ZONA).recurrence as string[])[0]));
+
+    await caso(14, 'El feriado del 12/10 no tiene clase', 'EXDATE;TZID=America/Argentina/Buenos_Aires:20261012T180000', () =>
+        String((aEventoGoogle(porClave.get('cl3')!, ZONA).recurrence as string[])[1]));
+
+    await caso(15, 'Un evento que no se repite no lleva reglas de repetición', 'sin recurrence', () =>
+        ('recurrence' in aEventoGoogle(parcial, ZONA) ? 'con recurrence' : 'sin recurrence'));
 
     await caso(9, 'El id para Google usa solo letras y números permitidos', 'sntrev12 | válido', () => {
         const id = idGoogle('ev12');

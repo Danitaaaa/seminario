@@ -13,10 +13,13 @@ export class ListarCuadernos {
     const filas = await this.persistencia.ejecutar(
       `WITH RECURSIVE mis AS (
          SELECT c.id_cuaderno, c.nombre AS cuaderno, m.id_materia, m.nombre, m.anio, m.cuatrimestre, m.estado,
-                f.nombre AS formacion
+                f.nombre AS formacion, c.id_cuatrimestre, cu.anio AS cuatri_anio, cu.tipo AS cuatri_tipo,
+                to_char(cu.fecha_inicio, 'YYYY-MM-DD') AS cuatri_inicio, to_char(cu.fecha_fin, 'YYYY-MM-DD') AS cuatri_fin,
+                cu.fecha_inicio AS cuatri_orden
            FROM cuaderno c
            JOIN materia m ON m.id_materia = c.id_materia
            JOIN formacion f ON f.id_formacion = m.id_formacion
+           LEFT JOIN cuatrimestre cu ON cu.id_cuatrimestre = c.id_cuatrimestre
           WHERE c.id_usuario = $1 AND f.id_usuario = $1 AND ($2::int IS NULL OR c.id_cuaderno = $2)
        ),
        arbol AS (
@@ -39,7 +42,7 @@ export class ListarCuadernos {
             WHERE n.id_cuaderno = mis.id_cuaderno AND n.estado = 'pendiente' AND n.fecha >= CURRENT_DATE
             ORDER BY n.fecha LIMIT 1
          ) prox ON true
-        ORDER BY mis.anio NULLS LAST, mis.cuaderno`,
+        ORDER BY mis.cuatri_orden DESC NULLS LAST, mis.anio NULLS LAST, mis.cuaderno`,
       [datos.usuarioId, idCuaderno ?? null]
     );
     return filas.map(materializarResumen);

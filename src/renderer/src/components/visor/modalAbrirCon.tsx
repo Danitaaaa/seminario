@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Archivo } from '../../types/nodo';
-import type { AplicacionExterna } from '../../types/archivo';
+import type { AplicacionExterna, LadoDrive } from '../../types/archivo';
 import { OPCIONES_ABRIR_CON, abrirCon, esMultimedia, type DestinoExterno } from './abrirCon';
+import { ConflictoDriveOpciones } from './modalConflictoDrive';
 import '../../styles/abrirCon.css';
 
 interface ModalAbrirConProps {
   archivo: Archivo;
   onCerrar: () => void;
   onError: (mensaje: string) => void;
+  onCambioArchivo?: () => void; // el archivo de Syntra se reemplazó por la versión de Google
 }
 
 // Saca el prefijo que agrega Electron a los errores que vienen del proceso principal.
@@ -18,10 +20,11 @@ const mensajeDe = (e: unknown) =>
 
 // Cartel "Abrir con": Microsoft / Google arriba (o la app predeterminada si es una foto, video o audio),
 // traer la versión de Drive y, abajo, las apps del sistema.
-export function ModalAbrirCon({ archivo, onCerrar, onError }: ModalAbrirConProps) {
+export function ModalAbrirCon({ archivo, onCerrar, onError, onCambioArchivo }: ModalAbrirConProps) {
   const [aplicaciones, setAplicaciones] = useState<AplicacionExterna[] | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [confirmandoTraer, setConfirmandoTraer] = useState(false);
+  const [conflictoDrive, setConflictoDrive] = useState(false);
   const multimedia = esMultimedia(archivo.extension ?? '');
   const cancelado = useRef(false);
 
@@ -48,11 +51,36 @@ export function ModalAbrirCon({ archivo, onCerrar, onError }: ModalAbrirConProps
     onCerrar();
   };
 
-  const elegir = (destino: DestinoExterno) =>
-    ejecutar(() => abrirCon(archivo.id, destino), destino === 'google' ? 'Subiendo a Google Docs…' : null);
+  // Si cambió en Syntra y en Google, en vez de abrir se pregunta qué versión conservar.
+  const elegir = (destino: DestinoExterno) => {
+    if (destino !== 'google') return ejecutar(async () => { await abrirCon(archivo.id, destino); });
+    setOcupado('Preparando el documento en Google Docs…');
+    abrirCon(archivo.id, destino)
+      .then((resultado) => {
+        if (resultado === 'conflicto') {
+          setOcupado(null);
+          setConflictoDrive(true);
+        } else {
+          onCerrar();
+        }
+      })
+      .catch((e) => {
+        if (!cancelado.current) onError(mensajeDe(e));
+        onCerrar();
+      });
+  };
+
+  const conservar = (lado: LadoDrive) =>
+    ejecutar(async () => {
+      await abrirCon(archivo.id, 'google', lado);
+      if (lado === 'google') onCambioArchivo?.();
+    }, lado === 'syntra' ? 'Subiendo la versión de Syntra a Google Docs…' : 'Trayendo la versión de Google Docs…');
 
   const traerVersion = () =>
-    ejecutar(() => window.api.traerVersionDrive({ id: archivo.id }), 'Trayendo la versión de Drive…');
+    ejecutar(async () => {
+      await window.api.traerVersionDrive({ id: archivo.id });
+      onCambioArchivo?.();
+    }, 'Trayendo la versión de Drive…');
 
   return (
     <div className="modal-overlay" onClick={ocupado ? undefined : onCerrar}>
@@ -68,6 +96,8 @@ export function ModalAbrirCon({ archivo, onCerrar, onError }: ModalAbrirConProps
               <button type="button" className="abrir-con-modal__cerrar" onClick={cancelar}>Cancelar</button>
             </div>
           </>
+        ) : conflictoDrive ? (
+          <ConflictoDriveOpciones onElegir={conservar} onCancelar={onCerrar} />
         ) : confirmandoTraer ? (
           <>
             <p className="abrir-con-modal__aviso">

@@ -23,8 +23,9 @@ export class ModificarHorario {
     const solapados = await this.persistencia.ejecutar(
       `SELECT titulo, hora_inicio, hora_fin FROM horarios_cursado
        WHERE usuario_id = $1 AND dia_semana = $2
-         AND hora_inicio < $4 AND hora_fin > $3 AND id != $5`,
-      [actual.usuario_id, diaSemana, horaInicio, horaFin, datos.id]
+         AND hora_inicio < $4 AND hora_fin > $3 AND id != $5
+         AND (id_cuatrimestre IS NOT DISTINCT FROM $6::int OR id_cuatrimestre IS NULL OR $6::int IS NULL)`,
+      [actual.usuario_id, diaSemana, horaInicio, horaFin, datos.id, actual.id_cuatrimestre]
     );
     if (solapados.length > 0) {
       const existente = solapados[0];
@@ -46,6 +47,7 @@ export class ModificarHorario {
     agregar('hora_fin', datos.horaFin);
     agregar('titulo', datos.titulo);
     agregar('tono', datos.tono);
+    agregar('id_materia', datos.idMateria);
     valores.push(datos.id);
 
     const filas = await this.persistencia.ejecutar(

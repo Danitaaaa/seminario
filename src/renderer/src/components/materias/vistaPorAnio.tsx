@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import type { EstadoMateria, MateriaFormacion } from '../../types/materias';
 import { ESTADOS, NOMBRE_ESTADO, agruparPorAnio } from '../../pages/materias/utilidadesMaterias';
 
@@ -9,10 +9,11 @@ interface VistaPorAnioProps {
   materias: MateriaFormacion[];
   onEditar: (materia: MateriaFormacion) => void;
   onEliminar: (materia: MateriaFormacion) => void;
+  onRecursar?: (materia: MateriaFormacion) => void; // en las materias libres
 }
 
 // Plan de estudios por año y cuatrimestre, con filtro por estado.
-export function VistaPorAnio({ materias, onEditar, onEliminar }: VistaPorAnioProps) {
+export function VistaPorAnio({ materias, onEditar, onEliminar, onRecursar }: VistaPorAnioProps) {
   const [filtro, setFiltro] = useState<Filtro>('todas');
   const anios = agruparPorAnio(filtro === 'todas' ? materias : materias.filter((m) => m.estado === filtro));
 
@@ -44,7 +45,14 @@ export function VistaPorAnio({ materias, onEditar, onEliminar }: VistaPorAnioPro
                         <button type="button" className="materias-icono" aria-label={`Eliminar ${m.nombre}`} onClick={() => onEliminar(m)}><Trash2 size={16} /></button>
                       </div>
                     </div>
-                    <span className={`materias-pildora materias-estado--${m.estado}`}>{NOMBRE_ESTADO[m.estado]}</span>
+                    <div className="materias-tarjeta__pie">
+                      <span className={`materias-pildora materias-estado--${m.estado}`}>{NOMBRE_ESTADO[m.estado]}</span>
+                      {m.estado === 'libre' && onRecursar && (
+                        <button type="button" className="materias-recursar" onClick={() => onRecursar(m)}>
+                          <RefreshCw size={14} /> Recursar
+                        </button>
+                      )}
+                    </div>
                   </article>
                 ))}
               </div>

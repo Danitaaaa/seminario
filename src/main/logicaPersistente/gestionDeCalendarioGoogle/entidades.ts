@@ -9,5 +9,7 @@ export interface ItemCalendario {
   fin: Date;
   todoElDia?: boolean; // metas: solo la fecha
   semanal?: boolean; // clases: se repiten cada semana
+  hasta?: Date; // clases: última fecha en que se repiten (fin del cuatrimestre)
+  excepciones?: Date[]; // clases: inicio de las que no se dan (feriados y recesos)
   color?: string; // colorId de Google Calendar (1 a 11)
 }

@@ -6,8 +6,9 @@ import { Boton } from '../../components/comunes/boton';
 import { CartelError } from '../../components/comunes/cartelError';
 import { ModalCuaderno } from '../../components/cuadernos/modalCuaderno';
 import { usarAvisos } from '../../hooks/usarAvisos';
+import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { obtenerUsuarioId } from '../../../lib/sesion';
-import type { ResumenCuaderno } from '../../types/cuadernos';
+import type { DatosCuaderno, ResumenCuaderno } from '../../types/cuadernos';
 import { mensajeDeError, nombreAnio } from '../materias/utilidadesMaterias';
 import { LOMOS_DE_MUESTRA, altoLomo, fechaCorta, progresoNotas, tonoDe } from './utilidadesCuadernos';
 import '../../styles/materias.css';
@@ -22,6 +23,8 @@ export function CuadernosPage() {
   const [parametros] = useSearchParams();
   const [creando, setCreando] = useState(parametros.get('nuevo') === '1');
   const [error, setError] = useState('');
+  // Filtro por cuatrimestre: 'todos', 'sin' o el id. Queda guardado.
+  const [filtro, setFiltro] = usarPreferencia<string>(`cuadernos:cuatrimestre:${usuarioId}`, 'todos');
 
   async function cargar(): Promise<void> {
     try {
@@ -36,7 +39,7 @@ export function CuadernosPage() {
     void cargar();
   }, []);
 
-  async function crear(datos: { nombre: string; idMateria: number }): Promise<boolean> {
+  async function crear(datos: DatosCuaderno): Promise<boolean> {
     try {
       const { idCuaderno } = await window.api.crearCuaderno({ usuarioId, ...datos });
       avisos.exito('Se creó el cuaderno.');
@@ -48,14 +51,33 @@ export function CuadernosPage() {
     }
   }
 
-  const lista = cuadernos ?? [];
+  const todos = cuadernos ?? [];
+  // Cuatrimestres que tienen cuadernos, del más nuevo al más viejo (la lista ya viene así ordenada).
+  const periodos = todos.reduce<{ id: number; corto: string }[]>((acc, c) => {
+    if (c.cuatrimestre && !acc.some((p) => p.id === c.cuatrimestre!.idCuatrimestre)) {
+      acc.push({ id: c.cuatrimestre.idCuatrimestre, corto: c.cuatrimestre.corto });
+    }
+    return acc;
+  }, []);
+  const haySinCuatri = todos.some((c) => !c.cuatrimestre);
+  const filtroValido = filtro === 'todos' || (filtro === 'sin' ? haySinCuatri : periodos.some((p) => String(p.id) === filtro));
+  const filtroActivo = filtroValido ? filtro : 'todos';
+  const lista = todos.filter((c) =>
+    filtroActivo === 'todos' ? true : filtroActivo === 'sin' ? !c.cuatrimestre : String(c.cuatrimestre?.idCuatrimestre) === filtroActivo
+  );
+  const chip = (valor: string, texto: string) => (
+    <button key={valor} type="button" aria-pressed={filtroActivo === valor}
+      className={`cuadernos-chip${filtroActivo === valor ? ' cuadernos-chip--activo' : ''}`} onClick={() => setFiltro(valor)}>
+      {texto}
+    </button>
+  );
   const variasFormaciones = new Set(lista.map((c) => c.materia.formacion)).size > 1;
   const abrir = (c: ResumenCuaderno) => navigate(`/cuadernos/${c.idCuaderno}`);
 
   const tapa = (c: ResumenCuaderno) => (
     <button key={c.idCuaderno} type="button" className={`cuaderno-tapa cuaderno-tono-${tonoDe(c.idCuaderno)}`} onClick={() => abrir(c)}>
       <span className="cuaderno-tapa__anio">
-        {[c.materia.anio ? nombreAnio(c.materia.anio) : null, variasFormaciones ? c.materia.formacion : null].filter(Boolean).join(' · ')}
+        {[c.materia.anio ? nombreAnio(c.materia.anio) : null, c.cuatrimestre?.corto, variasFormaciones ? c.materia.formacion : null].filter(Boolean).join(' · ')}
       </span>
       <strong className="cuaderno-tapa__nombre">{c.nombre}</strong>
       <span className="cuaderno-tapa__pie">
@@ -78,6 +100,14 @@ export function CuadernosPage() {
           <h1>Mis cuadernos</h1>
           <Boton onClick={() => setCreando(true)}><Plus size={16} /> Nuevo cuaderno</Boton>
         </header>
+
+        {(periodos.length > 1 || (periodos.length > 0 && haySinCuatri)) && (
+          <div className="cuadernos-filtros" role="group" aria-label="Filtrar por cuatrimestre">
+            {chip('todos', 'Todos')}
+            {periodos.map((p) => chip(String(p.id), p.corto))}
+            {haySinCuatri && chip('sin', 'Sin cuatrimestre')}
+          </div>
+        )}
 
         {cuadernos && cuadernos.length === 0 && (
           <p className="cuadernos-ayuda">Creá un cuaderno, ponele un nombre y asocialo a una materia: ahí se juntan sus carpetas de Material, sus flashcards, sus sesiones y tus notas.</p>
@@ -118,7 +148,11 @@ export function CuadernosPage() {
       </div>
 
       {creando && (
-        <ModalCuaderno usadas={lista.map((c) => c.materia.idMateria)} onGuardar={crear} onCerrar={() => setCreando(false)} />
+        <ModalCuaderno
+          usadas={todos.map((c) => ({ idMateria: c.materia.idMateria, idCuatrimestre: c.cuatrimestre?.idCuatrimestre ?? null }))}
+          onGuardar={crear}
+          onCerrar={() => setCreando(false)}
+        />
       )}
     </PlantillaLayout>
   );

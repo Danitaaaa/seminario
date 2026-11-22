@@ -10,5 +10,7 @@ export function materializarHorario(fila: any): HorarioCursado {
     horaFin: fila.hora_fin,
     titulo: fila.titulo,
     tono: fila.tono ?? null,
+    idCuatrimestre: fila.id_cuatrimestre ?? null,
+    idMateria: fila.id_materia ?? null,
   };
 }

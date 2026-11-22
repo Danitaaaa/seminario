@@ -79,7 +79,7 @@ export function PanelPomodoro({
 
       <AnilloProgreso progreso={progreso} tamaño={176} grosor={20}>
         <span className="pomodoro__tiempo" aria-live="off">{formatearTiempo(estado.segundosRestantes)}</span>
-        <span className="pomodoro__etiqueta">{estado.fase === 'pomodoro' ? 'FOCUS' : 'BREAK'}</span>
+        <span className="pomodoro__etiqueta">{estado.fase === 'pomodoro' ? 'Enfoque' : 'Descanso'}</span>
       </AnilloProgreso>
 
       <div className="pomodoro__controles">
@@ -99,7 +99,7 @@ export function PanelPomodoro({
           disabled={ocupado || completada || pausadaSesion}
           onClick={estado.corriendo ? onPausar : onIniciar}
         >
-          {estado.corriendo ? 'PAUSE' : 'START'}
+          {estado.corriendo ? 'PAUSA' : 'COMENZAR'}
         </button>
         <button
           type="button"
@@ -174,8 +174,8 @@ function ConfiguracionTiempos({ inicial, onCancelar, onGuardar }: ConfiguracionT
     <form className="pomodoro-config" onSubmit={enviar}>
       <div className="pomodoro-config__campos">
         {campo('pomodoroMin', 'Pomodoro', 180)}
-        {campo('descansoCortoMin', 'Short', 60)}
-        {campo('descansoLargoMin', 'Long', 120)}
+        {campo('descansoCortoMin', 'Descanso corto', 60)}
+        {campo('descansoLargoMin', 'Descanso largo', 120)}
       </div>
       <span className="pomodoro-config__unidad">Minutos</span>
       <div className="pomodoro-config__acciones">

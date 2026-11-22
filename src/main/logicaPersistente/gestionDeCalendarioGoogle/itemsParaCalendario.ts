@@ -19,6 +19,12 @@ const PIE = 'Creado por Syntra. Los cambios se hacen en Syntra.';
 
 // Lo que se copia al calendario de Google: eventos (propios y de proyectos), sesiones de estudio
 // sin terminar, clases (se repiten cada semana) y metas con fecha límite.
+// "AAAA-MM-DD" como fecha local (sin pasar por UTC, así no se corre un día).
+const fechaDeTexto = (texto: string) => {
+  const [a, m, d] = texto.split('-').map(Number);
+  return new Date(a, m - 1, d);
+};
+
 export class ItemsParaCalendario {
   constructor(private readonly persistencia: Persistencia) {}
 
@@ -49,8 +55,16 @@ export class ItemsParaCalendario {
         [idUsuario, desde, hasta]
       ),
       this.persistencia.ejecutar(
-        `SELECT id, dia_semana, hora_inicio, hora_fin, titulo FROM horarios_cursado WHERE usuario_id = $1`,
-        [idUsuario]
+        // Solo clases de cuatrimestres con fechas que no terminaron hace más de un mes.
+        // Las cargadas antes de los cuatrimestres (sin fechas) no se copian: se repetirían para siempre.
+        `SELECT h.id, h.dia_semana, h.hora_inicio, h.hora_fin, h.titulo,
+                to_char(c.fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio, to_char(c.fecha_fin, 'YYYY-MM-DD') AS fecha_fin,
+                COALESCE((SELECT json_agg(json_build_object('desde', to_char(r.desde, 'YYYY-MM-DD'),
+                                                            'hasta', to_char(r.hasta, 'YYYY-MM-DD')))
+                            FROM cuatrimestre_receso r WHERE r.id_cuatrimestre = c.id_cuatrimestre), '[]') AS recesos
+           FROM horarios_cursado h JOIN cuatrimestre c ON c.id_cuatrimestre = h.id_cuatrimestre
+          WHERE h.usuario_id = $1 AND c.fecha_fin >= $2::date`,
+        [idUsuario, desde]
       ),
       this.persistencia.ejecutar(
         `SELECT id_meta AS id, titulo, descripcion, fecha_limite FROM metas
@@ -98,10 +112,22 @@ export class ItemsParaCalendario {
       });
     }
 
-    // Clases: la primera es la de esta semana (aunque ya haya pasado) y se repite cada semana.
-    const inicioSemana = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - hoy.getDay());
+    // Clases: la primera es la del primer día de cursada; se repiten cada semana hasta el fin del cuatrimestre,
+    // salvo los días de feriados y recesos.
     for (const c of clases) {
-      const dia = new Date(inicioSemana.getFullYear(), inicioSemana.getMonth(), inicioSemana.getDate() + c.dia_semana);
+      const inicioCursada = fechaDeTexto(c.fecha_inicio);
+      const finCursada = fechaDeTexto(c.fecha_fin);
+      const dia = new Date(inicioCursada);
+      dia.setDate(dia.getDate() + ((c.dia_semana - dia.getDay() + 7) % 7));
+      if (dia > finCursada) continue;
+
+      const excepciones: Date[] = [];
+      for (const r of c.recesos as { desde: string; hasta: string }[]) {
+        const fin = fechaDeTexto(r.hasta);
+        for (const d = new Date(fechaDeTexto(r.desde)); d <= fin; d.setDate(d.getDate() + 1)) {
+          if (d.getDay() === c.dia_semana && d >= dia) excepciones.push(conHora(new Date(d), c.hora_inicio));
+        }
+      }
       items.push({
         clave: `cl${c.id}`,
         titulo: c.titulo,
@@ -109,6 +135,8 @@ export class ItemsParaCalendario {
         inicio: conHora(dia, c.hora_inicio),
         fin: conHora(dia, c.hora_fin),
         semanal: true,
+        hasta: new Date(finCursada.getFullYear(), finCursada.getMonth(), finCursada.getDate(), 23, 59, 59),
+        excepciones,
         color: '2',
       });
     }

@@ -13,6 +13,8 @@ import { ActualizarFotoPerfil, ElegirAvatar, ObtenerFotoPerfil } from "../logica
 import { ElegirColorAvatar } from "../logicaPersistente/gestionDeUsuarios/colorAvatar";
 import { VerificarPassword } from "../logicaPersistente/gestionDeUsuarios/verificarPassword";
 import { ActualizarRostro } from "../logicaPersistente/gestionDeUsuarios/actualizarRostro";
+import { LoginFacial } from "../logicaPersistente/gestionDeUsuarios/loginFacial";
+import { RegistrarRostro } from "../logicaPersistente/gestionDeUsuarios/registrarRostro";
 import type { Perfil } from "../logicaPersistente/gestionDeUsuarios/perfil";
 import type {
     CambiarPasswordDto, IniciarSesionDto, RegistrarUsuarioDto, ValidarCodigoDto,
@@ -37,8 +39,18 @@ export class Usuarios {
         private readonly verificarPasswordCaso: VerificarPassword,
         private readonly actualizarRostroCaso: ActualizarRostro,
         private readonly elegirAvatarCaso: ElegirAvatar,
-        private readonly elegirColorAvatarCaso: ElegirColorAvatar
+        private readonly elegirColorAvatarCaso: ElegirColorAvatar,
+        private readonly loginFacialCaso: LoginFacial,
+        private readonly registrarRostroCaso: RegistrarRostro
     ) {}
+
+    async loginFacial(embedding: number[]) {
+        return this.loginFacialCaso.ejecutar(embedding);
+    }
+
+    async registrarRostro(usuarioId: number, embedding: number[]) {
+        return this.registrarRostroCaso.ejecutar(usuarioId, embedding);
+    }
 
     async iniciarSesion(datos: IniciarSesionDto): Promise<Usuario> {
         return this.iniciarSesionCaso.ejecutar(datos);

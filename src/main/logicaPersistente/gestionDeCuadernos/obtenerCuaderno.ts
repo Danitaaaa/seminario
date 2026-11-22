@@ -14,7 +14,7 @@ export class ObtenerCuaderno {
     if (!resumen) throw new Error('El cuaderno no existe.');
     const { idMateria, nombre } = resumen.materia;
 
-    const [carpetas, mazos, sesiones, metodos, notas, materialesIA] = await Promise.all([
+    const [carpetas, mazos, sesiones, metodos, notas, materialesIA, cursadas, cuentaPara] = await Promise.all([
       this.persistencia.ejecutar(
         `SELECT n.id_nodo, n.nombre,
                 ((SELECT count(*) FROM nodos h WHERE h.id_padre = n.id_nodo)
@@ -61,6 +61,21 @@ export class ObtenerCuaderno {
           ORDER BY tipo, titulo`,
         [datos.usuarioId, idMateria]
       ),
+      // Todas las cursadas de la materia: un cuaderno por cuatrimestre.
+      this.persistencia.ejecutar(
+        `SELECT c.id_cuaderno, cu.anio, cu.tipo FROM cuaderno c
+           LEFT JOIN cuatrimestre cu ON cu.id_cuatrimestre = c.id_cuatrimestre
+          WHERE c.id_usuario = $1 AND c.id_materia = $2
+          ORDER BY cu.fecha_inicio DESC NULLS LAST, c.id_cuaderno DESC`,
+        [datos.usuarioId, idMateria]
+      ),
+      this.persistencia.ejecutar(
+        `SELECT m.id_materia, m.nombre, f.nombre AS formacion
+           FROM cuaderno_materia_extra e
+           JOIN materia m ON m.id_materia = e.id_materia JOIN formacion f ON f.id_formacion = m.id_formacion
+          WHERE e.id_cuaderno = $1 ORDER BY f.nombre`,
+        [datos.idCuaderno]
+      ),
     ]);
 
     return {
@@ -71,6 +86,12 @@ export class ObtenerCuaderno {
       metodos: metodos.map((m: any) => ({ nombre: m.nombre, sesiones: m.sesiones })),
       materialesIA: materialesIA.map((m: any) => ({ idMaterialIA: m.id_material_ia, tipo: m.tipo, titulo: m.titulo })),
       notas: notas.map(materializarNota),
+      cursadas: cursadas.map((c: any) => ({
+        idCuaderno: c.id_cuaderno,
+        cuatrimestre: c.anio ? `${c.tipo === 'primero' ? '1C' : '2C'} ${c.anio}` : null,
+        actual: c.id_cuaderno === datos.idCuaderno,
+      })),
+      cuentaPara: cuentaPara.map((m: any) => ({ idMateria: m.id_materia, nombre: m.nombre, formacion: m.formacion })),
     };
   }
 }

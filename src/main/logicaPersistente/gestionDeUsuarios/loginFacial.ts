@@ -7,8 +7,9 @@ type ResultadoLogin =
   | { exito: false; mensaje: string }
  
 // Valida los datos biométricos faciales contra los datos registrados
+// El repositorio se recibe por constructor (inyección de dependencias), como en el resto de los casos de uso.
 export class LoginFacial {
-  private repositorio = new UsuarioFacialRepositorio()
+  constructor(private readonly repositorio: UsuarioFacialRepositorio) {}
  
   async ejecutar(embedding: number[]): Promise<ResultadoLogin> {
     const embeddingValido =

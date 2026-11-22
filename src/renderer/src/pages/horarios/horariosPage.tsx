@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import { PlantillaLayout } from '../plantillaLayout/plantillaLayout';
 import {
   HorarioCursado,
@@ -9,6 +11,8 @@ import {
 import { obtenerUsuarioId } from '../../../lib/sesion';
 import { usarPreferencia } from '../../hooks/usarPreferencia';
 import { TONOS, claseTono, tonoDeMateria } from '../../utils/tonos';
+import type { CuatrimestreCursada, OpcionMateria } from '../../types/materias';
+import { cuatrimestreActual, estadoCuatrimestre, rangoCuatrimestre } from '../../utils/cuatrimestres';
 import '../../styles/horarios.css';
  
 const ALTO_HORA = 56; // px por hora en la grilla
@@ -42,6 +46,15 @@ export function HorariosPage(): JSX.Element {
   const [vista, setVista] = usarPreferencia<Vista>(`horarios:vista:${obtenerUsuarioId() ?? 0}`, 'semanal');
   const [horarios, setHorarios] = useState<HorarioCursado[]>([]);
   const [cargando, setCargando] = useState(false);
+  const navigate = useNavigate();
+
+  // Cuatrimestre que se está mirando (queda guardado). Si no hay ninguno elegido, el actual.
+  const [cuatris, setCuatris] = useState<CuatrimestreCursada[] | null>(null);
+  const [idCuatri, setIdCuatri] = usarPreferencia<number | null>(`horarios:cuatrimestre:${USUARIO_ID_ACTUAL}`, null);
+  const cuatri = cuatris?.find((c) => c.idCuatrimestre === idCuatri) ?? null;
+  // Materias para elegir en "Nuevo horario" (las que están en curso primero).
+  const [materias, setMaterias] = useState<OpcionMateria[]>([]);
+  const [formIdMateria, setFormIdMateria] = useState<number | null>(null);
  
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
@@ -56,13 +69,25 @@ export function HorariosPage(): JSX.Element {
   const [horasPorDia, setHorasPorDia] = useState<Record<number, { inicio: string; fin: string }>>({});
  
   useEffect(() => {
-    cargarHorarios();
+    window.api.listarCuatrimestres({ usuarioId: USUARIO_ID_ACTUAL })
+      .then((lista) => {
+        setCuatris(lista);
+        if (!lista.some((c) => c.idCuatrimestre === idCuatri)) setIdCuatri(cuatrimestreActual(lista)?.idCuatrimestre ?? null);
+      })
+      .catch((e) => console.error('Error al cargar cuatrimestres:', e));
+    window.api.listarMateriasUsuario({ usuarioId: USUARIO_ID_ACTUAL })
+      .then(setMaterias)
+      .catch((e) => console.error('Error al cargar materias:', e));
   }, []);
+
+  useEffect(() => {
+    if (cuatris) cargarHorarios();
+  }, [cuatris, idCuatri]);
  
   async function cargarHorarios(): Promise<void> {
     setCargando(true);
     try {
-      const resultado = await window.api.listarHorarios({ usuarioId: USUARIO_ID_ACTUAL });
+      const resultado = await window.api.listarHorarios({ usuarioId: USUARIO_ID_ACTUAL, idCuatrimestre: idCuatri ?? undefined });
       setHorarios(resultado);
     } finally {
       setCargando(false);
@@ -75,6 +100,7 @@ export function HorariosPage(): JSX.Element {
     setFormHoraInicio(horaInicio);
     setFormHoraFin(aHora(Math.min(aMinutos(horaInicio) + 60, 23 * 60 + 59)));
     setFormTitulo('');
+    setFormIdMateria(null);
     setFormTono(null);
     setErrorForm(null);
     setMismoHorario(true);
@@ -88,6 +114,7 @@ export function HorariosPage(): JSX.Element {
     setFormHoraInicio(horario.horaInicio);
     setFormHoraFin(horario.horaFin);
     setFormTitulo(horario.titulo);
+    setFormIdMateria(horario.idMateria);
     setFormTono(tonoDeMateria(horario.titulo, horarios));
     setErrorForm(null);
     setMismoHorario(true);
@@ -153,6 +180,7 @@ export function HorariosPage(): JSX.Element {
           horaFin: formHoraFin,
           titulo: formTitulo.trim(),
           tono: tonoElegido,
+          idMateria: formIdMateria,
         };
         await window.api.modificarHorario(cambios);
       } else {
@@ -166,6 +194,8 @@ export function HorariosPage(): JSX.Element {
             horaFin: fin,
             titulo: formTitulo.trim(),
             tono: tonoElegido,
+            idCuatrimestre: idCuatri,
+            idMateria: formIdMateria,
           };
           await window.api.crearHorario(nuevo);
         }
@@ -239,6 +269,24 @@ export function HorariosPage(): JSX.Element {
       }));
   }, [horarios]);
  
+  // Horarios cargados antes de que existieran los cuatrimestres: no van a Google hasta asignarlos.
+  const sinCuatrimestre = horarios.filter((h) => h.idCuatrimestre === null).length;
+
+  async function asignarSinCuatrimestre(): Promise<void> {
+    if (idCuatri === null) return;
+    await window.api.asignarCuatrimestreHorarios({ usuarioId: USUARIO_ID_ACTUAL, idCuatrimestre: idCuatri });
+    await cargarHorarios();
+  }
+
+  const enCurso = materias.filter((m) => m.estado === 'cursando');
+  const otrasMaterias = materias.filter((m) => m.estado !== 'cursando');
+
+  function elegirMateria(valor: string): void {
+    const materia = materias.find((m) => m.idMateria === Number(valor));
+    setFormIdMateria(materia?.idMateria ?? null);
+    if (materia) setFormTitulo(materia.nombre);
+  }
+
   const totalHoras =
     horarios.reduce((acc, h) => acc + aMinutos(h.horaFin) - aMinutos(h.horaInicio), 0) / 60;
  
@@ -251,12 +299,63 @@ export function HorariosPage(): JSX.Element {
     >
       <div className="horarios">
         <header className="horarios__cabecera">
-          <p className="horarios__subtitulo">Visualizá y organizá tus clases de la facultad</p>
+          <div className="horarios__periodo">
+            {cuatris && cuatris.length > 0 ? (
+              <>
+                <select
+                  className="horarios__periodo-select"
+                  aria-label="Cuatrimestre"
+                  value={idCuatri ?? ''}
+                  onChange={(e) => setIdCuatri(Number(e.target.value))}
+                >
+                  {cuatris.map((c) => (
+                    <option key={c.idCuatrimestre} value={c.idCuatrimestre}>{c.nombre}</option>
+                  ))}
+                </select>
+                {cuatri && (
+                  <span className="horarios__subtitulo">
+                    {rangoCuatrimestre(cuatri)} · {estadoCuatrimestre(cuatri)}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="horarios__icono"
+                  aria-label="Editar fechas del cuatrimestre"
+                  title="Fechas, feriados y recesos"
+                  onClick={() => navigate(`/materias?cuatrimestres=${idCuatri ?? ''}`)}
+                >
+                  <Settings size={16} />
+                </button>
+              </>
+            ) : (
+              <p className="horarios__subtitulo">Visualizá y organizá tus clases de la facultad</p>
+            )}
+          </div>
           <button className="horarios__boton-primario" onClick={() => abrirModalNuevo()}>
             + Agregar horario
           </button>
         </header>
  
+        {cuatris && cuatris.length === 0 && (
+          <div className="horarios__aviso">
+            <span>Cargá las fechas de tu cuatrimestre para que las clases se copien a Google Calendar solo hasta que termine la cursada.</span>
+            <button className="horarios__boton-secundario" onClick={() => navigate('/materias?cuatrimestres=')}>
+              Cargar cuatrimestre
+            </button>
+          </div>
+        )}
+
+        {cuatri && sinCuatrimestre > 0 && (
+          <div className="horarios__aviso">
+            <span>
+              {sinCuatrimestre === 1 ? 'Tenés 1 horario' : `Tenés ${sinCuatrimestre} horarios`} sin cuatrimestre. No se copian a Google Calendar hasta que los asignes.
+            </span>
+            <button className="horarios__boton-secundario" onClick={() => void asignarSinCuatrimestre()}>
+              Pasarlos al {cuatri.nombre}
+            </button>
+          </div>
+        )}
+
         <div className="horarios__pestanas">
           <button
             className={`horarios__pestana ${vista === 'semanal' ? 'horarios__pestana--activa' : ''}`}
@@ -379,8 +478,27 @@ export function HorariosPage(): JSX.Element {
                 {editandoId !== null ? 'Editar horario' : 'Nuevo horario'}
               </h3>
  
+              {materias.length > 0 && (
+                <label className="horarios__campo">
+                  Materia
+                  <select value={formIdMateria ?? ''} onChange={(e) => elegirMateria(e.target.value)}>
+                    <option value="">Otra (la escribo)</option>
+                    {enCurso.length > 0 && (
+                      <optgroup label="Cursando">
+                        {enCurso.map((m) => <option key={m.idMateria} value={m.idMateria}>{m.nombre} · {m.formacion}</option>)}
+                      </optgroup>
+                    )}
+                    {otrasMaterias.length > 0 && (
+                      <optgroup label="Otras materias">
+                        {otrasMaterias.map((m) => <option key={m.idMateria} value={m.idMateria}>{m.nombre} · {m.formacion}</option>)}
+                      </optgroup>
+                    )}
+                  </select>
+                </label>
+              )}
+
               <label className="horarios__campo">
-                Materia
+                {materias.length > 0 ? 'Nombre en el horario' : 'Materia'}
                 <input
                   placeholder="Ej.: Base de Datos"
                   value={formTitulo}

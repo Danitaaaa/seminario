@@ -19,14 +19,14 @@ async function main(): Promise<void> {
     const obtenerOriginal = UsuarioFacialRepositorio.prototype.obtenerEmbeddings;
     try {
         await caso(1, 'Login facial con embedding inválido', 'Error: El embedding recibido no es válido', async () => {
-            const r = await new LoginFacial().ejecutar([1, 2, 3]);
+            const r = await new LoginFacial(new UsuarioFacialRepositorio()).ejecutar([1, 2, 3]);
             if (r.exito === true) throw new Error('Se aceptó un embedding inválido');
             comprobar(r.mensaje === 'El embedding recibido no es válido', 'El mensaje no coincide');
             return `Error: ${r.mensaje}`;
         });
         await caso(2, 'Login facial sin rostros registrados', 'Error: Todavía no hay rostros registrados', async () => {
             UsuarioFacialRepositorio.prototype.obtenerEmbeddings = async () => [];
-            const r = await new LoginFacial().ejecutar(Array(128).fill(0));
+            const r = await new LoginFacial(new UsuarioFacialRepositorio()).ejecutar(Array(128).fill(0));
             if (r.exito === true) throw new Error('Se inició sesión sin rostros registrados');
             comprobar(r.mensaje === 'Todavía no hay rostros registrados', 'El mensaje no coincide');
             return `Error: ${r.mensaje}`;
@@ -36,7 +36,7 @@ async function main(): Promise<void> {
                 { usuarioId: 42, embedding: Array(128).fill(0.01) },
                 { usuarioId: 43, embedding: Array(128).fill(0.2) },
             ];
-            const r = await new LoginFacial().ejecutar(Array(128).fill(0));
+            const r = await new LoginFacial(new UsuarioFacialRepositorio()).ejecutar(Array(128).fill(0));
             if (r.exito !== true) throw new Error('No se reconoció el rostro');
             comprobar(r.usuarioId === 42, 'No se eligió el rostro más cercano');
             return `Login facial exitoso para usuario ${r.usuarioId}`;
@@ -45,7 +45,7 @@ async function main(): Promise<void> {
             UsuarioFacialRepositorio.prototype.obtenerEmbeddings = async (): Promise<EmbeddingGuardado[]> => [
                 { usuarioId: 42, embedding: Array(128).fill(0.1) },
             ];
-            const r = await new LoginFacial().ejecutar(Array(128).fill(1));
+            const r = await new LoginFacial(new UsuarioFacialRepositorio()).ejecutar(Array(128).fill(1));
             if (r.exito === true) throw new Error('Se reconoció un rostro distante');
             comprobar(r.mensaje === 'No se reconoció el rostro', 'El mensaje no coincide');
             return `Error: ${r.mensaje}`;

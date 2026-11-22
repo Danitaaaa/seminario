@@ -11,10 +11,11 @@ interface ModalMateriaProps {
   materia?: MateriaFormacion; // si viene, se edita
   onCerrar: () => void;
   onGuardada: (materia: MateriaFormacion) => void;
+  onRecursar?: (materia: MateriaFormacion) => void; // si quedó libre, se puede volver a cursar
 }
 
 // Alta o edición de una materia a mano.
-export function ModalMateria({ usuarioId, formaciones, idFormacion, materia, onCerrar, onGuardada }: ModalMateriaProps) {
+export function ModalMateria({ usuarioId, formaciones, idFormacion, materia, onCerrar, onGuardada, onRecursar }: ModalMateriaProps) {
   const [formacion, setFormacion] = useState(materia?.idFormacion ?? idFormacion);
   const [nombre, setNombre] = useState(materia?.nombre ?? '');
   const [anio, setAnio] = useState<string>(materia?.anio ? String(materia.anio) : '');
@@ -112,6 +113,9 @@ export function ModalMateria({ usuarioId, formaciones, idFormacion, materia, onC
         {error && <p className="materias-error" role="alert">{error}</p>}
 
         <div className="materias-acciones">
+          {materia?.estado === 'libre' && onRecursar && (
+            <Boton variante="contorno" onClick={() => onRecursar(materia)}>Recursar</Boton>
+          )}
           <Boton variante="contorno" onClick={onCerrar}>Cancelar</Boton>
           <Boton type="submit" disabled={guardando}>{guardando ? 'Guardando…' : materia ? 'Guardar cambios' : 'Crear materia'}</Boton>
         </div>

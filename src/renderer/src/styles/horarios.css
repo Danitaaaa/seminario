@@ -423,3 +423,49 @@
     grid-template-columns: 1fr;
   }
 }
+/* Cuatrimestre que se está mirando */
+.horarios__periodo {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  flex-wrap: wrap;
+}
+
+.horarios__periodo-select {
+  padding: 6px 10px;
+  border: 1px solid var(--color-frost-claro);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: var(--tamano-sm);
+}
+
+.horarios__icono {
+  display: inline-flex;
+  padding: 6px;
+  border: none;
+  border-radius: var(--radio-md);
+  background: transparent;
+  color: var(--color-steel);
+  cursor: pointer;
+}
+
+.horarios__icono:hover {
+  background: var(--color-frost-claro);
+  color: var(--color-text-primary);
+}
+
+.horarios__aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-md);
+  padding: var(--espacio-sm) var(--espacio-md);
+  border: 1px solid var(--color-frost-claro);
+  border-left: 4px solid var(--color-warning);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--tamano-sm);
+}

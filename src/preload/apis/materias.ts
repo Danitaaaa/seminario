@@ -12,5 +12,9 @@ export const materiasApi = {
   listarMateriasUsuario: (datos: unknown) => ipcRenderer.invoke('materias:delUsuario', datos),
   listarCorrelativas: (datos: unknown) => ipcRenderer.invoke('materias:correlativas', datos),
   guardarCorrelativas: (datos: unknown) => ipcRenderer.invoke('materias:guardarCorrelativas', datos),
+  listarCuatrimestres: (datos: unknown) => ipcRenderer.invoke('materias:cuatrimestres', datos),
+  guardarCuatrimestre: (datos: unknown) => ipcRenderer.invoke('materias:guardarCuatrimestre', datos),
+  eliminarCuatrimestre: (datos: unknown) => ipcRenderer.invoke('materias:eliminarCuatrimestre', datos),
+  recursarMateria: (datos: unknown) => ipcRenderer.invoke('materias:recursar', datos),
   leerPlanEstudios: (datos: unknown) => ipcRenderer.invoke('materias:leerPlan', datos),
 };

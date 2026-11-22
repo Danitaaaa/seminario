@@ -7,6 +7,8 @@ import { VisorDocx } from './visorDocx';
 import { VisorExcel } from './visorExcel';
 import { VisorTexto } from './visorTexto';
 import { MenuAbrirCon } from './menuAbrirCon';
+import { ModalConflictoDrive } from './modalConflictoDrive';
+import type { LadoDrive } from '../../types/archivo';
 import { BannerEdicion } from '../proyectos/bannerEdicion';
 import { ModalConflicto } from '../proyectos/modalConflicto';
 import { useEdicionDeElemento } from '../../hooks/useEdicionCompartida';
@@ -35,6 +37,7 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
   const [recarga, setRecarga] = useState(0);
   const [resolviendo, setResolviendo] = useState(false);
   const [completo, setCompleto] = useState(false);
+  const [conflictoDrive, setConflictoDrive] = useState(false);
   const avisos = usarAvisos();
 
   // Agrandar: el visor ocupa toda la ventana de Syntra. Escape (o el botón) lo achica.
@@ -55,11 +58,59 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
   const sinEdicion = soloLectura || !puedeEditar;
 
   useEffect(() => {
+    let vigente = true;
     window.api
       .leerArchivo({ id: archivo.id })
-      .then((r) => setContenido(r.contenido))
-      .catch((e) => setError(mensaje(e, 'No se pudo abrir el archivo.')));
+      .then((r) => vigente && setContenido(r.contenido))
+      .catch((e) => vigente && setError(mensaje(e, 'No se pudo abrir el archivo.')));
+    return () => {
+      vigente = false;
+    };
   }, [archivo.id, recarga]);
+
+  // El archivo se reemplazó (por ejemplo, con la versión de Google Docs): se vuelve a leer.
+  const recargar = () => {
+    setContenido(null);
+    setRecarga((n) => n + 1);
+    onGuardado();
+  };
+
+  // Si el archivo está en Google Docs y se editó allá, se traen esos cambios.
+  // No pide iniciar sesión: sin permiso o sin internet, se muestra lo que hay en Syntra.
+  useEffect(() => {
+    let vigente = true;
+    window.api
+      .revisarDrive({ id: archivo.id })
+      .then((r) => {
+        if (!vigente) return;
+        if (r === 'traido') {
+          setAviso('Se trajeron los cambios de Google Docs.');
+          recargar();
+        } else if (r === 'conflicto') {
+          setConflictoDrive(true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      vigente = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [archivo.id]);
+
+  const conservarDrive = (lado: LadoDrive) => {
+    setConflictoDrive(false);
+    window.api
+      .revisarDrive({ id: archivo.id, conservar: lado })
+      .then((r) => {
+        if (r === 'traido') {
+          setAviso('Quedó la versión de Google Docs.');
+          recargar();
+        } else {
+          setAviso('Quedó la versión de Syntra y se subió a Google Docs.');
+        }
+      })
+      .catch((e) => setError(mensaje(e, 'No se pudo sincronizar con Google Docs.')));
+  };
 
   const motivoSinEdicion = () =>
     soloLectura ? 'Tu rol en este proyecto es de solo lectura.' : 'Ahora no se puede editar este archivo: mirá el aviso de arriba.';
@@ -85,6 +136,9 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
     if (sinEdicion) return setError(motivoSinEdicion());
     try {
       await window.api.guardarDocx({ id: archivo.id, html });
+      // Sin pasar por "Cargando…": el editor sigue abierto y "Ver documento" muestra lo guardado.
+      const { contenido: guardado } = await window.api.leerArchivo({ id: archivo.id });
+      setContenido(guardado);
       await alGuardar();
     } catch (e) {
       setError(mensaje(e, 'No se pudo guardar.'));
@@ -150,7 +204,7 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
                 {lectura === 'leyendo' ? 'Pausar lectura' : lectura === 'pausada' ? 'Seguir leyendo' : 'Leer en voz alta'}
               </button>
             )}
-            <MenuAbrirCon archivo={archivo} onError={setError} />
+            <MenuAbrirCon archivo={archivo} onError={setError} onCambioArchivo={recargar} />
             <button className="visor-boton visor-boton--contorno" onClick={() => void descargarArchivos([archivo.id], avisos)}>
               Descargar
             </button>
@@ -178,6 +232,14 @@ export function VisorArchivo({ archivo, onCerrar, onGuardado, soloLectura = fals
           {contenido && tipo === 'texto' && <VisorTexto contenido={contenido} onGuardar={guardarBytes} soloLectura={sinEdicion} />}
         </div>
       </div>
+
+      {conflictoDrive && (
+        <ModalConflictoDrive
+          nombre={`${archivo.nombre}.${archivo.extension}`}
+          onElegir={conservarDrive}
+          onCancelar={() => setConflictoDrive(false)}
+        />
+      )}
 
       {resolviendo && clave && (
         <ModalConflicto clave={clave} onCerrar={() => setResolviendo(false)} onResuelto={alResolver} />

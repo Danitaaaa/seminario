@@ -28,8 +28,17 @@ export class AgendaParaIA {
 
     const [clases, eventos, sesiones, estudiado, tareas, metas, mazos, temas, material] = await Promise.all([
       this.persistencia.ejecutar(
-        `SELECT dia_semana, hora_inicio, hora_fin, titulo FROM horarios_cursado WHERE usuario_id = $1 ORDER BY dia_semana, hora_inicio`,
-        [idUsuario]
+        // Clases del cuatrimestre que se cursa en estas semanas (y las cargadas antes de los cuatrimestres),
+        // con el fin de la cursada y los feriados o recesos que caen en el período.
+        `SELECT h.dia_semana, h.hora_inicio, h.hora_fin, h.titulo, to_char(c.fecha_fin, 'DD/MM') AS hasta_fecha,
+                (SELECT string_agg(to_char(r.desde, 'DD/MM')
+                                   || CASE WHEN r.hasta > r.desde THEN ' al ' || to_char(r.hasta, 'DD/MM') ELSE '' END, ', ')
+                   FROM cuatrimestre_receso r
+                  WHERE r.id_cuatrimestre = c.id_cuatrimestre AND r.hasta >= $2::date AND r.desde < $3::date) AS recesos
+           FROM horarios_cursado h LEFT JOIN cuatrimestre c ON c.id_cuatrimestre = h.id_cuatrimestre
+          WHERE h.usuario_id = $1 AND (c.id_cuatrimestre IS NULL OR (c.fecha_inicio < $3::date AND c.fecha_fin >= $2::date))
+          ORDER BY h.dia_semana, h.hora_inicio`,
+        p
       ),
       this.persistencia.ejecutar(
         `SELECT e.titulo, e.fecha, e.categoria, e.prioridad, e.lugar, p.nombre AS proyecto
@@ -120,7 +129,8 @@ export class AgendaParaIA {
 
     const partes = [
       `HOY: ${dia(ahora)}/${ahora.getFullYear()}, ${hora(ahora)} hs.`,
-      seccion('CLASES (se repiten cada semana)', clases.map((c) => `${DIAS[c.dia_semana]} ${c.hora_inicio} a ${c.hora_fin}: ${c.titulo}`), 'no cargó horarios de cursado'),
+      seccion('CLASES (se repiten cada semana)', clases.map((c) => `${DIAS[c.dia_semana]} ${c.hora_inicio} a ${c.hora_fin}: ${c.titulo}`
+        + (c.hasta_fecha ? ` (hasta el ${c.hasta_fecha}${c.recesos ? `; sin clases: ${c.recesos}` : ''})` : '')), 'no cargó horarios de cursado'),
       seccion(
         `EVENTOS (próximos ${DIAS_ADELANTE} días)`,
         eventos.map((e) => {

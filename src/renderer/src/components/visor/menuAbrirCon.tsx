@@ -5,10 +5,11 @@ import { ModalAbrirCon } from './modalAbrirCon';
 interface MenuAbrirConProps {
   archivo: Archivo;
   onError: (mensaje: string) => void;
+  onCambioArchivo?: () => void;
 }
 
 // Botón "Abrir con" del visor: abre el mismo cartel que se usa para los formatos que la app no muestra.
-export function MenuAbrirCon({ archivo, onError }: MenuAbrirConProps) {
+export function MenuAbrirCon({ archivo, onError, onCambioArchivo }: MenuAbrirConProps) {
   const [abierto, setAbierto] = useState(false);
 
   return (
@@ -17,7 +18,7 @@ export function MenuAbrirCon({ archivo, onError }: MenuAbrirConProps) {
         Abrir con…
       </button>
       {abierto && (
-        <ModalAbrirCon archivo={archivo} onCerrar={() => setAbierto(false)} onError={onError} />
+        <ModalAbrirCon archivo={archivo} onCerrar={() => setAbierto(false)} onError={onError} onCambioArchivo={onCambioArchivo} />
       )}
     </>
   );

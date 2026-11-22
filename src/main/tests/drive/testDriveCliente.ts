@@ -127,6 +127,27 @@ async function main(): Promise<void> {
     });
 
 
+
+    await caso(7, 'Actualizar un documento ya subido usa el mismo ID y el formato Word', 'PATCH | abc123 | application/vnd.openxmlformats-officedocument.wordprocessingml.document | T9', async () => {
+        const { fetchFalso, llamadas } = crearFetchFalso(() => new Response(
+            JSON.stringify({ modifiedTime: 'T9' }), { status: 200 },
+        ));
+        const fecha = await new DriveCliente(tokenPrueba, fetchFalso).actualizarContenido('abc123', 'docx', Buffer.from('hola'));
+        const { url, init } = llamadas[0];
+        comprobar(url.includes('uploadType=media'), 'No sube solo el contenido');
+        const tipo = (init.headers as Record<string, string>)['Content-Type'];
+        return `${init.method} | ${url.includes('/files/abc123?') ? 'abc123' : url} | ${tipo} | ${fecha}`;
+    });
+
+
+    await caso(8, 'Consultar la última modificación en Drive', 'T5 | GET', async () => {
+        const { fetchFalso, llamadas } = crearFetchFalso(() => new Response(
+            JSON.stringify({ modifiedTime: 'T5' }), { status: 200 },
+        ));
+        const fecha = await new DriveCliente(tokenPrueba, fetchFalso).ultimaModificacion('abc123');
+        return `${fecha} | ${llamadas[0].init.method ?? 'GET'}`;
+    });
+
     console.log(`\nResultado: ${bien} BIEN, ${mal} MAL.`);
     if (mal) process.exitCode = 1;
 }

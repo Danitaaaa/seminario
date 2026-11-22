@@ -5,6 +5,7 @@ import {
   listarHorariosSchema,
   modificarHorarioSchema,
   eliminarHorarioSchema,
+  asignarCuatrimestreSchema,
 } from '../logicaPersistente/gestionDeHorarios/dto';
 
 export function registerHorariosIpc(horarios: Horarios): void {
@@ -22,6 +23,10 @@ export function registerHorariosIpc(horarios: Horarios): void {
     const validado = modificarHorarioSchema.parse(datos);
     return horarios.modificar(validado);
   });
+
+  ipcMain.handle('horarios:asignarCuatrimestre', async (_event, datos: unknown) =>
+    horarios.asignar(asignarCuatrimestreSchema.parse(datos))
+  );
 
   ipcMain.handle('horarios:eliminar', async (_event, datos: unknown) => {
     const validado = eliminarHorarioSchema.parse(datos);

@@ -10,7 +10,15 @@ export type UsuarioDTO = z.infer<typeof usuarioSchema>;
 export const cuadernoSchema = z.object({ usuarioId: id, idCuaderno: id });
 export type CuadernoDTO = z.infer<typeof cuadernoSchema>;
 
-export const crearCuadernoSchema = z.object({ usuarioId: id, nombre, idMateria: id });
+export const crearCuadernoSchema = z.object({
+  usuarioId: id,
+  nombre,
+  idMateria: id,
+  // Cuatrimestre de esta cursada (un cuaderno por cada vez que se cursa la materia).
+  idCuatrimestre: id.nullish().transform((v) => v ?? null),
+  // La misma cursada cuenta también para materias de otras formaciones.
+  materiasExtra: z.array(id).max(5).default([]),
+});
 export type CrearCuadernoDTO = z.infer<typeof crearCuadernoSchema>;
 
 export const modificarCuadernoSchema = crearCuadernoSchema.extend({ idCuaderno: id });

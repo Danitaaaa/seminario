@@ -64,6 +64,35 @@ export interface OpcionMateria {
   estado: EstadoMateria;
 }
 
+// Cuatrimestre de cursada del usuario (vale para todas sus formaciones). Fechas en AAAA-MM-DD.
+export interface Receso {
+  desde: string;
+  hasta: string;
+  descripcion: string | null;
+}
+
+export interface CuatrimestreCursada {
+  idCuatrimestre: number;
+  anio: number;
+  tipo: 'primero' | 'segundo';
+  nombre: string; // "2° cuatrimestre 2026"
+  fechaInicio: string;
+  fechaFin: string;
+  recesos: Receso[];
+  horarios: number;
+  cuadernos: number;
+}
+
+export interface DatosCuatrimestre {
+  idCuatrimestre?: number;
+  anio: number;
+  tipo: 'primero' | 'segundo';
+  fechaInicio: string;
+  fechaFin: string;
+  recesos: Receso[];
+  copiarHorariosDe?: number;
+}
+
 export interface MateriasApi {
   listarFormaciones(datos: { usuarioId: number }): Promise<Formacion[]>;
   crearFormacion(datos: { usuarioId: number } & DatosFormacion): Promise<Formacion>;
@@ -77,4 +106,8 @@ export interface MateriasApi {
   listarCorrelativas(datos: { usuarioId: number; idFormacion: number }): Promise<Correlativa[]>;
   guardarCorrelativas(datos: { usuarioId: number; idMateria: number; requisitos: number[] }): Promise<Correlativa[]>;
   leerPlanEstudios(datos: { texto: string }): Promise<MateriaLeida[]>;
+  listarCuatrimestres(datos: { usuarioId: number }): Promise<CuatrimestreCursada[]>;
+  guardarCuatrimestre(datos: { usuarioId: number } & DatosCuatrimestre): Promise<CuatrimestreCursada>;
+  eliminarCuatrimestre(datos: { usuarioId: number; idCuatrimestre: number }): Promise<{ ok: boolean }>;
+  recursarMateria(datos: { usuarioId: number; idMateria: number; idCuatrimestre: number; copiarHorarios: boolean }): Promise<{ idCuaderno: number }>;
 }

@@ -2277,3 +2277,9 @@ button.proxima:hover {
   font: inherit;
   font-size: var(--tamano-sm);
 }
+
+/* En oscuro, el ámbar mezclado con negro no se lee sobre el fondo oscuro. */
+:root[data-modo="oscuro"] .sesiones__estado--pausada,
+:root[data-modo="oscuro"] .superposicion__icono {
+  color: var(--color-accent);
+}

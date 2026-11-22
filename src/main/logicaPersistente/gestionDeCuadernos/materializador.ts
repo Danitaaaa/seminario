@@ -24,6 +24,15 @@ export function materializarResumen(fila: any): ResumenCuaderno {
       cuatrimestre: fila.cuatrimestre ?? null,
       estado: fila.estado,
     },
+    cuatrimestre: fila.id_cuatrimestre
+      ? {
+          idCuatrimestre: fila.id_cuatrimestre,
+          nombre: `${fila.cuatri_tipo === 'primero' ? '1°' : '2°'} cuatrimestre ${fila.cuatri_anio}`,
+          corto: `${fila.cuatri_tipo === 'primero' ? '1C' : '2C'} ${fila.cuatri_anio}`,
+          fechaInicio: fila.cuatri_inicio,
+          fechaFin: fila.cuatri_fin,
+        }
+      : null,
     archivos: fila.archivos,
     flashcards: fila.flashcards,
     notasTotal: fila.notas_total,

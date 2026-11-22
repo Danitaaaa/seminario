@@ -16,3 +16,5 @@ export interface AplicacionExterna {
   id: string;
   nombre: string;
 }
+// Versión que se conserva cuando un documento cambió en Syntra y en Google Docs.
+export type LadoDrive = 'syntra' | 'google';

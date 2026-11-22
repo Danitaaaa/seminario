@@ -12,22 +12,24 @@
   pointer-events: none;
 }
 
-/* Tonos pastel de la paleta elegida: el papel es el color mezclado con blanco y la tinta, con negro. */
-.nota-rapida--0 { --tono: var(--color-accent); }
-.nota-rapida--1 { --tono: var(--color-primary); }
-.nota-rapida--2 { --tono: var(--color-secondary); }
-.nota-rapida--3 { --tono: var(--color-primary-light); }
+/* Tonos de la paleta elegida: acento y principal, cada uno suave y fuerte, para que los cuatro se distingan.
+   (secondary es igual a accent en casi todas las paletas, por eso no se usa.)
+   Claro: el papel es el tono mezclado con blanco y la tinta, con negro. Oscuro: mezclado con la superficie y tinta clara. */
+.nota-rapida--0 { --tono: var(--color-accent); --fuerza: 22%; --fuerza-oscuro: 25%; }
+.nota-rapida--1 { --tono: var(--color-accent); --fuerza: 50%; --fuerza-oscuro: 55%; }
+.nota-rapida--2 { --tono: var(--color-primary); --fuerza: 18%; --fuerza-oscuro: 35%; }
+.nota-rapida--3 { --tono: var(--color-primary); --fuerza: 45%; --fuerza-oscuro: 75%; }
 
 .nota-rapida,
 .nota-rapida__color {
-  --papel: color-mix(in srgb, var(--tono) 24%, #ffffff);
+  --papel: color-mix(in srgb, var(--tono) var(--fuerza), #ffffff);
   --tinta: color-mix(in srgb, var(--tono) 55%, #000000);
 }
 
 :root[data-modo="oscuro"] .nota-rapida,
 :root[data-modo="oscuro"] .nota-rapida__color {
-  --papel: color-mix(in srgb, var(--tono) 30%, #1c2130);
-  --tinta: color-mix(in srgb, var(--tono) 25%, #ffffff);
+  --papel: color-mix(in srgb, var(--tono) var(--fuerza-oscuro), var(--color-surface));
+  --tinta: #ffffff;
 }
 
 .nota-rapida {

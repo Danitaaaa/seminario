@@ -15,6 +15,10 @@ export const crearHorarioSchema = z
     horaFin: horaSchema,
     titulo: z.string().min(1).max(200),
     tono: tonoSchema.optional(),
+    // Cuatrimestre en el que se cursa (NULL solo para los horarios cargados antes de que existieran).
+    idCuatrimestre: z.number().int().positive().nullish().transform((v) => v ?? null),
+    // Materia elegida de la lista (si se escribió otra cosa, queda NULL y vale el título).
+    idMateria: z.number().int().positive().nullish().transform((v) => v ?? null),
   })
   .refine((d) => d.horaFin > d.horaInicio, {
     message: 'La hora de fin debe ser posterior a la hora de inicio',
@@ -33,11 +37,22 @@ export const modificarHorarioSchema = z.object({
   horaFin: horaSchema.optional(),
   titulo: z.string().min(1).max(200).optional(),
   tono: tonoSchema.optional(),
+  idMateria: z.number().int().positive().nullable().optional(),
 });
 export type ModificarHorarioDTO = z.infer<typeof modificarHorarioSchema>;
 
 export const eliminarHorarioSchema = z.object({ id: z.number().int().positive() });
 export type EliminarHorarioDTO = z.infer<typeof eliminarHorarioSchema>;
 
-export const listarHorariosSchema = z.object({ usuarioId: z.number().int().positive() });
+// Con cuatrimestre: los de ese cuatrimestre y los viejos que todavía no tienen uno.
+export const listarHorariosSchema = z.object({
+  usuarioId: z.number().int().positive(),
+  idCuatrimestre: z.number().int().positive().optional(),
+});
 export type ListarHorariosDTO = z.infer<typeof listarHorariosSchema>;
+// Pasa los horarios cargados antes de los cuatrimestres (sin cuatrimestre) a uno.
+export const asignarCuatrimestreSchema = z.object({
+  usuarioId: z.number().int().positive(),
+  idCuatrimestre: z.number().int().positive(),
+});
+export type AsignarCuatrimestreDTO = z.infer<typeof asignarCuatrimestreSchema>;
