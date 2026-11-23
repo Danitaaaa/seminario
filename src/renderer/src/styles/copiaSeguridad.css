@@ -1,0 +1,139 @@
+/* Ventana para restaurar una copia de seguridad (en el inicio y en Ajustes). */
+.copia-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.copia-modal {
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 22px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.copia-modal__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.copia-modal h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.copia-modal p {
+  margin: 0;
+}
+
+.copia-ayuda {
+  font-size: 0.9rem;
+  color: var(--color-steel);
+}
+
+.copia-icono {
+  display: inline-flex;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: var(--color-steel);
+  cursor: pointer;
+}
+
+.copia-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.copia-acciones--izq {
+  justify-content: flex-start;
+}
+
+.copia-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.copia-boton--secundario {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.copia-boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.copia-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.copia-opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.copia-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.copia-campo input {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.copia-error {
+  color: var(--color-error);
+  font-size: 0.9rem;
+}
+
+/* Link del inicio */
+.copia-link-inicio {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-secondary);
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
+}

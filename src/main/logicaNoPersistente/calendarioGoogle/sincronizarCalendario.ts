@@ -1,10 +1,11 @@
 import crypto from 'node:crypto';
-import type { ItemCalendario } from '../../logicaPersistente/gestionDeCalendarioGoogle/entidades';
-import type { ClienteCalendar } from './clienteCalendar';
+import type { CambioDeGoogle, ItemCalendario } from '../../logicaPersistente/gestionDeCalendarioGoogle/entidades';
+import type { ClienteCalendar, DatosEvento, EventoExistente } from './clienteCalendar';
 
 export interface ResultadoSincronizacion {
   creadosOActualizados: number;
   borrados: number;
+  traidos?: number; // cambios hechos en Google que se pasaron a Syntra
   sinCambios: number;
   fallidos: number;
 }
@@ -41,7 +42,53 @@ export function aEventoGoogle(item: ItemCalendario, zonaHoraria: string): Record
     reminders: { useDefault: false, overrides: [] },
   };
   const huella = crypto.createHash('sha1').update(JSON.stringify(cuerpo)).digest('hex').slice(0, 16);
-  return { ...cuerpo, extendedProperties: { private: { syntra: '1', huella } } };
+  // Además de la huella, cómo quedó subido: si después no coincide con lo que hay en Google, se editó allá.
+  const privado = {
+    syntra: '1',
+    huella,
+    tit: item.titulo,
+    ini: item.todoElDia ? '' : String(item.inicio.getTime()),
+    fin: item.todoElDia ? '' : String(item.fin.getTime()),
+    lug: item.lugar ?? '',
+  };
+  return { ...cuerpo, extendedProperties: { private: privado } };
+}
+
+const huellaDe = (item: ItemCalendario, zonaHoraria: string) =>
+  (aEventoGoogle(item, zonaHoraria).extendedProperties as { private: { huella: string } }).private.huella;
+
+const iguales = (a: DatosEvento, b: DatosEvento) =>
+  a.titulo === b.titulo && a.inicio === b.inicio && a.fin === b.fin && a.lugar === b.lugar;
+
+// Compara lo que Syntra subió con lo que hay ahora en Google.
+// - cambios: lo que se puede pasar a Syntra (eventos y sesiones que no cambiaron también en Syntra).
+// - editados: todo lo que se tocó en Google. Lo que no se pase a Syntra se vuelve a subir como está en Syntra.
+// Si cambió en los dos lados, gana Syntra.
+export function cambiosEnGoogle(
+  existentes: EventoExistente[],
+  items: ItemCalendario[],
+  zonaHoraria: string,
+): { cambios: CambioDeGoogle[]; editados: Set<string> } {
+  const porId = new Map(items.map((item) => [idGoogle(item.clave), item]));
+  const cambios: CambioDeGoogle[] = [];
+  const editados = new Set<string>();
+  for (const e of existentes) {
+    if (e.recurrente || !e.huella || !e.guardado || !e.google || iguales(e.guardado, e.google)) continue;
+    editados.add(e.id);
+    const item = porId.get(e.id);
+    if (!item || item.semanal || item.todoElDia) continue; // clases y metas se cambian en Syntra
+    if (!/^(ev|se)\d+$/.test(item.clave)) continue;
+    if (huellaDe(item, zonaHoraria) !== e.huella) continue; // también cambió en Syntra: gana Syntra
+    if (e.google.inicio === null || e.google.fin === null) continue; // lo pasaron a "todo el día"
+    cambios.push({
+      clave: item.clave,
+      titulo: e.google.titulo.trim() || item.titulo,
+      inicio: new Date(e.google.inicio),
+      fin: new Date(e.google.fin),
+      lugar: e.google.lugar.trim() || null,
+    });
+  }
+  return { cambios, editados };
 }
 
 // Deja el calendario "Syntra" de Google igual a lo que hay en Syntra: crea lo nuevo, actualiza lo que
@@ -51,8 +98,14 @@ export async function sincronizarCalendario(
   idCalendario: string,
   items: ItemCalendario[],
   zonaHoraria: string,
+  opciones: { existentes?: EventoExistente[]; forzar?: Set<string> } = {},
 ): Promise<ResultadoSincronizacion> {
-  const existentes = new Map((await cliente.listarEventos(idCalendario)).map((e) => [e.id, e.huella]));
+  // Los días sueltos de una clase que se movieron en Google los maneja Google: no se tocan.
+  const lista = (opciones.existentes ?? (await cliente.listarEventos(idCalendario))).filter((e) => !e.recurrente);
+  const existentes = new Map(lista.map((e) => [e.id, e.huella]));
+  // Se vuelven a subir: lo editado en Google que no se pasó a Syntra, y lo subido sin los datos para comparar.
+  const forzar = new Set(opciones.forzar ?? []);
+  for (const e of lista) if (e.huella && e.guardado === null) forzar.add(e.id);
   const resultado: ResultadoSincronizacion = { creadosOActualizados: 0, borrados: 0, sinCambios: 0, fallidos: 0 };
   const deseados = new Set<string>();
 
@@ -62,7 +115,7 @@ export async function sincronizarCalendario(
     deseados.add(id);
     const evento = aEventoGoogle(item, zonaHoraria);
     const huella = (evento.extendedProperties as { private: { huella: string } }).private.huella;
-    if (existentes.get(id) === huella) {
+    if (existentes.get(id) === huella && !forzar.has(id)) {
       resultado.sinCambios++;
       continue;
     }
@@ -71,8 +124,9 @@ export async function sincronizarCalendario(
       resultado.creadosOActualizados++;
     });
   }
-  for (const id of existentes.keys()) {
-    if (deseados.has(id)) continue;
+  for (const [id, huella] of existentes) {
+    // Solo se borra lo que creó Syntra (lleva huella); lo que la persona cargó a mano en Google no se toca.
+    if (deseados.has(id) || huella === null) continue;
     tareas.push(async () => {
       await cliente.borrarEvento(idCalendario, id);
       resultado.borrados++;

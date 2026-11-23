@@ -356,3 +356,32 @@
 @keyframes eventos-girar {
   to { transform: rotate(360deg); }
 }
+
+/* Eventos de otros calendarios de Google: se ven punteados y no se editan en Syntra. */
+.eventos-pildora--google {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px dashed var(--color-steel);
+}
+
+/* En el día seleccionado (fondo oscuro), el texto y el borde van claros para que se lean. */
+.eventos-celda--seleccionada .eventos-pildora--google {
+  color: var(--color-white);
+  border-color: var(--color-white) !important;
+}
+
+.eventos-tarjeta--google {
+  border: 1px dashed var(--color-steel);
+  border-left-width: 4px;
+}
+
+/* Un evento que se movió desde Google en los últimos días. */
+.eventos-tarjeta-google {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: var(--color-frost-claro);
+  color: var(--color-text);
+  font-size: 0.75rem;
+}

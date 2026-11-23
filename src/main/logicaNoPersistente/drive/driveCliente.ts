@@ -117,6 +117,60 @@ export class DriveCliente {
     }
   }
 
+  /* ---------- Copias de seguridad (archivos .syntra en una carpeta propia de Syntra) ---------- */
+
+  // Busca la carpeta de las copias; si no está, la crea. Syntra solo ve lo que creó ella (drive.file).
+  async carpetaCopias(nombre: string): Promise<string> {
+    const q = `name = '${nombre.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+    const lista = await (await this.pedir(`${BASE_API}/drive/v3/files?${new URLSearchParams({ q, fields: 'files(id)', spaces: 'drive' })}`)).json() as { files?: { id: string }[] };
+    if (lista.files?.[0]) return lista.files[0].id;
+    const creada = await (await this.pedir(`${BASE_API}/drive/v3/files?fields=id`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: nombre, mimeType: 'application/vnd.google-apps.folder' }),
+    })).json() as { id: string };
+    return creada.id;
+  }
+
+  // Subida "reanudable": sirve para archivos grandes (la común se corta en 5 MB).
+  async subirCopia(idCarpeta: string, nombre: string, contenido: Buffer): Promise<string> {
+    const inicio = await this.pedir(`${BASE_API}/upload/drive/v3/files?uploadType=resumable&fields=id`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'X-Upload-Content-Type': 'application/octet-stream',
+        'X-Upload-Content-Length': String(contenido.length),
+      },
+      body: JSON.stringify({ name: nombre, parents: [idCarpeta], mimeType: 'application/octet-stream' }),
+    });
+    const sesion = inicio.headers.get('location');
+    if (!sesion?.startsWith(`${BASE_API}/upload/`)) throw new Error('Google Drive no aceptó la subida de la copia.');
+    const subida = await (await this.pedir(sesion, { method: 'PUT', body: new Uint8Array(contenido) })).json() as { id: string };
+    return subida.id;
+  }
+
+  async listarCopias(idCarpeta: string): Promise<{ id: string; nombre: string; tamanio: number; fecha: string }[]> {
+    const parametros = new URLSearchParams({
+      q: `'${idCarpeta}' in parents and trashed = false`,
+      orderBy: 'createdTime desc',
+      fields: 'files(id,name,size,createdTime)',
+      pageSize: '50',
+    });
+    const datos = await (await this.pedir(`${BASE_API}/drive/v3/files?${parametros}`)).json() as {
+      files?: { id: string; name: string; size?: string; createdTime: string }[];
+    };
+    return (datos.files ?? []).map((f) => ({ id: f.id, nombre: f.name, tamanio: Number(f.size ?? 0), fecha: f.createdTime }));
+  }
+
+  async descargarCopia(id: string): Promise<Buffer> {
+    const respuesta = await this.pedir(`${BASE_API}/drive/v3/files/${encodeURIComponent(id)}?alt=media`);
+    return Buffer.from(await respuesta.arrayBuffer());
+  }
+
+  async borrarCopia(id: string): Promise<void> {
+    await this.pedir(`${BASE_API}/drive/v3/files/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }
+
   private extensionSoportada(extension: string): string {
     const ext = extension.toLowerCase();
     if (!MIME_GOOGLE[ext]) throw new Error(MENSAJE_FORMATOS);

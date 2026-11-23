@@ -12,6 +12,7 @@ import { usarPreferenciaBanner, type FondoBanner, type TarjetasBanner } from "..
 import { PALETAS } from "../../styles/temas/paletas";
 import { VistaPreviaBanner } from "./vistaPreviaBanner";
 import { AjustesCalendarioGoogle } from "../../components/ajustes/calendarioGoogle";
+import { AjustesCopiaSeguridad } from "../../components/ajustes/copiaSeguridad";
 import "../../styles/ajustes.css";
 
 const opcionesModo: { valor: PreferenciaModo; etiqueta: string; icono: LucideIcon }[] = [
@@ -285,6 +286,7 @@ export function AjustesPage() {
         </section>
 
         <AjustesCalendarioGoogle />
+        <AjustesCopiaSeguridad />
       </div>
     </PlantillaLayout>
   );

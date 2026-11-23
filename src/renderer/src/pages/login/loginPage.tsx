@@ -10,6 +10,7 @@ import { guardarSesion } from '../../../lib/sesion';
 import { enterParaAvanzar } from '../../utils/enterParaAvanzar';
 import { useVoice } from '../../hooks/useVoice';
 import { GuidedFaceLogin } from './GuidedFaceLogin';
+import { ModalRestaurar } from '../../components/copiaSeguridad/modalRestaurar';
 
 export function LoginPage(){
     const { modoVoz } = useVoice();
@@ -18,6 +19,13 @@ export function LoginPage(){
     const [modoFacial, setModoFacial] = useState(false);
     const [modoGuiado, setModoGuiado] = useState(false);
     const [error, setError] = useState("");
+    // En una compu sin usuarios se ofrece traer la copia de seguridad de otra compu.
+    const [puedeRestaurar, setPuedeRestaurar] = useState(false);
+    const [restaurando, setRestaurando] = useState(false);
+
+    useEffect(() => {
+        window.api.puedeRestaurarDesdeInicio().then(setPuedeRestaurar).catch(() => setPuedeRestaurar(false));
+    }, []);
 
     const navigate = useNavigate();
 
@@ -95,6 +103,11 @@ export function LoginPage(){
                             Registrarse
                         </span>
                     </p>
+                    {puedeRestaurar && (
+                        <button type="button" className="copia-link-inicio" onClick={() => setRestaurando(true)}>
+                            ¿Ya usabas Syntra en otra compu? Restaurar copia
+                        </button>
+                    )}
                 </div>
             </Card>
 
@@ -133,6 +146,7 @@ export function LoginPage(){
                     </>
                 )}
             </section>
+            {restaurando && <ModalRestaurar desdeInicio onCerrar={() => setRestaurando(false)} />}
         </main>
     );
 }

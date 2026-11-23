@@ -13,3 +13,20 @@ export interface ItemCalendario {
   excepciones?: Date[]; // clases: inicio de las que no se dan (feriados y recesos)
   color?: string; // colorId de Google Calendar (1 a 11)
 }
+
+// Un evento o una sesión de Syntra que se cambió desde Google (lo que hay ahora en Google).
+export interface CambioDeGoogle {
+  clave: string; // "ev12", "se40"
+  titulo: string;
+  inicio: Date;
+  fin: Date;
+  lugar: string | null;
+}
+
+// Un cambio de Google que ya se pasó a Syntra (para avisarlo en la pantalla).
+export interface CambioTraido {
+  clave: string;
+  titulo: string;
+  antes: string; // ISO
+  ahora: string; // ISO
+}

@@ -12,6 +12,7 @@ import { usarAvisos } from '../../hooks/usarAvisos';
 import { BannerEdicion } from '../../components/proyectos/bannerEdicion';
 import { ConflictosProyecto } from '../../components/proyectos/conflictosProyecto';
 import { BotonGoogleCalendar } from '../../components/eventos/botonGoogleCalendar';
+import type { CambioTraido, EventoOtroCalendario } from '../../types/calendarioGoogle';
 import '../../styles/eventos.css';
 
 const UNIDADES: { valor: UnidadTiempo; etiqueta: string }[] = [
@@ -28,6 +29,10 @@ const ETIQUETA_PRIORIDAD: Record<Prioridad, string> = {
 };
 
 const MAX_EVENTOS_VISIBLES_POR_DIA = 3;
+
+const horaCorta = (iso: string) => new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+const diaYHora = (iso: string) =>
+  new Date(iso).toLocaleString('es-AR', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 function primerDiaYCantidad(anio: number, mesIndex: number): { inicio: number; dias: number } {
   const inicio = new Date(anio, mesIndex, 1).getDay();
@@ -81,6 +86,9 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
   const [anio, setAnio] = useState(hoy.getFullYear());
   const [mesIndex, setMesIndex] = useState(hoy.getMonth());
   const [eventos, setEventos] = useState<Evento[]>([]);
+  // De Google: eventos de otros calendarios (solo se ven) y cambios hechos en Google que ya se trajeron.
+  const [otros, setOtros] = useState<EventoOtroCalendario[]>([]);
+  const [cambiosGoogle, setCambiosGoogle] = useState<CambioTraido[]>([]);
   const [categorias, setCategorias] = useState<CategoriaRegistro[]>([]);
   const [diaSeleccionado, setDiaSeleccionado] = useState<number>(hoy.getDate());
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -176,6 +184,10 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
         hasta,
       });
       setEventos(resultado);
+      // Los otros calendarios de Google solo se muestran en el calendario personal.
+      if (idProyecto === undefined) {
+        window.api.eventosOtrosCalendarios({ desde, hasta }).then(setOtros).catch(() => setOtros([]));
+      }
     } finally {
       if (!silencioso) setCargando(false);
     }
@@ -307,6 +319,18 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
       return fechaEventoISO === fechaBuscada;
     });
   }
+
+  function otrosDelDia(dia: number): EventoOtroCalendario[] {
+    const fechaBuscada = formatoFechaISO(anio, mesIndex, dia);
+    return otros.filter((e) => {
+      if (e.todoElDia) return e.inicio === fechaBuscada;
+      const f = new Date(e.inicio);
+      return formatoFechaISO(f.getFullYear(), f.getMonth(), f.getDate()) === fechaBuscada;
+    });
+  }
+
+  // Si el evento se movió desde Google en los últimos días, se avisa en su tarjeta.
+  const cambioDe = (evento: Evento) => cambiosGoogle.find((c) => c.clave === `ev${evento.id}`);
 
   function cambiarMes(delta: number): void {
     const nuevo = new Date(anio, mesIndex + delta, 1);
@@ -483,7 +507,10 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
               <div className="eventos-acciones">
                 <button className="eventos-boton-nav" onClick={() => cambiarMes(-1)}>‹</button>
                 <button className="eventos-boton-nav" onClick={() => cambiarMes(1)}>›</button>
-                <BotonGoogleCalendar />
+                <BotonGoogleCalendar
+                  onEstado={(estado) => setCambiosGoogle(estado.ultimosCambios)}
+                  onSincronizado={() => void cargarEventos(true)}
+                />
                 {puede(rol, 'evento.crear') && (
                   <button className="eventos-boton-primario" onClick={abrirModalNuevoEvento}>+ Nuevo Evento</button>
                 )}
@@ -504,7 +531,9 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
                 const eventosDia = eventosDelDia(dia);
                 const seleccionado = dia === diaSeleccionado;
                 const visibles = eventosDia.slice(0, MAX_EVENTOS_VISIBLES_POR_DIA);
-                const restantes = eventosDia.length - visibles.length;
+                const otrosDia = idProyecto === undefined ? otrosDelDia(dia) : [];
+                const otrosVisibles = otrosDia.slice(0, Math.max(0, MAX_EVENTOS_VISIBLES_POR_DIA - visibles.length));
+                const restantes = eventosDia.length + otrosDia.length - visibles.length - otrosVisibles.length;
 
                 return (
                   <div
@@ -534,6 +563,17 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
                         {!idProyecto && evento.nombreProyecto && (
                           <span className="eventos-chip-proyecto"> · {evento.nombreProyecto}</span>
                         )}
+                      </div>
+                    ))}
+
+                    {otrosVisibles.map((e) => (
+                      <div
+                        key={e.id}
+                        className="eventos-pildora eventos-pildora--google"
+                        style={{ borderColor: e.color ?? undefined }}
+                        title={`${e.titulo} · ${e.calendario} (Google)`}
+                      >
+                        {e.titulo}
                       </div>
                     ))}
 
@@ -625,7 +665,7 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
 
             <h3 className="eventos-subtitulo-chico">Eventos del día</h3>
             {cargando && <p className="eventos-texto-secundario">Cargando...</p>}
-            {!cargando && eventosDelDia(diaSeleccionado).length === 0 && (
+            {!cargando && eventosDelDia(diaSeleccionado).length === 0 && otrosDelDia(diaSeleccionado).length === 0 && (
               <p className="eventos-texto-secundario">No hay eventos para este día.</p>
             )}
             {eventosDelDia(diaSeleccionado).map((evento) => (
@@ -640,6 +680,11 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
                 <div className="eventos-tarjeta-meta">
                   {new Date(evento.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
+                {cambioDe(evento) && (
+                  <div className="eventos-tarjeta-google">
+                    Movido desde Google (antes {diaYHora(cambioDe(evento)!.antes)})
+                  </div>
+                )}
                 {evento.descripcion && (
                   <div className="eventos-tarjeta-descripcion">{evento.descripcion}</div>
                 )}
@@ -666,6 +711,29 @@ function EventosContenido({ usuarioId }: { usuarioId: number }): JSX.Element {
                     </div>
                   )
                 )}
+              </div>
+            ))}
+            {idProyecto === undefined && otrosDelDia(diaSeleccionado).map((e) => (
+              <div key={e.id} className="eventos-tarjeta eventos-tarjeta--google" style={{ borderColor: e.color ?? undefined }}>
+                <div className="eventos-tarjeta-cabecera">
+                  <div className="eventos-tarjeta-titulo">{e.titulo}</div>
+                  <span className="eventos-badge">{e.calendario}</span>
+                </div>
+                <div className="eventos-tarjeta-meta">
+                  {e.todoElDia ? 'Todo el día' : `${horaCorta(e.inicio)} – ${horaCorta(e.fin)}`}
+                  {e.lugar ? ` · ${e.lugar}` : ''}
+                </div>
+                <div className="eventos-tarjeta-meta eventos-tarjeta-meta--sep">
+                  De tu Google Calendar ({e.calendario}). Se edita desde Google.
+                </div>
+                <div className="eventos-tarjeta-acciones">
+                  <button
+                    className="eventos-boton-nav"
+                    onClick={() => window.api.abrirEventoGoogle({ id: e.id }).catch((err) => avisos.error(mensajeDeError(err, 'No se pudo abrir en Google.')))}
+                  >
+                    Abrir en Google
+                  </button>
+                </div>
               </div>
             ))}
           </div>

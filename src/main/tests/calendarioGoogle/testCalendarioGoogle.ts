@@ -1,7 +1,7 @@
 import type { Persistencia } from '../../persistencia/persistencia';
 import { ItemsParaCalendario } from '../../logicaPersistente/gestionDeCalendarioGoogle/itemsParaCalendario';
 import type { ItemCalendario } from '../../logicaPersistente/gestionDeCalendarioGoogle/entidades';
-import { aEventoGoogle, idGoogle, sincronizarCalendario } from '../../logicaNoPersistente/calendarioGoogle/sincronizarCalendario';
+import { aEventoGoogle, cambiosEnGoogle, idGoogle, sincronizarCalendario } from '../../logicaNoPersistente/calendarioGoogle/sincronizarCalendario';
 import type { ClienteCalendar } from '../../logicaNoPersistente/calendarioGoogle/clienteCalendar';
 
 // Tests de la copia a Google Calendar (sin conectarse a Google: el cliente es falso).
@@ -159,6 +159,61 @@ async function main(): Promise<void> {
         const { cliente, guardados } = clienteFalso([], 'sntrev12');
         const r = await sincronizarCalendario(cliente, 'cal', [parcial, sesion], ZONA);
         return `${r.fallidos} fallido, ${guardados.length} guardado`;
+    });
+
+    await caso(16, 'Sincronizar: no borra un evento que se cargó a mano en Google', 'borrados: ninguno', async () => {
+        const { cliente, borrados } = clienteFalso([{ id: 'turnomedico01', huella: null }]);
+        await sincronizarCalendario(cliente, 'cal', [], ZONA);
+        return `borrados: ${borrados.join(',') || 'ninguno'}`;
+    });
+
+    // Cómo quedó subido un elemento (lo que Syntra guarda en el evento) y el mismo evento tocado en Google.
+    const subido = (item: ItemCalendario, cambios: Partial<{ titulo: string; inicio: number; fin: number; lugar: string }> = {}) => {
+        const privado = (aEventoGoogle(item, ZONA).extendedProperties as { private: Record<string, string> }).private;
+        const guardado = { titulo: privado.tit, inicio: Number(privado.ini), fin: Number(privado.fin), lugar: privado.lug };
+        return { id: idGoogle(item.clave), huella: privado.huella, guardado, google: { ...guardado, ...cambios } };
+    };
+    const unaHoraDespues = (f: Date) => f.getTime() + 60 * 60_000;
+
+    await caso(17, 'Un parcial movido en Google se trae a Syntra', 'ev12 a las 15:00', async () => {
+        const { cambios } = cambiosEnGoogle([subido(parcial, { inicio: unaHoraDespues(parcial.inicio), fin: unaHoraDespues(parcial.fin) })], [parcial], ZONA);
+        return cambios.map((c) => `${c.clave} a las ${c.inicio.getHours()}:${String(c.inicio.getMinutes()).padStart(2, '0')}`).join(', ');
+    });
+
+    await caso(18, 'Si no se tocó en Google, no hay nada para traer', '0 cambios, 0 editados', async () => {
+        const { cambios, editados } = cambiosEnGoogle([subido(parcial)], [parcial], ZONA);
+        return `${cambios.length} cambios, ${editados.size} editados`;
+    });
+
+    await caso(19, 'Si cambió en Google y también en Syntra, gana Syntra', '0 cambios, se vuelve a subir: sntrev12', async () => {
+        const enGoogle = subido(parcial, { lugar: 'Aula 9' });
+        const enSyntra = { ...parcial, titulo: 'Parcial de Probabilidad (recuperatorio)' };
+        const { cambios, editados } = cambiosEnGoogle([enGoogle], [enSyntra], ZONA);
+        return `${cambios.length} cambios, se vuelve a subir: ${[...editados].join(',')}`;
+    });
+
+    await caso(20, 'Una clase cambiada en Google no se trae: se vuelve a poner la de Syntra', '0 cambios | guardados: sntrcl3', async () => {
+        const clase = porClave.get('cl3')!;
+        const enGoogle = subido(clase, { titulo: 'Redes (otra aula)' });
+        const { cambios, editados } = cambiosEnGoogle([enGoogle], [clase], ZONA);
+        const { cliente, guardados } = clienteFalso([]);
+        await sincronizarCalendario(cliente, 'cal', [clase], ZONA, { existentes: [enGoogle], forzar: editados });
+        return `${cambios.length} cambios | guardados: ${guardados.join(',')}`;
+    });
+
+    await caso(21, 'Un día de una clase movido solo en Google no se borra', 'borrados: ninguno', async () => {
+        const clase = porClave.get('cl3')!;
+        const unDia = { id: `${idGoogle(clase.clave)}_20261012T210000Z`, huella: 'x', recurrente: true };
+        const { cliente, borrados } = clienteFalso([]);
+        await sincronizarCalendario(cliente, 'cal', [clase], ZONA, { existentes: [subido(clase), unDia] });
+        return `borrados: ${borrados.join(',') || 'ninguno'}`;
+    });
+
+    await caso(22, 'Un evento subido por una versión vieja de Syntra se vuelve a subir con los datos para comparar', 'guardados: sntrev12', async () => {
+        const { cliente, guardados } = clienteFalso([]);
+        const viejo = { id: 'sntrev12', huella: huellaDe(parcial), guardado: null };
+        await sincronizarCalendario(cliente, 'cal', [parcial], ZONA, { existentes: [viejo] });
+        return `guardados: ${guardados.join(',')}`;
     });
 
     console.log(`\nResultado: ${bien} BIEN, ${mal} MAL.`);

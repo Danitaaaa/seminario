@@ -67,6 +67,9 @@ export interface ISincronizador {
     // dentro de ISincronizador (junto a gestionarMiembroPorMail):
     listarMiembrosRemotos(idRemoto: string): Promise<MiembroRemoto[]>;
 
+    // Sube el apodo y el color de avatar del usuario conectado, para que los vean los demás miembros.
+    actualizarMiPerfil?(apodo: string | null, colorAvatar: number | null): Promise<void>;
+
     // Alta/baja de un miembro por mail (sirve para quien todavía no tiene cuenta ni existe en esta base).
     gestionarMiembroPorMail(idRemoto: string, mail: string, accion: 'alta' | 'baja', rol?: RolMiembro): Promise<void>;
 }

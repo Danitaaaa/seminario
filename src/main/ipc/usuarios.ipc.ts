@@ -23,6 +23,7 @@ import type { RegistrarUsuarioDto } from "../logicaPersistente/gestionDeUsuarios
 export interface HooksSesion {
     alIniciarSesion: (idUsuario: number, password: string | null) => void;
     alCerrarSesion: () => Promise<void>;
+    alCambiarPassword?: (idUsuario: number, password: string) => void; // la clave de las copias se rearma
 }
 
 // Rostro: 128 números (el largo exacto y que sean finitos lo revisa el caso de uso, con su propio mensaje).
@@ -92,9 +93,12 @@ export function registerUsuariosIpc(usuarios: Usuarios, hooks: HooksSesion): voi
         usuarios.modificarPerfil(validarDatos(modificarPerfilSchema, datos))
     );
 
-    ipcMain.handle("usuarios:cambiarPasswordActual", async (_event, datos: unknown) =>
-        usuarios.cambiarPasswordActual(validarDatos(cambiarPasswordActualSchema, datos))
-    );
+    ipcMain.handle("usuarios:cambiarPasswordActual", async (_event, datos: unknown) => {
+        const validado = validarDatos(cambiarPasswordActualSchema, datos);
+        const resultado = await usuarios.cambiarPasswordActual(validado);
+        hooks.alCambiarPassword?.(validado.id, validado.passwordNueva);
+        return resultado;
+    });
 
     ipcMain.handle("usuarios:eliminarUsuario", async (_event, datos: unknown) =>
         usuarios.eliminarUsuario(validarDatos(eliminarUsuarioSchema, datos))

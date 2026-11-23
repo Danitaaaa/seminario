@@ -174,6 +174,10 @@ export class SincronizadorSupabase implements ISincronizador, IBloqueador, IAvis
         }));
     }
 
+    async actualizarMiPerfil(apodo: string | null, colorAvatar: number | null): Promise<void> {
+        await this.rpc('actualizar_mi_perfil', { p_apodo: apodo, p_color: colorAvatar });
+    }
+
     async gestionarMiembroPorMail(idRemoto: string, mail: string, accion: 'alta' | 'baja', rol?: RolMiembro): Promise<void> {
         await this.rpc('gestionar_miembro', { p_id: idRemoto, p_mail: mail, p_accion: accion, p_rol: rol ?? 'editor' });
     }

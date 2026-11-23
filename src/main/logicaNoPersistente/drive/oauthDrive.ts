@@ -9,6 +9,9 @@ export const SCOPE_DRIVE = 'openid email https://www.googleapis.com/auth/drive.f
 // Google Calendar: solo puede crear su propio calendario ("Syntra") y manejar los eventos de ese calendario.
 // No ve ni toca el resto de los calendarios del usuario.
 export const SCOPE_CALENDAR = 'openid email https://www.googleapis.com/auth/calendar.app.created';
+// Si la persona elige ver sus otros calendarios en Syntra: además, leer la lista de calendarios y sus eventos.
+// Solo lectura: Syntra nunca cambia nada fuera de su propio calendario.
+export const SCOPE_CALENDAR_LECTURA = `${SCOPE_CALENDAR} https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events.readonly`;
 const URL_AUTORIZACION = 'https://accounts.google.com/o/oauth2/v2/auth';
 const URL_TOKEN = 'https://oauth2.googleapis.com/token';
 const TIEMPO_MAXIMO_LOGIN_MS = 5 * 60 * 1000;

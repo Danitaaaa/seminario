@@ -1,14 +1,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import type { CambioTraido } from '../../logicaPersistente/gestionDeCalendarioGoogle/entidades';
 
 // Lo que se recuerda de la conexión con Google Calendar de cada usuario (en la carpeta de la app).
 export interface ConfigCalendario {
   idCalendario: string | null;
   ultimaSincronizacion: string | null; // ISO
   correo: string | null;
+  traerCambios: boolean; // lo que se edite en Google de los eventos de Syntra vuelve a Syntra
+  permisoLectura: boolean; // dio permiso para leer sus otros calendarios
+  calendariosVisibles: { id: string; nombre: string; color: string | null }[]; // otros calendarios que se ven en Syntra
+  ultimosCambios: (CambioTraido & { cuando: string })[]; // lo último que se trajo de Google
 }
 
-const VACIA: ConfigCalendario = { idCalendario: null, ultimaSincronizacion: null, correo: null };
+const VACIA: ConfigCalendario = {
+  idCalendario: null,
+  ultimaSincronizacion: null,
+  correo: null,
+  traerCambios: true,
+  permisoLectura: false,
+  calendariosVisibles: [],
+  ultimosCambios: [],
+};
 
 export class ConfigsCalendario {
   constructor(private readonly carpeta: string) {}

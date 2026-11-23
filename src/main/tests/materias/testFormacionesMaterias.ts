@@ -45,7 +45,7 @@ function persistenciaFalsa(responder: (sql: string, valores: unknown[]) => unkno
 const errorPostgres = (code: string) => Object.assign(new Error('error de postgres'), { code });
 
 const filaMateria = (nombre: string) => ({ id_materia: 1, id_formacion: 3, nombre, anio: 1, cuatrimestre: 'primero', estado: 'libre' });
-const materia = (nombre: string) => ({ nombre, anio: 1, cuatrimestre: 'primero' as const, estado: 'libre' as const });
+const materia = (nombre: string) => ({ nombre, anio: 1, cuatrimestre: 'primero' as const, estado: 'libre' as const, correlativas: [] as string[] });
 
 
 async function main(): Promise<void> {

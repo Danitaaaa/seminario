@@ -207,5 +207,5 @@ Proyecto desarrollado para la materia **Seminario** de Ingeniería en Sistemas d
 
 - Dana Diez Gomez — [@Danitaaaa](https://github.com/Danitaaaa)
 - Alba Heredia
-- Carolina Magagnini
-- Ludmila Peretti
+- Carolina Magagnini — [@USUARIO_DE_CARO](https://github.com/USUARIO_DE_CARO)
+- Ludmila Peretti — [@ludmilaaperetti](https://github.com/ludmilaaperetti)

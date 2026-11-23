@@ -1,7 +1,7 @@
 import 'dotenv/config';
 // Tiene que ir antes que baseDeDatos: deja armada la conexión a la base propia de Syntra.
 import { iniciarBaseEmbebida, detenerBaseEmbebida } from './persistencia/baseEmbebida';
-import { app, Menu, BrowserWindow, dialog, net, Notification, protocol, shell } from 'electron';
+import { app, Menu, BrowserWindow, dialog, net, Notification, protocol, safeStorage, shell } from 'electron';
 import { isAbsolute, join, relative, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
@@ -180,7 +180,13 @@ import { registerNotasRapidasIpc } from './ipc/notasRapidas.ipc';
 import { AgendaParaIA } from './logicaPersistente/gestionDeChatIA/agendaParaIA';
 import { CalendarioGoogle } from './administracionDePersistencia/calendarioGoogle';
 import { ItemsParaCalendario } from './logicaPersistente/gestionDeCalendarioGoogle/itemsParaCalendario';
+import { AplicarCambiosDeGoogle } from './logicaPersistente/gestionDeCalendarioGoogle/aplicarCambiosDeGoogle';
 import { registerCalendarioGoogleIpc } from './ipc/calendarioGoogle.ipc';
+import { CopiaSeguridad } from './administracionDePersistencia/copiaSeguridad';
+import { ClavesCopia } from './logicaNoPersistente/copiaSeguridad/clavesCopia';
+import { ExportarBase, ContarUsuarios } from './logicaPersistente/gestionDeCopiaSeguridad/exportarBase';
+import { RestaurarBase } from './logicaPersistente/gestionDeCopiaSeguridad/restaurarBase';
+import { registerCopiaSeguridadIpc } from './ipc/copiaSeguridad.ipc';
 import { activarMenuContextual } from './logicaNoPersistente/ventana/menuContextual';
 import { registerNotificacionesIpc } from './ipc/notificaciones.ipc';
 
@@ -413,9 +419,11 @@ function wireDependencies(): ProcesoSesionEstudio {
     almacenTokens,
     (url) => shell.openExternal(url),
   );
-  // Google Calendar: copia de Syntra al calendario "Syntra" de Google (cada 15 minutos y al tocar "Sincronizar").
+  // Google Calendar: copia de Syntra al calendario "Syntra" de Google y trae lo que se editó allá
+  // (cada 15 minutos y al tocar "Sincronizar"). También muestra, sin editarlos, los otros calendarios elegidos.
   const calendarioGoogle = new CalendarioGoogle(
     new ItemsParaCalendario(persistencia),
+    new AplicarCambiosDeGoogle(persistencia),
     app.getPath('userData'),
     { clientId: process.env.GOOGLE_CLIENT_ID ?? '', clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '' },
     cifradorElectron,
@@ -447,6 +455,26 @@ function wireDependencies(): ProcesoSesionEstudio {
   const validarCodigo = new ValidarCodigo(persistencia);
   const cambiarPassword = new CambiarPassword(persistencia);
   const verificarPassword = new VerificarPassword(persistencia);
+
+  // Copia de seguridad en Google Drive (o en un archivo), cifrada con la contraseña del usuario.
+  // La clave se guarda con el cifrado del sistema; en un Linux sin llavero no se guarda.
+  const copiaSeguridad = new CopiaSeguridad(
+    new ExportarBase(persistencia),
+    new RestaurarBase(persistencia),
+    new ContarUsuarios(persistencia),
+    verificarPassword,
+    new ClavesCopia(
+      app.getPath('userData'),
+      cifradorElectron,
+      () => process.platform !== 'linux' || safeStorage.getSelectedStorageBackend() !== 'basic_text',
+    ),
+    new DriveCliente(() => oauth.obtenerAccessToken()),
+    new DriveCliente(() => oauth.obtenerAccessToken(false)),
+    app.getPath('userData'),
+    app.getVersion(),
+  );
+  registerCopiaSeguridadIpc(copiaSeguridad);
+  setInterval(() => void copiaSeguridad.copiaAutomatica(), 60 * 60_000);
   // Rostros del login facial (lo usan iniciar sesión con la cámara y registrar el rostro).
   const usuarioFacial = new UsuarioFacialRepositorio();
   const registrarRostro = new RegistrarRostro(usuarioFacial);
@@ -627,12 +655,16 @@ function wireDependencies(): ProcesoSesionEstudio {
   // IPC de usuarios: ahora que existe la sincronización, el login la arranca y el logout la detiene.
   registerUsuariosIpc(usuarios, {
     alIniciarSesion: (idUsuario, password) => {
+      copiaSeguridad.alIniciarSesion(idUsuario, password);
+      // La copia automática se revisa un rato después de entrar (y después, cada hora).
+      setTimeout(() => void copiaSeguridad.copiaAutomatica(), 2 * 60_000);
       console.log('[sync] hook de login, usuario:', idUsuario);
       fijarSesionSync(idUsuario, password);
       void sync.coordinador.iniciar(idUsuario)
         .then(() => console.log('[sync] coordinador iniciado'))
         .catch((e) => console.warn('[sync] no pudo iniciar:', e));
     },
+    alCambiarPassword: (idUsuario, password) => copiaSeguridad.alIniciarSesion(idUsuario, password),
     alCerrarSesion: async () => {
       await sync.coordinador.detener();
       limpiarSesionSync();

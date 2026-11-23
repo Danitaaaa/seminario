@@ -29,12 +29,13 @@ export class SincronizarProyecto {
         private edicion: Edicion,
         private ultimaRevisionIds = new Map<number, number>(),
         private ultimaRevisionMiembros = new Map<number, number>(),
+        private perfilSubido = new Map<number, string>(), // último apodo y color subidos de cada usuario
     ) {}
 
     async ejecutar(entrada: SincronizarProyectoDTO): Promise<ResultadoSincronizacion> {
         const dto = SincronizarProyectoDTOSchema.parse(entrada);
         // Antes de mirar el rol: si lo cambiaron desde otra compu, acá ya se usa el nuevo.
-        const miembrosCambiaron = await this.actualizarMiembros(dto.idProyecto);
+        const miembrosCambiaron = await this.actualizarMiembros(dto.idProyecto, dto.idUsuario);
         // Los lectores también sincronizan, pero solo reciben.
         const rol = await exigirPermiso(this.persistencia, dto.idProyecto, dto.idUsuario, 'proyecto.sincronizar');
         const puedeEnviar = rol !== 'lector';
@@ -121,7 +122,7 @@ export class SincronizarProyecto {
      * Antes solo se hacía al abrir la lista de miembros, así que un rol cambiado desde otra compu
      * no llegaba a esta base y los permisos locales quedaban viejos. Si falla, no corta la sincronización.
      */
-    private async actualizarMiembros(idProyecto: number): Promise<boolean> {
+    private async actualizarMiembros(idProyecto: number, idUsuario: number): Promise<boolean> {
         const ahora = Date.now();
         if (ahora - (this.ultimaRevisionMiembros.get(idProyecto) ?? 0) < REVISAR_MIEMBROS_MS) return false;
         try {
@@ -129,6 +130,7 @@ export class SincronizarProyecto {
                 `SELECT id_remoto FROM proyectos WHERE id_proyecto = $1`, [idProyecto]);
             if (!p?.id_remoto) return false;
             if (!this.sincronizador.estaConectado()) await this.sincronizador.conectar();
+            await this.subirMiPerfil(idUsuario);
             const remotos = await this.sincronizador.listarMiembrosRemotos(p.id_remoto);
             this.ultimaRevisionMiembros.set(idProyecto, ahora);
             if (remotos.length === 0) return false; // lista vacía = respuesta rara: no se da de baja a nadie
@@ -136,6 +138,23 @@ export class SincronizarProyecto {
         } catch (e) {
             console.warn('[sync] no se pudieron actualizar los miembros:', e);
             return false;
+        }
+    }
+
+    // El apodo y el color propios se suben solo cuando cambiaron. Si falla, se reintenta la próxima vez.
+    private async subirMiPerfil(idUsuario: number): Promise<void> {
+        if (!this.sincronizador.actualizarMiPerfil) return;
+        const [u] = await this.persistencia.ejecutar<{ apodo: string | null; color_avatar: number | null }>(
+            `SELECT apodo, color_avatar FROM usuarios WHERE id_usuario = $1`, [idUsuario]);
+        if (!u) return;
+        const apodo = u.apodo?.trim() || null;
+        const huella = `${apodo ?? ''}|${u.color_avatar ?? ''}`;
+        if (this.perfilSubido.get(idUsuario) === huella) return;
+        try {
+            await this.sincronizador.actualizarMiPerfil(apodo, u.color_avatar);
+            this.perfilSubido.set(idUsuario, huella);
+        } catch (e) {
+            console.warn('[sync] no se pudo subir el apodo y el color:', e);
         }
     }
 

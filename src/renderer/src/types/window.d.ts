@@ -1,7 +1,8 @@
 import { Archivo, AplicacionExterna, LadoDrive } from './archivo';
 import { Nodo, ResultadoImportacion } from './nodo';
 import type { NotaRapida } from './notasRapidas';
-import type { EstadoCalendarioGoogle } from './calendarioGoogle';
+import type { CalendarioVisible, EstadoCalendarioGoogle, EventoOtroCalendario } from './calendarioGoogle';
+import type { CopiaEnDrive, EstadoCopiaSeguridad, OrigenCopia } from './copiaSeguridad';
 import type { Evento, CrearEventoInput, ListarEventosInput, ModificarEventoInput } from './eventos';
 import type { Categoria, CrearCategoriaInput, ListarCategoriasInput, ModificarCategoriaInput } from './categorias';
 import type { HorarioCursado, CrearHorarioInput, ListarHorariosInput, ModificarHorarioInput } from './horarios';
@@ -160,7 +161,7 @@ declare global {
       alSonarNotificacion: (escuchar: () => void) => () => void;
 
       // Enlaces externos
-      abrirEnlace: (datos: { enlace: 'github-dana' | 'correo' }) => Promise<void>;
+      abrirEnlace: (datos: { enlace: 'github-dana' | 'github-caro' | 'github-ludmila' | 'correo' }) => Promise<void>;
 
       // Gestion de flashcards
       crearDeck: (datos: { usuarioId: number; nombre: string; descripcion?: string; materiaAsociada?: string }) => Promise<Deck>;
@@ -270,6 +271,21 @@ declare global {
       sincronizarCalendarioGoogle: () => Promise<EstadoCalendarioGoogle>;
       desconectarCalendarioGoogle: () => Promise<EstadoCalendarioGoogle>;
       cancelarCalendarioGoogle: () => Promise<void>;
+      configurarCalendarioGoogle: (datos: { traerCambios: boolean }) => Promise<EstadoCalendarioGoogle>;
+      permitirLecturaCalendarioGoogle: () => Promise<EstadoCalendarioGoogle>;
+      listarCalendariosGoogle: () => Promise<CalendarioVisible[]>;
+      elegirCalendariosGoogle: (datos: { ids: string[] }) => Promise<EstadoCalendarioGoogle>;
+      eventosOtrosCalendarios: (datos: { desde: string; hasta: string }) => Promise<EventoOtroCalendario[]>;
+      abrirEventoGoogle: (datos: { id: string }) => Promise<void>;
+      estadoCopiaSeguridad: () => Promise<EstadoCopiaSeguridad>;
+      configurarCopiaSeguridad: (datos: { automatica: boolean }) => Promise<EstadoCopiaSeguridad>;
+      copiarADrive: (datos: { password?: string }) => Promise<EstadoCopiaSeguridad>;
+      guardarCopiaEnArchivo: (datos: { password?: string }) => Promise<EstadoCopiaSeguridad | null>;
+      puedeRestaurarDesdeInicio: () => Promise<boolean>;
+      copiasEnDrive: () => Promise<CopiaEnDrive[]>;
+      elegirArchivoCopia: () => Promise<{ nombre: string } | null>;
+      restaurarCopia: (datos: { origen: OrigenCopia; password: string; desdeInicio: boolean }) => Promise<{ fecha: string }>;
+      reiniciarSyntra: () => Promise<void>;
       cambiarBienestar: (datos: { usuarioId: number; activo: boolean }) => Promise<boolean>;
     };
   }

@@ -201,8 +201,8 @@ export function CrearSesionEstudioPage() {
 
         <div className="sesiones__fila-campos">
           <Paso etiqueta="Pomodoro" valor={pomodoroMin} min={1} max={180} onCambio={setPomodoroMin} />
-          <Paso etiqueta="Short break" valor={descansoCortoMin} min={1} max={60} onCambio={setDescansoCortoMin} />
-          <Paso etiqueta="Long break" valor={descansoLargoMin} min={1} max={120} onCambio={setDescansoLargoMin} />
+          <Paso etiqueta="Descanso corto" valor={descansoCortoMin} min={1} max={60} onCambio={setDescansoCortoMin} />
+          <Paso etiqueta="Descanso largo" valor={descansoLargoMin} min={1} max={120} onCambio={setDescansoLargoMin} />
         </div>
 
         <div className="sesiones__fila-campos">

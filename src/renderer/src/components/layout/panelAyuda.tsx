@@ -10,7 +10,7 @@ interface PanelAyudaProps {
   onCerrar: () => void;
 }
 
-type Enlace = "github-dana" | "correo";
+type Enlace = "github-dana" | "github-caro" | "github-ludmila" | "correo";
 
 const CORREO = "babineo.utn15@gmail.com";
 
@@ -39,9 +39,9 @@ const FUNCIONES: Funcion[] = [
 
 const INTEGRANTES: Integrante[] = [
   { nombre: "Dana Diez Gomez", iniciales: "DDG", rol: "Desarrolladora full stack · Diseño e integración", frase: "Si no está en el calendario, no existe", github: "github-dana" },
-  { nombre: "Carolina Magagnini", iniciales: "CM", rol: "Desarrolladora full stack · Material de estudio" },
-  { nombre: "Alba Heredia", iniciales: "AH", rol: "Desarrolladora full stack · Usuarios y acceso facial" },
-  { nombre: "Ludmila Peretti", iniciales: "LP", rol: "Desarrolladora full stack · Horarios y eventos" },
+  { nombre: "Carolina Magagnini", iniciales: "CM", rol: "Desarrolladora full stack · Material de estudio", github: "github-caro" },
+  { nombre: "Alba Heredia", iniciales: "AH", rol: "Desarrolladora full stack · Usuarios y acceso facial", frase: "bok" },
+  { nombre: "Ludmila Peretti", iniciales: "LP", rol: "Desarrolladora full stack · Horarios y eventos", github: "github-ludmila" },
 ];
 
 const abrir = (enlace: Enlace) => window.api.abrirEnlace({ enlace }).catch(console.error);

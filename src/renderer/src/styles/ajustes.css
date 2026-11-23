@@ -289,3 +289,61 @@
 @keyframes ajustes-girar {
   to { transform: rotate(360deg); }
 }
+
+.ajustes__calendario-opcion {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-sm);
+  font-size: var(--tamano-sm);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.ajustes__calendario-opcion input {
+  margin-top: 3px;
+}
+
+.ajustes__calendario-opcion small {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-steel);
+}
+
+.ajustes__calendario-opcion--fila {
+  align-items: center;
+}
+
+.ajustes__calendario-opcion--fila input {
+  margin-top: 0;
+}
+
+.ajustes__calendarios {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+}
+
+.ajustes__calendario-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ajustes__campo-copia {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 320px;
+  font-size: var(--tamano-sm);
+  color: var(--color-text);
+}
+
+.ajustes__campo-copia input {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radio-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
