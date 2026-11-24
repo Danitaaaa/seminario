@@ -206,6 +206,6 @@ npx tsx src/main/tests/CARPETA_DEL_MODULO/testNOMBRE.ts
 Proyecto desarrollado para la materia **Seminario** de Ingeniería en Sistemas de Información, **UTN Facultad Regional Villa María**, 2026.
 
 - Dana Diez Gomez — [@Danitaaaa](https://github.com/Danitaaaa)
-- Alba Heredia
-- Carolina Magagnini — [@USUARIO_DE_CARO](https://github.com/USUARIO_DE_CARO)
+- Alba Heredia - [@AlbaHeredia](https://github.com/AlbaHeredia)
+- Carolina Magagnini — [@cm766](https://github.com/cm766)
 - Ludmila Peretti — [@ludmilaaperetti](https://github.com/ludmilaaperetti)
